@@ -337,7 +337,7 @@ const MoodForm = () => {
             timestamp: diaryEntry.timestamp,
             finalMood: diaryEntry.finalMood,
             hasExplicitMood: diaryEntry.hasExplicitMood,
-            aiAnalysis: diaryEntry.aiAnalysis
+            aiAnalysis: diaryEntry.aiAnalysis,
           }}
           onSave={saveMoodLog}
           onEdit={() => {

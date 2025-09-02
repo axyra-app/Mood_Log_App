@@ -315,7 +315,7 @@ const MoodFlow = () => {
           )}
 
           {/* Step 4: Summary and Save */}
-          {currentStep === 'complete' && diaryEntry && (
+          {currentStep === 'complete' && diaryEntry && diaryEntry.finalMood && (
             <MoodSummary
               diaryEntry={{
                 text: diaryEntry.text,
