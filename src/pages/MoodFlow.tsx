@@ -45,18 +45,22 @@ const MoodFlow = () => {
 
   // Get diary text from navigation state
   useEffect(() => {
-    if (location.state?.diaryText) {
+    if (location.state?.diaryText && !diaryEntry) {
       setDiaryText(location.state.diaryText);
       // Start the mood flow with the diary text
-      startDiaryEntry(location.state.diaryText);
-      // Automatically try AI analysis
-      analyzeWithAI();
+      const entry = startDiaryEntry(location.state.diaryText);
+      console.log('Started diary entry:', entry);
+      
+      // Automatically try AI analysis after a short delay
+      setTimeout(() => {
+        analyzeWithAI();
+      }, 500);
 
       // Track mood flow start
       analyticsService.trackMoodFlowEvent('start', {
         textLength: location.state.diaryText.length,
       });
-    } else {
+    } else if (!location.state?.diaryText) {
       // If no diary text, redirect back to diary entry
       console.warn('No diary text found in navigation state, redirecting to diary entry');
       navigate('/diary-entry', { replace: true });
@@ -64,7 +68,7 @@ const MoodFlow = () => {
 
     // Track page view
     analyticsService.trackPageView('mood_flow');
-  }, [location.state, startDiaryEntry, analyzeWithAI, navigate]);
+  }, [location.state, diaryEntry, startDiaryEntry, analyzeWithAI, navigate]);
 
   const handleMoodSelect = (mood: number) => {
     setExplicitMood(mood);
