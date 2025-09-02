@@ -67,7 +67,10 @@ export const useMoodFlow = () => {
 
   const getCurrentStep = useCallback((): MoodFlowState['currentStep'] => {
     if (!diaryEntry) return 'diary';
-    return moodFlowService.getCurrentStep(diaryEntry);
+    if (!diaryEntry.finalMood) return 'selection';
+    if (!diaryEntry.aiAnalysis && !diaryEntry.hasExplicitMood) return 'analysis';
+    if (diaryEntry.aiAnalysis?.confidence < 0.7 && !diaryEntry.fallbackQuestions) return 'questions';
+    return 'complete';
   }, [diaryEntry]);
 
   const resetFlow = useCallback(() => {

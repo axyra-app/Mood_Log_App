@@ -187,6 +187,10 @@ const MoodFlow = () => {
   };
 
   const currentStep = getCurrentStep();
+  
+  // Debug logging
+  console.log('Current step:', currentStep);
+  console.log('Diary entry:', diaryEntry);
 
   if (!diaryText) {
     return (

@@ -5,7 +5,7 @@ import Achievements from '../components/Achievements';
 import DailyRegistry from '../components/DailyRegistry';
 import DiaryHistory from '../components/DiaryHistory';
 import Notifications from '../components/Notifications';
-import PsychologistList from '../components/PsychologistList';
+import PsychologistModal from '../components/PsychologistModal';
 import RecentActivities from '../components/RecentActivities';
 import Statistics from '../components/Statistics';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +16,7 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('mood');
   const [isCheckingDaily, setIsCheckingDaily] = useState(true);
+  const [showPsychologistModal, setShowPsychologistModal] = useState(false);
 
   // Check if it's a new day and redirect to diary entry
   useEffect(() => {
@@ -45,7 +46,7 @@ const UserDashboard = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    const name = userProfile?.name || 'Usuario';
+    const name = userProfile?.name || userProfile?.displayName || 'Usuario';
     if (hour < 12) return `Buenos días, ${name}`;
     if (hour < 18) return `Buenas tardes, ${name}`;
     return `Buenas noches, ${name}`;
@@ -96,6 +97,7 @@ const UserDashboard = () => {
       color: 'from-green-500 to-emerald-500',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
+      onClick: () => setShowPsychologistModal(true),
     },
     {
       id: 'achievements',
@@ -225,8 +227,8 @@ const UserDashboard = () => {
                   <MessageCircle className='w-16 h-16 text-gray-400 mx-auto mb-4' />
                   <h3 className='text-xl font-semibold text-gray-900 mb-2'>Chat con Psicólogos</h3>
                   <p className='text-gray-600 mb-6'>Conecta con profesionales de la salud mental</p>
-                  <button onClick={() => navigate('/chat')} className='btn-primary'>
-                    Ir al Chat
+                  <button onClick={() => setShowPsychologistModal(true)} className='btn-primary'>
+                    Ver Psicólogos
                   </button>
                 </div>
               )}
@@ -241,8 +243,11 @@ const UserDashboard = () => {
             {/* Recent Activities */}
             <RecentActivities />
 
-            {/* Psychologist List */}
-            <PsychologistList />
+            {/* Psychologist Modal */}
+            <PsychologistModal 
+              isOpen={showPsychologistModal} 
+              onClose={() => setShowPsychologistModal(false)} 
+            />
           </div>
         </div>
       </div>

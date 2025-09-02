@@ -65,8 +65,7 @@ const DiaryEntry = () => {
 
       // Navigate to mood flow page with diary text
       navigate('/mood-flow', {
-        state: { diaryText: diaryText.trim() },
-        replace: true
+        state: { diaryText: diaryText.trim() }
       });
     } catch (error) {
       console.error('Error processing diary entry:', error);

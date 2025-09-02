@@ -1,35 +1,54 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can read and write their own user profile
+    // Users can read and write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Users can read and write their own mood logs
-    match /moodLogs/{logId} {
+    // Mood logs - users can read/write their own
+    match /moodLogs/{moodLogId} {
       allow read, write: if request.auth != null && 
         (resource.data.userId == request.auth.uid || 
          request.auth.token.role == 'psychologist');
     }
     
-    // Psychologists can read all user profiles and mood logs
-    match /{document=**} {
+    // Psychologists collection - public read, admin write
+    match /psychologists/{psychologistId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (request.auth.token.role == 'admin' || 
+         request.auth.uid == psychologistId);
+    }
+    
+    // Daily checks - users can read/write their own
+    match /dailyChecks/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Notifications - users can read their own
+    match /notifications/{notificationId} {
       allow read, write: if request.auth != null && 
-        request.auth.token.role == 'psychologist';
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Achievements - users can read their own
+    match /achievements/{achievementId} {
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
     }
     
     // Chat messages - users can read/write their own conversations
+    match /chatMessages/{messageId} {
+      allow read, write: if request.auth != null && 
+        (resource.data.senderId == request.auth.uid || 
+         resource.data.receiverId == request.auth.uid);
+    }
+    
+    // Conversations - users can read their own
     match /conversations/{conversationId} {
       allow read, write: if request.auth != null && 
         (resource.data.participants[request.auth.uid] != null ||
-         request.auth.token.role == 'psychologist');
-    }
-    
-    // Messages within conversations
-    match /conversations/{conversationId}/messages/{messageId} {
-      allow read, write: if request.auth != null && 
-        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants[request.auth.uid] != null ||
          request.auth.token.role == 'psychologist');
     }
   }
