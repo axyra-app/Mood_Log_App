@@ -14,7 +14,7 @@ const DiaryEntry = () => {
   const navigate = useNavigate();
 
   // Auto-save functionality
-  const { save } = useAutoSave({
+  const { save: autoSave } = useAutoSave({
     value: diaryText,
     delay: 3000, // Save after 3 seconds of inactivity
     onSave: (value) => {

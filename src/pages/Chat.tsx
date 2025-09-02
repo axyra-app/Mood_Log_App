@@ -9,7 +9,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { ArrowLeft, Heart, Info, MoreVertical, Phone, Plus, Search, Send, Video } from 'lucide-react';
+import { ArrowLeft, Heart, Info, MessageCircle, MoreVertical, Phone, Plus, Search, Send, Video } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewConversationModal from '../components/NewConversationModal';

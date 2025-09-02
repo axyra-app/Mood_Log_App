@@ -332,7 +332,13 @@ const MoodForm = () => {
       {/* Step 5: Summary and Save */}
       {currentStep === 'complete' && diaryEntry && diaryEntry.finalMood && (
         <MoodSummary
-          diaryEntry={diaryEntry}
+          diaryEntry={{
+            text: diaryEntry.text,
+            timestamp: diaryEntry.timestamp,
+            finalMood: diaryEntry.finalMood,
+            hasExplicitMood: diaryEntry.hasExplicitMood,
+            aiAnalysis: diaryEntry.aiAnalysis
+          }}
           onSave={saveMoodLog}
           onEdit={() => {
             // Go back to mood selection
