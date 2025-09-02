@@ -14,6 +14,7 @@ import { useOffline } from '../hooks/useOffline';
 import { db } from '../lib/firebase';
 import { achievementService } from '../services/achievementService';
 import { analyticsService } from '../services/analyticsService';
+import { dailyCheckService } from '../services/dailyCheckService';
 import { notificationService } from '../services/notificationService';
 
 const MoodFlow = () => {
@@ -161,10 +162,16 @@ const MoodFlow = () => {
         }
 
         setSuccessMessage('¡Estado de ánimo guardado exitosamente!');
+        
+        // Mark diary as completed for today
+        await dailyCheckService.markDiaryCompleted(userProfile.uid);
       } else {
         // Save offline when not connected
         saveOffline(moodLogData);
         setSuccessMessage('¡Estado de ánimo guardado localmente! Se sincronizará cuando vuelvas a conectarte.');
+        
+        // Mark diary as completed locally
+        await dailyCheckService.markDiaryCompleted(userProfile.uid);
       }
 
       // Redirect to dashboard after successful save

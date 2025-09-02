@@ -193,9 +193,17 @@ const LandingPage = () => {
               </div>
               <span className='text-xl font-bold text-gradient'>Mood Log App</span>
             </div>
-            <p className='text-gray-600 text-center md:text-right'>
-              © 2024 Mood Log App. Todos los derechos reservados.
-            </p>
+            <div className='text-center md:text-right'>
+              <p className='text-gray-600 mb-2'>
+                © 2025 Mood Log App. Todos los derechos reservados.
+              </p>
+              <Link 
+                to='/terms' 
+                className='text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors'
+              >
+                Términos y Condiciones
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

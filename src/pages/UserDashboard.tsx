@@ -1,5 +1,5 @@
 import { BarChart3, Heart, LogOut, MessageCircle, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Achievements from '../components/Achievements';
 import DailyRegistry from '../components/DailyRegistry';
@@ -9,11 +9,34 @@ import PsychologistList from '../components/PsychologistList';
 import RecentActivities from '../components/RecentActivities';
 import Statistics from '../components/Statistics';
 import { useAuth } from '../contexts/AuthContext';
+import { dailyCheckService } from '../services/dailyCheckService';
 
 const UserDashboard = () => {
   const { userProfile, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('mood');
+  const [isCheckingDaily, setIsCheckingDaily] = useState(true);
+
+  // Check if it's a new day and redirect to diary entry
+  useEffect(() => {
+    const checkDailyEntry = async () => {
+      if (userProfile?.uid) {
+        try {
+          const isNewDay = await dailyCheckService.isNewDay(userProfile.uid);
+          if (isNewDay) {
+            // Redirect to diary entry for new day
+            navigate('/diary-entry', { replace: true });
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking daily entry:', error);
+        }
+      }
+      setIsCheckingDaily(false);
+    };
+
+    checkDailyEntry();
+  }, [userProfile?.uid, navigate]);
 
   const handleLogout = async () => {
     await logout();
@@ -102,6 +125,18 @@ const UserDashboard = () => {
       iconColor: 'text-purple-600',
     },
   ];
+
+  // Show loading while checking daily entry
+  if (isCheckingDaily) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-gray-600'>Verificando tu entrada diaria...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50'>

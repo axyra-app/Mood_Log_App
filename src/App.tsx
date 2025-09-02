@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import MoodFlow from './pages/MoodFlow';
 import PsychologistDashboard from './pages/PsychologistDashboard';
 import Register from './pages/Register';
+import TermsAndConditions from './pages/TermsAndConditions';
 import UserDashboard from './pages/UserDashboard';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Route path='/' element={<LandingPage />} />
               <Route path='/login' element={<Login />} />
               <Route path='/register' element={<Register />} />
+              <Route path='/terms' element={<TermsAndConditions />} />
               <Route
                 path='/diary-entry'
                 element={

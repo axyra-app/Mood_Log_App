@@ -66,6 +66,7 @@ const DiaryEntry = () => {
       // Navigate to mood flow page with diary text
       navigate('/mood-flow', {
         state: { diaryText: diaryText.trim() },
+        replace: true
       });
     } catch (error) {
       console.error('Error processing diary entry:', error);
@@ -159,24 +160,34 @@ const DiaryEntry = () => {
               </ul>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type='submit'
-              disabled={diaryText.trim().length < 10 || isLoading}
-              className='w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed py-4 text-lg font-semibold'
-            >
-              {isLoading ? (
-                <div className='flex items-center justify-center space-x-3'>
-                  <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  <span>Procesando...</span>
-                </div>
-              ) : (
-                <div className='flex items-center justify-center space-x-3'>
-                  <Send className='w-5 h-5' />
-                  <span>Continuar con mi Estado de Ánimo</span>
-                </div>
-              )}
-            </button>
+                         {/* Action Buttons */}
+             <div className='space-y-3'>
+               <button
+                 type='submit'
+                 disabled={diaryText.trim().length < 10 || isLoading}
+                 className='w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed py-4 text-lg font-semibold'
+               >
+                 {isLoading ? (
+                   <div className='flex items-center justify-center space-x-3'>
+                     <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                     <span>Procesando...</span>
+                   </div>
+                 ) : (
+                   <div className='flex items-center justify-center space-x-3'>
+                     <Send className='w-5 h-5' />
+                     <span>Continuar con mi Estado de Ánimo</span>
+                   </div>
+                 )}
+               </button>
+               
+               <button
+                 type='button'
+                 onClick={() => navigate('/dashboard')}
+                 className='w-full bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium'
+               >
+                 Seguir sin registrar diario
+               </button>
+             </div>
           </div>
         </form>
 
