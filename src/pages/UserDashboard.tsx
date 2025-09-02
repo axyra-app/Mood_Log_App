@@ -151,9 +151,7 @@ const UserDashboard = () => {
                 <Heart className='w-6 h-6 text-white' />
               </div>
               <div>
-                <h1 className='text-2xl font-bold text-gray-900'>
-                  {getGreeting()}, {userProfile?.name?.split(' ')[0]}!
-                </h1>
+                <h1 className='text-2xl font-bold text-gray-900'>{getGreeting()}</h1>
                 <p className='text-gray-600'>Tu bienestar mental es nuestra prioridad</p>
               </div>
             </div>
@@ -244,10 +242,7 @@ const UserDashboard = () => {
             <RecentActivities />
 
             {/* Psychologist Modal */}
-            <PsychologistModal 
-              isOpen={showPsychologistModal} 
-              onClose={() => setShowPsychologistModal(false)} 
-            />
+            <PsychologistModal isOpen={showPsychologistModal} onClose={() => setShowPsychologistModal(false)} />
           </div>
         </div>
       </div>

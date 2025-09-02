@@ -16,6 +16,7 @@ import { achievementService } from '../services/achievementService';
 import { analyticsService } from '../services/analyticsService';
 import { dailyCheckService } from '../services/dailyCheckService';
 import { notificationService } from '../services/notificationService';
+import { rateLimitService } from '../services/rateLimitService';
 
 const MoodFlow = () => {
   const location = useLocation();
@@ -50,7 +51,7 @@ const MoodFlow = () => {
       // Start the mood flow with the diary text
       const entry = startDiaryEntry(location.state.diaryText);
       console.log('Started diary entry:', entry);
-      
+
       // Automatically try AI analysis after a short delay
       setTimeout(() => {
         analyzeWithAI();
@@ -105,8 +106,24 @@ const MoodFlow = () => {
   };
 
   const saveMoodLog = async () => {
-    if (!userProfile?.uid || !diaryEntry?.finalMood) {
-      setErrorMessage('Debes estar autenticado y tener un estado de ánimo registrado');
+    if (!userProfile?.uid) {
+      setErrorMessage('Debes estar autenticado para guardar tu estado de ánimo');
+      return;
+    }
+
+    if (!diaryEntry?.finalMood) {
+      setErrorMessage('Debes seleccionar un estado de ánimo antes de guardar');
+      return;
+    }
+
+    // Check rate limit
+    if (!rateLimitService.isAllowed('mood-log')) {
+      const remaining = rateLimitService.getRemaining('mood-log');
+      const resetTime = rateLimitService.getResetTime('mood-log');
+      const hoursLeft = Math.ceil((resetTime - Date.now()) / (1000 * 60 * 60));
+      setErrorMessage(
+        `Has alcanzado el límite diario de registros de estado de ánimo. Inténtalo de nuevo en ${hoursLeft} horas.`
+      );
       return;
     }
 
@@ -166,14 +183,14 @@ const MoodFlow = () => {
         }
 
         setSuccessMessage('¡Estado de ánimo guardado exitosamente!');
-        
+
         // Mark diary as completed for today
         await dailyCheckService.markDiaryCompleted(userProfile.uid);
       } else {
         // Save offline when not connected
         saveOffline(moodLogData);
         setSuccessMessage('¡Estado de ánimo guardado localmente! Se sincronizará cuando vuelvas a conectarte.');
-        
+
         // Mark diary as completed locally
         await dailyCheckService.markDiaryCompleted(userProfile.uid);
       }
@@ -191,7 +208,7 @@ const MoodFlow = () => {
   };
 
   const currentStep = getCurrentStep();
-  
+
   // Debug logging
   console.log('Current step:', currentStep);
   console.log('Diary entry:', diaryEntry);
@@ -337,7 +354,7 @@ const MoodFlow = () => {
                 timestamp: diaryEntry.timestamp,
                 finalMood: diaryEntry.finalMood,
                 hasExplicitMood: diaryEntry.hasExplicitMood,
-                aiAnalysis: diaryEntry.aiAnalysis
+                aiAnalysis: diaryEntry.aiAnalysis,
               }}
               onSave={saveMoodLog}
               onEdit={() => {

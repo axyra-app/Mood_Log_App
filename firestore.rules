@@ -45,6 +45,16 @@ service cloud.firestore {
          resource.data.receiverId == request.auth.uid);
     }
     
+    // User settings - users can read/write their own
+    match /userSettings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // User achievements - users can read/write their own
+    match /userAchievements/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
     // Conversations - users can read their own
     match /conversations/{conversationId} {
       allow read, write: if request.auth != null && 

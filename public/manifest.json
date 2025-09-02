@@ -1,11 +1,11 @@
 {
-  "name": "Mood Log App - Seguimiento del Estado de Ánimo",
+  "name": "Mood Log App - Registro de Estado de Ánimo",
   "short_name": "MoodLog",
-  "description": "Tu compañero personal para el seguimiento del estado de ánimo con inteligencia artificial",
+  "description": "Aplicación para registrar y analizar tu estado de ánimo diario. Conecta con psicólogos y mejora tu bienestar mental.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#6366f1",
+  "theme_color": "#3B82F6",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -21,9 +21,36 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["health", "lifestyle", "productivity"],
+  "categories": ["health", "lifestyle", "productivity", "medical"],
   "lang": "es",
   "dir": "ltr",
   "scope": "/",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Registrar Estado de Ánimo",
+      "short_name": "Registrar",
+      "description": "Registra tu estado de ánimo actual",
+      "url": "/mood-flow",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Chat con Psicólogo",
+      "short_name": "Chat",
+      "description": "Conecta con tu psicólogo",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": []
 }

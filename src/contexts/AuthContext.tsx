@@ -8,6 +8,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../lib/firebase';
+import { captureError, clearUserContext, setUserContext } from '../lib/sentry';
 
 interface UserProfile {
   uid: string;
@@ -63,32 +64,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      captureError(error as Error, { action: 'login', email });
+      throw error;
+    }
   };
 
   const register = async (userData: RegisterData) => {
-    const { user } = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
 
-    const profile: UserProfile = {
-      uid: user.uid,
-      email: userData.email,
-      name: userData.name,
-      role: userData.role,
-      phone: userData.phone,
-      birthDate: userData.birthDate,
-      gender: userData.gender,
-      licenseNumber: userData.licenseNumber,
-      specialization: userData.specialization,
-      experience: userData.experience,
-      bio: userData.bio,
-      createdAt: new Date(),
-    };
+      const profile: UserProfile = {
+        uid: user.uid,
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+        phone: userData.phone,
+        birthDate: userData.birthDate,
+        gender: userData.gender,
+        licenseNumber: userData.licenseNumber,
+        specialization: userData.specialization,
+        experience: userData.experience,
+        bio: userData.bio,
+        createdAt: new Date(),
+      };
 
-    await setDoc(doc(db, 'users', user.uid), profile);
+      await setDoc(doc(db, 'users', user.uid), profile);
+    } catch (error) {
+      captureError(error as Error, { action: 'register', email: userData.email });
+      throw error;
+    }
   };
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+      clearUserContext();
+    } catch (error) {
+      captureError(error as Error, { action: 'logout' });
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -96,12 +113,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(user);
 
       if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as UserProfile);
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const profile = userDoc.data() as UserProfile;
+            setUserProfile(profile);
+            setUserContext({
+              id: user.uid,
+              email: user.email || '',
+              name: profile.name,
+            });
+          } else {
+            console.warn('User document not found for uid:', user.uid);
+            setUserProfile(null);
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          captureError(error as Error, { action: 'fetchUserProfile', uid: user.uid });
+          setUserProfile(null);
         }
       } else {
         setUserProfile(null);
+        clearUserContext();
       }
 
       setLoading(false);

@@ -192,11 +192,7 @@ const Achievements = () => {
 
     try {
       // Obtener registros de estado de ánimo
-      const moodLogsQuery = query(
-        collection(db, 'moodLogs'),
-        where('userId', '==', userProfile.uid),
-        where('createdAt', '>=', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) // Último año
-      );
+      const moodLogsQuery = query(collection(db, 'moodLogs'), where('userId', '==', userProfile.uid));
       const moodLogsSnapshot = await getDocs(moodLogsQuery);
       const moodLogs = moodLogsSnapshot.docs.map((doc) => doc.data());
 
@@ -279,6 +275,7 @@ const Achievements = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error calculating user stats:', error);
+      setLoading(false);
     }
   };
 
@@ -397,6 +394,18 @@ const Achievements = () => {
               <div key={i} className='h-24 bg-gray-200 rounded'></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (achievements.length === 0) {
+    return (
+      <div className='bg-white rounded-xl shadow-lg p-6'>
+        <div className='text-center py-12'>
+          <Trophy className='w-16 h-16 text-gray-300 mx-auto mb-4' />
+          <h3 className='text-xl font-semibold text-gray-900 mb-2'>No hay logros disponibles</h3>
+          <p className='text-gray-600 mb-6'>Comienza a usar la aplicación para desbloquear logros</p>
         </div>
       </div>
     );

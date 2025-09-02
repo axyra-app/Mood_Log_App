@@ -22,5 +22,22 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Handle external script errors that might affect the app
+      window.addEventListener('error', function (e) {
+        if (e.message && e.message.includes('Cannot determine language')) {
+          console.warn('External language detection error suppressed:', e.message);
+          e.preventDefault();
+          return false;
+        }
+      });
+
+      window.addEventListener('unhandledrejection', function (e) {
+        if (e.reason && e.reason.message && e.reason.message.includes('Cannot determine language')) {
+          console.warn('External language detection promise rejection suppressed:', e.reason.message);
+          e.preventDefault();
+        }
+      });
+    </script>
   </body>
 </html>

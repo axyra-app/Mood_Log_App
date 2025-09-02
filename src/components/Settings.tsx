@@ -1,9 +1,10 @@
+import { EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail, updatePassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { Bell, Eye, Moon, Palette, Shield, Sun, User, Volume2 } from 'lucide-react';
+import { AlertCircle, Bell, Eye, Key, Mail, Moon, Palette, Shield, Sun, User, Volume2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { db } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 
 interface UserSettings {
   notifications: {
@@ -32,6 +33,10 @@ interface UserSettings {
     highContrast: boolean;
     reducedMotion: boolean;
     screenReader: boolean;
+  };
+  security: {
+    twoFactorEnabled: boolean;
+    passwordLastChanged: Date | null;
   };
 }
 
@@ -66,9 +71,21 @@ const Settings = () => {
       reducedMotion: false,
       screenReader: false,
     },
+    security: {
+      twoFactorEnabled: false,
+      passwordLastChanged: null,
+    },
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [passwordResetSent, setPasswordResetSent] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   useEffect(() => {
     fetchSettings();
@@ -112,6 +129,81 @@ const Settings = () => {
     };
     setSettings(newSettings);
     saveSettings(newSettings);
+  };
+
+  const handlePasswordReset = async () => {
+    if (!userProfile?.email) return;
+
+    try {
+      await sendPasswordResetEmail(auth, userProfile.email);
+      setPasswordResetSent(true);
+      setTimeout(() => setPasswordResetSent(false), 5000);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!auth.currentUser) return;
+
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      // Re-authenticate user before changing password
+      const credential = EmailAuthProvider.credential(userProfile?.email || '', currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+
+      // Update password
+      await updatePassword(auth.currentUser, newPassword);
+
+      // Update settings
+      const newSettings = {
+        ...settings,
+        security: {
+          ...settings.security,
+          passwordLastChanged: new Date(),
+        },
+      };
+      await saveSettings(newSettings);
+
+      setPasswordSuccess('Contraseña actualizada exitosamente');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      setTimeout(() => setPasswordSuccess(''), 5000);
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      if (error.code === 'auth/wrong-password') {
+        setPasswordError('La contraseña actual es incorrecta');
+      } else if (error.code === 'auth/weak-password') {
+        setPasswordError('La nueva contraseña es muy débil');
+      } else {
+        setPasswordError('Error al cambiar la contraseña. Inténtalo de nuevo.');
+      }
+    }
+  };
+
+  const toggleTwoFactor = async () => {
+    const newSettings = {
+      ...settings,
+      security: {
+        ...settings.security,
+        twoFactorEnabled: !settings.security.twoFactorEnabled,
+      },
+    };
+    await saveSettings(newSettings);
   };
 
   if (loading) {
@@ -324,6 +416,131 @@ const Settings = () => {
                 />
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Seguridad */}
+        <div>
+          <div className='flex items-center gap-3 mb-4'>
+            <Shield className='w-5 h-5 text-primary-600' />
+            <h4 className='text-lg font-medium text-gray-900'>Seguridad</h4>
+          </div>
+          <div className='space-y-4'>
+            {/* Two-Factor Authentication */}
+            <div className='flex items-center justify-between'>
+              <div>
+                <div className='font-medium text-gray-900'>Autenticación de dos factores</div>
+                <div className='text-sm text-gray-500'>Añade una capa extra de seguridad a tu cuenta</div>
+              </div>
+              <label className='relative inline-flex items-center cursor-pointer'>
+                <input
+                  type='checkbox'
+                  checked={settings.security.twoFactorEnabled}
+                  onChange={toggleTwoFactor}
+                  className='sr-only peer'
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+              </label>
+            </div>
+
+            {/* Password Reset via Email */}
+            <div className='border-t border-gray-200 pt-4'>
+              <div className='flex items-center justify-between mb-3'>
+                <div>
+                  <div className='font-medium text-gray-900'>Restablecer contraseña por email</div>
+                  <div className='text-sm text-gray-500'>Recibe un enlace para restablecer tu contraseña</div>
+                </div>
+                <button
+                  onClick={handlePasswordReset}
+                  className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+                >
+                  <Mail className='w-4 h-4' />
+                  Enviar enlace
+                </button>
+              </div>
+              {passwordResetSent && (
+                <div className='bg-green-50 border border-green-200 rounded-lg p-3'>
+                  <div className='flex items-center gap-2 text-green-700'>
+                    <div className='w-4 h-4 bg-green-500 rounded-full flex items-center justify-center'>
+                      <span className='text-white text-xs'>✓</span>
+                    </div>
+                    <span className='text-sm'>Enlace de restablecimiento enviado a tu email</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Change Password */}
+            <div className='border-t border-gray-200 pt-4'>
+              <div className='mb-3'>
+                <div className='font-medium text-gray-900 mb-2'>Cambiar contraseña</div>
+                <div className='text-sm text-gray-500'>Actualiza tu contraseña actual</div>
+              </div>
+
+              <div className='space-y-3'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Contraseña actual</label>
+                  <input
+                    type='password'
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className='w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
+                    placeholder='Ingresa tu contraseña actual'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Nueva contraseña</label>
+                  <input
+                    type='password'
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className='w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
+                    placeholder='Ingresa tu nueva contraseña'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Confirmar nueva contraseña</label>
+                  <input
+                    type='password'
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className='w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
+                    placeholder='Confirma tu nueva contraseña'
+                  />
+                </div>
+
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={!currentPassword || !newPassword || !confirmPassword}
+                  className='w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors'
+                >
+                  <Key className='w-4 h-4' />
+                  Cambiar contraseña
+                </button>
+
+                {passwordError && (
+                  <div className='bg-red-50 border border-red-200 rounded-lg p-3'>
+                    <div className='flex items-center gap-2 text-red-700'>
+                      <AlertCircle className='w-4 h-4' />
+                      <span className='text-sm'>{passwordError}</span>
+                    </div>
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div className='bg-green-50 border border-green-200 rounded-lg p-3'>
+                    <div className='flex items-center gap-2 text-green-700'>
+                      <div className='w-4 h-4 bg-green-500 rounded-full flex items-center justify-center'>
+                        <span className='text-white text-xs'>✓</span>
+                      </div>
+                      <span className='text-sm'>{passwordSuccess}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

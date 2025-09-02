@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import NewConversationModal from '../components/NewConversationModal';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
+import { rateLimitService } from '../services/rateLimitService';
 
 interface Message {
   id: string;
@@ -135,6 +136,15 @@ const Chat = () => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !userProfile?.uid) return;
+
+    // Check rate limit for chat messages
+    if (!rateLimitService.isAllowed('chat-message')) {
+      const remaining = rateLimitService.getRemaining('chat-message');
+      const resetTime = rateLimitService.getResetTime('chat-message');
+      const minutesLeft = Math.ceil((resetTime - Date.now()) / (1000 * 60));
+      alert(`Has alcanzado el límite de mensajes por hora. Inténtalo de nuevo en ${minutesLeft} minutos.`);
+      return;
+    }
 
     try {
       // Add message to Firestore

@@ -86,8 +86,13 @@ const MoodForm = () => {
   };
 
   const saveMoodLog = async () => {
-    if (!userProfile?.uid || !diaryEntry?.finalMood) {
-      setErrorMessage('Debes estar autenticado y tener un estado de ánimo registrado');
+    if (!userProfile?.uid) {
+      setErrorMessage('Debes estar autenticado para guardar tu estado de ánimo');
+      return;
+    }
+
+    if (!diaryEntry?.finalMood) {
+      setErrorMessage('Debes seleccionar un estado de ánimo antes de guardar');
       return;
     }
 
