@@ -12,39 +12,56 @@ const firebaseConfig = {
   measurementId: 'G-8G4S8BJK98',
 };
 
-// Initialize Firebase app
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-// Wait for Firebase to be ready before initializing services
-let auth: any = null;
-let db: any = null;
-
-// Initialize services after a short delay to ensure Firebase is ready
-setTimeout(() => {
-  try {
-    auth = getAuth(app);
-    db = getFirestore(app);
-    console.log('Firebase services initialized successfully');
-  } catch (error) {
-    console.error('Error initializing Firebase services:', error);
+// Initialize Firebase app with error handling
+let app;
+try {
+  // Check if Firebase is already initialized
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+    console.log('Firebase app initialized');
+  } else {
+    app = getApp();
+    console.log('Using existing Firebase app');
   }
-}, 100);
+} catch (error) {
+  console.error('Error initializing Firebase app:', error);
+  throw error;
+}
 
-// Export functions that return the services
-export const getAuthInstance = () => {
-  if (!auth) {
-    auth = getAuth(app);
-  }
-  return auth;
-};
+// Initialize services with error handling
+let auth, db;
 
-export const getDbInstance = () => {
-  if (!db) {
-    db = getFirestore(app);
-  }
-  return db;
-};
+try {
+  auth = getAuth(app);
+  console.log('Firebase Auth initialized');
+} catch (error) {
+  console.error('Error initializing Firebase Auth:', error);
+  // Retry after a short delay
+  setTimeout(() => {
+    try {
+      auth = getAuth(app);
+      console.log('Firebase Auth initialized on retry');
+    } catch (retryError) {
+      console.error('Error retrying Firebase Auth:', retryError);
+    }
+  }, 1000);
+}
 
-// For backward compatibility - these will be null initially
+try {
+  db = getFirestore(app);
+  console.log('Firebase Firestore initialized');
+} catch (error) {
+  console.error('Error initializing Firebase Firestore:', error);
+  // Retry after a short delay
+  setTimeout(() => {
+    try {
+      db = getFirestore(app);
+      console.log('Firebase Firestore initialized on retry');
+    } catch (retryError) {
+      console.error('Error retrying Firebase Firestore:', retryError);
+    }
+  }, 1000);
+}
+
 export { auth, db };
 export default app;
