@@ -170,7 +170,9 @@ const MoodFlow = () => {
 
       if (isOnline) {
         // Save to Firestore when online
-        await addDoc(collection(db, 'moodLogs'), moodLogData);
+        console.log('Saving mood log to Firestore:', moodLogData);
+        const docRef = await addDoc(collection(db, 'moodLogs'), moodLogData);
+        console.log('Mood log saved successfully with ID:', docRef.id);
 
         // Check for new achievements
         const unlockedAchievements = await achievementService.checkAchievements(userProfile.uid, {

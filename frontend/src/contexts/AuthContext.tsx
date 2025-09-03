@@ -171,10 +171,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      setLoading(true);
 
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
           if (userDoc.exists()) {
             const profile = userDoc.data() as UserProfile;
             setUserProfile(profile);
@@ -185,7 +188,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } else {
             console.warn('User document not found for uid:', user.uid);
-            setUserProfile(null);
+            
+            // Try to create a basic user profile for existing authenticated users
+            try {
+              console.log('Attempting to create user profile for existing auth user...');
+              const basicProfile: UserProfile = {
+                uid: user.uid,
+                email: user.email || '',
+                name: user.displayName || user.email?.split('@')[0] || 'Usuario',
+                role: 'user', // Default role
+                phone: user.phoneNumber || '',
+                birthDate: '',
+                gender: '',
+                createdAt: new Date(),
+              };
+              
+              await setDoc(userDocRef, basicProfile);
+              console.log('Basic user profile created successfully');
+              setUserProfile(basicProfile);
+              setUserContext({
+                id: user.uid,
+                email: user.email || '',
+                name: basicProfile.name,
+              });
+            } catch (createError) {
+              console.error('Error creating basic user profile:', createError);
+              setUserProfile(null);
+            }
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
