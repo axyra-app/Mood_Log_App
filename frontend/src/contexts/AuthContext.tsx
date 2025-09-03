@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
-          name: user.displayName || '',
+          name: user.displayName || user.email?.split('@')[0] || 'Usuario',
           role: 'user', // Default role for Google sign-in
           phone: user.phoneNumber || '',
           birthDate: '',

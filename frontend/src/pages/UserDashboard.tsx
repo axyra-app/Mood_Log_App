@@ -47,6 +47,8 @@ const UserDashboard = () => {
   const getGreeting = () => {
     const hour = new Date().getHours();
     const name = userProfile?.name || userProfile?.displayName || 'Usuario';
+    console.log('User profile in dashboard:', userProfile);
+    console.log('User name:', name);
     if (hour < 12) return `Buenos días, ${name}`;
     if (hour < 18) return `Buenas tardes, ${name}`;
     return `Buenas noches, ${name}`;

@@ -80,7 +80,7 @@ const Register = () => {
     
     try {
       await loginWithGoogle();
-      navigate('/dashboard');
+      navigate('/diary-entry');
     } catch (err: any) {
       setError('Error al iniciar sesión con Google. Por favor, intenta de nuevo.');
     } finally {
