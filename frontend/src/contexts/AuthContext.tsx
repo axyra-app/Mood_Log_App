@@ -3,6 +3,8 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -31,6 +33,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -107,6 +110,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      console.log('Starting Google authentication...');
+      const provider = new GoogleAuthProvider();
+      
+      // Add additional scopes if needed
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      console.log('Google authentication successful for:', user.email);
+      console.log('User UID:', user.uid);
+      
+      // Check if user profile exists in Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        console.log('User profile not found, creating new profile...');
+        
+        // Create user profile from Google data
+        const profile: UserProfile = {
+          uid: user.uid,
+          email: user.email || '',
+          name: user.displayName || '',
+          role: 'user', // Default role for Google sign-in
+          phone: user.phoneNumber || '',
+          birthDate: '',
+          gender: '',
+          createdAt: new Date(),
+        };
+        
+        console.log('Creating user profile in Firestore:', profile);
+        await setDoc(userDocRef, profile);
+        console.log('User profile created successfully in Firestore');
+      } else {
+        console.log('User profile already exists in Firestore');
+      }
+      
+    } catch (error) {
+      console.error('Google authentication error:', error);
+      captureError(error as Error, { action: 'google_login' });
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -158,6 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     login,
     register,
+    loginWithGoogle,
     logout,
   };
 
