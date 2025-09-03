@@ -23,7 +23,9 @@
     "date-fns": "^2.29.3",
     "react-hook-form": "^7.43.5",
     "react-hot-toast": "^2.4.0",
-    "framer-motion": "^10.12.4"
+    "framer-motion": "^10.12.4",
+    "react-helmet-async": "^2.0.5",
+    "@sentry/react": "^7.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",
