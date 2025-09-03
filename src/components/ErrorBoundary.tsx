@@ -27,19 +27,23 @@ class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
     // Log error to error service
-    errorService.createError(
-      'react/error-boundary',
-      error.message,
-      {
-        error: error.toString(),
-        errorInfo: errorInfo.componentStack,
-        stack: error.stack,
-      },
-      {
-        component: 'ErrorBoundary',
-        action: 'componentDidCatch',
-      }
-    );
+    try {
+      errorService.createError(
+        'react/error-boundary',
+        error.message,
+        {
+          error: error.toString(),
+          errorInfo: errorInfo.componentStack,
+          stack: error.stack,
+        },
+        {
+          component: 'ErrorBoundary',
+          action: 'componentDidCatch',
+        }
+      );
+    } catch (serviceError) {
+      console.error('Failed to log error to service:', serviceError);
+    }
 
     this.setState({ error, errorInfo });
   }

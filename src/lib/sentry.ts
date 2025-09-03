@@ -5,25 +5,31 @@ export const initSentry = () => {
 
   if (!dsn || dsn === 'your_sentry_dsn_here') {
     // Silently disable Sentry if not configured
+    console.log('Sentry disabled: No DSN configured');
     return;
   }
 
-  Sentry.init({
-    dsn,
-    environment: import.meta.env.MODE,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: false,
-        blockAllMedia: false,
-      }),
-    ],
-    // Performance Monitoring
-    tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
-    // Session Replay
-    replaysSessionSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 0.1,
-    replaysOnErrorSampleRate: 1.0,
-  });
+  try {
+    Sentry.init({
+      dsn,
+      environment: import.meta.env.MODE,
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration({
+          maskAllText: false,
+          blockAllMedia: false,
+        }),
+      ],
+      // Performance Monitoring
+      tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
+      // Session Replay
+      replaysSessionSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 0.1,
+      replaysOnErrorSampleRate: 1.0,
+    });
+    console.log('Sentry initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Sentry:', error);
+  }
 };
 
 export const captureError = (error: Error, context?: any) => {

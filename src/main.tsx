@@ -5,7 +5,11 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 
-// Initialize Firebase first
+// Initialize Sentry first
+import { initSentry } from './lib/sentry';
+initSentry();
+
+// Initialize Firebase
 import './lib/firebase';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
