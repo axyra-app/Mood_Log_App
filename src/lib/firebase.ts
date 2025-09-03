@@ -1,6 +1,6 @@
-import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 // Validate environment variables
 const requiredEnvVars = {
@@ -52,9 +52,17 @@ try {
   throw error;
 }
 
-// Initialize services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-console.log('Firebase services (auth, db) initialized successfully');
+// Initialize services with error handling
+let auth, db;
+try {
+  auth = getAuth(app);
+  db = getFirestore(app);
+  console.log('Firebase services (auth, db) initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Firebase services:', error);
+  throw error;
+}
+
+export { auth, db };
 
 export default app;
