@@ -1,26 +1,15 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "cd config && npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "cd config && npm install",
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "dist/**/*",
-      "use": "@vercel/static"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/dist/index.html"
-    }
-  ],
-  "functions": {
-    "dist/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
     "VITE_FIREBASE_API_KEY": "AIzaSyDB8VIbM5bFJTvuwkLThDIXeJgor87hQgQ",
     "VITE_FIREBASE_AUTH_DOMAIN": "mood-log-app-0.firebaseapp.com",
