@@ -61,8 +61,19 @@ const MoodFlow = () => {
       analyticsService.trackMoodFlowEvent('start', {
         textLength: location.state.diaryText.length,
       });
-    } else if (!location.state?.diaryText) {
-      // If no diary text, redirect back to diary entry
+    } else if (location.state?.skipDiary && !diaryEntry) {
+      // If skipping diary, start with empty text and go directly to mood selection
+      setDiaryText('');
+      const entry = startDiaryEntry('');
+      console.log('Started mood flow without diary:', entry);
+
+      // Track mood flow start without diary
+      analyticsService.trackMoodFlowEvent('start', {
+        textLength: 0,
+        skippedDiary: true,
+      });
+    } else if (!location.state?.diaryText && !location.state?.skipDiary) {
+      // If no diary text and not skipping, redirect back to diary entry
       console.warn('No diary text found in navigation state, redirecting to diary entry');
       navigate('/diary-entry', { replace: true });
     }
@@ -213,7 +224,7 @@ const MoodFlow = () => {
   console.log('Current step:', currentStep);
   console.log('Diary entry:', diaryEntry);
 
-  if (!diaryText) {
+  if (!diaryText && !location.state?.skipDiary) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center'>
         <div className='text-center'>

@@ -9,7 +9,7 @@ export const initAnalytics = () => {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
   if (!measurementId || measurementId === 'your_ga_measurement_id') {
-    console.warn('Google Analytics measurement ID not configured. Analytics disabled.');
+    // Silently disable Google Analytics if not configured
     return;
   }
 
