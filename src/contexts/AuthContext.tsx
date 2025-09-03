@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase-alt';
+import { auth, db } from '../lib/firebase-new';
 import { captureError, clearUserContext, setUserContext } from '../lib/sentry';
 
 interface UserProfile {

@@ -1,5 +1,6 @@
 import { BarChart3, Brain, Calendar, Heart, MessageCircle, Shield, Users, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import FirebaseTest from '../components/FirebaseTest';
 
 const LandingPage = () => {
   return (
@@ -43,6 +44,11 @@ const LandingPage = () => {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Firebase Test Section */}
+      <section className='py-10 px-4 sm:px-6 lg:px-8'>
+        <FirebaseTest />
       </section>
 
       {/* Features Section */}

@@ -9,8 +9,8 @@ import './index.css';
 import { initSentry } from './lib/sentry';
 initSentry();
 
-// Initialize Firebase (alternative version)
-import './lib/firebase-alt';
+// Initialize Firebase (new version)
+import './lib/firebase-new';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
