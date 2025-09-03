@@ -1,0 +1,14 @@
+# Ignore test files and configurations
+**/*.test.*
+**/*.spec.*
+**/test/**
+**/tests/**
+**/__tests__/**
+**/coverage/**
+**/node_modules/.cache/**
+
+# Ignore development files
+**/.env.local
+**/.env.development
+**/dist/
+**/build/
