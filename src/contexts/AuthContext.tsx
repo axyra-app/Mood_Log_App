@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase-new';
+import { auth, db } from '../lib/firebase-simple';
 import { captureError, clearUserContext, setUserContext } from '../lib/sentry';
 
 interface UserProfile {
@@ -67,21 +67,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string) => {
-    if (!auth) {
-      throw new Error('Firebase Auth not available');
-    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      captureError(error as Error, { action: 'login', email });
+      console.error('Login error:', error);
       throw error;
     }
   };
 
   const register = async (userData: RegisterData) => {
-    if (!auth || !db) {
-      throw new Error('Firebase not available');
-    }
     try {
       console.log('Starting user registration for:', userData.email);
 
@@ -110,28 +104,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('User profile created successfully in Firestore');
     } catch (error) {
       console.error('Registration error:', error);
-      captureError(error as Error, { action: 'register', email: userData.email });
       throw error;
     }
   };
 
   const loginWithGoogle = async () => {
-    if (!auth || !db) {
-      throw new Error('Firebase not available');
-    }
     try {
       console.log('Starting Google authentication...');
       const provider = new GoogleAuthProvider();
-
-      // Add additional scopes if needed
-      provider.addScope('email');
-      provider.addScope('profile');
 
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
       console.log('Google authentication successful for:', user.email);
-      console.log('User UID:', user.uid);
 
       // Check if user profile exists in Firestore
       const userDocRef = doc(db, 'users', user.uid);
@@ -140,57 +125,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!userDoc.exists()) {
         console.log('User profile not found, creating basic profile...');
 
-        // Create basic user profile from Google data (incomplete)
+        // Create basic user profile from Google data
         const basicProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           name: user.displayName || user.email?.split('@')[0] || 'Usuario',
-          role: 'user', // Default role for Google sign-in
+          role: 'user',
           phone: user.phoneNumber || '',
           birthDate: '',
           gender: '',
           createdAt: new Date(),
         };
 
-        console.log('Creating basic user profile in Firestore:', basicProfile);
         await setDoc(userDocRef, basicProfile);
-        console.log('Basic user profile created successfully in Firestore');
-
-        // Don't set userProfile here - let the app redirect to complete profile
+        console.log('Basic user profile created successfully');
         setUserProfile(null);
       } else {
-        console.log('User profile already exists in Firestore');
+        console.log('User profile already exists');
         const existingProfile = userDoc.data() as UserProfile;
         setUserProfile(existingProfile);
       }
     } catch (error) {
       console.error('Google authentication error:', error);
-      captureError(error as Error, { action: 'google_login' });
       throw error;
     }
   };
 
   const logout = async () => {
-    if (!auth) {
-      throw new Error('Firebase Auth not available');
-    }
     try {
       await signOut(auth);
       clearUserContext();
     } catch (error) {
-      captureError(error as Error, { action: 'logout' });
+      console.error('Logout error:', error);
       throw error;
     }
   };
 
   useEffect(() => {
-    // Check if Firebase is available
-    if (!auth || !db) {
-      console.warn('Firebase not available, skipping auth state listener');
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setLoading(true);
@@ -210,37 +181,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } else {
             console.warn('User document not found for uid:', user.uid);
-
-            // Try to create a basic user profile for existing authenticated users
-            try {
-              console.log('Attempting to create user profile for existing auth user...');
-              const basicProfile: UserProfile = {
-                uid: user.uid,
-                email: user.email || '',
-                name: user.displayName || user.email?.split('@')[0] || 'Usuario',
-                role: 'user', // Default role
-                phone: user.phoneNumber || '',
-                birthDate: '',
-                gender: '',
-                createdAt: new Date(),
-              };
-
-              await setDoc(userDocRef, basicProfile);
-              console.log('Basic user profile created successfully');
-              setUserProfile(basicProfile);
-              setUserContext({
-                id: user.uid,
-                email: user.email || '',
-                name: basicProfile.name,
-              });
-            } catch (createError) {
-              console.error('Error creating basic user profile:', createError);
-              setUserProfile(null);
-            }
+            setUserProfile(null);
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
-          captureError(error as Error, { action: 'fetchUserProfile', uid: user.uid });
           setUserProfile(null);
         }
       } else {

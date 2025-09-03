@@ -5,12 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 
-// Initialize Sentry first
-import { initSentry } from './lib/sentry';
-initSentry();
-
-// Initialize Firebase (new version)
-import './lib/firebase-new';
+// Initialize Firebase (simple version)
+import './lib/firebase-simple';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
