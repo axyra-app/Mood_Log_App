@@ -170,6 +170,7 @@ const MoodFlow = () => {
 
       if (isOnline) {
         // Save to Firestore when online
+        console.log('User UID:', userProfile.uid);
         console.log('Saving mood log to Firestore:', moodLogData);
         const docRef = await addDoc(collection(db, 'moodLogs'), moodLogData);
         console.log('Mood log saved successfully with ID:', docRef.id);
