@@ -74,8 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (userData: RegisterData) => {
     try {
+      console.log('Starting user registration for:', userData.email);
+      
+      // Create user in Firebase Authentication
       const { user } = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+      console.log('User created in Auth with UID:', user.uid);
 
+      // Create user profile in Firestore
       const profile: UserProfile = {
         uid: user.uid,
         email: userData.email,
@@ -91,8 +96,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date(),
       };
 
+      console.log('Creating user profile in Firestore:', profile);
       await setDoc(doc(db, 'users', user.uid), profile);
+      console.log('User profile created successfully in Firestore');
+      
     } catch (error) {
+      console.error('Registration error:', error);
       captureError(error as Error, { action: 'register', email: userData.email });
       throw error;
     }
