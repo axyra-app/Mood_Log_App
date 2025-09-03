@@ -13,6 +13,12 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-8G4S8BJK98',
 };
 
+// Validate Firebase config
+if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
+  console.error('Invalid Firebase configuration');
+  throw new Error('Firebase configuration is incomplete');
+}
+
 console.log('Firebase config loaded:', {
   apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : 'MISSING',
   authDomain: firebaseConfig.authDomain,
@@ -23,7 +29,7 @@ console.log('Firebase config loaded:', {
   hasMeasurementId: !!firebaseConfig.measurementId,
 });
 
-// Initialize Firebase app
+// Initialize Firebase app with retry logic
 let app;
 try {
   if (getApps().length === 0) {
@@ -35,26 +41,60 @@ try {
   }
 } catch (error) {
   console.error('Failed to initialize Firebase app:', error);
-  // Don't throw error, let the app continue without Firebase
-  app = null;
+  // Try to get existing app if initialization failed
+  try {
+    app = getApp();
+    console.log('Using existing Firebase app after initialization failure');
+  } catch (getAppError) {
+    console.error('Failed to get existing Firebase app:', getAppError);
+    app = null;
+  }
 }
 
-// Initialize services
+// Initialize services with proper error handling
 let auth = null;
 let db = null;
 
 if (app) {
   try {
+    // Initialize Auth first
     auth = getAuth(app);
+    console.log('Firebase Auth initialized successfully');
+    
+    // Initialize Firestore
     db = getFirestore(app);
-    console.log('Firebase services (auth, db) initialized successfully');
+    console.log('Firebase Firestore initialized successfully');
+    
+    console.log('All Firebase services initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Firebase services:', error);
-    // Don't throw error, let the app continue without Firebase
+    // Reset services to null if initialization fails
+    auth = null;
+    db = null;
   }
 } else {
   console.warn('Firebase app not initialized, services will be null');
 }
+
+// Export a function to get services with retry logic
+export const getFirebaseServices = () => {
+  if (!app) {
+    return { auth: null, db: null };
+  }
+  
+  try {
+    if (!auth) {
+      auth = getAuth(app);
+    }
+    if (!db) {
+      db = getFirestore(app);
+    }
+    return { auth, db };
+  } catch (error) {
+    console.error('Error getting Firebase services:', error);
+    return { auth: null, db: null };
+  }
+};
 
 export { auth, db };
 export default app;

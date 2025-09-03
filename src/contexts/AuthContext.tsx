@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase';
+import { auth, db, getFirebaseServices } from '../lib/firebase';
 import { captureError, clearUserContext, setUserContext } from '../lib/sentry';
 
 interface UserProfile {
@@ -67,11 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string) => {
-    if (!auth) {
+    const { auth: authService } = getFirebaseServices();
+    if (!authService) {
       throw new Error('Firebase Auth not available');
     }
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(authService, email, password);
     } catch (error) {
       captureError(error as Error, { action: 'login', email });
       throw error;
@@ -79,14 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (userData: RegisterData) => {
-    if (!auth || !db) {
+    const { auth: authService, db: dbService } = getFirebaseServices();
+    if (!authService || !dbService) {
       throw new Error('Firebase not available');
     }
     try {
       console.log('Starting user registration for:', userData.email);
 
       // Create user in Firebase Authentication
-      const { user } = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+      const { user } = await createUserWithEmailAndPassword(authService, userData.email, userData.password);
       console.log('User created in Auth with UID:', user.uid);
 
       // Create user profile in Firestore
@@ -106,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       console.log('Creating user profile in Firestore:', profile);
-      await setDoc(doc(db, 'users', user.uid), profile);
+      await setDoc(doc(dbService, 'users', user.uid), profile);
       console.log('User profile created successfully in Firestore');
     } catch (error) {
       console.error('Registration error:', error);
@@ -116,7 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithGoogle = async () => {
-    if (!auth || !db) {
+    const { auth: authService, db: dbService } = getFirebaseServices();
+    if (!authService || !dbService) {
       throw new Error('Firebase not available');
     }
     try {
@@ -127,14 +130,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       provider.addScope('email');
       provider.addScope('profile');
 
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(authService, provider);
       const user = result.user;
 
       console.log('Google authentication successful for:', user.email);
       console.log('User UID:', user.uid);
 
       // Check if user profile exists in Firestore
-      const userDocRef = doc(db, 'users', user.uid);
+      const userDocRef = doc(dbService, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
@@ -171,11 +174,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (!auth) {
+    const { auth: authService } = getFirebaseServices();
+    if (!authService) {
       throw new Error('Firebase Auth not available');
     }
     try {
-      await signOut(auth);
+      await signOut(authService);
       clearUserContext();
     } catch (error) {
       captureError(error as Error, { action: 'logout' });
@@ -185,19 +189,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check if Firebase is available
-    if (!auth || !db) {
+    const { auth: authService, db: dbService } = getFirebaseServices();
+    if (!authService || !dbService) {
       console.warn('Firebase not available, skipping auth state listener');
       setLoading(false);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(authService, async (user) => {
       setCurrentUser(user);
       setLoading(true);
 
       if (user) {
         try {
-          const userDocRef = doc(db, 'users', user.uid);
+          const userDocRef = doc(dbService, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
