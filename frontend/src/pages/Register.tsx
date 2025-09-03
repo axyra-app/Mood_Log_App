@@ -80,7 +80,10 @@ const Register = () => {
     
     try {
       await loginWithGoogle();
-      navigate('/diary-entry');
+      // Check if user needs to complete profile
+      setTimeout(() => {
+        navigate('/complete-profile');
+      }, 1000);
     } catch (err: any) {
       setError('Error al iniciar sesión con Google. Por favor, intenta de nuevo.');
     } finally {

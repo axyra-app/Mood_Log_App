@@ -130,10 +130,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDoc = await getDoc(userDocRef);
       
       if (!userDoc.exists()) {
-        console.log('User profile not found, creating new profile...');
+        console.log('User profile not found, creating basic profile...');
         
-        // Create user profile from Google data
-        const profile: UserProfile = {
+        // Create basic user profile from Google data (incomplete)
+        const basicProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           name: user.displayName || user.email?.split('@')[0] || 'Usuario',
@@ -144,11 +144,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date(),
         };
         
-        console.log('Creating user profile in Firestore:', profile);
-        await setDoc(userDocRef, profile);
-        console.log('User profile created successfully in Firestore');
+        console.log('Creating basic user profile in Firestore:', basicProfile);
+        await setDoc(userDocRef, basicProfile);
+        console.log('Basic user profile created successfully in Firestore');
+        
+        // Don't set userProfile here - let the app redirect to complete profile
+        setUserProfile(null);
       } else {
         console.log('User profile already exists in Firestore');
+        const existingProfile = userDoc.data() as UserProfile;
+        setUserProfile(existingProfile);
       }
       
     } catch (error) {

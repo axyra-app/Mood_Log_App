@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Chat from './pages/Chat';
+import CompleteProfile from './pages/CompleteProfile';
 import DiaryEntry from './pages/DiaryEntry';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -25,6 +26,7 @@ function App() {
               <Route path='/' element={<LandingPage />} />
               <Route path='/login' element={<Login />} />
               <Route path='/register' element={<Register />} />
+              <Route path='/complete-profile' element={<CompleteProfile />} />
               <Route path='/terms' element={<TermsAndConditions />} />
               <Route
                 path='/diary-entry'
