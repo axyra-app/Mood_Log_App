@@ -1,26 +1,40 @@
 {
-  "name": "mood-log-app",
+  "name": "mood-log-app-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cd config && npm run dev",
-    "build": "cd config && npm run build",
-    "lint": "cd config && npm run lint",
-    "preview": "cd config && npm run preview",
-    "test": "cd config && npm run test",
-    "test:ui": "cd config && npm run test:ui",
-    "test:run": "cd config && npm run test:run",
-    "test:coverage": "cd config && npm run test:coverage",
-    "install-deps": "cd config && npm install",
-    "firebase:deploy": "cd backend && firebase deploy",
-    "firebase:serve": "cd backend && firebase serve",
-    "vercel:deploy": "vercel --prod",
-    "vercel:dev": "vercel dev"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
   },
-  "workspaces": [
-    "config",
-    "frontend",
-    "backend"
-  ]
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.1",
+    "firebase": "^9.17.1",
+    "lucide-react": "^0.263.1",
+    "recharts": "^2.5.0",
+    "date-fns": "^2.29.3",
+    "react-hook-form": "^7.43.5",
+    "react-hot-toast": "^2.4.0",
+    "framer-motion": "^10.12.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.38.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.3.4",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.2",
+    "vite-plugin-pwa": "^0.14.4"
+  }
 }
