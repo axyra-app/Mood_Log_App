@@ -1,5 +1,5 @@
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { Calendar, MessageCircle, Phone, TrendingDown, TrendingUp, User, Video } from 'lucide-react';
+import { Calendar, Filter, MessageCircle, Phone, Search, TrendingDown, TrendingUp, User, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
@@ -21,14 +21,47 @@ interface Patient {
 const PatientManagement = () => {
   const { userProfile } = useAuth();
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [riskFilter, setRiskFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
 
   useEffect(() => {
     if (userProfile?.uid) {
       fetchPatients();
     }
   }, [userProfile?.uid]);
+
+  useEffect(() => {
+    filterPatients();
+  }, [patients, searchTerm, riskFilter, statusFilter]);
+
+  const filterPatients = () => {
+    let filtered = patients;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (patient) =>
+          patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Risk filter
+    if (riskFilter !== 'all') {
+      filtered = filtered.filter((patient) => patient.riskLevel === riskFilter);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((patient) => (statusFilter === 'online' ? patient.isOnline : !patient.isOnline));
+    }
+
+    setFilteredPatients(filtered);
+  };
 
   const fetchPatients = async () => {
     if (!userProfile?.uid) return;
@@ -169,83 +202,170 @@ const PatientManagement = () => {
 
   return (
     <div className='space-y-6'>
+      {/* Filters */}
+      <div className='bg-white rounded-xl shadow-lg border border-gray-100 p-6'>
+        <div className='flex items-center justify-between mb-4'>
+          <h2 className='text-xl font-semibold text-gray-900'>Gestión de Pacientes</h2>
+          <div className='flex items-center space-x-2 text-sm text-gray-600'>
+            <User className='w-4 h-4' />
+            <span>
+              {filteredPatients.length} de {patients.length} pacientes
+            </span>
+          </div>
+        </div>
+
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+          {/* Search */}
+          <div className='relative'>
+            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+            <input
+              type='text'
+              placeholder='Buscar pacientes...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
+            />
+          </div>
+
+          {/* Risk Filter */}
+          <select
+            value={riskFilter}
+            onChange={(e) => setRiskFilter(e.target.value as any)}
+            className='px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
+          >
+            <option value='all'>Todos los riesgos</option>
+            <option value='low'>Bajo riesgo</option>
+            <option value='medium'>Riesgo medio</option>
+            <option value='high'>Alto riesgo</option>
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className='px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
+          >
+            <option value='all'>Todos los estados</option>
+            <option value='online'>En línea</option>
+            <option value='offline'>Desconectado</option>
+          </select>
+
+          {/* Clear Filters */}
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setRiskFilter('all');
+              setStatusFilter('all');
+            }}
+            className='flex items-center justify-center space-x-2 px-4 py-2 text-gray-600 hover:text-primary-600 transition-colors'
+          >
+            <Filter className='w-4 h-4' />
+            <span>Limpiar filtros</span>
+          </button>
+        </div>
+      </div>
+
       {/* Patient List */}
       <div className='space-y-4'>
-        {patients.map((patient) => (
-          <div
-            key={patient.id}
-            className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md cursor-pointer ${
-              selectedPatient?.id === patient.id
-                ? 'border-primary-200 bg-primary-50'
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-            onClick={() => setSelectedPatient(patient)}
-          >
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center space-x-4'>
-                <div className='relative'>
-                  <div className='w-12 h-12 bg-gradient-to-r from-primary-100 to-purple-100 rounded-full flex items-center justify-center'>
-                    <User className='w-6 h-6 text-primary-600' />
+        {filteredPatients.length === 0 ? (
+          <div className='text-center py-12'>
+            <User className='w-16 h-16 text-gray-300 mx-auto mb-4' />
+            <h3 className='text-xl font-semibold text-gray-900 mb-2'>No hay pacientes disponibles</h3>
+            <p className='text-gray-600 mb-6'>
+              {patients.length === 0
+                ? 'Los pacientes aparecerán aquí cuando inicien conversaciones contigo'
+                : 'No se encontraron pacientes con los filtros aplicados'}
+            </p>
+            {patients.length > 0 && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setRiskFilter('all');
+                  setStatusFilter('all');
+                }}
+                className='btn-primary'
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        ) : (
+          filteredPatients.map((patient) => (
+            <div
+              key={patient.id}
+              className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md cursor-pointer ${
+                selectedPatient?.id === patient.id
+                  ? 'border-primary-200 bg-primary-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              onClick={() => setSelectedPatient(patient)}
+            >
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center space-x-4'>
+                  <div className='relative'>
+                    <div className='w-12 h-12 bg-gradient-to-r from-primary-100 to-purple-100 rounded-full flex items-center justify-center'>
+                      <User className='w-6 h-6 text-primary-600' />
+                    </div>
+                    {patient.isOnline && (
+                      <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white'></div>
+                    )}
                   </div>
-                  {patient.isOnline && (
-                    <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white'></div>
-                  )}
+
+                  <div>
+                    <h3 className='font-semibold text-gray-900'>{patient.name}</h3>
+                    <p className='text-sm text-gray-600'>{patient.email}</p>
+                    <p className='text-xs text-gray-500'>Última actividad: {formatLastActivity(patient.lastMoodLog)}</p>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className='font-semibold text-gray-900'>{patient.name}</h3>
-                  <p className='text-sm text-gray-600'>{patient.email}</p>
-                  <p className='text-xs text-gray-500'>Última actividad: {formatLastActivity(patient.lastMoodLog)}</p>
-                </div>
-              </div>
+                <div className='flex items-center space-x-4'>
+                  {/* Mood Trend */}
+                  <div className='flex items-center space-x-1'>
+                    {getTrendIcon(patient.moodTrend)}
+                    <span className='text-sm text-gray-600'>
+                      {patient.lastMoodLog ? `${patient.lastMoodLog.mood}/5` : 'N/A'}
+                    </span>
+                  </div>
 
-              <div className='flex items-center space-x-4'>
-                {/* Mood Trend */}
-                <div className='flex items-center space-x-1'>
-                  {getTrendIcon(patient.moodTrend)}
-                  <span className='text-sm text-gray-600'>
-                    {patient.lastMoodLog ? `${patient.lastMoodLog.mood}/5` : 'N/A'}
+                  {/* Progress */}
+                  <div className='text-right'>
+                    <div className='text-sm font-medium text-gray-900'>{patient.progress.toFixed(0)}%</div>
+                    <div className='w-20 bg-gray-200 rounded-full h-2'>
+                      <div className='bg-primary-600 h-2 rounded-full' style={{ width: `${patient.progress}%` }}></div>
+                    </div>
+                  </div>
+
+                  {/* Risk Level */}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium border ${getRiskColor(patient.riskLevel)}`}
+                  >
+                    {patient.riskLevel === 'high'
+                      ? 'Alto Riesgo'
+                      : patient.riskLevel === 'medium'
+                      ? 'Riesgo Medio'
+                      : 'Bajo Riesgo'}
                   </span>
-                </div>
 
-                {/* Progress */}
-                <div className='text-right'>
-                  <div className='text-sm font-medium text-gray-900'>{patient.progress.toFixed(0)}%</div>
-                  <div className='w-20 bg-gray-200 rounded-full h-2'>
-                    <div className='bg-primary-600 h-2 rounded-full' style={{ width: `${patient.progress}%` }}></div>
+                  {/* Actions */}
+                  <div className='flex items-center space-x-2'>
+                    <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
+                      <MessageCircle className='w-4 h-4' />
+                    </button>
+                    <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
+                      <Phone className='w-4 h-4' />
+                    </button>
+                    <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
+                      <Video className='w-4 h-4' />
+                    </button>
+                    <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
+                      <Calendar className='w-4 h-4' />
+                    </button>
                   </div>
-                </div>
-
-                {/* Risk Level */}
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${getRiskColor(patient.riskLevel)}`}
-                >
-                  {patient.riskLevel === 'high'
-                    ? 'Alto Riesgo'
-                    : patient.riskLevel === 'medium'
-                    ? 'Riesgo Medio'
-                    : 'Bajo Riesgo'}
-                </span>
-
-                {/* Actions */}
-                <div className='flex items-center space-x-2'>
-                  <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
-                    <MessageCircle className='w-4 h-4' />
-                  </button>
-                  <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
-                    <Phone className='w-4 h-4' />
-                  </button>
-                  <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
-                    <Video className='w-4 h-4' />
-                  </button>
-                  <button className='p-2 text-gray-600 hover:text-primary-600 transition-colors'>
-                    <Calendar className='w-4 h-4' />
-                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Patient Details */}

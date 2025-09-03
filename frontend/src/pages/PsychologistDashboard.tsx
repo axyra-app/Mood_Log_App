@@ -300,9 +300,14 @@ const PsychologistDashboard = () => {
               </div>
             </div>
             <div className='flex items-center space-x-4'>
-              <button className='relative p-2 text-gray-600 hover:text-primary-600 transition-colors'>
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className='relative p-2 text-gray-600 hover:text-primary-600 transition-colors'
+              >
                 <Bell className='w-6 h-6' />
-                <span className='absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full'></span>
+                {urgentAlerts.length > 0 && (
+                  <span className='absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full'></span>
+                )}
               </button>
               <button
                 onClick={() => navigate('/chat')}
@@ -387,6 +392,7 @@ const PsychologistDashboard = () => {
             { id: 'overview', label: 'Resumen', icon: BarChart3 },
             { id: 'patients', label: 'Pacientes', icon: Users },
             { id: 'sessions', label: 'Sesiones', icon: Calendar },
+            { id: 'notifications', label: 'Notificaciones', icon: Bell },
             { id: 'reports', label: 'Reportes', icon: Download },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -514,6 +520,74 @@ const PsychologistDashboard = () => {
           {activeTab === 'patients' && <PatientManagement />}
 
           {activeTab === 'sessions' && <SessionScheduler />}
+
+          {activeTab === 'notifications' && (
+            <div className='space-y-6'>
+              <h2 className='text-2xl font-bold text-gray-900 mb-6'>Notificaciones del Sistema</h2>
+
+              {/* Alertas Urgentes */}
+              {urgentAlerts.length > 0 ? (
+                <div className='space-y-4'>
+                  <h3 className='text-lg font-semibold text-gray-900'>Alertas Urgentes</h3>
+                  {urgentAlerts.map((patient) => (
+                    <div key={patient.id} className='p-4 bg-red-50 border border-red-200 rounded-lg'>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center space-x-3'>
+                          <AlertTriangle className='w-5 h-5 text-red-600' />
+                          <div>
+                            <h4 className='font-semibold text-red-800'>{patient.name}</h4>
+                            <p className='text-sm text-red-600'>
+                              Estado de ánimo crítico ({patient.mood}/5) - Requiere atención inmediata
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => navigate('/chat')}
+                          className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors'
+                        >
+                          Contactar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className='text-center py-12'>
+                  <Bell className='w-16 h-16 text-gray-300 mx-auto mb-4' />
+                  <h3 className='text-xl font-semibold text-gray-900 mb-2'>No hay notificaciones urgentes</h3>
+                  <p className='text-gray-600'>Todo está bajo control</p>
+                </div>
+              )}
+
+              {/* Notificaciones del Sistema */}
+              <div className='mt-8'>
+                <h3 className='text-lg font-semibold text-gray-900 mb-4'>Notificaciones del Sistema</h3>
+                <div className='space-y-3'>
+                  <div className='p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+                    <div className='flex items-center space-x-3'>
+                      <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
+                      <div>
+                        <h4 className='font-medium text-blue-800'>Sistema actualizado</h4>
+                        <p className='text-sm text-blue-600'>
+                          Nuevas funcionalidades disponibles para el seguimiento de pacientes
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='p-4 bg-green-50 border border-green-200 rounded-lg'>
+                    <div className='flex items-center space-x-3'>
+                      <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+                      <div>
+                        <h4 className='font-medium text-green-800'>Backup completado</h4>
+                        <p className='text-sm text-green-600'>Respaldo de datos realizado exitosamente</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {activeTab === 'reports' && (
             <div className='text-center py-12'>

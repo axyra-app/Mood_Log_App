@@ -1,0 +1,38 @@
+{
+  "name": "Mood Log App Workspace",
+  "description": "Workspace configuration for Mood Log App",
+  "folders": [
+    {
+      "name": "Frontend",
+      "path": "./frontend"
+    },
+    {
+      "name": "Backend",
+      "path": "./backend"
+    },
+    {
+      "name": "Config",
+      "path": "./config"
+    },
+    {
+      "name": "Deployment",
+      "path": "./deployment"
+    },
+    {
+      "name": "Documentation",
+      "path": "./docs"
+    },
+    {
+      "name": "Testing",
+      "path": "./testing"
+    }
+  ],
+  "settings": {
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  }
+}
+

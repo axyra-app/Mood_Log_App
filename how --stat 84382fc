@@ -1,0 +1,8 @@
+[33mcommit 84382fca2344c3a86ccecb60f6df85b42339be0f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Juano007 <jfuran@correo.iue.edu.co>
+Date:   Tue Sep 2 11:19:20 2025 -0500
+
+    fix: resolve deployment issues and disable tests temporarily
+
+.github/workflows/deploy.yml
+vercel.json
