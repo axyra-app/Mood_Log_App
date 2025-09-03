@@ -234,28 +234,34 @@ const MoodFlow = () => {
   const currentStep = getCurrentStep();
 
   // Debug logging
-  console.log('MoodFlow render:', {
-    currentStep,
-    diaryEntry,
-    diaryText,
-    hasLocationState: !!location.state,
-    locationState: location.state
-  });
+  useEffect(() => {
+    console.log('MoodFlow render:', {
+      currentStep,
+      diaryEntry,
+      diaryText,
+      hasLocationState: !!location.state,
+      locationState: location.state
+    });
+  }, [currentStep, diaryEntry, diaryText, location.state]);
 
+  // Simple loading state
   if (!diaryText && !location.state?.skipDiary) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center'>
         <div className='text-center'>
           <div className='w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-gray-600'>Cargando tu entrada de diario...</p>
+          <p className='text-sm text-gray-500 mt-2'>Debug: {JSON.stringify(location.state)}</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-2 sm:p-4'>
-      <div className='max-w-4xl mx-auto'>
+  // Error boundary for debugging
+  try {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-2 sm:p-4'>
+        <div className='max-w-4xl mx-auto'>
         {/* Header */}
         <div className='flex items-center justify-between mb-4 sm:mb-8'>
           <button
@@ -398,6 +404,34 @@ const MoodFlow = () => {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('Error in MoodFlow component:', error);
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 flex items-center justify-center'>
+        <div className='text-center max-w-md mx-auto p-6'>
+          <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <AlertCircle className='w-8 h-8 text-red-600' />
+          </div>
+          <h2 className='text-xl font-semibold text-gray-900 mb-2'>Error en la aplicación</h2>
+          <p className='text-gray-600 mb-4'>
+            Ha ocurrido un error inesperado. Por favor, recarga la página.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className='btn-primary'
+          >
+            Recargar página
+          </button>
+          <details className='mt-4 text-left'>
+            <summary className='cursor-pointer text-sm text-gray-500'>Detalles del error</summary>
+            <pre className='mt-2 text-xs text-gray-600 bg-gray-100 p-2 rounded overflow-auto'>
+              {error instanceof Error ? error.message : String(error)}
+            </pre>
+          </details>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default MoodFlow;
