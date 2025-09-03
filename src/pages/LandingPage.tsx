@@ -1,9 +1,11 @@
 import { BarChart3, Brain, Calendar, Heart, MessageCircle, Shield, Users, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import FirebaseStatus from '../components/FirebaseStatus';
 
 const LandingPage = () => {
   return (
     <div className='min-h-screen bg-white'>
+      <FirebaseStatus />
       {/* Header */}
       <header className='bg-white border-b border-gray-100'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>

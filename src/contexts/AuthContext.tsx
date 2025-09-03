@@ -9,8 +9,8 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase-simple';
-import { captureError, clearUserContext, setUserContext } from '../lib/sentry';
+import { auth, db } from '../lib/firebase';
+import { clearUserContext, setUserContext } from '../lib/sentry';
 
 interface UserProfile {
   uid: string;
