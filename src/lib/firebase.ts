@@ -1,39 +1,19 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getApp, getApps, initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-// Validate environment variables
-const requiredEnvVars = {
-  VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY,
-  VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  VITE_FIREBASE_STORAGE_BUCKET: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  VITE_FIREBASE_MESSAGING_SENDER_ID: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  VITE_FIREBASE_APP_ID: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-// Check for missing environment variables
-const missingVars = Object.entries(requiredEnvVars)
-  .filter(([key, value]) => !value)
-  .map(([key]) => key);
-
-if (missingVars.length > 0) {
-  console.error('Missing Firebase environment variables:', missingVars);
-  throw new Error(`Missing required Firebase environment variables: ${missingVars.join(', ')}`);
-}
-
+// Firebase configuration with fallbacks for production
 const firebaseConfig = {
-  apiKey: requiredEnvVars.VITE_FIREBASE_API_KEY,
-  authDomain: requiredEnvVars.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: requiredEnvVars.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: requiredEnvVars.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: requiredEnvVars.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: requiredEnvVars.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDB8VIbM5bFJTvuwkLThDIXeJgor87hQgQ',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'mood-log-app-0.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'mood-log-app-0',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'mood-log-app-0.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '39654401201',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:39654401201:web:c0edd8ea835df67a84ae90',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-8G4S8BJK98',
 };
 
-// Initialize Firebase app
-console.log('Initializing Firebase with config:', {
+console.log('Firebase config loaded:', {
   apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : 'MISSING',
   authDomain: firebaseConfig.authDomain,
   projectId: firebaseConfig.projectId,
@@ -43,26 +23,38 @@ console.log('Initializing Firebase with config:', {
   hasMeasurementId: !!firebaseConfig.measurementId,
 });
 
+// Initialize Firebase app
 let app;
 try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  console.log('Firebase app initialized successfully');
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+    console.log('Firebase app initialized successfully');
+  } else {
+    app = getApp();
+    console.log('Firebase app already initialized');
+  }
 } catch (error) {
-  console.error('Failed to initialize Firebase:', error);
-  throw error;
+  console.error('Failed to initialize Firebase app:', error);
+  // Don't throw error, let the app continue without Firebase
+  app = null;
 }
 
-// Initialize services with error handling
-let auth, db;
-try {
-  auth = getAuth(app);
-  db = getFirestore(app);
-  console.log('Firebase services (auth, db) initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize Firebase services:', error);
-  throw error;
+// Initialize services
+let auth = null;
+let db = null;
+
+if (app) {
+  try {
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log('Firebase services (auth, db) initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Firebase services:', error);
+    // Don't throw error, let the app continue without Firebase
+  }
+} else {
+  console.warn('Firebase app not initialized, services will be null');
 }
 
 export { auth, db };
-
 export default app;

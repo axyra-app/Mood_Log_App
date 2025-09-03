@@ -9,16 +9,8 @@ import './index.css';
 import { initSentry } from './lib/sentry';
 initSentry();
 
-// Initialize Firebase with error handling
-try {
-  import('./lib/firebase').then(() => {
-    console.log('Firebase module loaded successfully');
-  }).catch((error) => {
-    console.error('Failed to load Firebase module:', error);
-  });
-} catch (error) {
-  console.error('Error importing Firebase:', error);
-}
+// Initialize Firebase
+import './lib/firebase';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
