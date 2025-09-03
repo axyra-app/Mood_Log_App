@@ -4,12 +4,21 @@ import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
+
+// Initialize Firebase first
+import './lib/firebase';
+
+// Initialize monitoring after Firebase
 import { initAnalytics } from './lib/analytics';
 import { initSentry } from './lib/sentry';
 
 // Initialize monitoring
-initSentry();
-initAnalytics();
+try {
+  initSentry();
+  initAnalytics();
+} catch (error) {
+  console.warn('Failed to initialize monitoring:', error);
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
