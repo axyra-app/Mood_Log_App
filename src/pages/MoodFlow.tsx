@@ -46,7 +46,15 @@ const MoodFlow = () => {
 
   // Get diary text from navigation state
   useEffect(() => {
+    console.log('MoodFlow useEffect triggered:', {
+      hasDiaryText: !!location.state?.diaryText,
+      diaryText: location.state?.diaryText,
+      hasDiaryEntry: !!diaryEntry,
+      skipDiary: location.state?.skipDiary
+    });
+
     if (location.state?.diaryText && !diaryEntry) {
+      console.log('Starting diary entry with text:', location.state.diaryText);
       setDiaryText(location.state.diaryText);
       // Start the mood flow with the diary text
       const entry = startDiaryEntry(location.state.diaryText);
@@ -54,6 +62,7 @@ const MoodFlow = () => {
 
       // Automatically try AI analysis after a short delay
       setTimeout(() => {
+        console.log('Starting AI analysis...');
         analyzeWithAI();
       }, 500);
 
@@ -62,6 +71,7 @@ const MoodFlow = () => {
         textLength: location.state.diaryText.length,
       });
     } else if (location.state?.skipDiary && !diaryEntry) {
+      console.log('Starting mood flow without diary');
       // If skipping diary, start with empty text and go directly to mood selection
       setDiaryText('');
       const entry = startDiaryEntry('');
@@ -224,8 +234,13 @@ const MoodFlow = () => {
   const currentStep = getCurrentStep();
 
   // Debug logging
-  console.log('Current step:', currentStep);
-  console.log('Diary entry:', diaryEntry);
+  console.log('MoodFlow render:', {
+    currentStep,
+    diaryEntry,
+    diaryText,
+    hasLocationState: !!location.state,
+    locationState: location.state
+  });
 
   if (!diaryText && !location.state?.skipDiary) {
     return (
