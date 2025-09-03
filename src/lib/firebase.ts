@@ -12,9 +12,39 @@ const firebaseConfig = {
   measurementId: 'G-8G4S8BJK98',
 };
 
-// Initialize Firebase only if it hasn't been initialized already
+// Initialize Firebase app
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Wait for Firebase to be ready before initializing services
+let auth: any = null;
+let db: any = null;
+
+// Initialize services after a short delay to ensure Firebase is ready
+setTimeout(() => {
+  try {
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log('Firebase services initialized successfully');
+  } catch (error) {
+    console.error('Error initializing Firebase services:', error);
+  }
+}, 100);
+
+// Export functions that return the services
+export const getAuthInstance = () => {
+  if (!auth) {
+    auth = getAuth(app);
+  }
+  return auth;
+};
+
+export const getDbInstance = () => {
+  if (!db) {
+    db = getFirestore(app);
+  }
+  return db;
+};
+
+// For backward compatibility - these will be null initially
+export { auth, db };
 export default app;
