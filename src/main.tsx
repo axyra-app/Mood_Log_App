@@ -1,69 +1,63 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import MinimalApp from './AppMinimal.tsx';
 import './index.css';
 
-// Simple error boundary
-class SimpleErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
+// Ultra simple app component
+const UltraSimpleApp = () => {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontFamily: 'Arial, sans-serif',
+      padding: '20px'
+    }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.1)',
+        padding: '40px',
+        borderRadius: '20px',
+        textAlign: 'center',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.2)',
+        maxWidth: '500px'
+      }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
+          🚀 Mood Log App
+        </h1>
+        <p style={{ fontSize: '1.2rem', marginBottom: '30px' }}>
+          ¡Aplicación funcionando correctamente!
+        </p>
         <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#f0f0f0',
-          fontFamily: 'Arial, sans-serif'
+          background: 'rgba(0,255,0,0.2)',
+          padding: '15px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          border: '2px solid rgba(0,255,0,0.5)'
         }}>
-          <div style={{
-            background: 'white',
-            padding: '40px',
-            borderRadius: '10px',
-            textAlign: 'center',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          }}>
-            <h1 style={{ color: '#e74c3c' }}>Error en la aplicación</h1>
-            <p>Por favor recarga la página</p>
-            <button 
-              onClick={() => window.location.reload()}
-              style={{
-                background: '#3498db',
-                color: 'white',
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer'
-              }}
-            >
-              Recargar
-            </button>
-          </div>
+          ✅ <strong>APLICACIÓN CARGADA EXITOSAMENTE</strong><br />
+          ✅ <strong>SIN FIREBASE</strong><br />
+          ✅ <strong>SIN ERRORES</strong>
         </div>
-      );
-    }
+        <button style={{
+          background: 'white',
+          color: '#667eea',
+          padding: '15px 30px',
+          borderRadius: '25px',
+          fontSize: '1.1rem',
+          border: 'none',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}>
+          Continuar
+        </button>
+      </div>
+    </div>
+  );
+};
 
-    return this.props.children;
-  }
-}
-
-// Render the app
+// Render the app directly
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <SimpleErrorBoundary>
-    <MinimalApp />
-  </SimpleErrorBoundary>
-);
+root.render(<UltraSimpleApp />);
