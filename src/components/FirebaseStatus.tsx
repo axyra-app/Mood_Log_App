@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase';
 
 const FirebaseStatus: React.FC = () => {
   const [status, setStatus] = useState<string>('Checking...');
+  const [details, setDetails] = useState<string>('');
 
   useEffect(() => {
-    const checkFirebase = () => {
+    const checkFirebase = async () => {
       try {
+        // Dynamic import to avoid initialization issues
+        const { auth, db } = await import('../lib/firebase');
+        
         if (auth && db) {
-          setStatus('✅ Firebase initialized successfully');
+          setStatus('✅ Firebase OK');
+          setDetails('Auth & Firestore ready');
         } else {
-          setStatus('❌ Firebase not initialized');
+          setStatus('❌ Firebase Error');
+          setDetails('Services not available');
         }
       } catch (error) {
-        setStatus(`❌ Firebase error: ${error}`);
+        setStatus('❌ Firebase Error');
+        setDetails(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error('Firebase initialization error:', error);
       }
     };
 
@@ -25,15 +32,19 @@ const FirebaseStatus: React.FC = () => {
       position: 'fixed', 
       top: '10px', 
       right: '10px', 
-      background: 'white', 
+      background: 'rgba(0,0,0,0.8)', 
+      color: 'white',
       padding: '10px', 
-      border: '1px solid #ccc',
+      border: '1px solid #333',
       borderRadius: '5px',
       zIndex: 9999,
-      fontSize: '12px'
+      fontSize: '12px',
+      fontFamily: 'monospace',
+      maxWidth: '200px'
     }}>
-      <strong>Firebase Status:</strong><br />
-      {status}
+      <div><strong>Firebase Status:</strong></div>
+      <div>{status}</div>
+      <div style={{ fontSize: '10px', marginTop: '5px' }}>{details}</div>
     </div>
   );
 };

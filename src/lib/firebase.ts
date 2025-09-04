@@ -1,5 +1,5 @@
-// Firebase v9 configuration - Definitive version
-import { initializeApp } from 'firebase/app';
+// Firebase v9 configuration - Production ready
+import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -13,14 +13,22 @@ const firebaseConfig = {
   measurementId: 'G-8G4S8BJK98',
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if no apps exist
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
 
 // Initialize Firebase Authentication and get a reference to the service
 const auth = getAuth(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
+
+// Log successful initialization
+console.log('Firebase initialized successfully:', { auth: !!auth, db: !!db });
 
 export { auth, db };
 export default app;
