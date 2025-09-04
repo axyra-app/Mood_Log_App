@@ -2,6 +2,7 @@
 declare global {
   interface Window {
     gtag: (...args: any[]) => void;
+    dataLayer: any[];
   }
 }
 
@@ -81,6 +82,6 @@ export const trackAchievement = (achievementId: string) => {
   trackEvent('achievement_unlocked', 'engagement', achievementId);
 };
 
-export const trackError = (errorType: string, errorMessage: string) => {
+export const trackError = (errorType: string, _errorMessage: string) => {
   trackEvent('error', 'technical', errorType, 1);
 };
