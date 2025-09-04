@@ -1,7 +1,7 @@
-// Firebase v9 configuration - Production ready
+// Firebase v9 configuration - Error-free version
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDB8VIbM5bFJTvuwkLThDIXeJgor87hQgQ',
@@ -13,22 +13,40 @@ const firebaseConfig = {
   measurementId: 'G-8G4S8BJK98',
 };
 
-// Initialize Firebase only if no apps exist
+// Initialize Firebase app
 let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
+try {
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+    console.log('Firebase app initialized successfully');
+  } else {
+    app = getApps()[0];
+    console.log('Using existing Firebase app');
+  }
+} catch (error) {
+  console.error('Failed to initialize Firebase app:', error);
+  throw error;
 }
 
-// Initialize Firebase Authentication and get a reference to the service
-const auth = getAuth(app);
+// Initialize Firebase services with error handling
+let auth;
+let db;
 
-// Initialize Cloud Firestore and get a reference to the service
-const db = getFirestore(app);
-
-// Log successful initialization
-console.log('Firebase initialized successfully:', { auth: !!auth, db: !!db });
+try {
+  // Initialize Auth
+  auth = getAuth(app);
+  console.log('Firebase Auth initialized successfully');
+  
+  // Initialize Firestore
+  db = getFirestore(app);
+  console.log('Firebase Firestore initialized successfully');
+  
+} catch (error) {
+  console.error('Failed to initialize Firebase services:', error);
+  // Create fallback objects to prevent app crash
+  auth = null;
+  db = null;
+}
 
 export { auth, db };
 export default app;

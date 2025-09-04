@@ -5,26 +5,44 @@ const FirebaseStatus: React.FC = () => {
   const [details, setDetails] = useState<string>('');
 
   useEffect(() => {
-    const checkFirebase = async () => {
+    const checkFirebase = () => {
       try {
-        // Dynamic import to avoid initialization issues
-        const { auth, db } = await import('../lib/firebase');
-        
-        if (auth && db) {
-          setStatus('✅ Firebase OK');
-          setDetails('Auth & Firestore ready');
-        } else {
-          setStatus('❌ Firebase Error');
-          setDetails('Services not available');
+        // Check if Firebase is available globally
+        if (typeof window !== 'undefined' && (window as any).firebase) {
+          setStatus('✅ Firebase Global');
+          setDetails('Firebase available globally');
+          return;
         }
+
+        // Try to import Firebase
+        import('../lib/firebase').then(({ auth, db }) => {
+          if (auth && db) {
+            setStatus('✅ Firebase OK');
+            setDetails('Auth & Firestore ready');
+          } else {
+            setStatus('⚠️ Firebase Partial');
+            setDetails('Some services unavailable');
+          }
+        }).catch((error) => {
+          setStatus('❌ Firebase Error');
+          setDetails(`Import failed: ${error.message}`);
+          console.error('Firebase import error:', error);
+        });
+        
       } catch (error) {
         setStatus('❌ Firebase Error');
         setDetails(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        console.error('Firebase initialization error:', error);
+        console.error('Firebase check error:', error);
       }
     };
 
+    // Check immediately
     checkFirebase();
+    
+    // Check again after a delay
+    const timeout = setTimeout(checkFirebase, 2000);
+    
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
@@ -32,19 +50,20 @@ const FirebaseStatus: React.FC = () => {
       position: 'fixed', 
       top: '10px', 
       right: '10px', 
-      background: 'rgba(0,0,0,0.8)', 
+      background: 'rgba(0,0,0,0.9)', 
       color: 'white',
-      padding: '10px', 
-      border: '1px solid #333',
-      borderRadius: '5px',
+      padding: '12px', 
+      border: '2px solid #333',
+      borderRadius: '8px',
       zIndex: 9999,
       fontSize: '12px',
       fontFamily: 'monospace',
-      maxWidth: '200px'
+      maxWidth: '220px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
     }}>
-      <div><strong>Firebase Status:</strong></div>
-      <div>{status}</div>
-      <div style={{ fontSize: '10px', marginTop: '5px' }}>{details}</div>
+      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Firebase Status:</div>
+      <div style={{ marginBottom: '4px' }}>{status}</div>
+      <div style={{ fontSize: '10px', opacity: 0.8 }}>{details}</div>
     </div>
   );
 };
