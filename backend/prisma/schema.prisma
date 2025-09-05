@@ -1,0 +1,377 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  PSYCHOLOGIST
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum ConsentType {
+  DATA_PROCESSING
+  AI_ANALYSIS
+  PSYCHOLOGIST_ACCESS
+  RESEARCH
+  MARKETING
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TEXT
+  NUMERIC
+  SCALE
+  BOOLEAN
+}
+
+enum QuestionCategory {
+  MOOD
+  ENERGY
+  STRESS
+  SLEEP
+  SOCIAL
+  WORK
+  HEALTH
+  OTHER
+}
+
+enum InsightType {
+  EMOTION_PATTERN
+  TREND_ANALYSIS
+  RECOMMENDATION
+  CORRELATION
+  ANOMALY
+}
+
+enum AssignmentStatus {
+  PENDING
+  ACTIVE
+  ENDED
+  DECLINED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  isVerified Boolean @default(false)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  profile              UserProfile?
+  preferences          UserPreferences?
+  consents            Consent[]
+  entries             Entry[]
+  aiInsights         AIInsight[]
+  psychologistProfile PsychologistProfile?
+  patientAssignments  PatientAssignment[] @relation("PatientAssignments")
+  assignedPatients    PatientAssignment[] @relation("AssignedPsychologist")
+  messages            Message[]           @relation("UserMessages")
+  receivedMessages    Message[]           @relation("ReceivedMessages")
+  sessions            Session[]
+  auditLogs           AuditLog[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime
+  gender      Gender
+  phone       String?
+  emergencyContact Json?
+  bio         String?
+  avatar      String?
+  timezone    String   @default("UTC")
+  language    String   @default("en")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserPreferences {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  dailyReminderTime     String   @default("09:00")
+  weeklyReportDay       Int      @default(1) // 1 = Monday
+  enableNotifications   Boolean  @default(true)
+  enableAIInsights      Boolean  @default(true)
+  enablePsychologistAccess Boolean @default(false)
+  theme                 String   @default("light")
+  privacyLevel          String   @default("private")
+  dataRetentionDays     Int      @default(365)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Consent {
+  id          String      @id @default(cuid())
+  userId      String
+  type        ConsentType
+  granted     Boolean     @default(false)
+  grantedAt   DateTime?
+  revokedAt   DateTime?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consents")
+}
+
+model Question {
+  id          String           @id @default(cuid())
+  text        String
+  type        QuestionType
+  category    QuestionCategory
+  isActive    Boolean          @default(true)
+  order       Int
+  required    Boolean          @default(true)
+  options     QuestionOption[]
+  answers     Answer[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  text       String
+  value      String
+  order      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relación
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_options")
+}
+
+model Entry {
+  id          String   @id @default(cuid())
+  userId      String
+  date        DateTime @default(now())
+  mood        Int      // 1-10 scale
+  energy      Int?     // 1-10 scale
+  stress      Int?     // 1-10 scale
+  sleep       Int?     // 1-10 scale
+  notes       String?
+  isPrivate   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers    Answer[]
+  moodData   MoodData[]
+  aiInsights AIInsight[]
+
+  @@map("entries")
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  entryId    String
+  questionId String
+  value      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relaciones
+  entry    Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("answers")
+}
+
+model MoodData {
+  id        String   @id @default(cuid())
+  entryId   String
+  emotion   String
+  intensity Int      // 1-10 scale
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación
+  entry Entry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@map("mood_data")
+}
+
+model AIInsight {
+  id          String     @id @default(cuid())
+  userId      String
+  entryId     String?
+  type        InsightType
+  title       String
+  description String
+  confidence  Float      // 0.0 - 1.0
+  data        Json?
+  isRead      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relaciones
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entry Entry? @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@map("ai_insights")
+}
+
+model PsychologistProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  licenseNumber   String
+  specialization  String[]
+  experience      Int      // years
+  bio             String
+  consultationFee Float?
+  isAvailable     Boolean  @default(true)
+  maxPatients     Int      @default(50)
+  rating          Float    @default(0.0)
+  reviewCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("psychologist_profiles")
+}
+
+model PatientAssignment {
+  id              String          @id @default(cuid())
+  psychologistId  String
+  patientId       String
+  status          AssignmentStatus @default(PENDING)
+  assignedAt      DateTime        @default(now())
+  acceptedAt      DateTime?
+  endedAt         DateTime?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relaciones
+  psychologist User @relation("AssignedPsychologist", fields: [psychologistId], references: [id], onDelete: Cascade)
+  patient      User @relation("PatientAssignments", fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@map("patient_assignments")
+}
+
+model Message {
+  id              String      @id @default(cuid())
+  senderId        String
+  receiverId      String
+  type            MessageType @default(TEXT)
+  content         String
+  metadata        Json?
+  isRead          Boolean     @default(false)
+  readAt          DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relaciones
+  sender   User @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  userId    String
+  period    String   // daily, weekly, monthly
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("analytics")
+}
+
+model Recommendation {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  type        String
+  priority    String   @default("medium")
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("recommendations")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  resource  String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
