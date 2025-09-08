@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
+import SuccessModal from './SuccessModal';
 
 interface ConfigurationModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
     darkMode: false,
     language: 'es'
   });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -37,13 +39,12 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
 
   const handleSave = () => {
     // Aquí iría la lógica para guardar los cambios
-    alert('Configuración guardada exitosamente');
-    onClose();
+    setShowSuccessModal(true);
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="text-6xl mb-4">⚙️</div>
@@ -239,6 +240,18 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          onClose();
+        }}
+        title="¡CONFIGURACIÓN GUARDADA!"
+        message="Tus cambios han sido guardados exitosamente. Tu experiencia personalizada está lista."
+        icon="⚙️"
+      />
     </Modal>
   );
 };

@@ -80,7 +80,7 @@ const RegisterSimple: React.FC = () => {
       setError('');
       setLoading(true);
       
-      await signUp(formData.email, formData.password);
+      await signUp(formData.email, formData.password, formData.role);
       navigate('/dashboard');
       
     } catch (error: any) {

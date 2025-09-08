@@ -20,7 +20,7 @@ const ComingSoonModal: React.FC<ComingSoonModalProps> = ({
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="text-center">
+      <div className="text-center max-h-[90vh] overflow-y-auto">
         {/* Icon */}
         <div className="text-8xl mb-6 animate-pulse">
           {icon}

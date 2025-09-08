@@ -4,13 +4,14 @@ interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
+  role: 'user' | 'psychologist';
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, role?: 'user' | 'psychologist') => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -44,24 +45,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Simular login exitoso
       await new Promise(resolve => setTimeout(resolve, 1000));
+      const uniqueId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       setUser({
-        uid: 'debug-user-123',
+        uid: uniqueId,
         email: email,
-        displayName: email.split('@')[0]
+        displayName: email.split('@')[0],
+        role: 'user'
       });
     } catch (error: any) {
       throw new Error(error.message);
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, role: 'user' | 'psychologist' = 'user') => {
     try {
       // Simular registro exitoso
       await new Promise(resolve => setTimeout(resolve, 1000));
+      const uniqueId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       setUser({
-        uid: 'debug-user-123',
+        uid: uniqueId,
         email: email,
-        displayName: email.split('@')[0]
+        displayName: email.split('@')[0],
+        role: role
       });
     } catch (error: any) {
       throw new Error(error.message);
@@ -72,10 +77,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Simular login con Google
       await new Promise(resolve => setTimeout(resolve, 1000));
+      const uniqueId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       setUser({
-        uid: 'debug-user-123',
+        uid: uniqueId,
         email: 'usuario@gmail.com',
-        displayName: 'Usuario'
+        displayName: 'Usuario',
+        role: 'user'
       });
     } catch (error: any) {
       throw new Error(error.message);
