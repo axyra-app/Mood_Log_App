@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationDropdown from '../components/NotificationDropdown';
 
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -205,22 +206,12 @@ const DashboardSimple: React.FC = () => {
           
           <div className="flex items-center space-x-4">
             {/* Notificaciones */}
-            <div className="relative">
-              <button
-                className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-                  isDarkMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                🔔
-                {notifications.filter(n => !n.isRead).length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notifications.filter(n => !n.isRead).length}
-                  </span>
-                )}
-              </button>
-            </div>
+            <NotificationDropdown
+              notifications={notifications}
+              onMarkAsRead={handleMarkNotificationAsRead}
+              onDismiss={handleDismissNotification}
+              isDarkMode={isDarkMode}
+            />
             
             <button
               onClick={toggleDarkMode}
@@ -253,7 +244,7 @@ const DashboardSimple: React.FC = () => {
           <h2 className={`text-4xl font-black mb-4 transition-colors duration-500 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            ¡HOLA {user?.displayName || user?.email?.split('@')[0] || 'USUARIO'}! 👋
+            ¡HOLA {user?.displayName || user?.email?.split('@')[0]?.toUpperCase() || 'USUARIO'}! 👋
           </h2>
           <p className={`text-xl transition-colors duration-500 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -490,7 +481,7 @@ const DashboardSimple: React.FC = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Psicólogos */}
+            {/* Quick Actions */}
             <div className={`p-8 rounded-2xl border-2 transition-all duration-300 ${
               isDarkMode
                 ? 'bg-gray-800 border-gray-700 hover:border-purple-500'
@@ -499,51 +490,81 @@ const DashboardSimple: React.FC = () => {
               <h3 className={`text-2xl font-black mb-6 transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                PSICÓLOGOS DISPONIBLES
+                ACCIONES RÁPIDAS
               </h3>
               <div className="space-y-4">
-                {[
-                  { id: 1, name: 'Dr. María González', specialty: 'Ansiedad y Estrés', rating: 4.9, available: true },
-                  { id: 2, name: 'Lic. Carlos Rodríguez', specialty: 'Terapia Cognitiva', rating: 4.8, available: false },
-                  { id: 3, name: 'Dra. Ana Martínez', specialty: 'Depresión', rating: 4.9, available: true },
-                ].map((psychologist) => (
-                  <div key={psychologist.id} className={`p-4 rounded-xl transition-all duration-300 ${
+                {/* Chat con IA */}
+                <button
+                  onClick={() => alert('Chat con IA - Próximamente')}
+                  className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
                     isDarkMode
-                      ? 'bg-gray-700 hover:bg-gray-600'
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className={`font-bold transition-colors duration-500 ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>{psychologist.name}</h4>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          psychologist.available 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {psychologist.available ? 'Disponible' : 'Ocupado'}
-                      </span>
-                    </div>
-                    <p className={`text-sm transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>{psychologist.specialty}</p>
-                    <div className="flex items-center space-x-1 mt-2">
-                      <span className="text-yellow-500">⭐</span>
-                      <span className={`text-sm font-bold transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                      }`}>{psychologist.rating}</span>
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                  } text-white`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">🤖</div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-lg">Chat con IA</h4>
+                      <p className="text-sm opacity-90">Habla sobre tus sentimientos</p>
                     </div>
                   </div>
-                ))}
+                </button>
+
+                {/* Chat con Psicólogos */}
+                <button
+                  onClick={() => alert('Chat con Psicólogos - Próximamente')}
+                  className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                  } text-white`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">👨‍⚕️</div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-lg">Psicólogos</h4>
+                      <p className="text-sm opacity-90">Conecta con profesionales</p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Estadísticas */}
+                <button
+                  onClick={() => alert('Estadísticas Detalladas - Próximamente')}
+                  className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700'
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                  } text-white`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">📊</div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-lg">Estadísticas</h4>
+                      <p className="text-sm opacity-90">Ve tu progreso detallado</p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Objetivos */}
+                <button
+                  onClick={() => alert('Objetivos y Metas - Próximamente')}
+                  className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
+                      : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                  } text-white`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">🎯</div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-lg">Objetivos</h4>
+                      <p className="text-sm opacity-90">Establece metas de bienestar</p>
+                    </div>
+                  </div>
+                </button>
               </div>
-              <Link
-                to="/chat"
-                className={`w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-lg uppercase tracking-wider py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 block text-center`}
-              >
-                VER TODOS LOS PSICÓLOGOS
-              </Link>
             </div>
 
             {/* Recordatorios */}
