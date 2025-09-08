@@ -9,8 +9,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
 
 // Pages (solo las que existen)
-import DashboardSimple from './pages/DashboardSimple';
-import DashboardPsychologist from './pages/DashboardPsychologist';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
