@@ -2,27 +2,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-};
-
-console.log('Firebase Config:', {
-  apiKey: firebaseConfig.apiKey ? 'SET' : 'NOT SET',
-  authDomain: firebaseConfig.authDomain ? 'SET' : 'NOT SET',
-  projectId: firebaseConfig.projectId ? 'SET' : 'NOT SET',
-  storageBucket: firebaseConfig.storageBucket ? 'SET' : 'NOT SET',
-  messagingSenderId: firebaseConfig.messagingSenderId ? 'SET' : 'NOT SET',
-  appId: firebaseConfig.appId ? 'SET' : 'NOT SET',
-  measurementId: firebaseConfig.measurementId ? 'SET' : 'NOT SET',
-});
+import { firebaseConfig, validateFirebaseConfig } from '../config/firebase-config-simple';
 
 // Initialize Firebase
 let app;
@@ -30,10 +10,15 @@ let auth;
 let db;
 
 try {
+  // Validate configuration first
+  if (!validateFirebaseConfig()) {
+    throw new Error('Invalid Firebase configuration');
+  }
+
   // Check if Firebase is already initialized
   if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
-    console.log('Firebase app initialized');
+    console.log('Firebase app initialized successfully');
   } else {
     app = getApps()[0];
     console.log('Using existing Firebase app');
