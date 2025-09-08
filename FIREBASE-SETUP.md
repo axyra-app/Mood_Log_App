@@ -14,22 +14,25 @@ Los errores que estás viendo indican que Firebase no puede conectarse correctam
 Crea un archivo `.env` en la raíz del proyecto con:
 
 ```bash
-# Firebase Configuration - REEMPLAZA CON TUS VALORES REALES
-VITE_FIREBASE_API_KEY=tu_api_key_aqui
-VITE_FIREBASE_AUTH_DOMAIN=tu_proyecto.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=tu_proyecto_id
-VITE_FIREBASE_STORAGE_BUCKET=tu_proyecto.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
-VITE_FIREBASE_APP_ID=tu_app_id
+# Firebase Configuration - MOOD LOG APP (YA CONFIGURADO)
+VITE_FIREBASE_API_KEY=AIzaSyDW4VRBdTMzDwxmkcnsVqrdaxlXoskxqFw
+VITE_FIREBASE_AUTH_DOMAIN=mood-log-app-1.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=mood-log-app-1
+VITE_FIREBASE_STORAGE_BUCKET=mood-log-app-1.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=163973255515
+VITE_FIREBASE_APP_ID=1:163973255515:web:f4c2c94e97262ed53d4a7e
+VITE_FIREBASE_MEASUREMENT_ID=G-XXTF4D7MRW
 
-# OpenAI Configuration
+# OpenAI Configuration - REEMPLAZA CON TU API KEY
 VITE_OPENAI_API_KEY=tu_openai_api_key
 ```
+
+**✅ Firebase ya está configurado** - Solo necesitas agregar tu API key de OpenAI.
 
 ### 2. **Obtener Configuración de Firebase**
 
 1. Ve a [Firebase Console](https://console.firebase.google.com/)
-2. Selecciona tu proyecto `mood-log-app-0`
+2. Selecciona tu proyecto `mood-log-app-1`
 3. Ve a **Configuración del proyecto** (⚙️)
 4. En la sección **Tus aplicaciones**, selecciona tu app web
 5. Copia la configuración que aparece
