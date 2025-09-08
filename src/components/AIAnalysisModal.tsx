@@ -132,26 +132,26 @@ const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
       title="🧠 ANÁLISIS DE IA"
       isDarkMode={isDarkMode}
     >
-      <div className="space-y-6">
+      <div className="space-y-4 max-h-[50vh] overflow-y-auto">
         {/* Mood Display */}
-        <div className={`p-6 rounded-2xl bg-gradient-to-r ${analysis.color} text-white text-center`}>
-          <div className="text-6xl mb-4">{moodEmojis[mood - 1]}</div>
-          <h3 className="text-2xl font-black mb-2">{moodLabels[mood - 1]}</h3>
-          <p className="text-lg opacity-90">Estado de ánimo registrado</p>
+        <div className={`p-4 rounded-2xl bg-gradient-to-r ${analysis.color} text-white text-center`}>
+          <div className="text-4xl mb-3">{moodEmojis[mood - 1]}</div>
+          <h3 className="text-xl font-black mb-2">{moodLabels[mood - 1]}</h3>
+          <p className="text-sm opacity-90">Estado de ánimo registrado</p>
         </div>
 
         {/* AI Analysis */}
-        <div className={`p-6 rounded-2xl border-2 ${
+        <div className={`p-4 rounded-2xl border-2 ${
           isDarkMode
             ? 'bg-gray-800 border-purple-500'
             : 'bg-purple-50 border-purple-200'
         }`}>
-          <h4 className={`text-xl font-black mb-4 transition-colors duration-500 ${
+          <h4 className={`text-lg font-black mb-3 transition-colors duration-500 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             📊 ANÁLISIS DETALLADO
           </h4>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
               <span className={`font-bold transition-colors duration-500 ${
                 isDarkMode ? 'text-purple-400' : 'text-purple-600'
@@ -181,17 +181,17 @@ const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
 
         {/* Insights */}
         {analysis.insights.length > 0 && (
-          <div className={`p-6 rounded-2xl border-2 ${
+          <div className={`p-4 rounded-2xl border-2 ${
             isDarkMode
               ? 'bg-gray-800 border-blue-500'
               : 'bg-blue-50 border-blue-200'
           }`}>
-            <h4 className={`text-xl font-black mb-4 transition-colors duration-500 ${
+            <h4 className={`text-lg font-black mb-3 transition-colors duration-500 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
               💡 INSIGHTS PERSONALIZADOS
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {analysis.insights.map((insight, index) => (
                 <li key={index} className={`flex items-start space-x-3 transition-colors duration-500 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -205,17 +205,17 @@ const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
         )}
 
         {/* Suggestions */}
-        <div className={`p-6 rounded-2xl border-2 ${
+        <div className={`p-4 rounded-2xl border-2 ${
           isDarkMode
             ? 'bg-gray-800 border-green-500'
             : 'bg-green-50 border-green-200'
         }`}>
-          <h4 className={`text-xl font-black mb-4 transition-colors duration-500 ${
+          <h4 className={`text-lg font-black mb-3 transition-colors duration-500 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             🎯 SUGERENCIAS PERSONALIZADAS
           </h4>
-          <ul className="space-y-3">
+          <ul className="space-y-2">
             {analysis.suggestions.map((suggestion, index) => (
               <li key={index} className={`flex items-start space-x-3 transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -229,22 +229,22 @@ const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
 
         {/* Feelings Analysis */}
         {feelings && (
-          <div className={`p-6 rounded-2xl border-2 ${
+          <div className={`p-4 rounded-2xl border-2 ${
             isDarkMode
               ? 'bg-gray-800 border-pink-500'
               : 'bg-pink-50 border-pink-200'
           }`}>
-            <h4 className={`text-xl font-black mb-4 transition-colors duration-500 ${
+            <h4 className={`text-lg font-black mb-3 transition-colors duration-500 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
               📝 ANÁLISIS DE TUS PALABRAS
             </h4>
-            <p className={`text-lg italic transition-colors duration-500 ${
+            <p className={`text-sm italic transition-colors duration-500 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
               "{feelings}"
             </p>
-            <p className={`mt-3 transition-colors duration-500 ${
+            <p className={`mt-2 text-xs transition-colors duration-500 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
               Tu descripción muestra una actitud reflexiva y consciente de tus emociones. 
