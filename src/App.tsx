@@ -11,7 +11,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import MoodFlow from './pages/MoodFlow';
+import Chat from './pages/Chat';
+import Settings from './pages/Settings';
 import Statistics from './components/Statistics';
+import Achievements from './components/Achievements';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -68,6 +71,33 @@ function App() {
                         <Statistics />
                       </div>
                     </div>
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/chat" 
+                element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/achievements" 
+                element={
+                  <ProtectedRoute>
+                    <Achievements />
                   </ProtectedRoute>
                 } 
               />

@@ -1,7 +1,20 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { Award, Heart, MessageCircle, Star, Target, Trophy, Zap } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Trophy, 
+  Star, 
+  Target, 
+  Calendar, 
+  Heart, 
+  Brain,
+  Zap,
+  Shield,
+  Award,
+  Crown,
+  CheckCircle,
+  Lock
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface Achievement {
@@ -9,510 +22,420 @@ interface Achievement {
   title: string;
   description: string;
   icon: string;
-  category: 'mood' | 'streak' | 'social' | 'wellness' | 'milestone';
+  category: 'streak' | 'mood' | 'social' | 'wellness' | 'special';
   requirement: number;
-  current: number;
-  completed: boolean;
-  unlockedAt?: Date;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  points: number;
-}
-
-interface UserAchievement {
-  achievementId: string;
-  unlockedAt: Date;
+  unlocked: boolean;
+  unlockedAt?: any;
   progress: number;
 }
 
-const Achievements = () => {
-  const { userProfile } = useAuth();
+const Achievements: React.FC = () => {
+  const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalPoints, setTotalPoints] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
-    if (userProfile?.uid) {
+    if (user) {
       fetchAchievements();
-      fetchUserAchievements();
     }
-  }, [userProfile?.uid]);
+  }, [user]);
 
   const fetchAchievements = async () => {
+    if (!user) return;
+
     try {
-      // Definir logros del sistema
-      const systemAchievements: Achievement[] = [
+      setLoading(true);
+      
+      // Obtener datos del usuario para calcular logros
+      const moodLogsRef = collection(db, 'moodLogs');
+      const userMoodLogs = query(moodLogsRef, where('userId', '==', user.uid));
+      const moodLogsSnapshot = await getDocs(userMoodLogs);
+      const moodLogs = moodLogsSnapshot.docs.map(doc => doc.data());
+
+      // Obtener logros desbloqueados
+      const achievementsRef = collection(db, 'userAchievements');
+      const userAchievements = query(achievementsRef, where('userId', '==', user.uid));
+      const achievementsSnapshot = await getDocs(userAchievements);
+      const unlockedAchievements = achievementsSnapshot.docs.map(doc => doc.data());
+
+      // Definir todos los logros posibles
+      const allAchievements: Achievement[] = [
         {
           id: 'first_mood',
           title: 'Primer Paso',
           description: 'Registra tu primer estado de ánimo',
-          icon: '🎯',
+          icon: 'star',
           category: 'mood',
           requirement: 1,
-          current: 0,
-          completed: false,
-          rarity: 'common',
-          points: 10,
+          unlocked: moodLogs.length >= 1,
+          progress: Math.min(moodLogs.length, 1),
+          unlockedAt: moodLogs.length >= 1 ? new Date() : undefined
         },
         {
-          id: 'mood_streak_7',
-          title: 'Semana Consistente',
+          id: 'week_streak',
+          title: 'Constancia Semanal',
           description: 'Registra tu estado de ánimo por 7 días consecutivos',
-          icon: '🔥',
+          icon: 'calendar',
           category: 'streak',
           requirement: 7,
-          current: 0,
-          completed: false,
-          rarity: 'rare',
-          points: 50,
+          unlocked: calculateStreak(moodLogs) >= 7,
+          progress: Math.min(calculateStreak(moodLogs), 7),
+          unlockedAt: calculateStreak(moodLogs) >= 7 ? new Date() : undefined
         },
         {
-          id: 'mood_streak_30',
-          title: 'Mes de Dedication',
+          id: 'month_streak',
+          title: 'Maratón Mensual',
           description: 'Registra tu estado de ánimo por 30 días consecutivos',
-          icon: '💎',
+          icon: 'trophy',
           category: 'streak',
           requirement: 30,
-          current: 0,
-          completed: false,
-          rarity: 'epic',
-          points: 200,
+          unlocked: calculateStreak(moodLogs) >= 30,
+          progress: Math.min(calculateStreak(moodLogs), 30),
+          unlockedAt: calculateStreak(moodLogs) >= 30 ? new Date() : undefined
         },
         {
-          id: 'mood_streak_100',
-          title: 'Centurión',
-          description: 'Registra tu estado de ánimo por 100 días consecutivos',
-          icon: '👑',
-          category: 'streak',
-          requirement: 100,
-          current: 0,
-          completed: false,
-          rarity: 'legendary',
-          points: 1000,
-        },
-        {
-          id: 'total_moods_50',
-          title: 'Explorador',
-          description: 'Registra 50 estados de ánimo en total',
-          icon: '🗺️',
-          category: 'milestone',
-          requirement: 50,
-          current: 0,
-          completed: false,
-          rarity: 'rare',
-          points: 100,
-        },
-        {
-          id: 'total_moods_200',
-          title: 'Veterano',
-          description: 'Registra 200 estados de ánimo en total',
-          icon: '🏆',
-          category: 'milestone',
-          requirement: 200,
-          current: 0,
-          completed: false,
-          rarity: 'epic',
-          points: 500,
-        },
-        {
-          id: 'first_chat',
-          title: 'Comunicador',
-          description: 'Envía tu primer mensaje a un psicólogo',
-          icon: '💬',
-          category: 'social',
-          requirement: 1,
-          current: 0,
-          completed: false,
-          rarity: 'common',
-          points: 25,
-        },
-        {
-          id: 'chat_sessions_10',
-          title: 'Conversador',
-          description: 'Mantén 10 conversaciones con psicólogos',
-          icon: '🤝',
-          category: 'social',
+          id: 'mood_explorer',
+          title: 'Explorador de Emociones',
+          description: 'Registra 10 estados de ánimo diferentes',
+          icon: 'brain',
+          category: 'mood',
           requirement: 10,
-          current: 0,
-          completed: false,
-          rarity: 'rare',
-          points: 75,
+          unlocked: moodLogs.length >= 10,
+          progress: Math.min(moodLogs.length, 10),
+          unlockedAt: moodLogs.length >= 10 ? new Date() : undefined
         },
         {
           id: 'positive_week',
           title: 'Semana Positiva',
-          description: 'Mantén un estado de ánimo promedio de 4+ por una semana',
-          icon: '☀️',
+          description: 'Mantén un promedio de ánimo alto por 7 días',
+          icon: 'heart',
           category: 'wellness',
-          requirement: 1,
-          current: 0,
-          completed: false,
-          rarity: 'rare',
-          points: 60,
+          requirement: 7,
+          unlocked: calculatePositiveDays(moodLogs) >= 7,
+          progress: Math.min(calculatePositiveDays(moodLogs), 7),
+          unlockedAt: calculatePositiveDays(moodLogs) >= 7 ? new Date() : undefined
         },
         {
-          id: 'wellness_tracker',
-          title: 'Bienestar Total',
-          description: 'Registra métricas de bienestar por 14 días consecutivos',
-          icon: '🧘',
-          category: 'wellness',
-          requirement: 14,
-          current: 0,
-          completed: false,
-          rarity: 'epic',
-          points: 150,
+          id: 'mood_master',
+          title: 'Maestro del Estado de Ánimo',
+          description: 'Registra 100 estados de ánimo',
+          icon: 'crown',
+          category: 'mood',
+          requirement: 100,
+          unlocked: moodLogs.length >= 100,
+          progress: Math.min(moodLogs.length, 100),
+          unlockedAt: moodLogs.length >= 100 ? new Date() : undefined
         },
+        {
+          id: 'early_bird',
+          title: 'Madrugador',
+          description: 'Registra tu estado de ánimo antes de las 8 AM por 5 días',
+          icon: 'zap',
+          category: 'special',
+          requirement: 5,
+          unlocked: calculateEarlyMornings(moodLogs) >= 5,
+          progress: Math.min(calculateEarlyMornings(moodLogs), 5),
+          unlockedAt: calculateEarlyMornings(moodLogs) >= 5 ? new Date() : undefined
+        },
+        {
+          id: 'consistency_king',
+          title: 'Rey de la Consistencia',
+          description: 'Registra tu estado de ánimo por 100 días consecutivos',
+          icon: 'shield',
+          category: 'streak',
+          requirement: 100,
+          unlocked: calculateStreak(moodLogs) >= 100,
+          progress: Math.min(calculateStreak(moodLogs), 100),
+          unlockedAt: calculateStreak(moodLogs) >= 100 ? new Date() : undefined
+        }
       ];
 
-      setAchievements(systemAchievements);
+      setAchievements(allAchievements);
+      
+      // Verificar si hay nuevos logros desbloqueados
+      checkNewAchievements(allAchievements, unlockedAchievements);
+      
     } catch (error) {
       console.error('Error fetching achievements:', error);
-    }
-  };
-
-  const fetchUserAchievements = async () => {
-    if (!userProfile?.uid) return;
-
-    try {
-      // Obtener logros del usuario
-      const userAchievementsDoc = await getDoc(doc(db, 'userAchievements', userProfile.uid));
-      const userAchievementsData = userAchievementsDoc.exists() ? userAchievementsDoc.data().achievements || [] : [];
-
-      setUserAchievements(userAchievementsData);
-
-      // Calcular estadísticas del usuario
-      await calculateUserStats(userAchievementsData);
-    } catch (error) {
-      console.error('Error fetching user achievements:', error);
-    }
-  };
-
-  const calculateUserStats = async (userAchievementsData: UserAchievement[]) => {
-    if (!userProfile?.uid) return;
-
-    try {
-      // Obtener registros de estado de ánimo
-      const moodLogsQuery = query(collection(db, 'moodLogs'), where('userId', '==', userProfile.uid));
-      const moodLogsSnapshot = await getDocs(moodLogsQuery);
-      const moodLogs = moodLogsSnapshot.docs.map((doc) => doc.data());
-
-      // Obtener conversaciones
-      const conversationsQuery = query(
-        collection(db, 'conversations'),
-        where(`participants.${userProfile.uid}`, '==', true)
-      );
-      const conversationsSnapshot = await getDocs(conversationsQuery);
-      const conversations = conversationsSnapshot.docs.map((doc) => doc.id);
-
-      // Calcular estadísticas
-      const stats = {
-        totalMoods: moodLogs.length,
-        currentStreak: calculateCurrentStreak(moodLogs),
-        totalChats: conversations.length,
-        positiveWeeks: calculatePositiveWeeks(moodLogs),
-        wellnessDays: calculateWellnessDays(moodLogs),
-      };
-
-      // Actualizar progreso de logros
-      const updatedAchievements = achievements.map((achievement) => {
-        let current = 0;
-        let completed = false;
-
-        switch (achievement.id) {
-          case 'first_mood':
-            current = stats.totalMoods;
-            completed = stats.totalMoods >= 1;
-            break;
-          case 'mood_streak_7':
-            current = stats.currentStreak;
-            completed = stats.currentStreak >= 7;
-            break;
-          case 'mood_streak_30':
-            current = stats.currentStreak;
-            completed = stats.currentStreak >= 30;
-            break;
-          case 'mood_streak_100':
-            current = stats.currentStreak;
-            completed = stats.currentStreak >= 100;
-            break;
-          case 'total_moods_50':
-            current = stats.totalMoods;
-            completed = stats.totalMoods >= 50;
-            break;
-          case 'total_moods_200':
-            current = stats.totalMoods;
-            completed = stats.totalMoods >= 200;
-            break;
-          case 'first_chat':
-            current = stats.totalChats;
-            completed = stats.totalChats >= 1;
-            break;
-          case 'chat_sessions_10':
-            current = stats.totalChats;
-            completed = stats.totalChats >= 10;
-            break;
-          case 'positive_week':
-            current = stats.positiveWeeks;
-            completed = stats.positiveWeeks >= 1;
-            break;
-          case 'wellness_tracker':
-            current = stats.wellnessDays;
-            completed = stats.wellnessDays >= 14;
-            break;
-        }
-
-        return { ...achievement, current, completed };
-      });
-
-      setAchievements(updatedAchievements);
-
-      // Calcular puntos totales
-      const totalPoints = updatedAchievements
-        .filter((achievement) => achievement.completed)
-        .reduce((sum, achievement) => sum + achievement.points, 0);
-      setTotalPoints(totalPoints);
-
-      setLoading(false);
-    } catch (error) {
-      console.error('Error calculating user stats:', error);
+    } finally {
       setLoading(false);
     }
   };
 
-  const calculateCurrentStreak = (moodLogs: any[]) => {
+  const calculateStreak = (moodLogs: any[]): number => {
     if (moodLogs.length === 0) return 0;
-
-    const sortedLogs = moodLogs.sort((a, b) => {
-      const dateA = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
-      const dateB = b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
-      return dateB.getTime() - dateA.getTime();
-    });
-
+    
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+    
+    // Ordenar logs por fecha descendente
+    const sortedLogs = moodLogs.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
+    
     for (let i = 0; i < sortedLogs.length; i++) {
-      const logDate = sortedLogs[i].createdAt.toDate
-        ? sortedLogs[i].createdAt.toDate()
-        : new Date(sortedLogs[i].createdAt);
+      const logDate = sortedLogs[i].createdAt?.toDate ? sortedLogs[i].createdAt.toDate() : new Date(sortedLogs[i].createdAt);
       logDate.setHours(0, 0, 0, 0);
-
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - i);
-
-      if (logDate.getTime() === expectedDate.getTime()) {
+      
+      const daysDiff = Math.floor((today.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff === streak) {
         streak++;
-      } else {
+      } else if (daysDiff > streak) {
         break;
       }
     }
-
+    
     return streak;
   };
 
-  const calculatePositiveWeeks = (moodLogs: any[]) => {
-    const weeklyAverages: { [key: string]: number[] } = {};
-
-    moodLogs.forEach((log) => {
-      const date = log.createdAt.toDate ? log.createdAt.toDate() : new Date(log.createdAt);
-      const weekKey = getWeekKey(date);
-
-      if (!weeklyAverages[weekKey]) {
-        weeklyAverages[weekKey] = [];
-      }
-      weeklyAverages[weekKey].push(log.mood);
+  const calculatePositiveDays = (moodLogs: any[]): number => {
+    if (moodLogs.length === 0) return 0;
+    
+    // Obtener logs de los últimos 7 días
+    const lastWeek = moodLogs.filter(log => {
+      const logDate = log.createdAt?.toDate ? log.createdAt.toDate() : new Date(log.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return logDate >= weekAgo;
     });
+    
+    // Contar días con mood >= 4
+    const positiveDays = lastWeek.filter(log => log.mood >= 4).length;
+    return positiveDays;
+  };
 
-    let positiveWeeks = 0;
-    Object.values(weeklyAverages).forEach((weekMoods) => {
-      if (weekMoods.length >= 3) {
-        // Mínimo 3 registros por semana
-        const average = weekMoods.reduce((sum, mood) => sum + mood, 0) / weekMoods.length;
-        if (average >= 4) {
-          positiveWeeks++;
-        }
+  const calculateEarlyMornings = (moodLogs: any[]): number => {
+    if (moodLogs.length === 0) return 0;
+    
+    // Contar logs registrados antes de las 8 AM
+    const earlyMornings = moodLogs.filter(log => {
+      const logDate = log.createdAt?.toDate ? log.createdAt.toDate() : new Date(log.createdAt);
+      return logDate.getHours() < 8;
+    }).length;
+    
+    return earlyMornings;
+  };
+
+  const checkNewAchievements = async (allAchievements: Achievement[], unlockedAchievements: any[]) => {
+    if (!user) return;
+    
+    const newAchievements = allAchievements.filter(achievement => 
+      achievement.unlocked && 
+      !unlockedAchievements.some(unlocked => unlocked.achievementId === achievement.id)
+    );
+    
+    // Guardar nuevos logros desbloqueados
+    for (const achievement of newAchievements) {
+      try {
+        await addDoc(collection(db, 'userAchievements'), {
+          userId: user.uid,
+          achievementId: achievement.id,
+          unlockedAt: serverTimestamp(),
+          title: achievement.title,
+          description: achievement.description
+        });
+      } catch (error) {
+        console.error('Error saving achievement:', error);
       }
-    });
-
-    return positiveWeeks;
-  };
-
-  const calculateWellnessDays = (moodLogs: any[]) => {
-    return moodLogs.filter(
-      (log) =>
-        log.wellness &&
-        (log.wellness.sleep > 0 || log.wellness.stress > 0 || log.wellness.energy > 0 || log.wellness.social > 0)
-    ).length;
-  };
-
-  const getWeekKey = (date: Date) => {
-    const year = date.getFullYear();
-    const week = Math.ceil(((date.getTime() - new Date(year, 0, 1).getTime()) / 86400000 + 1) / 7);
-    return `${year}-W${week}`;
-  };
-
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common':
-        return 'text-gray-600 bg-gray-100';
-      case 'rare':
-        return 'text-blue-600 bg-blue-100';
-      case 'epic':
-        return 'text-purple-600 bg-purple-100';
-      case 'legendary':
-        return 'text-yellow-600 bg-yellow-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'mood':
-        return <Heart className='w-5 h-5' />;
-      case 'streak':
-        return <Zap className='w-5 h-5' />;
-      case 'social':
-        return <MessageCircle className='w-5 h-5' />;
-      case 'wellness':
-        return <Target className='w-5 h-5' />;
-      case 'milestone':
-        return <Trophy className='w-5 h-5' />;
-      default:
-        return <Award className='w-5 h-5' />;
-    }
+  const getIcon = (iconName: string) => {
+    const icons: { [key: string]: React.ReactNode } = {
+      star: <Star className="w-6 h-6" />,
+      calendar: <Calendar className="w-6 h-6" />,
+      trophy: <Trophy className="w-6 h-6" />,
+      brain: <Brain className="w-6 h-6" />,
+      heart: <Heart className="w-6 h-6" />,
+      crown: <Crown className="w-6 h-6" />,
+      zap: <Zap className="w-6 h-6" />,
+      shield: <Shield className="w-6 h-6" />,
+      award: <Award className="w-6 h-6" />
+    };
+    return icons[iconName] || <Star className="w-6 h-6" />;
   };
+
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      streak: 'bg-orange-100 text-orange-600',
+      mood: 'bg-blue-100 text-blue-600',
+      social: 'bg-green-100 text-green-600',
+      wellness: 'bg-pink-100 text-pink-600',
+      special: 'bg-purple-100 text-purple-600'
+    };
+    return colors[category] || 'bg-gray-100 text-gray-600';
+  };
+
+  const filteredAchievements = selectedCategory === 'all' 
+    ? achievements 
+    : achievements.filter(achievement => achievement.category === selectedCategory);
+
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+  const totalCount = achievements.length;
 
   if (loading) {
     return (
-      <div className='bg-white rounded-xl shadow-lg p-6'>
-        <div className='animate-pulse'>
-          <div className='h-6 bg-gray-200 rounded w-1/3 mb-6'></div>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className='h-24 bg-gray-200 rounded'></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (achievements.length === 0) {
-    return (
-      <div className='bg-white rounded-xl shadow-lg p-6'>
-        <div className='text-center py-12'>
-          <Trophy className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-          <h3 className='text-xl font-semibold text-gray-900 mb-2'>No hay logros disponibles</h3>
-          <p className='text-gray-600 mb-6'>Comienza a usar la aplicación para desbloquear logros</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando logros...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='bg-white rounded-xl shadow-lg p-6'>
-      <div className='flex items-center justify-between mb-6'>
-        <div className='flex items-center gap-3'>
-          <Trophy className='w-6 h-6 text-primary-600' />
-          <h3 className='text-xl font-semibold text-gray-900'>Logros</h3>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <Trophy className="w-8 h-8 text-yellow-500" />
+            <h1 className="text-3xl font-bold text-gray-900">Logros</h1>
+          </div>
+          <p className="text-gray-600">
+            Desbloquea logros completando diferentes objetivos en tu viaje de bienestar
+          </p>
         </div>
-        <div className='text-right'>
-          <div className='text-2xl font-bold text-primary-600'>{totalPoints}</div>
-          <div className='text-sm text-gray-500'>Puntos Totales</div>
-        </div>
-      </div>
 
-      {/* Resumen de logros */}
-      <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-8'>
-        <div className='bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 text-center'>
-          <Trophy className='w-6 h-6 text-green-600 mx-auto mb-2' />
-          <div className='text-2xl font-bold text-green-600'>{achievements.filter((a) => a.completed).length}</div>
-          <div className='text-sm text-green-600'>Completados</div>
-        </div>
-        <div className='bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 text-center'>
-          <Target className='w-6 h-6 text-blue-600 mx-auto mb-2' />
-          <div className='text-2xl font-bold text-blue-600'>
-            {achievements.length - achievements.filter((a) => a.completed).length}
+        {/* Progress Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Progreso General</h2>
+            <span className="text-2xl font-bold text-primary-600">
+              {unlockedCount}/{totalCount}
+            </span>
           </div>
-          <div className='text-sm text-blue-600'>Pendientes</div>
-        </div>
-        <div className='bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 text-center'>
-          <Star className='w-6 h-6 text-purple-600 mx-auto mb-2' />
-          <div className='text-2xl font-bold text-purple-600'>
-            {achievements.filter((a) => a.completed && a.rarity === 'legendary').length}
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div 
+              className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${(unlockedCount / totalCount) * 100}%` }}
+            ></div>
           </div>
-          <div className='text-sm text-purple-600'>Legendarios</div>
+          <p className="text-sm text-gray-600 mt-2">
+            {unlockedCount === totalCount 
+              ? '¡Felicidades! Has desbloqueado todos los logros 🎉'
+              : `${totalCount - unlockedCount} logros restantes`
+            }
+          </p>
         </div>
-        <div className='bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 text-center'>
-          <Zap className='w-6 h-6 text-orange-600 mx-auto mb-2' />
-          <div className='text-2xl font-bold text-orange-600'>
-            {Math.round((achievements.filter((a) => a.completed).length / achievements.length) * 100)}%
-          </div>
-          <div className='text-sm text-orange-600'>Progreso</div>
-        </div>
-      </div>
 
-      {/* Lista de logros */}
-      <div className='space-y-4'>
-        <h4 className='text-lg font-medium text-gray-900 mb-4'>Todos los Logros</h4>
-        {achievements.map((achievement) => (
-          <div
-            key={achievement.id}
-            className={`p-4 rounded-lg border transition-all duration-200 ${
-              achievement.completed ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+        {/* Category Filter */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              selectedCategory === 'all'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-4'>
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                    achievement.completed ? 'bg-green-100' : 'bg-gray-100'
-                  }`}
-                >
-                  {achievement.completed ? '✅' : achievement.icon}
+            Todos
+          </button>
+          {['streak', 'mood', 'wellness', 'special'].map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+                selectedCategory === category
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              {category === 'streak' ? 'Rachas' : 
+               category === 'mood' ? 'Estado de Ánimo' :
+               category === 'wellness' ? 'Bienestar' : 'Especiales'}
+            </button>
+          ))}
+        </div>
+
+        {/* Achievements Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAchievements.map((achievement) => (
+            <div
+              key={achievement.id}
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 ${
+                achievement.unlocked 
+                  ? 'ring-2 ring-yellow-400 ring-opacity-50' 
+                  : 'opacity-75'
+              }`}
+            >
+              <div className="flex items-start space-x-4">
+                <div className={`p-3 rounded-lg ${
+                  achievement.unlocked 
+                    ? 'bg-yellow-100 text-yellow-600' 
+                    : 'bg-gray-100 text-gray-400'
+                }`}>
+                  {achievement.unlocked ? getIcon(achievement.icon) : <Lock className="w-6 h-6" />}
                 </div>
-                <div>
-                  <div className='flex items-center gap-2 mb-1'>
-                    <h5 className={`font-semibold ${achievement.completed ? 'text-green-800' : 'text-gray-900'}`}>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className={`text-lg font-semibold ${
+                      achievement.unlocked ? 'text-gray-900' : 'text-gray-500'
+                    }`}>
                       {achievement.title}
-                    </h5>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getRarityColor(achievement.rarity)}`}
-                    >
-                      {achievement.rarity}
+                    </h3>
+                    {achievement.unlocked && (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    )}
+                  </div>
+                  
+                  <p className={`text-sm mb-3 ${
+                    achievement.unlocked ? 'text-gray-600' : 'text-gray-400'
+                  }`}>
+                    {achievement.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(achievement.category)}`}>
+                      {achievement.category === 'streak' ? 'Racha' : 
+                       achievement.category === 'mood' ? 'Estado de Ánimo' :
+                       achievement.category === 'wellness' ? 'Bienestar' : 'Especial'}
                     </span>
-                  </div>
-                  <p className='text-sm text-gray-600 mb-2'>{achievement.description}</p>
-                  <div className='flex items-center gap-4 text-xs text-gray-500'>
-                    <div className='flex items-center gap-1'>
-                      {getCategoryIcon(achievement.category)}
-                      <span>{achievement.category}</span>
+                    
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">
+                        {achievement.progress}/{achievement.requirement}
+                      </div>
+                      <div className="w-16 bg-gray-200 rounded-full h-1.5 mt-1">
+                        <div 
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                            achievement.unlocked ? 'bg-green-500' : 'bg-primary-500'
+                          }`}
+                          style={{ width: `${(achievement.progress / achievement.requirement) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className='flex items-center gap-1'>
-                      <Star className='w-3 h-3' />
-                      <span>{achievement.points} pts</span>
-                    </div>
                   </div>
-                </div>
-              </div>
-              <div className='text-right'>
-                <div className={`text-lg font-bold ${achievement.completed ? 'text-green-600' : 'text-gray-400'}`}>
-                  {achievement.current}/{achievement.requirement}
-                </div>
-                <div className='w-20 bg-gray-200 rounded-full h-2 mt-1'>
-                  <div
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      achievement.completed ? 'bg-green-500' : 'bg-primary-500'
-                    }`}
-                    style={{ width: `${Math.min((achievement.current / achievement.requirement) * 100, 100)}%` }}
-                  ></div>
+                  
+                  {achievement.unlocked && achievement.unlockedAt && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Desbloqueado: {new Date(achievement.unlockedAt).toLocaleDateString('es-ES')}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+
+        {filteredAchievements.length === 0 && (
+          <div className="text-center py-12">
+            <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay logros en esta categoría
+            </h3>
+            <p className="text-gray-600">
+              Cambia de categoría para ver más logros disponibles
+            </p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

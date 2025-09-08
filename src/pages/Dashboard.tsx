@@ -13,7 +13,8 @@ import {
   Brain,
   Bell,
   Menu,
-  X
+  X,
+  Trophy
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
@@ -268,18 +269,31 @@ const Dashboard: React.FC = () => {
               </div>
             </Link>
 
-            <Link
-              to="/chat"
-              className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all duration-200"
-            >
-              <div className="flex items-center space-x-3">
-                <MessageCircle className="w-8 h-8 text-green-600" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Chat</h3>
-                  <p className="text-gray-600 text-sm">Conecta con tu psicólogo</p>
-                </div>
-              </div>
-            </Link>
+      <Link
+        to="/chat"
+        className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all duration-200"
+      >
+        <div className="flex items-center space-x-3">
+          <MessageCircle className="w-8 h-8 text-green-600" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Chat</h3>
+            <p className="text-gray-600 text-sm">Conecta con tu psicólogo</p>
+          </div>
+        </div>
+      </Link>
+
+      <Link
+        to="/achievements"
+        className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all duration-200"
+      >
+        <div className="flex items-center space-x-3">
+          <Trophy className="w-8 h-8 text-yellow-600" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Logros</h3>
+            <p className="text-gray-600 text-sm">Desbloquea logros y objetivos</p>
+          </div>
+        </div>
+      </Link>
           </div>
 
           {/* Stats cards */}
@@ -418,6 +432,13 @@ const SidebarContent: React.FC<{ userProfile: any; onSignOut: () => void }> = ({
       >
         <MessageCircle className="w-5 h-5" />
         <span>Chat</span>
+      </Link>
+      <Link
+        to="/achievements"
+        className="flex items-center space-x-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+      >
+        <Trophy className="w-5 h-5" />
+        <span>Logros</span>
       </Link>
       <Link
         to="/settings"
