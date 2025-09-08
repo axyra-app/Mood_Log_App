@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const MoodFlowSimple: React.FC = () => {
+  const { user } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
@@ -64,9 +66,10 @@ const MoodFlowSimple: React.FC = () => {
 
       // Guardar en localStorage para simular persistencia
       const today = new Date().toDateString();
-      const existingData = JSON.parse(localStorage.getItem('moodLogs') || '{}');
+      const userKey = `moodLogs_${user?.uid}`;
+      const existingData = JSON.parse(localStorage.getItem(userKey) || '{}');
       existingData[today] = moodData;
-      localStorage.setItem('moodLogs', JSON.stringify(existingData));
+      localStorage.setItem(userKey, JSON.stringify(existingData));
 
       // Mostrar análisis de IA
       alert(`¡Mood guardado exitosamente! 😊\n\nAnálisis de IA: ${moodData.aiAnalysis.primaryEmotion} (${moodData.aiAnalysis.confidence}% confianza)\n\nSugerencias:\n${moodData.aiAnalysis.suggestions.join('\n• ')}`);
@@ -107,9 +110,10 @@ const MoodFlowSimple: React.FC = () => {
 
       // Guardar en localStorage
       const today = new Date().toDateString();
-      const existingData = JSON.parse(localStorage.getItem('moodLogs') || '{}');
+      const userKey = `moodLogs_${user?.uid}`;
+      const existingData = JSON.parse(localStorage.getItem(userKey) || '{}');
       existingData[today] = moodData;
-      localStorage.setItem('moodLogs', JSON.stringify(existingData));
+      localStorage.setItem(userKey, JSON.stringify(existingData));
 
       alert(`¡Mood guardado exitosamente! 😊\n\nAnálisis de IA: ${moodData.aiAnalysis.primaryEmotion} (${moodData.aiAnalysis.confidence}% confianza)`);
       

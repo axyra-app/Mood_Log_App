@@ -1,7 +1,9 @@
 import React, { useState, FormEvent, useEffect, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const RegisterSimple: React.FC = () => {
+  const { signUp, signInWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -78,11 +80,8 @@ const RegisterSimple: React.FC = () => {
       setError('');
       setLoading(true);
       
-      // Aquí iría la lógica real de Firebase Auth
-      // Por ahora redirigimos al dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      await signUp(formData.email, formData.password);
+      navigate('/dashboard');
       
     } catch (error: any) {
       setError('Error en el registro: ' + error.message);
@@ -96,11 +95,8 @@ const RegisterSimple: React.FC = () => {
       setError('');
       setLoading(true);
       
-      // Aquí iría la lógica real de Google Auth
-      // Por ahora redirigimos al dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      await signInWithGoogle();
+      navigate('/dashboard');
       
     } catch (error: any) {
       setError('Error en el registro con Google: ' + error.message);

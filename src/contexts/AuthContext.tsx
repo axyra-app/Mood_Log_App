@@ -1,20 +1,20 @@
-import {
-  GoogleAuthProvider,
-  User,
-  createUserWithEmailAndPassword,
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  User, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
   onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
-import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../services/firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, additionalData?: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -30,7 +30,7 @@ export const useAuth = () => {
 };
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
@@ -38,78 +38,59 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        setLoading(false);
-      }, (error) => {
-        console.warn('⚠️ Error en autenticación:', error);
-        setLoading(false);
-      });
-
-      return unsubscribe;
-    } catch (error) {
-      console.warn('⚠️ Error al inicializar autenticación:', error);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setLoading(false);
-    }
+    });
+
+    return unsubscribe;
   }, []);
 
-  const signUp = async (email: string, password: string, additionalData?: any) => {
-    setLoading(true);
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      // Aquí puedes agregar lógica adicional para guardar datos del usuario
-      console.log('Usuario creado:', result.user);
-    } catch (error: any) {
-      throw new Error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
       throw new Error(error.message);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      throw new Error(error.message);
     }
   };
 
   const signInWithGoogle = async () => {
-    setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error: any) {
       throw new Error(error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
-    setLoading(true);
     try {
       await signOut(auth);
     } catch (error: any) {
       throw new Error(error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const value: AuthContextType = {
     user,
     loading,
-    signUp,
     signIn,
+    signUp,
     signInWithGoogle,
-    logout,
+    logout
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-

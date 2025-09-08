@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const DashboardSimple: React.FC = () => {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -22,8 +24,11 @@ const DashboardSimple: React.FC = () => {
   }, []);
 
   const checkFirstTimeToday = () => {
+    if (!user) return;
+    
     const today = new Date().toDateString();
-    const existingData = JSON.parse(localStorage.getItem('moodLogs') || '{}');
+    const userKey = `moodLogs_${user.uid}`;
+    const existingData = JSON.parse(localStorage.getItem(userKey) || '{}');
     
     // Si no hay registro para hoy, redirigir a MoodFlow
     if (!existingData[today]) {
@@ -50,9 +55,12 @@ const DashboardSimple: React.FC = () => {
 
   const loadUserData = async () => {
     try {
+      if (!user) return;
+      
       // Verificar si ya se registró el mood de hoy
       const today = new Date().toDateString();
-      const existingData = JSON.parse(localStorage.getItem('moodLogs') || '{}');
+      const userKey = `moodLogs_${user.uid}`;
+      const existingData = JSON.parse(localStorage.getItem(userKey) || '{}');
       const todayMood = existingData[today];
       
       // Calcular estadísticas basadas en datos reales
@@ -225,7 +233,7 @@ const DashboardSimple: React.FC = () => {
               {isDarkMode ? '☀️' : '🌙'}
             </button>
             <button
-              onClick={() => window.location.href = '/login'}
+              onClick={logout}
               className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 ${
                 isDarkMode
                   ? 'bg-gray-700 text-white hover:bg-gray-600'
@@ -245,7 +253,7 @@ const DashboardSimple: React.FC = () => {
           <h2 className={`text-4xl font-black mb-4 transition-colors duration-500 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            ¡HOLA! 👋
+            ¡HOLA {user?.displayName || user?.email?.split('@')[0] || 'USUARIO'}! 👋
           </h2>
           <p className={`text-xl transition-colors duration-500 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'

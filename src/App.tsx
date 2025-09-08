@@ -1,6 +1,12 @@
 import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
+// Contexts
+import { AuthProvider } from './contexts/AuthContext';
+
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+
 // Pages (solo las que existen)
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
@@ -13,18 +19,29 @@ import TermsSimple from './pages/TermsSimple';
 
 function App() {
   return (
-    <Router>
-      <div className='App'>
-        <Routes>
-          {/* Public routes */}
-          <Route path='/' element={<HomeSimple />} />
-          <Route path='/login' element={<LoginSimple />} />
-          <Route path='/register' element={<RegisterSimple />} />
-          <Route path='/forgot-password' element={<ForgotPassword />} />
-          <Route path='/terms' element={<TermsSimple />} />
-          <Route path='/privacy' element={<PrivacySimple />} />
-          <Route path='/dashboard' element={<DashboardSimple />} />
-          <Route path='/mood-flow' element={<MoodFlowSimple />} />
+    <AuthProvider>
+      <Router>
+        <div className='App'>
+          <Routes>
+            {/* Public routes */}
+            <Route path='/' element={<HomeSimple />} />
+            <Route path='/login' element={<LoginSimple />} />
+            <Route path='/register' element={<RegisterSimple />} />
+            <Route path='/forgot-password' element={<ForgotPassword />} />
+            <Route path='/terms' element={<TermsSimple />} />
+            <Route path='/privacy' element={<PrivacySimple />} />
+            
+            {/* Protected routes */}
+            <Route path='/dashboard' element={
+              <ProtectedRoute>
+                <DashboardSimple />
+              </ProtectedRoute>
+            } />
+            <Route path='/mood-flow' element={
+              <ProtectedRoute>
+                <MoodFlowSimple />
+              </ProtectedRoute>
+            } />
 
           {/* Catch all route */}
           <Route
@@ -45,9 +62,10 @@ function App() {
               </div>
             }
           />
-        </Routes>
-      </div>
-    </Router>
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

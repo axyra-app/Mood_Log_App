@@ -1,7 +1,9 @@
 import React, { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginSimple: React.FC = () => {
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,11 +33,8 @@ const LoginSimple: React.FC = () => {
       setError('');
       setLoading(true);
       
-      // Aquí iría la lógica real de Firebase Auth
-      // Por ahora redirigimos al dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      await signIn(email, password);
+      navigate('/dashboard');
       
     } catch (error: any) {
       setError('Error en el login: ' + error.message);
@@ -49,11 +48,8 @@ const LoginSimple: React.FC = () => {
       setError('');
       setLoading(true);
       
-      // Aquí iría la lógica real de Google Auth
-      // Por ahora redirigimos al dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      await signInWithGoogle();
+      navigate('/dashboard');
       
     } catch (error: any) {
       setError('Error en el login con Google: ' + error.message);
