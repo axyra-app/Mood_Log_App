@@ -211,6 +211,50 @@ export const getUserChats = async (userId: string): Promise<Chat[]> => {
   }
 };
 
+// Funciones adicionales para Settings y Statistics
+export const getUserSettings = async (userId: string): Promise<any> => {
+  try {
+    const settingsRef = doc(db, 'userSettings', userId);
+    const settingsSnap = await getDoc(settingsRef);
+    
+    if (settingsSnap.exists()) {
+      return settingsSnap.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user settings:', error);
+    throw error;
+  }
+};
+
+export const saveUserSettings = async (userId: string, settings: any): Promise<void> => {
+  try {
+    const settingsRef = doc(db, 'userSettings', userId);
+    await updateDoc(settingsRef, {
+      ...settings,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error saving user settings:', error);
+    throw error;
+  }
+};
+
+export const getUserStatistics = async (userId: string): Promise<any> => {
+  try {
+    const statsRef = doc(db, 'userStats', userId);
+    const statsSnap = await getDoc(statsRef);
+    
+    if (statsSnap.exists()) {
+      return statsSnap.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user statistics:', error);
+    throw error;
+  }
+};
+
 // Función para verificar la conexión a Firestore
 export const testFirestoreConnection = async (): Promise<boolean> => {
   try {

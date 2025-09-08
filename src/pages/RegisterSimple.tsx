@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, useEffect, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext-debug';
+import { useAuth } from '../contexts/AuthContext';
 
 const RegisterSimple: React.FC = () => {
   const { signUp, signInWithGoogle } = useAuth();

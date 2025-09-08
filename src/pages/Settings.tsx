@@ -2,7 +2,7 @@ import { ArrowLeft, Bell, Calendar, Download, Mail, MapPin, Palette, Phone, Save
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext-debug';
+import { useAuth } from '../contexts/AuthContext';
 import { getUserSettings, saveUserSettings } from '../services/firestore';
 
 const Settings: React.FC = () => {

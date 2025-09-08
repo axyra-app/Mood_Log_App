@@ -2,7 +2,7 @@ import { BarChart3, Calendar, CheckCircle, Clock, MessageCircle } from 'lucide-r
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext-debug';
+import { useAuth } from '../contexts/AuthContext';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();

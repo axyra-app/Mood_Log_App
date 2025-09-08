@@ -28,7 +28,7 @@ import {
   YAxis,
 } from 'recharts';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext-debug';
+import { useAuth } from '../contexts/AuthContext';
 import { getUserStatistics } from '../services/firestore';
 
 const Statistics: React.FC = () => {

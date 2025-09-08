@@ -14,8 +14,8 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext-debug';
-import { getMessagesRealtime, getUserChats } from '../services/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import { getUserChats } from '../services/firestore';
 import { Chat, ChatMessage, Psychologist } from '../types';
 
 const Chat: React.FC = () => {

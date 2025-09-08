@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMoodLogsRealtime } from '../services/firestore';
+import { getMoodLogs } from '../services/firestore';
 import {
   ContextualData,
   analyzeLongTermTrends,
@@ -15,17 +15,22 @@ export const useMood = (userId?: string) => {
   const [insights, setInsights] = useState<string[]>([]);
   const [longTermTrends, setLongTermTrends] = useState<any>(null);
 
-  // Cargar mood logs en tiempo real si se proporciona userId
+  // Cargar mood logs si se proporciona userId
   useEffect(() => {
     if (userId) {
-      const unsubscribe = getMoodLogsRealtime(userId, (logs) => {
-        setMoodLogs(logs);
-        // Generar insights cuando se actualicen los logs
-        if (logs.length > 0) {
-          generateInsights(logs);
+      const loadMoodLogs = async () => {
+        try {
+          const logs = await getMoodLogs(userId);
+          setMoodLogs(logs);
+          // Generar insights cuando se carguen los logs
+          if (logs.length > 0) {
+            generateInsights(logs);
+          }
+        } catch (error) {
+          console.error('Error loading mood logs:', error);
         }
-      });
-      return () => unsubscribe();
+      };
+      loadMoodLogs();
     }
   }, [userId]);
 

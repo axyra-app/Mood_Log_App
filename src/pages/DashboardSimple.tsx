@@ -4,7 +4,7 @@ import AdvancedAIInsights from '../components/AdvancedAIInsights';
 import ComingSoonModal from '../components/ComingSoonModal';
 import ConfigurationModal from '../components/ConfigurationModal';
 import NotificationDropdown from '../components/NotificationDropdown';
-import { useAuth } from '../contexts/AuthContext-debug';
+import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 import DashboardPsychologist from './DashboardPsychologist';
 
