@@ -4,10 +4,16 @@ import { useAuth } from '../contexts/AuthContext-debug';
 import NotificationDropdown from '../components/NotificationDropdown';
 import ComingSoonModal from '../components/ComingSoonModal';
 import ConfigurationModal from '../components/ConfigurationModal';
+import DashboardPsychologist from './DashboardPsychologist';
 
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Si el usuario es psicólogo, mostrar el dashboard de psicólogo
+  if (user?.role === 'psychologist') {
+    return <DashboardPsychologist />;
+  }
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);

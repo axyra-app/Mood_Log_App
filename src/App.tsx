@@ -6,9 +6,9 @@ import { AuthProvider } from './contexts/AuthContext-debug';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
-import RoleBasedDashboard from './components/RoleBasedDashboard';
 
 // Pages (solo las que existen)
+import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
@@ -36,7 +36,7 @@ function App() {
               path='/dashboard'
               element={
                 <ProtectedRoute>
-                  <RoleBasedDashboard />
+                  <DashboardSimple />
                 </ProtectedRoute>
               }
             />
