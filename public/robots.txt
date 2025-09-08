@@ -1,0 +1,64 @@
+# Robots.txt para Mood Log App
+# https://moodlogapp.vercel.app
+
+User-agent: *
+Allow: /
+
+# Páginas públicas que pueden ser indexadas
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /terms
+Allow: /privacy
+
+# Páginas que requieren autenticación (no indexar)
+Disallow: /dashboard
+Disallow: /mood-flow
+Disallow: /statistics
+Disallow: /chat
+Disallow: /settings
+Disallow: /achievements
+
+# Archivos y directorios que no deben ser indexados
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+Disallow: /sw.js
+Disallow: /manifest.json
+
+# Archivos específicos
+Disallow: /*.json$
+Disallow: /*.js$
+Disallow: /*.css$
+
+# Sitemap
+Sitemap: https://moodlogapp.vercel.app/sitemap.xml
+
+# Crawl-delay para ser respetuosos con el servidor
+Crawl-delay: 1
+
+# User-agents específicos
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+# Bloquear bots maliciosos conocidos
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
