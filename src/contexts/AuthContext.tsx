@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, handleFirebaseError } from '../lib/firebase';
+import FirebaseFallback from '../components/FirebaseFallback';
 
 // Types
 export interface UserProfile {
@@ -78,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [firebaseError, setFirebaseError] = useState(false);
 
   // Create user profile in Firestore
   const createUserProfile = async (user: User, additionalData: any = {}) => {
@@ -260,20 +262,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Listen to auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      
-      if (user) {
-        await refreshUserProfile();
-      } else {
-        setUserProfile(null);
+    let unsubscribe: (() => void) | undefined;
+    
+    try {
+      // Check if Firebase is properly initialized
+      if (!auth || typeof auth === 'object' && Object.keys(auth).length === 0) {
+        console.error('Firebase not properly initialized');
+        setFirebaseError(true);
+        setLoading(false);
+        return;
       }
-      
-      setLoading(false);
-    });
 
-    return unsubscribe;
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        try {
+          setUser(user);
+          
+          if (user) {
+            await refreshUserProfile();
+          } else {
+            setUserProfile(null);
+          }
+        } catch (error) {
+          console.error('Error in auth state change:', error);
+          setUserProfile(null);
+        } finally {
+          setLoading(false);
+        }
+      });
+    } catch (error) {
+      console.error('Error setting up auth listener:', error);
+      setFirebaseError(true);
+      setLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
+
+  // Show fallback if Firebase is not working
+  if (firebaseError) {
+    return <FirebaseFallback />;
+  }
 
   const value: AuthContextType = {
     user,
