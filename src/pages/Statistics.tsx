@@ -28,7 +28,7 @@ import {
   YAxis,
 } from 'recharts';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext-debug';
 import { getUserStatistics } from '../services/firestore';
 
 const Statistics: React.FC = () => {
@@ -80,6 +80,74 @@ const Statistics: React.FC = () => {
   };
 
   const COLORS = ['#8B5CF6', '#EC4899', '#06B6D4', '#10B981', '#F59E0B'];
+
+  const handleDownloadReport = () => {
+    if (!statistics) return;
+
+    const reportData = {
+      generatedAt: new Date().toISOString(),
+      timeRange: timeRange,
+      statistics: statistics,
+      summary: {
+        averageMood: statistics.averageMood,
+        totalLogs: statistics.totalLogs,
+        trend: statistics.weeklyTrend,
+        topActivities: statistics.patterns.commonActivities.slice(0, 5),
+        topEmotions: statistics.patterns.commonEmotions.slice(0, 5),
+      },
+    };
+
+    const dataStr = JSON.stringify(reportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mood-statistics-${timeRange}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShareReport = async () => {
+    if (!statistics) return;
+
+    const shareText =
+      `📊 Mi reporte de bienestar emocional:\n\n` +
+      `• Mood promedio: ${statistics.averageMood}/5\n` +
+      `• Total de registros: ${statistics.totalLogs}\n` +
+      `• Tendencia: ${
+        statistics.weeklyTrend === 'improving'
+          ? 'Mejorando 📈'
+          : statistics.weeklyTrend === 'declining'
+          ? 'Declinando 📉'
+          : 'Estable ➡️'
+      }\n\n` +
+      `Registrado con Mood Log App 💜`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Mi Reporte de Bienestar Emocional',
+          text: shareText,
+          url: window.location.origin,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copiar al portapapeles
+      navigator.clipboard
+        .writeText(shareText)
+        .then(() => {
+          alert('Reporte copiado al portapapeles');
+        })
+        .catch(() => {
+          alert('No se pudo copiar el reporte');
+        });
+    }
+  };
 
   if (loading) {
     return (
@@ -148,10 +216,18 @@ const Statistics: React.FC = () => {
                   <option value='year'>Último año</option>
                 </select>
 
-                <button className='p-2 text-gray-400 hover:text-gray-600 transition-colors'>
+                <button
+                  onClick={handleDownloadReport}
+                  className='p-2 text-gray-400 hover:text-gray-600 transition-colors'
+                  title='Descargar reporte'
+                >
                   <Download className='w-5 h-5' />
                 </button>
-                <button className='p-2 text-gray-400 hover:text-gray-600 transition-colors'>
+                <button
+                  onClick={handleShareReport}
+                  className='p-2 text-gray-400 hover:text-gray-600 transition-colors'
+                  title='Compartir reporte'
+                >
                   <Share2 className='w-5 h-5' />
                 </button>
               </div>

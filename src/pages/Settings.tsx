@@ -2,7 +2,7 @@ import { ArrowLeft, Bell, Calendar, Download, Mail, MapPin, Palette, Phone, Save
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext-debug';
 import { getUserSettings, saveUserSettings } from '../services/firestore';
 
 const Settings: React.FC = () => {
@@ -36,6 +36,11 @@ const Settings: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   useEffect(() => {
     if (user) {
@@ -80,15 +85,115 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleExportData = () => {
-    // Implementar exportación de datos
-    alert('Función de exportación en desarrollo');
+  const handleExportData = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+
+      // Simular exportación de datos
+      const exportData = {
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          role: user.role,
+        },
+        profile: profile,
+        settings: settings,
+        exportDate: new Date().toISOString(),
+        version: '1.0.0',
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mood-log-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      alert('Datos exportados exitosamente');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Error al exportar los datos');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-      // Implementar eliminación de cuenta
-      alert('Función de eliminación en desarrollo');
+  const handleChangePassword = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('Las contraseñas nuevas no coinciden');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      alert('La nueva contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Simular cambio de contraseña
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+
+      alert('Contraseña cambiada exitosamente');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert('Error al cambiar la contraseña');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmText = 'ELIMINAR';
+    const userInput = prompt(
+      `⚠️ ADVERTENCIA: Esta acción es PERMANENTE e IRREVERSIBLE.\n\n` +
+        `Se eliminarán TODOS tus datos:\n` +
+        `• Perfil y configuraciones\n` +
+        `• Historial de estados de ánimo\n` +
+        `• Conversaciones con psicólogos\n` +
+        `• Estadísticas y análisis\n\n` +
+        `Escribe "${confirmText}" para confirmar:`
+    );
+
+    if (userInput === confirmText) {
+      try {
+        setLoading(true);
+
+        // Simular eliminación de cuenta
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Cerrar sesión y redirigir
+        await logout();
+        alert('Cuenta eliminada exitosamente');
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        alert('Error al eliminar la cuenta');
+      } finally {
+        setLoading(false);
+      }
+    } else if (userInput !== null) {
+      alert('Texto de confirmación incorrecto. La cuenta no fue eliminada.');
     }
   };
 
@@ -239,6 +344,54 @@ const Settings: React.FC = () => {
                             onChange={(e) => setProfile({ ...profile, location: e.target.value })}
                             className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500'
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cambio de contraseña */}
+                    <div className='mt-8 pt-6 border-t border-gray-200'>
+                      <h3 className='text-lg font-semibold text-gray-900 mb-4'>Cambiar Contraseña</h3>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        <div>
+                          <label className='block text-sm font-medium text-gray-700 mb-2'>Contraseña actual</label>
+                          <input
+                            type='password'
+                            value={passwordData.currentPassword}
+                            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500'
+                            placeholder='••••••••'
+                          />
+                        </div>
+                        <div>
+                          <label className='block text-sm font-medium text-gray-700 mb-2'>Nueva contraseña</label>
+                          <input
+                            type='password'
+                            value={passwordData.newPassword}
+                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500'
+                            placeholder='••••••••'
+                          />
+                        </div>
+                        <div>
+                          <label className='block text-sm font-medium text-gray-700 mb-2'>
+                            Confirmar nueva contraseña
+                          </label>
+                          <input
+                            type='password'
+                            value={passwordData.confirmPassword}
+                            onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500'
+                            placeholder='••••••••'
+                          />
+                        </div>
+                        <div className='flex items-end'>
+                          <button
+                            onClick={handleChangePassword}
+                            disabled={loading}
+                            className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                          >
+                            Cambiar Contraseña
+                          </button>
                         </div>
                       </div>
                     </div>

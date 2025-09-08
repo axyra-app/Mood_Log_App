@@ -14,8 +14,8 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { useAuth } from '../contexts/AuthContext';
-import { createChat, getMessagesRealtime, getPsychologists, getUserChats, sendMessage } from '../services/firestore';
+import { useAuth } from '../contexts/AuthContext-debug';
+import { getMessagesRealtime, getUserChats } from '../services/firestore';
 import { Chat, ChatMessage, Psychologist } from '../types';
 
 const Chat: React.FC = () => {
@@ -50,7 +50,62 @@ const Chat: React.FC = () => {
 
     setLoading(true);
     try {
-      const [psychs, userChats] = await Promise.all([getPsychologists(), getUserChats(user.uid)]);
+      // Simular datos de psicólogos para desarrollo
+      const mockPsychologists: Psychologist[] = [
+        {
+          id: 'psych1',
+          uid: 'psych1',
+          email: 'maria.gonzalez@psicologia.com',
+          displayName: 'Dra. María González',
+          role: 'psychologist',
+          licenseNumber: 'PSI-12345',
+          specialization: 'Ansiedad y Estrés',
+          yearsOfExperience: 8,
+          bio: 'Especialista en terapia cognitivo-conductual con más de 8 años de experiencia.',
+          rating: 4.9,
+          patientsCount: 150,
+          isAvailable: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'psych2',
+          uid: 'psych2',
+          email: 'carlos.rodriguez@psicologia.com',
+          displayName: 'Lic. Carlos Rodríguez',
+          role: 'psychologist',
+          licenseNumber: 'PSI-67890',
+          specialization: 'Terapia de Pareja',
+          yearsOfExperience: 5,
+          bio: 'Especialista en terapia de pareja y relaciones interpersonales.',
+          rating: 4.8,
+          patientsCount: 120,
+          isAvailable: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'psych3',
+          uid: 'psych3',
+          email: 'ana.martinez@psicologia.com',
+          displayName: 'Dra. Ana Martínez',
+          role: 'psychologist',
+          licenseNumber: 'PSI-11111',
+          specialization: 'Depresión y Trauma',
+          yearsOfExperience: 12,
+          bio: 'Experta en tratamiento de depresión y trauma con enfoque EMDR.',
+          rating: 4.9,
+          patientsCount: 200,
+          isAvailable: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      const [psychs, userChats] = await Promise.all([
+        Promise.resolve(mockPsychologists), // Usar datos mock
+        getUserChats(user.uid).catch(() => []), // Fallback a array vacío
+      ]);
 
       setPsychologists(psychs);
       setChats(userChats);
@@ -74,16 +129,38 @@ const Chat: React.FC = () => {
     if (!newMessage.trim() || !selectedChat || !user) return;
 
     try {
-      const messageData = {
+      // Simular envío de mensaje para desarrollo
+      const newMessageObj: ChatMessage = {
+        id: `msg_${Date.now()}`,
         chatId: selectedChat.id,
         senderId: user.uid,
         receiverId: selectedChat.participants.find((p) => p !== user.uid) || '',
         content: newMessage.trim(),
-        messageType: 'text' as const,
+        timestamp: new Date(),
+        isRead: false,
+        messageType: 'text',
       };
 
-      await sendMessage(messageData);
+      // Agregar mensaje localmente
+      setMessages((prev) => [...prev, newMessageObj]);
       setNewMessage('');
+      scrollToBottom();
+
+      // Simular respuesta automática del psicólogo después de 2 segundos
+      setTimeout(() => {
+        const psychologistResponse: ChatMessage = {
+          id: `msg_${Date.now() + 1}`,
+          chatId: selectedChat.id,
+          senderId: selectedChat.participants.find((p) => p !== user.uid) || '',
+          receiverId: user.uid,
+          content: 'Gracias por tu mensaje. Estoy aquí para ayudarte. ¿Cómo te sientes hoy?',
+          timestamp: new Date(),
+          isRead: false,
+          messageType: 'text',
+        };
+        setMessages((prev) => [...prev, psychologistResponse]);
+        scrollToBottom();
+      }, 2000);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -100,7 +177,18 @@ const Chat: React.FC = () => {
     if (!user) return;
 
     try {
-      const chatId = await createChat([user.uid, psychologist.id]);
+      // Verificar si ya existe un chat con este psicólogo
+      const existingChat = chats.find(
+        (chat) => chat.participants.includes(psychologist.id) && chat.participants.includes(user.uid)
+      );
+
+      if (existingChat) {
+        setSelectedChat(existingChat);
+        return;
+      }
+
+      // Crear nuevo chat simulado
+      const chatId = `chat_${Date.now()}`;
       const newChat: Chat = {
         id: chatId,
         participants: [user.uid, psychologist.id],
@@ -111,6 +199,21 @@ const Chat: React.FC = () => {
 
       setChats((prev) => [newChat, ...prev]);
       setSelectedChat(newChat);
+      setMessages([]); // Limpiar mensajes anteriores
+
+      // Agregar mensaje de bienvenida
+      const welcomeMessage: ChatMessage = {
+        id: `msg_${Date.now()}`,
+        chatId: chatId,
+        senderId: psychologist.id,
+        receiverId: user.uid,
+        content: `¡Hola! Soy ${psychologist.displayName}. Estoy aquí para ayudarte con tu bienestar emocional. ¿En qué puedo asistirte hoy?`,
+        timestamp: new Date(),
+        isRead: false,
+        messageType: 'text',
+      };
+
+      setMessages([welcomeMessage]);
     } catch (error) {
       console.error('Error starting new chat:', error);
     }

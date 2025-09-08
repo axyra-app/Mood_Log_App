@@ -7,7 +7,9 @@ import { AuthProvider } from './contexts/AuthContext-debug';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Pages (solo las que existen)
+// Pages
+import Chat from './pages/Chat';
+import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
@@ -15,6 +17,8 @@ import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
 import RegisterSimple from './pages/RegisterSimple';
+import Settings from './pages/Settings';
+import Statistics from './pages/Statistics';
 import TermsSimple from './pages/TermsSimple';
 
 function App() {
@@ -41,10 +45,42 @@ function App() {
               }
             />
             <Route
+              path='/dashboard-psychologist'
+              element={
+                <ProtectedRoute>
+                  <DashboardPsychologist />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path='/mood-flow'
               element={
                 <ProtectedRoute>
                   <MoodFlowSimple />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/statistics'
+              element={
+                <ProtectedRoute>
+                  <Statistics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/chat'
+              element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/settings'
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
