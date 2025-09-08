@@ -86,13 +86,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className={`absolute right-0 top-full mt-2 w-80 rounded-2xl border-2 shadow-2xl z-50 ${
+        <div className={`absolute right-0 top-full mt-2 w-80 rounded-2xl border-2 shadow-2xl z-50 max-h-[70vh] flex flex-col ${
           isDarkMode
             ? 'bg-gray-800 border-gray-700'
             : 'bg-white border-gray-200'
         }`}>
           {/* Header */}
-          <div className={`p-4 border-b-2 ${
+          <div className={`p-4 border-b-2 flex-shrink-0 ${
             isDarkMode ? 'border-gray-700' : 'border-gray-200'
           }`}>
             <div className="flex items-center justify-between">
@@ -110,7 +110,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {notifications.length === 0 ? (
               <div className="p-6 text-center">
                 <div className="text-4xl mb-2">🔔</div>
@@ -188,7 +188,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className={`p-4 border-t-2 ${
+            <div className={`p-4 border-t-2 flex-shrink-0 ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
               <button

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext-debug';
 import NotificationDropdown from '../components/NotificationDropdown';
+import ComingSoonModal from '../components/ComingSoonModal';
+import ConfigurationModal from '../components/ConfigurationModal';
 
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -14,6 +16,14 @@ const DashboardSimple: React.FC = () => {
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [moodLogs, setMoodLogs] = useState<any[]>([]);
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
+  const [comingSoonData, setComingSoonData] = useState({
+    title: '',
+    description: '',
+    icon: '',
+    features: [] as string[]
+  });
+  const [showConfigModal, setShowConfigModal] = useState(false);
 
   const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
   const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
@@ -172,6 +182,71 @@ const DashboardSimple: React.FC = () => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'chat':
+        setComingSoonData({
+          title: 'Chat con IA',
+          description: 'Próximamente podrás conversar con nuestra IA especializada en bienestar emocional. Obtén consejos personalizados, análisis de tus patrones de ánimo y apoyo 24/7.',
+          icon: '🤖',
+          features: [
+            'Conversaciones inteligentes sobre emociones',
+            'Análisis de patrones de ánimo',
+            'Consejos personalizados',
+            'Soporte 24/7',
+            'Integración con tu historial de estados de ánimo'
+          ]
+        });
+        setShowComingSoonModal(true);
+        break;
+      case 'psychologists':
+        setComingSoonData({
+          title: 'Conectar con Psicólogos',
+          description: 'Próximamente podrás conectarte con psicólogos profesionales certificados para recibir apoyo especializado y sesiones de terapia online.',
+          icon: '👨‍⚕️',
+          features: [
+            'Psicólogos certificados',
+            'Sesiones online',
+            'Agenda flexible',
+            'Seguimiento personalizado',
+            'Integración con tu perfil de ánimo'
+          ]
+        });
+        setShowComingSoonModal(true);
+        break;
+      case 'statistics':
+        setComingSoonData({
+          title: 'Estadísticas Avanzadas',
+          description: 'Próximamente tendrás acceso a estadísticas detalladas, gráficos interactivos y análisis profundos de tu bienestar emocional.',
+          icon: '📊',
+          features: [
+            'Gráficos interactivos',
+            'Análisis de tendencias',
+            'Reportes personalizados',
+            'Comparativas temporales',
+            'Insights de IA'
+          ]
+        });
+        setShowComingSoonModal(true);
+        break;
+      case 'goals':
+        setComingSoonData({
+          title: 'Objetivos de Bienestar',
+          description: 'Próximamente podrás establecer y seguir objetivos personalizados de bienestar emocional con seguimiento inteligente y recordatorios.',
+          icon: '🎯',
+          features: [
+            'Objetivos personalizados',
+            'Seguimiento automático',
+            'Recordatorios inteligentes',
+            'Celebración de logros',
+            'Integración con IA'
+          ]
+        });
+        setShowComingSoonModal(true);
+        break;
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
@@ -213,6 +288,16 @@ const DashboardSimple: React.FC = () => {
               isDarkMode={isDarkMode}
             />
             
+            <button
+              onClick={() => setShowConfigModal(true)}
+              className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
+                isDarkMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              ⚙️
+            </button>
             <button
               onClick={toggleDarkMode}
               className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
@@ -495,7 +580,7 @@ const DashboardSimple: React.FC = () => {
               <div className="space-y-4">
                 {/* Chat con IA */}
                 <button
-                  onClick={() => alert('Chat con IA - Próximamente')}
+                  onClick={() => handleQuickAction('chat')}
                   className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
                     isDarkMode
                       ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
@@ -513,7 +598,7 @@ const DashboardSimple: React.FC = () => {
 
                 {/* Chat con Psicólogos */}
                 <button
-                  onClick={() => alert('Chat con Psicólogos - Próximamente')}
+                  onClick={() => handleQuickAction('psychologists')}
                   className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
                     isDarkMode
                       ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
@@ -531,7 +616,7 @@ const DashboardSimple: React.FC = () => {
 
                 {/* Estadísticas */}
                 <button
-                  onClick={() => alert('Estadísticas Detalladas - Próximamente')}
+                  onClick={() => handleQuickAction('statistics')}
                   className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
                     isDarkMode
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700'
@@ -549,7 +634,7 @@ const DashboardSimple: React.FC = () => {
 
                 {/* Objetivos */}
                 <button
-                  onClick={() => alert('Objetivos y Metas - Próximamente')}
+                  onClick={() => handleQuickAction('goals')}
                   className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
                     isDarkMode
                       ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
@@ -618,6 +703,22 @@ const DashboardSimple: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modales */}
+      <ComingSoonModal
+        isOpen={showComingSoonModal}
+        onClose={() => setShowComingSoonModal(false)}
+        title={comingSoonData.title}
+        description={comingSoonData.description}
+        icon={comingSoonData.icon}
+        features={comingSoonData.features}
+      />
+
+      <ConfigurationModal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        user={user}
+      />
     </div>
   );
 };
