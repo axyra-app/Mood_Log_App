@@ -36,6 +36,17 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
+      external: (id) => {
+        // Excluir páginas no utilizadas
+        if (id.includes('Dashboard.tsx') || 
+            id.includes('Settings.tsx') || 
+            id.includes('MoodFlow.tsx') ||
+            id.includes('Statistics.tsx') ||
+            id.includes('Chat.tsx')) {
+          return true;
+        }
+        return false;
+      },
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
