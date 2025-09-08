@@ -35,24 +35,41 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
-    rollupOptions: {
-      external: (id) => {
-        // Excluir páginas no utilizadas
-        if (id.includes('Dashboard.tsx') || 
-            id.includes('Settings.tsx') || 
-            id.includes('MoodFlow.tsx') ||
-            id.includes('Statistics.tsx') ||
-            id.includes('Chat.tsx')) {
-          return true;
-        }
-        return false;
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
       },
+    },
+    rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          ui: ['lucide-react', 'framer-motion'],
+          charts: ['recharts'],
+          ai: ['openai'],
+          utils: ['date-fns', 'react-hook-form'],
         },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
+    chunkSizeWarningLimit: 1000,
+  },
+  server: {
+    port: 3000,
+    host: true,
+  },
+  preview: {
+    port: 4173,
+    host: true,
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
 });
+
