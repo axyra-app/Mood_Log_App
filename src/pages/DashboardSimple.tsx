@@ -6,6 +6,11 @@ import ConfigurationModal from '../components/ConfigurationModal';
 import NotificationDropdown from '../components/NotificationDropdown';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
+import { 
+  getUserNotifications, 
+  createMoodLogNotification, 
+  createAchievementNotification 
+} from '../services/notifications';
 import DashboardPsychologist from './DashboardPsychologist';
 
 const DashboardSimple: React.FC = () => {
@@ -90,26 +95,34 @@ const DashboardSimple: React.FC = () => {
       const stats = getMoodStatistics();
       setStatistics(stats);
 
-      // Simular notificaciones
-      const mockNotifications = [
-        {
-          id: 'welcome-1',
-          title: '¡Bienvenido!',
-          message: 'Comienza registrando tu primer estado de ánimo para obtener análisis personalizados con IA.',
-          type: 'info',
-          timestamp: new Date(),
-          isRead: false,
-        },
-        {
-          id: 'milestone-1',
-          title: '¡Hito alcanzado!',
-          message: 'Has registrado 15 estados de ánimo. ¡Sigue así!',
-          type: 'success',
-          timestamp: new Date(),
-          isRead: false,
-        },
-      ];
-      setNotifications(mockNotifications);
+      // Cargar notificaciones reales
+      try {
+        const realNotifications = await getUserNotifications(user.uid, 10);
+        setNotifications(
+          realNotifications.map((notif) => ({
+            id: notif.id,
+            title: notif.title,
+            message: notif.message,
+            type: notif.type,
+            timestamp: notif.createdAt?.toDate ? notif.createdAt.toDate() : new Date(),
+            isRead: notif.read,
+          }))
+        );
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        // Fallback a notificaciones mock si hay error
+        const mockNotifications = [
+          {
+            id: 'welcome-1',
+            title: '¡Bienvenido!',
+            message: 'Comienza registrando tu primer estado de ánimo para obtener análisis personalizados con IA.',
+            type: 'info',
+            timestamp: new Date(),
+            isRead: false,
+          },
+        ];
+        setNotifications(mockNotifications);
+      }
     } catch (error) {
       console.error('Error loading user data:', error);
     }
@@ -142,17 +155,29 @@ const DashboardSimple: React.FC = () => {
         emotions: [moodLabels[mood - 1].toLowerCase()],
       });
 
-      // Agregar notificación de éxito con análisis de IA
-      const aiAnalysis = newMoodLog.aiAnalysis;
-      const newNotification = {
-        id: Date.now().toString(),
-        title: 'Mood Guardado',
-        message: `Análisis de IA: ${aiAnalysis.primaryEmotion} (${aiAnalysis.confidence}% confianza)`,
-        type: 'success',
-        timestamp: new Date(),
-        isRead: false,
-      };
-      setNotifications((prev) => [newNotification, ...prev]);
+       // Crear notificación real en Firestore
+       try {
+         await createMoodLogNotification(user.uid, mood);
+         
+         // Verificar si es un logro (cada 5 moods)
+         const totalLogs = moodLogs.length + 1;
+         if (totalLogs % 5 === 0) {
+           await createAchievementNotification(user.uid, 'mood_streak', totalLogs);
+         }
+         
+         // Recargar notificaciones
+         const updatedNotifications = await getUserNotifications(user.uid, 10);
+         setNotifications(updatedNotifications.map(notif => ({
+           id: notif.id,
+           title: notif.title,
+           message: notif.message,
+           type: notif.type,
+           timestamp: notif.createdAt?.toDate ? notif.createdAt.toDate() : new Date(),
+           isRead: notif.read,
+         })));
+       } catch (error) {
+         console.error('Error creating notification:', error);
+       }
 
       // Mostrar mensaje de éxito con análisis de IA
       alert(
@@ -331,7 +356,7 @@ const DashboardSimple: React.FC = () => {
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}
           >
-            ¡HOLA {user?.displayName || user?.email?.split('@')[0]?.toUpperCase() || 'USUARIO'}! 👋
+            ¡HOLA {user?.username || user?.displayName || user?.email?.split('@')[0]?.toUpperCase() || 'USUARIO'}! 👋
           </h2>
           <p className={`text-xl transition-colors duration-500 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Tu bienestar emocional es importante. ¿Cómo te sientes hoy?

@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getUserSettings, saveUserSettings } from '../services/firestore';
 
 const Settings: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [settings, setSettings] = useState({
     notifications: {

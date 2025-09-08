@@ -1,10 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ========================================
-    // REGLAS SIMPLIFICADAS PARA DEBUG
-    // ========================================
-    
     // Función helper para verificar autenticación
     function isAuthenticated() {
       return request.auth != null;
@@ -15,86 +11,116 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // ========================================
-    // COLECCIONES PRINCIPALES
-    // ========================================
+    // Función helper para verificar si es psicólogo
+    function isPsychologist() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/psychologists/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/psychologists/$(request.auth.uid)).data.role == 'psychologist';
+    }
     
-    // Colección de usuarios - permitir lectura/escritura para usuarios autenticados
+    // Colección de usuarios
     match /users/{userId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isOwner(userId);
     }
     
-    // Colección de mood logs - permitir lectura/escritura para usuarios autenticados
+    // Colección de psicólogos
+    match /psychologists/{psychologistId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(psychologistId);
+    }
+    
+    // Colección de mood logs
     match /moodLogs/{logId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         isPsychologist());
     }
     
-    // Colección de análisis de IA - permitir lectura/escritura para usuarios autenticados
+    // Colección de análisis de IA
     match /aiAnalysis/{analysisId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         isPsychologist());
     }
     
-    // Colección de notificaciones - permitir lectura/escritura para usuarios autenticados
+    // Colección de notificaciones
     match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
     }
     
-    // Colección de configuración de usuario - permitir lectura/escritura para usuarios autenticados
+    // Colección de configuración de usuario
     match /userSettings/{userId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isOwner(userId);
     }
     
-    // Colección de estadísticas de usuario - permitir lectura/escritura para usuarios autenticados
+    // Colección de estadísticas de usuario
     match /userStats/{userId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isOwner(userId);
     }
     
-    // Colección de logros - permitir lectura/escritura para usuarios autenticados
+    // Colección de logros
     match /achievements/{achievementId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
     }
     
-    // Colección de sesiones de psicólogo - permitir lectura/escritura para usuarios autenticados
+    // Colección de sesiones de psicólogo
     match /psychologistSessions/{sessionId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.psychologistId == request.auth.uid);
     }
     
-    // Colección de mensajes - permitir lectura/escritura para usuarios autenticados
+    // Colección de mensajes
     match /messages/{messageId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        (resource.data.senderId == request.auth.uid || 
+         resource.data.receiverId == request.auth.uid);
     }
     
-    // Colección de conversaciones - permitir lectura/escritura para usuarios autenticados
+    // Colección de conversaciones
     match /conversations/{conversationId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.psychologistId == request.auth.uid);
     }
     
-    // Colección de configuración de la app - solo lectura para usuarios autenticados
+    // Colección de chats
+    match /chats/{chatId} {
+      allow read, write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.psychologistId == request.auth.uid);
+      
+      // Subcolección de mensajes
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated() && 
+          (get(/databases/$(database)/documents/chats/$(chatId)).data.userId == request.auth.uid || 
+           get(/databases/$(database)/documents/chats/$(chatId)).data.psychologistId == request.auth.uid);
+      }
+    }
+    
+    // Colección de configuración de la app
     match /appConfig/{configId} {
       allow read: if isAuthenticated();
     }
     
-    // Colección de logs de auditoría - permitir lectura/escritura para usuarios autenticados
+    // Colección de logs de auditoría
     match /auditLogs/{logId} {
       allow read, write: if isAuthenticated();
     }
     
-    // Colección de respaldos - permitir lectura/escritura para usuarios autenticados
+    // Colección de respaldos
     match /backups/{backupId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
     }
     
-    // Colección de userAchievements - permitir lectura/escritura para usuarios autenticados
+    // Colección de userAchievements
     match /userAchievements/{achievementId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // ========================================
-    // REGLA DE RESPALDO SEGURA
-    // ========================================
-    // Denegar todo lo que no esté explícitamente permitido
-    match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
     }
   }
 }

@@ -1,20 +1,24 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
+import {
   User as FirebaseUser,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
 } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { auth, db } from '../services/firebase';
 
 interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
   role: 'user' | 'psychologist';
+  username?: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 interface AuthContextType {
@@ -24,6 +28,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, role?: 'user' | 'psychologist') => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,14 +52,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // Usuario autenticado
-        const userData: User = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          role: 'user' // Por defecto, se puede cambiar después
-        };
-        setUser(userData);
+        try {
+          // Intentar cargar el perfil del usuario desde Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const userDataWithAuth: User = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: userData.displayName || firebaseUser.displayName,
+              username: userData.username,
+              role: userData.role || 'user',
+              createdAt: userData.createdAt,
+              updatedAt: userData.updatedAt,
+            };
+            setUser(userDataWithAuth);
+          } else {
+            // Si no existe el documento, crear uno básico
+            const basicUserData: User = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              role: 'user',
+            };
+            setUser(basicUserData);
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          // En caso de error, usar datos básicos de Firebase Auth
+          const userData: User = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            role: 'user',
+          };
+          setUser(userData);
+        }
       } else {
         // Usuario no autenticado
         setUser(null);
@@ -79,13 +113,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Aquí podrías guardar el rol en Firestore si es necesario
-      // await setDoc(doc(db, 'users', userCredential.user.uid), {
-      //   role: role,
-      //   createdAt: serverTimestamp()
-      // });
-      
+
+      // Crear perfil del usuario en Firestore
+      const userData = {
+        email: email,
+        displayName: email.split('@')[0],
+        username: email.split('@')[0],
+        role: role,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+
+      // Si es psicólogo, también crear en la colección de psicólogos
+      if (role === 'psychologist') {
+        const psychologistData = {
+          uid: userCredential.user.uid,
+          email: email,
+          displayName: email.split('@')[0],
+          role: 'psychologist',
+          licenseNumber: '',
+          specialization: '',
+          yearsOfExperience: 0,
+          bio: '',
+          rating: 0,
+          patientsCount: 0,
+          isAvailable: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        await setDoc(doc(db, 'psychologists', userCredential.user.uid), psychologistData);
+      }
     } catch (error: any) {
       setLoading(false);
       throw new Error(error.message);
@@ -113,18 +172,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUserProfile = async (updates: Partial<User>) => {
+    try {
+      if (!user) throw new Error('No user logged in');
+
+      setLoading(true);
+
+      // Actualizar en Firestore
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(
+        userRef,
+        {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      // Actualizar el estado local
+      setUser((prev) => (prev ? { ...prev, ...updates } : null));
+    } catch (error: any) {
+      setLoading(false);
+      throw new Error(error.message);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
     signIn,
     signUp,
     signInWithGoogle,
-    logout
+    logout,
+    updateUserProfile,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

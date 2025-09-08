@@ -9,7 +9,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
+          "fieldPath": "timestamp",
           "order": "DESCENDING"
         }
       ]
@@ -23,17 +23,13 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "mood",
+          "fieldPath": "timestamp",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "moodLogs",
+      "collectionGroup": "chats",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -41,59 +37,13 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "emotion",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
+          "fieldPath": "updatedAt",
           "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "conversations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "participants",
-          "arrayConfig": "CONTAINS"
-        },
-        {
-          "fieldPath": "lastMessageAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "messages",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "conversationId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "scheduledAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "sessions",
+      "collectionGroup": "chats",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -101,8 +51,8 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "scheduledAt",
-          "order": "ASCENDING"
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
         }
       ]
     },
@@ -115,68 +65,11 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "read",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "achievements",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "unlockedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "role",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ]
     }
   ],
-  "fieldOverrides": [
-    {
-      "collectionGroup": "moodLogs",
-      "fieldPath": "description",
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "arrayConfig": "CONTAINS",
-          "queryScope": "COLLECTION"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "fieldPath": "email",
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        }
-      ]
-    }
-  ]
+  "fieldOverrides": []
 }
