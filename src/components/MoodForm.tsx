@@ -7,6 +7,7 @@ import { useOffline } from '../hooks/useOffline';
 import { db } from '../lib/firebase';
 import { achievementService } from '../services/achievementService';
 import { notificationService } from '../services/notificationService';
+import OpenAIService from '../services/openaiService';
 import AIAnalysis from './AIAnalysis';
 import FallbackQuestions from './FallbackQuestions';
 import MoodSelector from './MoodSelector';

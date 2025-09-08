@@ -1,6 +1,7 @@
 // Custom hook for managing the mood logging flow
 import { useCallback, useState } from 'react';
 import { DiaryEntry, MoodFlowState, moodFlowService } from '../services/moodFlowService';
+import OpenAIService from '../services/openaiService';
 
 export const useMoodFlow = () => {
   const [diaryEntry, setDiaryEntry] = useState<DiaryEntry | null>(null);
@@ -29,6 +30,26 @@ export const useMoodFlow = () => {
 
     setIsAnalyzing(true);
     try {
+      // Use real OpenAI service for analysis
+      const aiAnalysis = await OpenAIService.analyzeDiaryText(diaryEntry.text);
+      
+      const updatedEntry: DiaryEntry = {
+        ...diaryEntry,
+        aiAnalysis: {
+          emotion: aiAnalysis.emotion,
+          confidence: aiAnalysis.confidence,
+          sentiment: aiAnalysis.sentiment,
+          canConclude: aiAnalysis.canConclude,
+        },
+        finalMood: aiAnalysis.moodScore,
+        isComplete: aiAnalysis.canConclude,
+      };
+      
+      setDiaryEntry(updatedEntry);
+      return updatedEntry;
+    } catch (error) {
+      console.error('Error in AI analysis:', error);
+      // Fallback to local analysis
       const updatedEntry = await moodFlowService.analyzeWithAI(diaryEntry);
       setDiaryEntry(updatedEntry);
       return updatedEntry;
