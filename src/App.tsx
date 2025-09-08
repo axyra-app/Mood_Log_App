@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Contexts
-import { AuthProvider } from './contexts/AuthContextSimple'; // Using fixed Firebase
+import { AuthProvider } from './contexts/AuthContextUltraSimple'; // Ultra simple for debugging
 
 // Pages
 import Home from './pages/Home';
@@ -16,6 +16,7 @@ import Settings from './pages/Settings';
 import Statistics from './components/Statistics';
 import Achievements from './components/Achievements';
 import DebugInfo from './components/DebugInfo';
+import TestPage from './pages/TestPage'; // Ultra simple test page
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/debug" element={<DebugInfo />} />
+              <Route path="/test" element={<TestPage />} /> {/* Ultra simple test route */}
               
               {/* Protected routes */}
               <Route 
