@@ -6,6 +6,7 @@ import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
+import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
 import RegisterSimple from './pages/RegisterSimple';
 import TermsSimple from './pages/TermsSimple';
@@ -23,6 +24,7 @@ function App() {
           <Route path='/terms' element={<TermsSimple />} />
           <Route path='/privacy' element={<PrivacySimple />} />
           <Route path='/dashboard' element={<DashboardSimple />} />
+          <Route path='/mood-flow' element={<MoodFlowSimple />} />
 
           {/* Catch all route */}
           <Route

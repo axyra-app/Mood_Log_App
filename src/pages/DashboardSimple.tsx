@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const DashboardSimple: React.FC = () => {
+  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
@@ -17,46 +18,70 @@ const DashboardSimple: React.FC = () => {
   useEffect(() => {
     setIsLoaded(true);
     loadUserData();
+    checkFirstTimeToday();
   }, []);
+
+  const checkFirstTimeToday = () => {
+    const today = new Date().toDateString();
+    const existingData = JSON.parse(localStorage.getItem('moodLogs') || '{}');
+    
+    // Si no hay registro para hoy, redirigir a MoodFlow
+    if (!existingData[today]) {
+      setTimeout(() => {
+        navigate('/mood-flow');
+      }, 1000); // Pequeño delay para que se vea el dashboard brevemente
+    }
+  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return 'Hace menos de 1 hora';
+    if (diffInHours < 24) return `Hace ${diffInHours} horas`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return 'Ayer';
+    return `Hace ${diffInDays} días`;
+  };
+
   const loadUserData = async () => {
     try {
-      // Simular datos de estadísticas
+      // Verificar si ya se registró el mood de hoy
+      const today = new Date().toDateString();
+      const existingData = JSON.parse(localStorage.getItem('moodLogs') || '{}');
+      const todayMood = existingData[today];
+      
+      // Calcular estadísticas basadas en datos reales
+      const allMoods = Object.values(existingData);
+      const totalLogs = allMoods.length;
+      const averageMood = totalLogs > 0 
+        ? allMoods.reduce((sum: number, mood: any) => sum + mood.mood, 0) / totalLogs 
+        : 0;
+
       const mockStats = {
-        totalLogs: 15,
-        averageMood: 3.8,
-        weeklyTrend: 'improving'
+        totalLogs: totalLogs || 15,
+        averageMood: averageMood || 3.8,
+        weeklyTrend: 'improving',
+        todayMood: todayMood
       };
       setStatistics(mockStats);
 
-      // Simular actividades recientes
-      const activities = [
-        {
-          id: '1',
+      // Generar actividades recientes basadas en datos reales
+      const activities = Object.entries(existingData)
+        .sort(([,a], [,b]) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 3)
+        .map(([date, mood]: [string, any]) => ({
+          id: date,
           action: 'Registraste tu estado de ánimo',
-          time: 'Hace 2 horas',
-          mood: '😊',
-          details: 'Me siento muy bien hoy, el sol está brillando...'
-        },
-        {
-          id: '2',
-          action: 'Registraste tu estado de ánimo',
-          time: 'Ayer',
-          mood: '🙂',
-          details: 'Día productivo en el trabajo...'
-        },
-        {
-          id: '3',
-          action: 'Registraste tu estado de ánimo',
-          time: 'Hace 2 días',
-          mood: '😐',
-          details: 'Día normal, sin mucho que destacar...'
-        }
-      ];
+          time: getTimeAgo(new Date(mood.timestamp)),
+          mood: moodEmojis[mood.mood - 1],
+          details: mood.feelings ? mood.feelings.substring(0, 50) + '...' : null
+        }));
+      
       setRecentActivities(activities);
 
       // Simular notificaciones
@@ -227,6 +252,55 @@ const DashboardSimple: React.FC = () => {
           }`}>
             Tu bienestar emocional es importante. ¿Cómo te sientes hoy?
           </p>
+
+          {/* Today's Mood Status */}
+          {statistics && (
+            <div className={`mt-6 p-6 rounded-2xl border-2 transition-all duration-300 ${
+              statistics.todayMood
+                ? isDarkMode
+                  ? 'bg-green-900/20 border-green-500'
+                  : 'bg-green-50 border-green-200'
+                : isDarkMode
+                  ? 'bg-orange-900/20 border-orange-500'
+                  : 'bg-orange-50 border-orange-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="text-4xl">
+                    {statistics.todayMood ? moodEmojis[statistics.todayMood.mood - 1] : '⏰'}
+                  </div>
+                  <div>
+                    <h3 className={`text-2xl font-black transition-colors duration-500 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {statistics.todayMood 
+                        ? `Mood de hoy: ${moodLabels[statistics.todayMood.mood - 1]}`
+                        : 'Aún no has registrado tu mood de hoy'
+                      }
+                    </h3>
+                    <p className={`text-lg transition-colors duration-500 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      {statistics.todayMood 
+                        ? `Registrado a las ${new Date(statistics.todayMood.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                        : 'Es importante registrar cómo te sientes cada día'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/mood-flow"
+                  className={`px-8 py-4 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 ${
+                    statistics.todayMood
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-2xl hover:shadow-green-500/50'
+                      : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-2xl hover:shadow-purple-500/50'
+                  }`}
+                >
+                  {statistics.todayMood ? 'Actualizar Mood' : 'Registrar Mood'}
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Estadísticas rápidas */}
           {statistics && statistics.totalLogs > 0 && (
