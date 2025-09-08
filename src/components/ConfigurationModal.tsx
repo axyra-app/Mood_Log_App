@@ -44,20 +44,20 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="w-full max-w-2xl max-h-[70vh] overflow-y-auto">
+      <div className="w-full max-w-2xl max-h-[50vh] overflow-y-auto">
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="text-6xl mb-4">⚙️</div>
-          <h2 className="text-3xl font-black text-gray-900 mb-2">
+        <div className="text-center mb-4">
+          <div className="text-4xl mb-3">⚙️</div>
+          <h2 className="text-2xl font-black text-gray-900 mb-2">
             CONFIGURACIÓN
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600">
             Personaliza tu experiencia en Mood Log
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-6 bg-gray-100 rounded-xl p-1">
+        <div className="flex space-x-1 mb-4 bg-gray-100 rounded-xl p-1">
           {[
             { id: 'profile', label: 'Perfil', icon: '👤' },
             { id: 'security', label: 'Seguridad', icon: '🔒' },
@@ -66,7 +66,7 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all duration-300 ${
+              className={`flex-1 py-2 px-3 rounded-lg font-bold transition-all duration-300 text-sm ${
                 activeTab === tab.id
                   ? 'bg-white text-purple-600 shadow-lg'
                   : 'text-gray-600 hover:text-gray-800'
@@ -79,10 +79,10 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {activeTab === 'profile' && (
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
+              <h3 className="text-lg font-bold text-gray-800 mb-3">
                 📝 Información Personal
               </h3>
               
