@@ -4,12 +4,13 @@ import AdvancedAIInsights from '../components/AdvancedAIInsights';
 import ComingSoonModal from '../components/ComingSoonModal';
 import ConfigurationModal from '../components/ConfigurationModal';
 import NotificationDropdown from '../components/NotificationDropdown';
+import NotificationModal from '../components/NotificationModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
-import { 
-  getUserNotifications, 
-  createMoodLogNotification, 
-  createAchievementNotification 
+import {
+  createAchievementNotification,
+  createMoodLogNotification,
+  getUserNotifications,
 } from '../services/notifications';
 import DashboardPsychologist from './DashboardPsychologist';
 
@@ -39,6 +40,13 @@ const DashboardSimple: React.FC = () => {
   });
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationData, setNotificationData] = useState({
+    type: 'success' as 'success' | 'error' | 'info',
+    title: '',
+    message: '',
+    icon: '',
+  });
 
   const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
   const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
@@ -85,6 +93,11 @@ const DashboardSimple: React.FC = () => {
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays === 1) return 'Ayer';
     return `Hace ${diffInDays} días`;
+  };
+
+  const showNotification = (type: 'success' | 'error' | 'info', title: string, message: string, icon?: string) => {
+    setNotificationData({ type, title, message, icon: icon || '' });
+    setShowNotificationModal(true);
   };
 
   const loadUserData = async () => {
@@ -155,39 +168,49 @@ const DashboardSimple: React.FC = () => {
         emotions: [moodLabels[mood - 1].toLowerCase()],
       });
 
-       // Crear notificación real en Firestore
-       try {
-         await createMoodLogNotification(user.uid, mood);
-         
-         // Verificar si es un logro (cada 5 moods)
-         const totalLogs = moodLogs.length + 1;
-         if (totalLogs % 5 === 0) {
-           await createAchievementNotification(user.uid, 'mood_streak', totalLogs);
-         }
-         
-         // Recargar notificaciones
-         const updatedNotifications = await getUserNotifications(user.uid, 10);
-         setNotifications(updatedNotifications.map(notif => ({
-           id: notif.id,
-           title: notif.title,
-           message: notif.message,
-           type: notif.type,
-           timestamp: notif.createdAt?.toDate ? notif.createdAt.toDate() : new Date(),
-           isRead: notif.read,
-         })));
-       } catch (error) {
-         console.error('Error creating notification:', error);
-       }
+      // Crear notificación real en Firestore
+      try {
+        await createMoodLogNotification(user.uid, mood);
+
+        // Verificar si es un logro (cada 5 moods)
+        const totalLogs = moodLogs.length + 1;
+        if (totalLogs % 5 === 0) {
+          await createAchievementNotification(user.uid, 'mood_streak', totalLogs);
+        }
+
+        // Recargar notificaciones
+        const updatedNotifications = await getUserNotifications(user.uid, 10);
+        setNotifications(
+          updatedNotifications.map((notif) => ({
+            id: notif.id,
+            title: notif.title,
+            message: notif.message,
+            type: notif.type,
+            timestamp: notif.createdAt?.toDate ? notif.createdAt.toDate() : new Date(),
+            isRead: notif.read,
+          }))
+        );
+      } catch (error) {
+        console.error('Error creating notification:', error);
+      }
 
       // Mostrar mensaje de éxito con análisis de IA
-      alert(
-        `¡Mood guardado exitosamente! 😊\n\nAnálisis de IA: ${aiAnalysis.primaryEmotion} (${
+      showNotification(
+        'success',
+        '¡Mood Guardado!',
+        `Análisis de IA: ${aiAnalysis.primaryEmotion} (${
           aiAnalysis.confidence
-        }% confianza)\n\nSugerencias:\n${aiAnalysis.suggestions.join('\n')}`
+        }% confianza)\n\nSugerencias:\n${aiAnalysis.suggestions.join('\n')}`,
+        '😊'
       );
     } catch (error) {
       console.error('Error saving mood:', error);
-      alert('Error al guardar el mood. Inténtalo de nuevo.');
+      showNotification(
+        'error',
+        'Error al Guardar',
+        'No se pudo guardar tu estado de ánimo. Por favor, inténtalo de nuevo.',
+        '😔'
+      );
     } finally {
       setMoodLoading(false);
     }
@@ -852,6 +875,15 @@ const DashboardSimple: React.FC = () => {
       />
 
       <ConfigurationModal isOpen={showConfigModal} onClose={() => setShowConfigModal(false)} user={user} />
+
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        type={notificationData.type}
+        title={notificationData.title}
+        message={notificationData.message}
+        icon={notificationData.icon}
+      />
     </div>
   );
 };

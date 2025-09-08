@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import Modal from './Modal';
 import { useAuth } from '../contexts/AuthContext';
+import Modal from './Modal';
+import NotificationModal from './NotificationModal';
 
 interface ConfigurationModalProps {
   isOpen: boolean;
@@ -15,6 +16,13 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, onClose
   const { updateUserProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile');
   const [loading, setLoading] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationData, setNotificationData] = useState({
+    type: 'success' as 'success' | 'error' | 'info',
+    title: '',
+    message: '',
+    icon: '',
+  });
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     email: user?.email || '',
@@ -34,38 +42,68 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, onClose
     }));
   };
 
+  const showNotificationModal = (type: 'success' | 'error' | 'info', title: string, message: string, icon?: string) => {
+    setNotificationData({ type, title, message, icon: icon || '' });
+    setShowNotification(true);
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
-      
+
       if (activeTab === 'profile') {
         // Actualizar perfil del usuario
         await updateUserProfile({
           displayName: formData.displayName,
           username: formData.displayName, // Usar displayName como username también
         });
-        alert('Perfil actualizado exitosamente');
+        showNotificationModal(
+          'success',
+          'Perfil Actualizado',
+          'Tu información personal se ha actualizado correctamente.',
+          '✅'
+        );
+        // Cerrar el modal después de un breve delay
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       } else if (activeTab === 'security') {
         // Aquí iría la lógica para cambiar contraseña
         if (formData.newPassword !== formData.confirmPassword) {
-          alert('Las contraseñas no coinciden');
+          showNotificationModal('error', 'Error de Contraseña', 'Las contraseñas no coinciden.', '❌');
           return;
         }
         if (formData.newPassword.length < 6) {
-          alert('La contraseña debe tener al menos 6 caracteres');
+          showNotificationModal(
+            'error',
+            'Contraseña Inválida',
+            'La contraseña debe tener al menos 6 caracteres.',
+            '❌'
+          );
           return;
         }
         // TODO: Implementar cambio de contraseña con Firebase Auth
-        alert('Cambio de contraseña implementado próximamente');
+        showNotificationModal('info', 'Próximamente', 'El cambio de contraseña estará disponible pronto.', 'ℹ️');
       } else if (activeTab === 'preferences') {
         // Aquí iría la lógica para guardar preferencias
-        alert('Preferencias guardadas exitosamente');
+        showNotificationModal(
+          'success',
+          'Preferencias Guardadas',
+          'Tus preferencias se han guardado correctamente.',
+          '✅'
+        );
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       }
-      
-      onClose();
     } catch (error) {
       console.error('Error saving changes:', error);
-      alert('Error al guardar los cambios');
+      showNotificationModal(
+        'error',
+        'Error al Guardar',
+        'No se pudieron guardar los cambios. Inténtalo de nuevo.',
+        '❌'
+      );
     } finally {
       setLoading(false);
     }
@@ -237,15 +275,24 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, onClose
           >
             Cancelar
           </button>
-           <button
-             onClick={handleSave}
-             disabled={loading}
-             className='flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
-           >
-             {loading ? 'Guardando...' : 'Guardar Cambios'}
-           </button>
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className='flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            {loading ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
         </div>
       </div>
+
+      <NotificationModal
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        type={notificationData.type}
+        title={notificationData.title}
+        message={notificationData.message}
+        icon={notificationData.icon}
+      />
     </Modal>
   );
 };

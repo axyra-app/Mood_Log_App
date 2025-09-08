@@ -176,8 +176,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       if (!user) throw new Error('No user logged in');
 
-      setLoading(true);
-
       // Actualizar en Firestore
       const userRef = doc(db, 'users', user.uid);
       await setDoc(
@@ -189,10 +187,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         { merge: true }
       );
 
-      // Actualizar el estado local
+      // Actualizar el estado local sin recargar
       setUser((prev) => (prev ? { ...prev, ...updates } : null));
     } catch (error: any) {
-      setLoading(false);
       throw new Error(error.message);
     }
   };
