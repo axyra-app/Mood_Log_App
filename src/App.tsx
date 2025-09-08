@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Contexts
-import { AuthProvider } from './contexts/AuthContextSimple';
+import { AuthProvider } from './contexts/AuthContextSimple'; // Using fixed Firebase
 
 // Pages
 import Home from './pages/Home';

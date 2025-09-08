@@ -1,7 +1,7 @@
 // Simple Firebase initialization
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { firebaseConfig, validateFirebaseConfig } from '../config/firebase-config-simple';
 
 // Initialize Firebase
@@ -24,11 +24,25 @@ try {
     console.log('Using existing Firebase app');
   }
 
-  // Initialize services
-  auth = getAuth(app);
-  db = getFirestore(app);
+  // Initialize Auth service
+  try {
+    auth = getAuth(app);
+    console.log('Firebase Auth initialized successfully');
+  } catch (authError) {
+    console.error('Firebase Auth initialization error:', authError);
+    throw authError;
+  }
+
+  // Initialize Firestore service
+  try {
+    db = getFirestore(app);
+    console.log('Firebase Firestore initialized successfully');
+  } catch (firestoreError) {
+    console.error('Firebase Firestore initialization error:', firestoreError);
+    throw firestoreError;
+  }
   
-  console.log('Firebase services initialized successfully');
+  console.log('All Firebase services initialized successfully');
 } catch (error) {
   console.error('Firebase initialization error:', error);
   throw error;

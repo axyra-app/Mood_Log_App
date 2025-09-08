@@ -10,7 +10,7 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase-simple';
+import { auth, db } from '../lib/firebase-fixed';
 
 // Types
 export interface UserProfile {
