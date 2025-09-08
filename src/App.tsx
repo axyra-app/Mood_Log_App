@@ -5,9 +5,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
 
-// Pages
-import Achievements from './components/Achievements';
-import Statistics from './components/Statistics';
+// Pages (solo las que existen)
 import Chat from './pages/Chat';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
@@ -17,10 +15,11 @@ import MoodFlow from './pages/MoodFlow';
 import Privacy from './pages/Privacy';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
+import Statistics from './pages/Statistics';
 import Terms from './pages/Terms';
 
 // Components
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -72,11 +71,7 @@ function App() {
                 path='/statistics'
                 element={
                   <ProtectedRoute>
-                    <div className='min-h-screen bg-gray-50 p-4'>
-                      <div className='max-w-6xl mx-auto'>
-                        <Statistics />
-                      </div>
-                    </div>
+                    <Statistics />
                   </ProtectedRoute>
                 }
               />
@@ -95,15 +90,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Settings />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path='/achievements'
-                element={
-                  <ProtectedRoute>
-                    <Achievements />
                   </ProtectedRoute>
                 }
               />
