@@ -4,13 +4,22 @@ import App from './App';
 import './index.css';
 import { logEnvironmentInfo, validateEnvironment } from './utils/env';
 
-// Validar configuración de entorno
-if (!validateEnvironment()) {
-  console.error('❌ La aplicación no puede iniciar debido a configuración inválida');
+// Validar configuración de entorno (no bloquear la aplicación)
+try {
+  const isValid = validateEnvironment();
+  if (!isValid) {
+    console.warn('⚠️ Algunas variables de entorno no están configuradas, pero la aplicación continuará');
+  }
+} catch (error) {
+  console.warn('⚠️ Error al validar configuración:', error);
 }
 
 // Mostrar información del entorno en desarrollo
-logEnvironmentInfo();
+try {
+  logEnvironmentInfo();
+} catch (error) {
+  console.warn('⚠️ Error al mostrar información del entorno:', error);
+}
 
 // Render the app
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);

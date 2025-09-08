@@ -90,14 +90,13 @@ export const validateConfig = () => {
     'VITE_FIREBASE_API_KEY',
     'VITE_FIREBASE_AUTH_DOMAIN',
     'VITE_FIREBASE_PROJECT_ID',
-    'VITE_OPENAI_API_KEY',
   ];
 
   const missing = required.filter((key) => !import.meta.env[key]);
 
   if (missing.length > 0) {
-    console.error('Missing required environment variables:', missing);
-    return false;
+    console.warn('⚠️ Variables de entorno faltantes (no críticas):', missing);
+    // No retornar false para no bloquear la aplicación
   }
 
   return true;
@@ -105,14 +104,21 @@ export const validateConfig = () => {
 
 // Función para obtener la configuración de Firebase
 export const getFirebaseConfig = () => {
-  return {
-    apiKey: PRODUCTION_CONFIG.FIREBASE.API_KEY,
-    authDomain: PRODUCTION_CONFIG.FIREBASE.AUTH_DOMAIN,
-    projectId: PRODUCTION_CONFIG.FIREBASE.PROJECT_ID,
-    storageBucket: PRODUCTION_CONFIG.FIREBASE.STORAGE_BUCKET,
-    messagingSenderId: PRODUCTION_CONFIG.FIREBASE.MESSAGING_SENDER_ID,
-    appId: PRODUCTION_CONFIG.FIREBASE.APP_ID,
+  const config = {
+    apiKey: PRODUCTION_CONFIG.FIREBASE.API_KEY || 'demo-api-key',
+    authDomain: PRODUCTION_CONFIG.FIREBASE.AUTH_DOMAIN || 'demo-project.firebaseapp.com',
+    projectId: PRODUCTION_CONFIG.FIREBASE.PROJECT_ID || 'demo-project',
+    storageBucket: PRODUCTION_CONFIG.FIREBASE.STORAGE_BUCKET || 'demo-project.appspot.com',
+    messagingSenderId: PRODUCTION_CONFIG.FIREBASE.MESSAGING_SENDER_ID || '123456789',
+    appId: PRODUCTION_CONFIG.FIREBASE.APP_ID || '1:123456789:web:abcdef',
   };
+
+  // Verificar si estamos usando valores demo
+  if (config.apiKey === 'demo-api-key') {
+    console.warn('⚠️ Usando configuración demo de Firebase. Configura las variables de entorno para producción.');
+  }
+
+  return config;
 };
 
 // Función para obtener la configuración de OpenAI

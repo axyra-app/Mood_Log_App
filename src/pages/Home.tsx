@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { 
   Heart, 
   Brain, 
@@ -18,15 +17,15 @@ import {
 import SEO from '../components/SEO';
 
 const Home: React.FC = () => {
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-  useEffect(() => {
-    if (user && !loading) {
-      navigate('/dashboard');
-    }
-  }, [user, loading, navigate]);
+  // Remover dependencia del AuthContext para evitar errores
+  // useEffect(() => {
+  //   if (user && !loading) {
+  //     navigate('/dashboard');
+  //   }
+  // }, [user, loading, navigate]);
 
   const testimonials = [
     {

@@ -19,6 +19,7 @@ import Statistics from './pages/Statistics';
 import Terms from './pages/Terms';
 
 // Components
+import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Create a client
@@ -35,11 +36,12 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className='App'>
-            <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Router>
+            <div className='App'>
+              <Routes>
               {/* Public routes */}
               <Route path='/' element={<Home />} />
               <Route path='/login' element={<Login />} />
@@ -113,11 +115,12 @@ function App() {
                   </div>
                 }
               />
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
-    </QueryClientProvider>
+              </Routes>
+            </div>
+          </Router>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
