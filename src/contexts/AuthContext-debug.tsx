@@ -34,7 +34,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const saveUserToStorage = (userData: User) => {
+    localStorage.setItem('moodLogUser', JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  const clearUserFromStorage = () => {
+    localStorage.removeItem('moodLogUser');
+    setUser(null);
+  };
+
   useEffect(() => {
+    // Cargar usuario desde localStorage si existe
+    const savedUser = localStorage.getItem('moodLogUser');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error loading user from localStorage:', error);
+        localStorage.removeItem('moodLogUser');
+      }
+    }
+    
     // Simular carga inicial
     setTimeout(() => {
       setLoading(false);
@@ -46,12 +68,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Simular login exitoso
       await new Promise(resolve => setTimeout(resolve, 1000));
       const uniqueId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setUser({
+      const userData = {
         uid: uniqueId,
         email: email,
         displayName: email.split('@')[0],
-        role: 'user'
-      });
+        role: 'user' as 'user' | 'psychologist'
+      };
+      saveUserToStorage(userData);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -62,12 +85,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Simular registro exitoso
       await new Promise(resolve => setTimeout(resolve, 1000));
       const uniqueId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setUser({
+      const userData = {
         uid: uniqueId,
         email: email,
         displayName: email.split('@')[0],
         role: role
-      });
+      };
+      saveUserToStorage(userData);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -78,12 +102,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Simular login con Google
       await new Promise(resolve => setTimeout(resolve, 1000));
       const uniqueId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setUser({
+      const userData = {
         uid: uniqueId,
         email: 'usuario@gmail.com',
         displayName: 'Usuario',
-        role: 'user'
-      });
+        role: 'user' as 'user' | 'psychologist'
+      };
+      saveUserToStorage(userData);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -91,7 +116,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      setUser(null);
+      clearUserFromStorage();
     } catch (error: any) {
       throw new Error(error.message);
     }

@@ -44,7 +44,7 @@ const ConfigurationModal: React.FC<ConfigurationModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-2xl max-h-[70vh] overflow-y-auto">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="text-6xl mb-4">⚙️</div>
