@@ -212,12 +212,12 @@ const HomeSimple: React.FC = () => {
             </span>
           </div>
           <h1
-            className={`text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-none transition-colors duration-500 ${
+            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black mb-8 leading-tight transition-colors duration-500 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}
           >
             <span className='block'>TU</span>
-            <span className='block bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent'>
+            <span className='block bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent break-words'>
               TRANSFORMACIÓN
             </span>
             <span className='block'>EMOCIONAL</span>
