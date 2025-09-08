@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Contexts
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContextSimple';
 
 // Pages
 import Home from './pages/Home';
@@ -15,6 +15,7 @@ import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import Statistics from './components/Statistics';
 import Achievements from './components/Achievements';
+import DebugInfo from './components/DebugInfo';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -44,6 +45,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/debug" element={<DebugInfo />} />
               
               {/* Protected routes */}
               <Route 
