@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Contexts
-import { AuthProvider } from './contexts/AuthContextUltraSimple'; // Ultra simple for debugging
+import { AuthProvider } from './contexts/AuthContextMock'; // Mock auth for debugging
 
 // Pages
 import Home from './pages/Home';
@@ -17,6 +17,7 @@ import Statistics from './components/Statistics';
 import Achievements from './components/Achievements';
 import DebugInfo from './components/DebugInfo';
 import TestPage from './pages/TestPage'; // Ultra simple test page
+import TestPageMock from './pages/TestPageMock'; // Mock test page
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -48,6 +49,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/debug" element={<DebugInfo />} />
               <Route path="/test" element={<TestPage />} /> {/* Ultra simple test route */}
+              <Route path="/test-mock" element={<TestPageMock />} /> {/* Mock test route */}
               
               {/* Protected routes */}
               <Route 
