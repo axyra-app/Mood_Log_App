@@ -1,6 +1,5 @@
 import React, { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContextSimple';
 import { 
   Eye, 
   EyeOff, 
@@ -30,7 +29,6 @@ const Login: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,7 +41,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError('Por favor completa todos los campos');
       return;
@@ -52,10 +50,13 @@ const Login: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      await signIn(email, password);
-      navigate('/dashboard');
+      // Simular login exitoso
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Login exitoso:', { email });
+      // Por ahora solo mostramos un mensaje de éxito
+      setError('¡Login exitoso! (Modo demo)');
     } catch (error: any) {
-      setError(error.message);
+      setError('Error en el login: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -65,10 +66,12 @@ const Login: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      await signInWithGoogle();
-      navigate('/dashboard');
+      // Simular login con Google
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Login con Google exitoso');
+      setError('¡Login con Google exitoso! (Modo demo)');
     } catch (error: any) {
-      setError(error.message);
+      setError('Error en el login con Google: ' + error.message);
     } finally {
       setLoading(false);
     }

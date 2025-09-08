@@ -1,6 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContextSimple';
 import { 
   Eye, 
   EyeOff, 
@@ -39,7 +38,6 @@ const Register: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -90,20 +88,18 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     try {
       setError('');
       setLoading(true);
-      await signUp(formData.email, formData.password, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: formData.role
-      });
-      navigate('/dashboard');
+      // Simular registro exitoso
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Registro exitoso:', formData);
+      setError('¡Registro exitoso! (Modo demo)');
     } catch (error: any) {
-      setError(error.message);
+      setError('Error en el registro: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -113,10 +109,12 @@ const Register: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      await signInWithGoogle();
-      navigate('/dashboard');
+      // Simular registro con Google
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Registro con Google exitoso');
+      setError('¡Registro con Google exitoso! (Modo demo)');
     } catch (error: any) {
-      setError(error.message);
+      setError('Error en el registro con Google: ' + error.message);
     } finally {
       setLoading(false);
     }
