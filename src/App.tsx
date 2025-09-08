@@ -3,13 +3,13 @@ import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Contexts
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContextSimple';
 
 // Pages (solo las que existen)
 import Chat from './pages/Chat';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
-import Home from './pages/Home';
+import HomeSimple from './pages/HomeSimple';
 import Login from './pages/Login';
 import MoodFlow from './pages/MoodFlow';
 import Privacy from './pages/Privacy';
@@ -43,7 +43,7 @@ function App() {
             <div className='App'>
               <Routes>
               {/* Public routes */}
-              <Route path='/' element={<Home />} />
+              <Route path='/' element={<HomeSimple />} />
               <Route path='/login' element={<Login />} />
               <Route path='/register' element={<Register />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
