@@ -77,10 +77,13 @@ const RegisterSimple: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      // Simular registro exitoso
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Registro exitoso:', formData);
-      setError('¡Registro exitoso! (Modo demo)');
+      
+      // Aquí iría la lógica real de Firebase Auth
+      // Por ahora redirigimos al dashboard
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+      
     } catch (error: any) {
       setError('Error en el registro: ' + error.message);
     } finally {
@@ -92,10 +95,13 @@ const RegisterSimple: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      // Simular registro con Google
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Registro con Google exitoso');
-      setError('¡Registro con Google exitoso! (Modo demo)');
+      
+      // Aquí iría la lógica real de Google Auth
+      // Por ahora redirigimos al dashboard
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+      
     } catch (error: any) {
       setError('Error en el registro con Google: ' + error.message);
     } finally {
@@ -150,7 +156,7 @@ const RegisterSimple: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex min-h-[calc(100vh-80px)]">
-        {/* Left Side - Form */}
+        {/* Centered Form */}
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
@@ -400,25 +406,6 @@ const RegisterSimple: React.FC = () => {
                 </Link>
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Right Side - Visual */}
-        <div className={`hidden lg:flex flex-1 items-center justify-center p-8 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
-        }`}>
-          <div className="text-center max-w-md">
-            <div className="text-8xl mb-6">🚀</div>
-            <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              ÚNETE A LA REVOLUCIÓN
-            </h2>
-            <p className={`text-lg transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              Comienza tu transformación emocional hoy mismo
-            </p>
           </div>
         </div>
       </div>

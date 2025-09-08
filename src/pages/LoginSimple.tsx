@@ -30,10 +30,13 @@ const LoginSimple: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      // Simular login exitoso
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Login exitoso:', { email });
-      setError('¡Login exitoso! (Modo demo)');
+      
+      // Aquí iría la lógica real de Firebase Auth
+      // Por ahora redirigimos al dashboard
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+      
     } catch (error: any) {
       setError('Error en el login: ' + error.message);
     } finally {
@@ -45,10 +48,13 @@ const LoginSimple: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      // Simular login con Google
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Login con Google exitoso');
-      setError('¡Login con Google exitoso! (Modo demo)');
+      
+      // Aquí iría la lógica real de Google Auth
+      // Por ahora redirigimos al dashboard
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+      
     } catch (error: any) {
       setError('Error en el login con Google: ' + error.message);
     } finally {
@@ -103,7 +109,7 @@ const LoginSimple: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex min-h-[calc(100vh-80px)]">
-        {/* Left Side - Form */}
+        {/* Centered Form */}
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
@@ -237,25 +243,6 @@ const LoginSimple: React.FC = () => {
                 </Link>
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Right Side - Visual */}
-        <div className={`hidden lg:flex flex-1 items-center justify-center p-8 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
-        }`}>
-          <div className="text-center max-w-md">
-            <div className="text-8xl mb-6">🧠</div>
-            <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              TU TRANSFORMACIÓN
-            </h2>
-            <p className={`text-lg transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              Accede a tu cuenta y continúa tu viaje hacia el bienestar emocional
-            </p>
           </div>
         </div>
       </div>

@@ -2,12 +2,13 @@ import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Pages (solo las que existen)
+import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
-import Privacy from './pages/Privacy';
+import PrivacySimple from './pages/PrivacySimple';
 import RegisterSimple from './pages/RegisterSimple';
-import Terms from './pages/Terms';
+import TermsSimple from './pages/TermsSimple';
 
 function App() {
   return (
@@ -19,8 +20,9 @@ function App() {
           <Route path='/login' element={<LoginSimple />} />
           <Route path='/register' element={<RegisterSimple />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
-          <Route path='/terms' element={<Terms />} />
-          <Route path='/privacy' element={<Privacy />} />
+          <Route path='/terms' element={<TermsSimple />} />
+          <Route path='/privacy' element={<PrivacySimple />} />
+          <Route path='/dashboard' element={<DashboardSimple />} />
 
           {/* Catch all route */}
           <Route
