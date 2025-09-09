@@ -121,7 +121,9 @@ export const useMood = () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     return moodLogs.find((log) => {
-      const logDate = log.createdAt.toDate();
+      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate() 
+        : new Date();
       return logDate >= today && logDate < tomorrow;
     });
   }, [moodLogs]);
@@ -164,7 +166,9 @@ export const useMood = () => {
     today.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < moodLogs.length; i++) {
-      const logDate = moodLogs[i].createdAt.toDate();
+      const logDate = moodLogs[i].createdAt && typeof moodLogs[i].createdAt.toDate === 'function' 
+        ? moodLogs[i].createdAt.toDate() 
+        : new Date();
       logDate.setHours(0, 0, 0, 0);
 
       const expectedDate = new Date(today);

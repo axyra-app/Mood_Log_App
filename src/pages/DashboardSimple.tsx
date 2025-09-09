@@ -117,7 +117,9 @@ const DashboardSimple: React.FC = () => {
             title: notif.title,
             message: notif.message,
             type: notif.type,
-            timestamp: notif.createdAt?.toDate ? notif.createdAt.toDate() : new Date(),
+            timestamp: notif.createdAt && typeof notif.createdAt.toDate === 'function' 
+              ? notif.createdAt.toDate() 
+              : new Date(),
             isRead: notif.read,
           }))
         );

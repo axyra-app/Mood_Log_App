@@ -425,7 +425,9 @@ const Chat: React.FC = () => {
                                 message.senderId === user?.uid ? 'text-purple-100' : 'text-gray-500'
                               }`}
                             >
-                              {message.timestamp?.toDate().toLocaleTimeString()}
+                              {message.timestamp && typeof message.timestamp.toDate === 'function' 
+                                ? message.timestamp.toDate().toLocaleTimeString()
+                                : new Date().toLocaleTimeString()}
                             </p>
                           </div>
                         </div>

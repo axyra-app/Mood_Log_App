@@ -199,7 +199,9 @@ export const getMoodStatistics = async (userId: string, days: number = 30) => {
     const weeks = new Map<string, number[]>();
 
     moodLogs.forEach((log) => {
-      const date = log.createdAt.toDate();
+      const date = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate() 
+        : new Date();
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
       const weekKey = weekStart.toISOString().split('T')[0];
@@ -246,7 +248,9 @@ export const getMoodStatistics = async (userId: string, days: number = 30) => {
     // Mood by day of week
     const moodByDayOfWeek: Record<string, number[]> = {};
     moodLogs.forEach((log) => {
-      const dayOfWeek = log.createdAt.toDate().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const dayOfWeek = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+        : new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       if (!moodByDayOfWeek[dayOfWeek]) {
         moodByDayOfWeek[dayOfWeek] = [];
       }
@@ -262,7 +266,9 @@ export const getMoodStatistics = async (userId: string, days: number = 30) => {
     // Mood by time of day
     const moodByTimeOfDay: Record<string, number[]> = {};
     moodLogs.forEach((log) => {
-      const hour = log.createdAt.toDate().getHours();
+      const hour = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate().getHours()
+        : new Date().getHours();
       let timeOfDay: string;
       if (hour < 6) timeOfDay = 'night';
       else if (hour < 12) timeOfDay = 'morning';
@@ -354,7 +360,9 @@ export const exportMoodData = async (userId: string, format: 'json' | 'csv' = 'j
 
       moodLogs.forEach((log) => {
         const row = [
-          log.createdAt.toDate().toISOString().split('T')[0],
+          log.createdAt && typeof log.createdAt.toDate === 'function' 
+            ? log.createdAt.toDate().toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
           log.mood.toString(),
           (log.energy || 0).toString(),
           (log.stress || 0).toString(),
