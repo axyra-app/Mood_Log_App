@@ -101,13 +101,7 @@ const MoodFlowSimple: React.FC = () => {
         sleep,
       };
 
-      const moodLogId = await createMoodLog(moodData);
-      
-      // Get the created mood log to access AI analysis
-      const createdMoodLog = getTodaysMoodLog();
-      if (createdMoodLog?.aiAnalysis) {
-        setAiAnalysis(createdMoodLog.aiAnalysis);
-      }
+      await createMoodLog(moodData);
 
       // Mostrar modal de análisis de IA
       setSavedMood(currentMood);
@@ -138,13 +132,7 @@ const MoodFlowSimple: React.FC = () => {
         sleep,
       };
 
-      const moodLogId = await createMoodLog(moodData);
-      
-      // Get the created mood log to access AI analysis
-      const createdMoodLog = getTodaysMoodLog();
-      if (createdMoodLog?.aiAnalysis) {
-        setAiAnalysis(createdMoodLog.aiAnalysis);
-      }
+      await createMoodLog(moodData);
 
       // Mostrar modal de análisis de IA
       setSavedMood(currentMood);
