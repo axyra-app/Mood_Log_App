@@ -201,7 +201,6 @@ const DashboardPsychologist: React.FC = () => {
           notes: 'Sesión de emergencia - seguimiento de crisis',
         },
         ];
-      }
 
       setAppointments(appointmentsData);
 
