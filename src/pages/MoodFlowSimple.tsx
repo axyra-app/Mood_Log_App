@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 
 const MoodFlowSimple: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { createMoodLog, getTodaysMoodLog, loading: moodLoading, error: moodError } = useMood();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -46,18 +46,16 @@ const MoodFlowSimple: React.FC = () => {
 
   useEffect(() => {
     setIsLoaded(true);
-    // Check if user already logged mood today
-    const todaysMood = getTodaysMoodLog();
-    if (todaysMood) {
-      setCurrentMood(todaysMood.mood);
-      setFeelings(todaysMood.notes);
-      setActivities(todaysMood.activities);
-      setEmotions(todaysMood.emotions);
-      setEnergy(todaysMood.energy || 5);
-      setStress(todaysMood.stress || 5);
-      setSleep(todaysMood.sleep || 5);
-    }
-  }, [getTodaysMoodLog]);
+    // Reset form when component mounts
+    setCurrentMood(null);
+    setFeelings('');
+    setActivities([]);
+    setEmotions([]);
+    setEnergy(5);
+    setStress(5);
+    setSleep(5);
+    setStep(1);
+  }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -205,6 +203,25 @@ const MoodFlowSimple: React.FC = () => {
             >
               Dashboard
             </Link>
+            <button
+              onClick={async () => {
+                if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                  try {
+                    await logout();
+                    navigate('/login');
+                  } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
+                  }
+                }
+              }}
+              className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 hover:scale-105 ${
+                isDarkMode
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+            >
+              Cerrar Sesión
+            </button>
           </div>
         </div>
       </header>
