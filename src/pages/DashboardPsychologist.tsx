@@ -43,9 +43,8 @@ const DashboardPsychologist: React.FC = () => {
   }, []);
 
   const loadPsychologistData = async () => {
-    try {
-      // Usar datos simulados para evitar problemas de Firebase
-      const patientsData = [
+    // Usar datos simulados estáticos para evitar problemas de Firebase
+    const patientsData = [
         {
           id: '1',
           name: 'María González',
@@ -252,23 +251,6 @@ const DashboardPsychologist: React.FC = () => {
         satisfactionRate: 87,
         riskPatients,
       });
-    } catch (error) {
-      console.error('Error loading psychologist data:', error);
-      
-      // En caso de error, establecer datos vacíos para evitar crashes
-      setPatients([]);
-      setAppointments([]);
-      setNotifications([]);
-      setStats({
-        totalPatients: 0,
-        activePatients: 0,
-        todayAppointments: 0,
-        weeklyAppointments: 0,
-        averageMood: 0,
-        satisfactionRate: 0,
-        riskPatients: 0,
-      });
-    }
   };
 
   const toggleDarkMode = () => {

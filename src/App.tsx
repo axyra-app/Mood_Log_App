@@ -12,7 +12,7 @@ import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist'
 
 // Pages
 import Chat from './pages/Chat';
-import DashboardPsychologistAdvanced from './pages/DashboardPsychologistAdvanced';
+import DashboardPsychologistSimple from './pages/DashboardPsychologistSimple';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
@@ -53,7 +53,7 @@ function App() {
                 path='/dashboard-psychologist'
                 element={
                   <ProtectedRoutePsychologist>
-                    <DashboardPsychologistAdvanced />
+                    <DashboardPsychologistSimple />
                   </ProtectedRoutePsychologist>
                 }
               />
