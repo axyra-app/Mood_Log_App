@@ -20,6 +20,11 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Reset error state after a delay to allow recovery
+    setTimeout(() => {
+      this.setState({ hasError: false, error: undefined });
+    }, 5000);
   }
 
   public render() {
@@ -34,8 +39,14 @@ class ErrorBoundary extends Component<Props, State> {
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => this.setState({ hasError: false, error: undefined })}
                 className="w-full bg-white text-purple-600 font-semibold py-3 px-6 rounded-xl hover:bg-white/90 transition-all duration-200"
+              >
+                Reintentar
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-white/20 text-white font-semibold py-3 px-6 rounded-xl hover:bg-white/30 transition-all duration-200"
               >
                 Recargar página
               </button>

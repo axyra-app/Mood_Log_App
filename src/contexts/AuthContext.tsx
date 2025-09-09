@@ -59,7 +59,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (!isMounted) return;
+
       try {
         if (firebaseUser) {
           try {
@@ -77,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 createdAt: userData.createdAt,
                 updatedAt: userData.updatedAt,
               };
-              setUser(userDataWithAuth);
+              if (isMounted) setUser(userDataWithAuth);
             } else {
               // Si no existe el documento, crear uno básico
               const basicUserData: User = {
@@ -86,7 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 displayName: firebaseUser.displayName,
                 role: 'user',
               };
-              setUser(basicUserData);
+              if (isMounted) setUser(basicUserData);
             }
           } catch (error) {
             console.error('Error loading user profile:', error);
@@ -97,21 +101,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               displayName: firebaseUser.displayName,
               role: 'user',
             };
-            setUser(userData);
+            if (isMounted) setUser(userData);
           }
         } else {
           // Usuario no autenticado
-          setUser(null);
+          if (isMounted) setUser(null);
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
-        setUser(null);
+        if (isMounted) setUser(null);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

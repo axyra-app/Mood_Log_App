@@ -186,20 +186,35 @@ export const useMood = () => {
 
   // Setup real-time subscription
   useEffect(() => {
+    let isMounted = true;
+
     if (!user?.uid) {
-      setMoodLogs([]);
-      setStatistics(null);
+      if (isMounted) {
+        setMoodLogs([]);
+        setStatistics(null);
+      }
       return;
     }
 
-    loadMoodLogs();
-    loadStatistics();
+    const initializeData = async () => {
+      try {
+        await loadMoodLogs();
+        await loadStatistics();
+      } catch (error) {
+        console.error('Error initializing mood data:', error);
+      }
+    };
+
+    initializeData();
 
     const unsubscribe = subscribeToMoodLogs(user.uid, (logs) => {
-      setMoodLogs(logs);
+      if (isMounted) {
+        setMoodLogs(logs);
+      }
     });
 
     return () => {
+      isMounted = false;
       if (unsubscribe && typeof unsubscribe === 'function') {
         unsubscribe();
       }
