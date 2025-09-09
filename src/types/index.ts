@@ -5,6 +5,16 @@ export interface User {
   displayName?: string;
   photoURL?: string;
   role: 'user' | 'psychologist';
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -12,13 +22,131 @@ export interface User {
 // Psychologist Types
 export interface Psychologist extends User {
   role: 'psychologist';
+  professionalTitle?: string;
   licenseNumber: string;
   specialization: string;
   yearsOfExperience: number;
   bio: string;
+  cvUrl?: string;
   rating: number;
   patientsCount: number;
   isAvailable: boolean;
+  workingHours?: {
+    monday: { start: string; end: string; available: boolean };
+    tuesday: { start: string; end: string; available: boolean };
+    wednesday: { start: string; end: string; available: boolean };
+    thursday: { start: string; end: string; available: boolean };
+    friday: { start: string; end: string; available: boolean };
+    saturday: { start: string; end: string; available: boolean };
+    sunday: { start: string; end: string; available: boolean };
+  };
+  consultationFee?: number;
+  languages?: string[];
+  treatmentMethods?: string[];
+}
+
+// Patient Types
+export interface Patient {
+  id: string;
+  userId: string;
+  psychologistId: string;
+  assignedAt: Date;
+  status: 'active' | 'inactive' | 'discharged';
+  diagnosis?: string;
+  treatmentGoals: string[];
+  riskLevel: 'low' | 'medium' | 'high';
+  lastSessionDate?: Date;
+  nextSessionDate?: Date;
+  totalSessions: number;
+  notes?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Session Notes Types
+export interface SessionNote {
+  id: string;
+  patientId: string;
+  psychologistId: string;
+  sessionDate: Date;
+  sessionType: 'individual' | 'group' | 'family' | 'online';
+  duration: number; // in minutes
+  notes: string;
+  observations: string;
+  interventions: string[];
+  homework?: string;
+  nextSessionGoals: string[];
+  moodBefore: number; // 1-10 scale
+  moodAfter: number; // 1-10 scale
+  progress: number; // 1-10 scale
+  concerns: string[];
+  strengths: string[];
+  attachments?: string[]; // file URLs
+  isConfidential: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Treatment Plan Types
+export interface TreatmentPlan {
+  id: string;
+  patientId: string;
+  psychologistId: string;
+  title: string;
+  description: string;
+  objectives: TreatmentObjective[];
+  phases: TreatmentPhase[];
+  startDate: Date;
+  endDate?: Date;
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
+  progress: number; // 0-100
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TreatmentObjective {
+  id: string;
+  title: string;
+  description: string;
+  targetDate: Date;
+  completed: boolean;
+  completedAt?: Date;
+  progress: number; // 0-100
+}
+
+export interface TreatmentPhase {
+  id: string;
+  title: string;
+  description: string;
+  duration: number; // in weeks
+  activities: string[];
+  goals: string[];
+  completed: boolean;
+  completedAt?: Date;
+}
+
+// Appointment Types
+export interface Appointment {
+  id: string;
+  patientId: string;
+  psychologistId: string;
+  title: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
+  type: 'consultation' | 'follow-up' | 'emergency' | 'assessment';
+  location: 'office' | 'online' | 'phone';
+  meetingLink?: string;
+  notes?: string;
+  reminderSent: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Mood Log Types
@@ -103,6 +231,81 @@ export interface Achievement {
   unlockedAt?: Date;
 }
 
+// Push Notification Types
+export interface PushNotification {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  type: 'appointment' | 'reminder' | 'message' | 'mood_check' | 'emergency' | 'general';
+  data?: any;
+  read: boolean;
+  sentAt: Date;
+  scheduledFor?: Date;
+}
+
+export interface NotificationSettings {
+  userId: string;
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  appointmentReminders: boolean;
+  moodCheckReminders: boolean;
+  messageNotifications: boolean;
+  weeklyReports: boolean;
+  emergencyAlerts: boolean;
+  quietHours: {
+    enabled: boolean;
+    start: string; // HH:MM format
+    end: string; // HH:MM format
+  };
+  timezone: string;
+}
+
+// Advanced Analytics Types
+export interface MoodTrend {
+  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  data: {
+    date: string;
+    mood: number;
+    energy: number;
+    stress: number;
+    sleep: number;
+    activities: string[];
+    emotions: string[];
+  }[];
+  averageMood: number;
+  trend: 'improving' | 'declining' | 'stable';
+  volatility: number; // 0-1 scale
+}
+
+export interface EmotionalPattern {
+  emotion: string;
+  frequency: number;
+  intensity: number;
+  triggers: string[];
+  timeOfDay: string[];
+  dayOfWeek: string[];
+  correlation: {
+    activity: string;
+    strength: number; // -1 to 1
+  }[];
+}
+
+export interface WellnessInsights {
+  overallScore: number; // 0-100
+  strengths: string[];
+  areasForImprovement: string[];
+  recommendations: string[];
+  riskFactors: string[];
+  protectiveFactors: string[];
+  patterns: EmotionalPattern[];
+  trends: MoodTrend[];
+  goals: {
+    shortTerm: string[];
+    longTerm: string[];
+  };
+}
+
 // Settings Types
 export interface UserSettings {
   notifications: {
@@ -172,4 +375,3 @@ export interface CardProps {
   hover?: boolean;
   padding?: 'sm' | 'md' | 'lg';
 }
-

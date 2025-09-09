@@ -3,29 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
-import { getUserSettings, saveUserSettings } from '../services/firestore';
+import { useMood } from '../hooks/useMood';
+import { useNotifications } from '../hooks/useNotifications';
 
 const Settings: React.FC = () => {
   const { user, logout, updateUserProfile } = useAuth();
+  const { settings, updateSettings, loading: notificationsLoading } = useNotifications();
+  const { exportMoodData } = useMood();
   const [activeTab, setActiveTab] = useState('profile');
-  const [settings, setSettings] = useState({
-    notifications: {
-      email: true,
-      push: true,
-      reminders: true,
-      weeklyReports: true,
-    },
-    privacy: {
-      shareData: false,
-      anonymousMode: false,
-      dataRetention: 365,
-    },
-    preferences: {
-      theme: 'light' as 'light' | 'dark' | 'auto',
-      language: 'es',
-      timezone: 'America/Mexico_City',
-    },
-  });
   const [profile, setProfile] = useState({
     displayName: '',
     email: '',
@@ -44,19 +29,6 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      loadUserData();
-    }
-  }, [user]);
-
-  const loadUserData = async () => {
-    if (!user) return;
-
-    try {
-      const userSettings = await getUserSettings(user.uid);
-      if (userSettings) {
-        setSettings(userSettings);
-      }
-
       setProfile({
         displayName: user.displayName || '',
         email: user.email || '',
@@ -65,17 +37,19 @@ const Settings: React.FC = () => {
         gender: '',
         location: '',
       });
-    } catch (error) {
-      console.error('Error loading user data:', error);
     }
-  };
+  }, [user]);
 
   const handleSaveSettings = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      await saveUserSettings(user.uid, settings);
+      // Update profile if needed
+      if (profile.displayName !== user.displayName) {
+        await updateUserProfile({ displayName: profile.displayName });
+      }
+
       alert('Configuraciones guardadas exitosamente');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -91,7 +65,9 @@ const Settings: React.FC = () => {
     try {
       setLoading(true);
 
-      // Simular exportación de datos
+      // Export mood data using the hook
+      const moodData = await exportMoodData(user.uid, 'json');
+
       const exportData = {
         user: {
           uid: user.uid,
@@ -101,6 +77,7 @@ const Settings: React.FC = () => {
         },
         profile: profile,
         settings: settings,
+        moodData: JSON.parse(moodData),
         exportDate: new Date().toISOString(),
         version: '1.0.0',
       };
@@ -412,13 +389,8 @@ const Settings: React.FC = () => {
                         <label className='relative inline-flex items-center cursor-pointer'>
                           <input
                             type='checkbox'
-                            checked={settings.notifications.email}
-                            onChange={(e) =>
-                              setSettings({
-                                ...settings,
-                                notifications: { ...settings.notifications, email: e.target.checked },
-                              })
-                            }
+                            checked={settings?.emailNotifications || false}
+                            onChange={(e) => updateSettings({ emailNotifications: e.target.checked })}
                             className='sr-only peer'
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>

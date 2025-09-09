@@ -1,18 +1,16 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  onSnapshot, 
+import {
+  Timestamp,
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
   serverTimestamp,
-  Timestamp 
+  updateDoc,
+  where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -77,12 +75,12 @@ export interface ChatMessage {
 export const createUser = async (userData: Partial<User>): Promise<void> => {
   try {
     if (!userData.uid) throw new Error('User ID is required');
-    
+
     const userRef = doc(db, 'users', userData.uid);
     await updateDoc(userRef, {
       ...userData,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
   } catch (error) {
     console.error('Error creating user:', error);
@@ -94,7 +92,7 @@ export const getUser = async (userId: string): Promise<User | null> => {
   try {
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       return userSnap.data() as User;
     }
@@ -110,7 +108,7 @@ export const saveMoodLog = async (moodLog: Omit<MoodLog, 'id' | 'timestamp'>): P
     const moodLogsRef = collection(db, 'moodLogs');
     const docRef = await addDoc(moodLogsRef, {
       ...moodLog,
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
     });
     return docRef.id;
   } catch (error) {
@@ -122,17 +120,12 @@ export const saveMoodLog = async (moodLog: Omit<MoodLog, 'id' | 'timestamp'>): P
 export const getMoodLogs = async (userId: string, limitCount: number = 50): Promise<MoodLog[]> => {
   try {
     const moodLogsRef = collection(db, 'moodLogs');
-    const q = query(
-      moodLogsRef,
-      where('userId', '==', userId),
-      orderBy('timestamp', 'desc'),
-      limit(limitCount)
-    );
-    
+    const q = query(moodLogsRef, where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(limitCount));
+
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     })) as MoodLog[];
   } catch (error) {
     console.error('Error getting mood logs:', error);
@@ -144,11 +137,11 @@ export const getPsychologists = async (): Promise<Psychologist[]> => {
   try {
     const psychologistsRef = collection(db, 'psychologists');
     const q = query(psychologistsRef, where('isAvailable', '==', true));
-    
+
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     })) as Psychologist[];
   } catch (error) {
     console.error('Error getting psychologists:', error);
@@ -162,7 +155,7 @@ export const createChat = async (chatData: Omit<Chat, 'id' | 'createdAt' | 'upda
     const docRef = await addDoc(chatsRef, {
       ...chatData,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
     return docRef.id;
   } catch (error) {
@@ -175,15 +168,15 @@ export const sendMessage = async (chatId: string, message: Omit<ChatMessage, 'id
   try {
     const chatRef = doc(db, 'chats', chatId);
     const messagesRef = collection(chatRef, 'messages');
-    
+
     await addDoc(messagesRef, {
       ...message,
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
     });
-    
+
     // Actualizar timestamp del chat
     await updateDoc(chatRef, {
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
   } catch (error) {
     console.error('Error sending message:', error);
@@ -194,16 +187,12 @@ export const sendMessage = async (chatId: string, message: Omit<ChatMessage, 'id
 export const getUserChats = async (userId: string): Promise<Chat[]> => {
   try {
     const chatsRef = collection(db, 'chats');
-    const q = query(
-      chatsRef,
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
-    );
-    
+    const q = query(chatsRef, where('userId', '==', userId), orderBy('updatedAt', 'desc'));
+
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     })) as Chat[];
   } catch (error) {
     console.error('Error getting user chats:', error);
@@ -216,7 +205,7 @@ export const getUserSettings = async (userId: string): Promise<any> => {
   try {
     const settingsRef = doc(db, 'userSettings', userId);
     const settingsSnap = await getDoc(settingsRef);
-    
+
     if (settingsSnap.exists()) {
       return settingsSnap.data();
     }
@@ -232,7 +221,7 @@ export const saveUserSettings = async (userId: string, settings: any): Promise<v
     const settingsRef = doc(db, 'userSettings', userId);
     await updateDoc(settingsRef, {
       ...settings,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
   } catch (error) {
     console.error('Error saving user settings:', error);
@@ -244,7 +233,7 @@ export const getUserStatistics = async (userId: string): Promise<any> => {
   try {
     const statsRef = doc(db, 'userStats', userId);
     const statsSnap = await getDoc(statsRef);
-    
+
     if (statsSnap.exists()) {
       return statsSnap.data();
     }

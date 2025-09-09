@@ -19,13 +19,21 @@ interface User {
   username?: string;
   createdAt?: any;
   updatedAt?: any;
+  // Campos profesionales para psicólogos
+  professionalTitle?: string;
+  specialization?: string;
+  yearsOfExperience?: number;
+  bio?: string;
+  licenseNumber?: string;
+  phone?: string;
+  cvUrl?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role?: 'user' | 'psychologist') => Promise<void>;
+  signUp: (email: string, password: string, role?: 'user' | 'psychologist', professionalData?: any) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
@@ -109,7 +117,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, role: 'user' | 'psychologist' = 'user') => {
+  const signUp = async (
+    email: string,
+    password: string,
+    role: 'user' | 'psychologist' = 'user',
+    professionalData?: any
+  ) => {
     try {
       setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -122,6 +135,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        // Agregar datos profesionales si existen
+        ...(professionalData && {
+          professionalTitle: professionalData.professionalTitle,
+          specialization: professionalData.specialization,
+          yearsOfExperience: professionalData.yearsOfExperience ? parseInt(professionalData.yearsOfExperience) : 0,
+          bio: professionalData.bio,
+          licenseNumber: professionalData.licenseNumber,
+          phone: professionalData.phone,
+          cvUrl: professionalData.cvUrl,
+        }),
       };
 
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
@@ -133,10 +156,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: email,
           displayName: email.split('@')[0],
           role: 'psychologist',
-          licenseNumber: '',
-          specialization: '',
-          yearsOfExperience: 0,
-          bio: '',
+          licenseNumber: professionalData?.licenseNumber || '',
+          specialization: professionalData?.specialization || '',
+          yearsOfExperience: professionalData?.yearsOfExperience ? parseInt(professionalData.yearsOfExperience) : 0,
+          bio: professionalData?.bio || '',
+          phone: professionalData?.phone || '',
+          cvUrl: professionalData?.cvUrl || '',
           rating: 0,
           patientsCount: 0,
           isAvailable: true,

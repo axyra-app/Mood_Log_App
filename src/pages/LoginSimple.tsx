@@ -1,9 +1,9 @@
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginSimple: React.FC = () => {
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +16,17 @@ const LoginSimple: React.FC = () => {
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'psychologist') {
+        navigate('/dashboard-psychologist');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [user, navigate]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -32,10 +43,9 @@ const LoginSimple: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      
+
       await signIn(email, password);
-      navigate('/dashboard');
-      
+      // La redirección se maneja en el useEffect
     } catch (error: any) {
       setError('Error en el login: ' + error.message);
     } finally {
@@ -47,10 +57,9 @@ const LoginSimple: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      
+
       await signInWithGoogle();
-      navigate('/dashboard');
-      
+      // La redirección se maneja en el useEffect
     } catch (error: any) {
       setError('Error en el login con Google: ' + error.message);
     } finally {
@@ -60,41 +69,43 @@ const LoginSimple: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-900' : 'bg-white'
-      }`}>
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      <div
+        className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
+          isDarkMode ? 'bg-gray-900' : 'bg-white'
+        }`}
+      >
+        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600'></div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${
-      isDarkMode ? 'bg-gray-900' : 'bg-white'
-    }`}>
+    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Header */}
-      <header className={`py-6 px-6 transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
-      } backdrop-blur-lg border-b ${
-        isDarkMode ? 'border-gray-700' : 'border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-black text-lg">💜</span>
+      <header
+        className={`py-6 px-6 transition-colors duration-500 ${
+          isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
+        } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+      >
+        <div className='max-w-7xl mx-auto flex items-center justify-between'>
+          <Link to='/' className='flex items-center space-x-3 group'>
+            <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
+              <span className='text-white font-black text-lg'>💜</span>
             </div>
-            <span className={`text-2xl font-black transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+            <span
+              className={`text-2xl font-black transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
               MOOD LOG
             </span>
           </Link>
-          
+
           <button
             onClick={toggleDarkMode}
             className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-              isDarkMode 
-                ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' 
+              isDarkMode
+                ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -104,33 +115,35 @@ const LoginSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex min-h-[calc(100vh-80px)]">
+      <div className='flex min-h-[calc(100vh-80px)]'>
         {/* Centered Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <h1 className={`text-4xl font-black mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
+        <div className='flex-1 flex items-center justify-center p-8'>
+          <div className='w-full max-w-md'>
+            <div className='text-center mb-8'>
+              <h1
+                className={`text-4xl font-black mb-4 transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
                 INICIAR SESIÓN
               </h1>
-              <p className={`text-lg transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
+              <p className={`text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Accede a tu cuenta y comienza tu transformación
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className='space-y-6'>
               {/* Email */}
               <div>
-                <label className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+                <label
+                  className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}
+                >
                   EMAIL
                 </label>
                 <input
-                  type="email"
+                  type='email'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
@@ -138,18 +151,20 @@ const LoginSimple: React.FC = () => {
                       ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                       : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
                   }`}
-                  placeholder="tu@email.com"
+                  placeholder='tu@email.com'
                 />
               </div>
 
               {/* Password */}
               <div>
-                <label className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+                <label
+                  className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}
+                >
                   CONTRASEÑA
                 </label>
-                <div className="relative">
+                <div className='relative'>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -159,10 +174,10 @@ const LoginSimple: React.FC = () => {
                         ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                         : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
                     }`}
-                    placeholder="••••••••"
+                    placeholder='••••••••'
                   />
                   <button
-                    type="button"
+                    type='button'
                     onClick={() => setShowPassword(!showPassword)}
                     className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
                       isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
@@ -175,21 +190,23 @@ const LoginSimple: React.FC = () => {
 
               {/* Error Message */}
               {error && (
-                <div className={`p-4 rounded-xl border-2 ${
-                  error.includes('exitoso') 
-                    ? 'bg-green-50 border-green-200 text-green-800'
-                    : 'bg-red-50 border-red-200 text-red-800'
-                }`}>
-                  <div className="flex items-center space-x-2">
+                <div
+                  className={`p-4 rounded-xl border-2 ${
+                    error.includes('exitoso')
+                      ? 'bg-green-50 border-green-200 text-green-800'
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}
+                >
+                  <div className='flex items-center space-x-2'>
                     <span>{error.includes('exitoso') ? '✅' : '❌'}</span>
-                    <span className="font-semibold">{error}</span>
+                    <span className='font-semibold'>{error}</span>
                   </div>
                 </div>
               )}
 
               {/* Submit Button */}
               <button
-                type="submit"
+                type='submit'
                 disabled={loading}
                 className={`w-full py-4 px-6 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDarkMode
@@ -202,7 +219,7 @@ const LoginSimple: React.FC = () => {
 
               {/* Google Sign In */}
               <button
-                type="button"
+                type='button'
                 onClick={handleGoogleSignIn}
                 disabled={loading}
                 className={`w-full py-4 px-6 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
@@ -216,21 +233,19 @@ const LoginSimple: React.FC = () => {
             </form>
 
             {/* Links */}
-            <div className="mt-8 text-center space-y-4">
+            <div className='mt-8 text-center space-y-4'>
               <Link
-                to="/forgot-password"
+                to='/forgot-password'
                 className={`block text-sm font-semibold transition-colors duration-300 hover:underline ${
                   isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'
                 }`}
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-              <p className={`text-sm transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
+              <p className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 ¿No tienes cuenta?{' '}
                 <Link
-                  to="/register"
+                  to='/register'
                   className={`font-bold transition-colors duration-300 hover:underline ${
                     isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'
                   }`}

@@ -11,7 +11,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bar,
@@ -29,33 +29,12 @@ import {
 } from 'recharts';
 import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
-import { getUserStatistics } from '../services/firestore';
+import { useMood } from '../hooks/useMood';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
-  const [statistics, setStatistics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { statistics, loading, getMoodTrend, getAverageMood, getMoodStreak } = useMood();
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
-
-  useEffect(() => {
-    if (user) {
-      loadStatistics();
-    }
-  }, [user, timeRange]);
-
-  const loadStatistics = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const stats = await getUserStatistics(user.uid);
-      setStatistics(stats);
-    } catch (error) {
-      console.error('Error loading statistics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -79,6 +58,10 @@ const Statistics: React.FC = () => {
     }
   };
 
+  const currentTrend = getMoodTrend();
+  const currentStreak = getMoodStreak();
+  const averageMood = getAverageMood(7);
+
   const COLORS = ['#8B5CF6', '#EC4899', '#06B6D4', '#10B981', '#F59E0B'];
 
   const handleDownloadReport = () => {
@@ -89,11 +72,11 @@ const Statistics: React.FC = () => {
       timeRange: timeRange,
       statistics: statistics,
       summary: {
-        averageMood: statistics.averageMood,
-        totalLogs: statistics.totalLogs,
-        trend: statistics.weeklyTrend,
-        topActivities: statistics.patterns.commonActivities.slice(0, 5),
-        topEmotions: statistics.patterns.commonEmotions.slice(0, 5),
+        averageMood: statistics.averageMood || averageMood,
+        totalLogs: statistics.totalEntries || 0,
+        trend: currentTrend,
+        topActivities: statistics.mostCommonActivities?.slice(0, 5) || [],
+        topEmotions: statistics.mostCommonEmotions?.slice(0, 5) || [],
       },
     };
 
@@ -115,14 +98,10 @@ const Statistics: React.FC = () => {
 
     const shareText =
       `📊 Mi reporte de bienestar emocional:\n\n` +
-      `• Mood promedio: ${statistics.averageMood}/5\n` +
-      `• Total de registros: ${statistics.totalLogs}\n` +
+      `• Mood promedio: ${statistics.averageMood || averageMood}/5\n` +
+      `• Total de registros: ${statistics.totalEntries || 0}\n` +
       `• Tendencia: ${
-        statistics.weeklyTrend === 'improving'
-          ? 'Mejorando 📈'
-          : statistics.weeklyTrend === 'declining'
-          ? 'Declinando 📉'
-          : 'Estable ➡️'
+        currentTrend === 'improving' ? 'Mejorando 📈' : currentTrend === 'declining' ? 'Declinando 📉' : 'Estable ➡️'
       }\n\n` +
       `Registrado con Mood Log App 💜`;
 
@@ -242,7 +221,7 @@ const Statistics: React.FC = () => {
               <div className='flex items-center justify-between'>
                 <div>
                   <p className='text-sm font-medium text-gray-600'>Mood Promedio</p>
-                  <p className='text-3xl font-bold text-gray-900'>{statistics.averageMood}</p>
+                  <p className='text-3xl font-bold text-gray-900'>{statistics?.averageMood || averageMood}</p>
                 </div>
                 <div className='w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center'>
                   <Brain className='w-6 h-6 text-purple-600' />
@@ -254,7 +233,7 @@ const Statistics: React.FC = () => {
               <div className='flex items-center justify-between'>
                 <div>
                   <p className='text-sm font-medium text-gray-600'>Total Registros</p>
-                  <p className='text-3xl font-bold text-gray-900'>{statistics.totalLogs}</p>
+                  <p className='text-3xl font-bold text-gray-900'>{statistics?.totalEntries || 0}</p>
                 </div>
                 <div className='w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center'>
                   <Activity className='w-6 h-6 text-blue-600' />
@@ -267,11 +246,11 @@ const Statistics: React.FC = () => {
                 <div>
                   <p className='text-sm font-medium text-gray-600'>Tendencia</p>
                   <div className='flex items-center space-x-2'>
-                    {getTrendIcon(statistics.weeklyTrend)}
-                    <span className={`text-lg font-semibold ${getTrendColor(statistics.weeklyTrend)}`}>
-                      {statistics.weeklyTrend === 'improving'
+                    {getTrendIcon(currentTrend)}
+                    <span className={`text-lg font-semibold ${getTrendColor(currentTrend)}`}>
+                      {currentTrend === 'improving'
                         ? 'Mejorando'
-                        : statistics.weeklyTrend === 'declining'
+                        : currentTrend === 'declining'
                         ? 'Declinando'
                         : 'Estable'}
                     </span>
@@ -287,7 +266,7 @@ const Statistics: React.FC = () => {
               <div className='flex items-center justify-between'>
                 <div>
                   <p className='text-sm font-medium text-gray-600'>Racha Actual</p>
-                  <p className='text-3xl font-bold text-gray-900'>7</p>
+                  <p className='text-3xl font-bold text-gray-900'>{currentStreak}</p>
                 </div>
                 <div className='w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center'>
                   <Award className='w-6 h-6 text-yellow-600' />
