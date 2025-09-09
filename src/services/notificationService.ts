@@ -149,10 +149,10 @@ export const updateNotificationSettings = async (
 ): Promise<void> => {
   try {
     const settingsRef = doc(db, 'notificationSettings', userId);
-    await updateDoc(settingsRef, {
+    await setDoc(settingsRef, {
       ...settings,
       updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
   } catch (error) {
     console.error('Error updating notification settings:', error);
     throw error;
