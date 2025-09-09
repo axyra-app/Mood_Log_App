@@ -147,7 +147,6 @@ const DashboardPsychologist: React.FC = () => {
           isActive: true,
         },
         ];
-      }
 
       setPatients(patientsData);
 
