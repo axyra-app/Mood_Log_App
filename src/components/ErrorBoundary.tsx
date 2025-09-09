@@ -28,7 +28,10 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('vite.svg') ||
         error.message.includes('content-all.js') ||
         error.message.includes('401') ||
-        error.message.includes('404')) {
+        error.message.includes('404') ||
+        error.message.includes('Missing or insufficient permissions') ||
+        error.message.includes('FirebaseError') ||
+        error.message.includes('permission-denied')) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });
       return;

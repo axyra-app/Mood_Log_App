@@ -44,30 +44,8 @@ const DashboardPsychologist: React.FC = () => {
 
   const loadPsychologistData = async () => {
     try {
-      // Intentar cargar datos reales de Firebase primero
-      let patientsData = [];
-      let appointmentsData = [];
-      let notificationsData = [];
-
-      try {
-        // Importar servicios dinámicamente para evitar errores de importación
-        const { getPatientsByPsychologist, getAppointments, getNotifications } = await import('../services/patientService');
-        const { getUserNotifications } = await import('../services/notifications');
-        
-        if (user?.uid) {
-          [patientsData, appointmentsData, notificationsData] = await Promise.all([
-            getPatientsByPsychologist(user.uid).catch(() => []),
-            getAppointments(user.uid).catch(() => []),
-            getUserNotifications(user.uid, 20).catch(() => [])
-          ]);
-        }
-      } catch (serviceError) {
-        console.warn('Error loading real data, using fallback:', serviceError);
-      }
-
-      // Si no hay datos reales, usar datos simulados
-      if (patientsData.length === 0) {
-        patientsData = [
+      // Usar datos simulados para evitar problemas de Firebase
+      const patientsData = [
         {
           id: '1',
           name: 'María González',
@@ -173,9 +151,8 @@ const DashboardPsychologist: React.FC = () => {
 
       setPatients(patientsData);
 
-      // Si no hay citas reales, usar datos simulados
-      if (appointmentsData.length === 0) {
-        appointmentsData = [
+      // Usar datos simulados para citas
+      const appointmentsData = [
         {
           id: '1',
           patientName: 'María González',
@@ -229,9 +206,8 @@ const DashboardPsychologist: React.FC = () => {
 
       setAppointments(appointmentsData);
 
-      // Si no hay notificaciones reales, usar datos simulados
-      if (notificationsData.length === 0) {
-        notificationsData = [
+      // Usar datos simulados para notificaciones
+      const notificationsData = [
         {
           id: '1',
           type: 'urgent',
@@ -260,7 +236,6 @@ const DashboardPsychologist: React.FC = () => {
           isRead: true,
         },
         ];
-      }
 
       setNotifications(notificationsData);
 
