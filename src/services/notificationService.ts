@@ -174,7 +174,7 @@ export const createDefaultNotificationSettings = async (userId: string): Promise
         start: '22:00',
         end: '08:00',
       },
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezone: typeof Intl !== 'undefined' && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
     };
 
     await updateDoc(settingsRef, {

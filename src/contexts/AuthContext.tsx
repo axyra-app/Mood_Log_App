@@ -60,49 +60,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        try {
-          // Intentar cargar el perfil del usuario desde Firestore
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      try {
+        if (firebaseUser) {
+          try {
+            // Intentar cargar el perfil del usuario desde Firestore
+            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            const userDataWithAuth: User = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: userData.displayName || firebaseUser.displayName,
-              username: userData.username,
-              role: userData.role || 'user',
-              createdAt: userData.createdAt,
-              updatedAt: userData.updatedAt,
-            };
-            setUser(userDataWithAuth);
-          } else {
-            // Si no existe el documento, crear uno básico
-            const basicUserData: User = {
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const userDataWithAuth: User = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: userData.displayName || firebaseUser.displayName,
+                username: userData.username,
+                role: userData.role || 'user',
+                createdAt: userData.createdAt,
+                updatedAt: userData.updatedAt,
+              };
+              setUser(userDataWithAuth);
+            } else {
+              // Si no existe el documento, crear uno básico
+              const basicUserData: User = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                role: 'user',
+              };
+              setUser(basicUserData);
+            }
+          } catch (error) {
+            console.error('Error loading user profile:', error);
+            // En caso de error, usar datos básicos de Firebase Auth
+            const userData: User = {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               displayName: firebaseUser.displayName,
               role: 'user',
             };
-            setUser(basicUserData);
+            setUser(userData);
           }
-        } catch (error) {
-          console.error('Error loading user profile:', error);
-          // En caso de error, usar datos básicos de Firebase Auth
-          const userData: User = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            role: 'user',
-          };
-          setUser(userData);
+        } else {
+          // Usuario no autenticado
+          setUser(null);
         }
-      } else {
-        // Usuario no autenticado
+      } catch (error) {
+        console.error('Error in auth state change:', error);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
