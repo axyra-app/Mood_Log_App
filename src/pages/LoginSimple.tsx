@@ -11,22 +11,21 @@ const LoginSimple: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showAlreadyLoggedIn, setShowAlreadyLoggedIn] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
-  // Redirigir si ya está autenticado
+  // Mostrar advertencia si ya está autenticado, pero permitir acceso
   useEffect(() => {
     if (user) {
-      if (user.role === 'psychologist') {
-        navigate('/dashboard-psychologist');
-      } else {
-        navigate('/dashboard');
-      }
+      setShowAlreadyLoggedIn(true);
+    } else {
+      setShowAlreadyLoggedIn(false);
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -130,6 +129,45 @@ const LoginSimple: React.FC = () => {
               <p className={`text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Accede a tu cuenta y comienza tu transformación
               </p>
+              
+              {/* Notificación si ya está autenticado */}
+              {showAlreadyLoggedIn && user && (
+                <div className={`mt-4 p-4 rounded-xl border-2 ${
+                  isDarkMode 
+                    ? 'bg-blue-900/30 border-blue-500 text-blue-200' 
+                    : 'bg-blue-50 border-blue-300 text-blue-800'
+                }`}>
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-2xl">ℹ️</span>
+                    <div>
+                      <p className="font-semibold">Ya estás autenticado</p>
+                      <p className="text-sm">
+                        Estás logueado como: <strong>{user.email}</strong>
+                      </p>
+                      <div className="mt-2 space-x-2">
+                        <button
+                          onClick={() => {
+                            if (user.role === 'psychologist') {
+                              navigate('/dashboard-psychologist');
+                            } else {
+                              navigate('/dashboard');
+                            }
+                          }}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                        >
+                          Ir al Dashboard
+                        </button>
+                        <button
+                          onClick={logout}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                        >
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className='space-y-6'>
