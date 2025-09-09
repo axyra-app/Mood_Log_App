@@ -165,7 +165,7 @@ export const usePWA = () => {
       hasInstallPrompt: installPrompt !== null,
       userAgent: navigator.userAgent,
       platform: navigator.platform,
-      language: navigator.language || 'es',
+      language: (typeof navigator !== 'undefined' && navigator.language) || 'es',
     };
   }, [isInstallable, isInstalled, isStandalone, isOnline, installPrompt]);
 

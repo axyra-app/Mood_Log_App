@@ -10,6 +10,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -175,10 +176,10 @@ export const createDefaultNotificationSettings = async (userId: string): Promise
         start: '22:00',
         end: '08:00',
       },
-      timezone: typeof Intl !== 'undefined' && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
+      timezone: (typeof Intl !== 'undefined' && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
     };
 
-    await updateDoc(settingsRef, {
+    await setDoc(settingsRef, {
       ...defaultSettings,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
