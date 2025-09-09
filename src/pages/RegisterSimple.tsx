@@ -190,13 +190,12 @@ const RegisterSimple: React.FC = () => {
 
   const handleGoogleSignUp = async () => {
     try {
-      setError('');
       setLoading(true);
 
       await signInWithGoogle();
       navigate('/dashboard');
     } catch (error: any) {
-      setError('Error en el registro con Google: ' + error.message);
+      showError('Error en el registro con Google', error.message);
     } finally {
       setLoading(false);
     }
@@ -690,21 +689,6 @@ const RegisterSimple: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                  <div
-                    className={`p-4 rounded-xl border-2 ${
-                      error.includes('exitoso')
-                        ? 'bg-green-50 border-green-200 text-green-800'
-                        : 'bg-red-50 border-red-200 text-red-800'
-                    }`}
-                  >
-                    <div className='flex items-center space-x-2'>
-                      <span>{error.includes('exitoso') ? '✅' : '❌'}</span>
-                      <span className='font-semibold'>{error}</span>
-                    </div>
-                  </div>
-                )}
 
                 {/* Submit Button */}
                 <button

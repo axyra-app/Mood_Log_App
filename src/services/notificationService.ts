@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 import { NotificationSettings, PushNotification } from '../types';
 import { db } from './firebase';
