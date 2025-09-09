@@ -141,13 +141,18 @@ const DashboardSimple: React.FC = () => {
   };
 
   const updateRecentActivities = () => {
-    const activities = moodLogs.slice(0, 3).map((log) => ({
-      id: log.id,
-      action: 'Registraste tu estado de ánimo',
-      time: getTimeAgo(log.createdAt),
-      mood: moodEmojis[log.mood - 1],
-      details: log.notes ? log.notes.substring(0, 50) + '...' : null,
-    }));
+    const activities = moodLogs.slice(0, 3).map((log) => {
+      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate() 
+        : new Date();
+      return {
+        id: log.id,
+        action: 'Registraste tu estado de ánimo',
+        time: getTimeAgo(logDate),
+        mood: moodEmojis[log.mood - 1],
+        details: log.notes ? log.notes.substring(0, 50) + '...' : null,
+      };
+    });
     setRecentActivities(activities);
   };
 

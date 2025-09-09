@@ -186,7 +186,11 @@ export const useMood = () => {
 
   // Setup real-time subscription
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      setMoodLogs([]);
+      setStatistics(null);
+      return;
+    }
 
     loadMoodLogs();
     loadStatistics();
@@ -195,7 +199,11 @@ export const useMood = () => {
       setMoodLogs(logs);
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, [user?.uid, loadMoodLogs, loadStatistics]);
 
   return {

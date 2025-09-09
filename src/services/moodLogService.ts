@@ -144,16 +144,29 @@ export const createMoodLogWithAI = async (
 
 // Real-time subscriptions
 export const subscribeToMoodLogs = (userId: string, callback: (moodLogs: MoodLog[]) => void) => {
-  const moodLogsRef = collection(db, 'moodLogs');
-  const q = query(moodLogsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(50));
+  try {
+    const moodLogsRef = collection(db, 'moodLogs');
+    const q = query(moodLogsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(50));
 
-  return onSnapshot(q, (querySnapshot) => {
-    const moodLogs = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as MoodLog[];
-    callback(moodLogs);
-  });
+    return onSnapshot(q, (querySnapshot) => {
+      try {
+        const moodLogs = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as MoodLog[];
+        callback(moodLogs);
+      } catch (error) {
+        console.error('Error processing mood logs snapshot:', error);
+        callback([]);
+      }
+    }, (error) => {
+      console.error('Error in mood logs subscription:', error);
+      callback([]);
+    });
+  } catch (error) {
+    console.error('Error setting up mood logs subscription:', error);
+    return () => {}; // Return empty unsubscribe function
+  }
 };
 
 // Statistics and Analytics
