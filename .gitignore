@@ -235,3 +235,4 @@ ui-debug.log
 # PWA files
 sw.js
 workbox-*.js
+.env*.local
