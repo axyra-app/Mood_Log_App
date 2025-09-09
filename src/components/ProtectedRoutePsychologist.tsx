@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,8 +8,32 @@ interface ProtectedRoutePsychologistProps {
 
 const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({ children }) => {
   const { user, loading } = useAuth();
+  const [timeoutReached, setTimeoutReached] = useState(false);
 
-  if (loading) {
+  // Timeout para evitar carga infinita
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeoutReached(true);
+    }, 5000); // 5 segundos de timeout
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Si ha pasado el timeout, mostrar el contenido independientemente del loading
+  if (timeoutReached) {
+    if (!user) {
+      return <Navigate to='/login' replace />;
+    }
+
+    if (user.role !== 'psychologist') {
+      return <Navigate to='/dashboard' replace />;
+    }
+
+    return <>{children}</>;
+  }
+
+  // Mostrar loading solo si no ha pasado el timeout
+  if (loading && !timeoutReached) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500'>
         <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
