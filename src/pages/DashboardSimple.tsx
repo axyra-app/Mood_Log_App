@@ -17,7 +17,7 @@ import DashboardPsychologist from './DashboardPsychologist';
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { moodLogs, loading, insights, longTermTrends, saveMoodLog, getMoodStatistics } = useMood(user?.uid);
+  const { moodLogs, loading, error: moodError, statistics, createMoodLog, refreshMoodLogs, refreshStatistics } = useMood();
 
   // Si el usuario es psicólogo, mostrar el dashboard de psicólogo
   if (user?.role === 'psychologist') {
@@ -28,7 +28,7 @@ const DashboardSimple: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
   const [moodLoading, setMoodLoading] = useState(false);
-  const [statistics, setStatistics] = useState<any>(null);
+  // statistics ya viene del hook useMood
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showComingSoonModal, setShowComingSoonModal] = useState(false);
@@ -59,8 +59,7 @@ const DashboardSimple: React.FC = () => {
 
   useEffect(() => {
     if (moodLogs.length > 0) {
-      const stats = getMoodStatistics();
-      setStatistics(stats);
+      // Las estadísticas ya vienen del hook useMood
       updateRecentActivities();
     }
   }, [moodLogs]);
@@ -104,9 +103,7 @@ const DashboardSimple: React.FC = () => {
     try {
       if (!user) return;
 
-      // Usar estadísticas del hook useMood
-      const stats = getMoodStatistics();
-      setStatistics(stats);
+      // Las estadísticas ya vienen del hook useMood
 
       // Cargar notificaciones reales
       try {
@@ -160,7 +157,7 @@ const DashboardSimple: React.FC = () => {
 
     try {
       // Usar el nuevo sistema de IA para guardar el mood
-      const newMoodLog = await saveMoodLog({
+      const moodLogId = await createMoodLog({
         mood: mood,
         energy: Math.floor(Math.random() * 10) + 1,
         stress: Math.floor(Math.random() * 10) + 1,
@@ -196,13 +193,11 @@ const DashboardSimple: React.FC = () => {
         console.error('Error creating notification:', error);
       }
 
-      // Mostrar mensaje de éxito con análisis de IA
+      // Mostrar mensaje de éxito
       showNotification(
         'success',
         '¡Mood Guardado!',
-        `Análisis de IA: ${aiAnalysis.primaryEmotion} (${
-          aiAnalysis.confidence
-        }% confianza)\n\nSugerencias:\n${aiAnalysis.suggestions.join('\n')}`,
+        `Tu estado de ánimo ha sido registrado exitosamente. Revisa tu dashboard para ver el análisis.`,
         '😊'
       );
     } catch (error) {
@@ -857,8 +852,8 @@ const DashboardSimple: React.FC = () => {
         {showAIInsights && (
           <div className='mt-8'>
             <AdvancedAIInsights
-              insights={insights}
-              longTermTrends={longTermTrends}
+              insights={[]}
+              longTermTrends={{}}
               moodStatistics={statistics}
               isDarkMode={isDarkMode}
             />
