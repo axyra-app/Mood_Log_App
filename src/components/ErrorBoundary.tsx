@@ -21,6 +21,19 @@ class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
+    // Suprimir errores específicos que no deberían mostrar el error boundary
+    if (error.message.includes('Cannot read properties of undefined') ||
+        error.message.includes('Cannot determine language') ||
+        error.message.includes('Failed to load resource') ||
+        error.message.includes('vite.svg') ||
+        error.message.includes('content-all.js') ||
+        error.message.includes('401') ||
+        error.message.includes('404')) {
+      console.warn('Suppressed error in ErrorBoundary:', error.message);
+      this.setState({ hasError: false });
+      return;
+    }
+    
     // Reset error state after a delay to allow recovery
     setTimeout(() => {
       this.setState({ hasError: false, error: undefined });

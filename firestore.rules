@@ -54,9 +54,9 @@ service cloud.firestore {
     // Patients collection
     match /patients/{patientId} {
       allow read, write: if isAuthenticated() && 
-        (isOwner(patientId) || 
-         (isPsychologist() && isPatientOfPsychologist(patientId, request.auth.uid)));
-      allow create: if isAuthenticated() && isPsychologist();
+        (resource.data.psychologistId == request.auth.uid || 
+         request.resource.data.psychologistId == request.auth.uid);
+      allow create: if isAuthenticated();
     }
     
     // Mood logs collection
@@ -113,8 +113,10 @@ service cloud.firestore {
     
     // Notifications collection
     match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow read, write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         request.resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated();
     }
     
     // Notification settings collection

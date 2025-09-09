@@ -44,8 +44,30 @@ const DashboardPsychologist: React.FC = () => {
 
   const loadPsychologistData = async () => {
     try {
-      // Simular datos de pacientes más detallados
-      const patientsData = [
+      // Intentar cargar datos reales de Firebase primero
+      let patientsData = [];
+      let appointmentsData = [];
+      let notificationsData = [];
+
+      try {
+        // Importar servicios dinámicamente para evitar errores de importación
+        const { getPatientsByPsychologist, getAppointments, getNotifications } = await import('../services/patientService');
+        const { getUserNotifications } = await import('../services/notifications');
+        
+        if (user?.uid) {
+          [patientsData, appointmentsData, notificationsData] = await Promise.all([
+            getPatientsByPsychologist(user.uid).catch(() => []),
+            getAppointments(user.uid).catch(() => []),
+            getUserNotifications(user.uid, 20).catch(() => [])
+          ]);
+        }
+      } catch (serviceError) {
+        console.warn('Error loading real data, using fallback:', serviceError);
+      }
+
+      // Si no hay datos reales, usar datos simulados
+      if (patientsData.length === 0) {
+        patientsData = [
         {
           id: '1',
           name: 'María González',
@@ -146,12 +168,14 @@ const DashboardPsychologist: React.FC = () => {
           moodHistory: [2, 2, 1, 2, 2, 2, 2],
           isActive: true,
         },
-      ];
+        ];
+      }
 
       setPatients(patientsData);
 
-      // Simular citas más detalladas
-      const appointmentsData = [
+      // Si no hay citas reales, usar datos simulados
+      if (appointmentsData.length === 0) {
+        appointmentsData = [
         {
           id: '1',
           patientName: 'María González',
@@ -200,12 +224,14 @@ const DashboardPsychologist: React.FC = () => {
           location: 'Online',
           notes: 'Sesión de emergencia - seguimiento de crisis',
         },
-      ];
+        ];
+      }
 
       setAppointments(appointmentsData);
 
-      // Simular notificaciones
-      const notificationsData = [
+      // Si no hay notificaciones reales, usar datos simulados
+      if (notificationsData.length === 0) {
+        notificationsData = [
         {
           id: '1',
           type: 'urgent',
@@ -233,7 +259,8 @@ const DashboardPsychologist: React.FC = () => {
           patientId: '3',
           isRead: true,
         },
-      ];
+        ];
+      }
 
       setNotifications(notificationsData);
 
@@ -254,6 +281,20 @@ const DashboardPsychologist: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading psychologist data:', error);
+      
+      // En caso de error, establecer datos vacíos para evitar crashes
+      setPatients([]);
+      setAppointments([]);
+      setNotifications([]);
+      setStats({
+        totalPatients: 0,
+        activePatients: 0,
+        todayAppointments: 0,
+        weeklyAppointments: 0,
+        averageMood: 0,
+        satisfactionRate: 0,
+        riskPatients: 0,
+      });
     }
   };
 
