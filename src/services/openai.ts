@@ -67,18 +67,59 @@ export interface ContextualData {
   lifestyleFactors: string[];
 }
 
-// Múltiples modelos de análisis
+// Múltiples modelos de análisis con variación
 const ANALYSIS_MODELS = {
-  EMOTIONAL: 'gpt-3.5-turbo',
+  EMOTIONAL: 'gpt-4',
   BEHAVIORAL: 'gpt-3.5-turbo',
-  WELLNESS: 'gpt-3.5-turbo',
+  WELLNESS: 'gpt-4',
   CONTEXTUAL: 'gpt-3.5-turbo',
 };
 
-// Prompts especializados
+// Sistema de rotación de personalidades para mayor variedad
+const AI_PERSONALITIES = [
+  {
+    name: 'Dr. Elena',
+    style: 'compasivo y empático',
+    expertise: 'psicología clínica',
+    tone: 'cálido y profesional',
+  },
+  {
+    name: 'Coach Miguel',
+    style: 'motivador y práctico',
+    expertise: 'coaching de bienestar',
+    tone: 'energético y directo',
+  },
+  {
+    name: 'Dra. Sofia',
+    style: 'analítico y científico',
+    expertise: 'neurociencia cognitiva',
+    tone: 'preciso y educativo',
+  },
+  {
+    name: 'Mentor Carlos',
+    style: 'sabio y reflexivo',
+    expertise: 'terapia humanista',
+    tone: 'filosófico y profundo',
+  },
+  {
+    name: 'Guía Ana',
+    style: 'intuitivo y creativo',
+    expertise: 'terapia artística',
+    tone: 'inspirador y metafórico',
+  },
+];
+
+// Función para seleccionar personalidad aleatoria
+function getRandomPersonality() {
+  return AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
+}
+
+// Prompts especializados con personalidades variadas
 const SPECIALIZED_PROMPTS = {
   EMOTIONAL_ANALYSIS: `
-Eres un psicólogo clínico especializado en análisis emocional. Analiza los siguientes datos del usuario:
+Eres {personalityName}, un {style} especializado en {expertise}. Tu tono es {tone}.
+
+Analiza los siguientes datos del usuario con tu perspectiva única:
 
 Datos del usuario:
 - Estado de ánimo (1-5): {mood}
@@ -89,24 +130,27 @@ Datos del usuario:
 - Actividades: {activities}
 - Emociones: {emotions}
 - Contexto: {context}
+- Historial reciente: {recentHistory}
 
 Proporciona un análisis emocional profundo en formato JSON con:
 1. primaryEmotion: La emoción principal detectada
 2. secondaryEmotions: Array de emociones secundarias
 3. confidence: Nivel de confianza (0-100)
 4. sentiment: "positive", "negative" o "neutral"
-5. suggestions: 5 sugerencias específicas para mejorar el bienestar
+5. suggestions: 5 sugerencias específicas y variadas para mejorar el bienestar
 6. patterns: 3 patrones emocionales identificados
 7. riskLevel: "low", "medium" o "high" basado en el estado
 8. emotionalState: Descripción detallada del estado emocional
-9. recommendations: 4 recomendaciones específicas
-10. contextualInsights: 3 insights basados en el contexto
+9. recommendations: 4 recomendaciones específicas y personalizadas
+10. contextualInsights: 3 insights únicos basados en el contexto
 11. moodTrend: "improving", "declining" o "stable"
 12. energyLevel: "high", "medium" o "low"
 13. stressIndicators: Array de indicadores de estrés
-14. copingStrategies: 3 estrategias de afrontamiento
-15. personalizedAdvice: Consejo personalizado específico
+14. copingStrategies: 3 estrategias de afrontamiento creativas
+15. personalizedAdvice: Consejo personalizado específico con tu estilo único
 16. nextSteps: 3 próximos pasos recomendados
+17. aiPersonality: Tu nombre y estilo para personalizar la respuesta
+18. motivationalMessage: Un mensaje motivacional en tu tono característico
 
 Responde SOLO con el JSON válido, sin texto adicional.
 `,
@@ -210,9 +254,12 @@ export const analyzeMoodWithAI = async (
   }
 };
 
-// Análisis emocional especializado
+// Análisis emocional especializado con personalidades variadas
 async function performEmotionalAnalysis(moodData: any, contextualData?: ContextualData): Promise<MoodAnalysis> {
   try {
+    // Seleccionar personalidad aleatoria para mayor variedad
+    const personality = getRandomPersonality();
+
     const context = contextualData
       ? `
       - Hora del día: ${contextualData.timeOfDay}
@@ -222,30 +269,38 @@ async function performEmotionalAnalysis(moodData: any, contextualData?: Contextu
     `
       : 'Contexto no disponible';
 
-    const prompt = SPECIALIZED_PROMPTS.EMOTIONAL_ANALYSIS.replace('{mood}', moodData.mood.toString())
+    const recentHistory = contextualData?.userHistory
+      ? JSON.stringify(contextualData.userHistory.slice(0, 7))
+      : 'Sin historial reciente';
+
+    const prompt = SPECIALIZED_PROMPTS.EMOTIONAL_ANALYSIS.replace('{personalityName}', personality.name)
+      .replace('{style}', personality.style)
+      .replace('{expertise}', personality.expertise)
+      .replace('{tone}', personality.tone)
+      .replace('{mood}', moodData.mood.toString())
       .replace('{energy}', moodData.energy.toString())
       .replace('{stress}', moodData.stress.toString())
       .replace('{sleep}', moodData.sleep.toString())
       .replace('{notes}', moodData.notes)
       .replace('{activities}', moodData.activities.join(', '))
       .replace('{emotions}', moodData.emotions.join(', '))
-      .replace('{context}', context);
+      .replace('{context}', context)
+      .replace('{recentHistory}', recentHistory);
 
     const completion = await openai.chat.completions.create({
       model: ANALYSIS_MODELS.EMOTIONAL,
       messages: [
         {
           role: 'system',
-          content:
-            'Eres un psicólogo clínico experto en análisis emocional. Proporciona análisis profundos y útiles basados en evidencia científica.',
+          content: `Eres ${personality.name}, un ${personality.style} especializado en ${personality.expertise}. Tu tono es ${personality.tone}. Proporciona análisis profundos, útiles y personalizados basados en evidencia científica, pero con tu perspectiva única y estilo característico.`,
         },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 1500,
+      temperature: 0.8, // Aumentar temperatura para mayor creatividad
+      max_tokens: 2000, // Aumentar tokens para respuestas más detalladas
     });
 
     const response = completion.choices[0]?.message?.content;
@@ -253,7 +308,12 @@ async function performEmotionalAnalysis(moodData: any, contextualData?: Contextu
       throw new Error('No se recibió respuesta de OpenAI');
     }
 
-    return JSON.parse(response) as MoodAnalysis;
+    const analysis = JSON.parse(response) as MoodAnalysis;
+
+    // Agregar información de personalidad al análisis
+    (analysis as any).aiPersonality = personality;
+
+    return analysis;
   } catch (error) {
     console.error('Error en análisis emocional:', error);
     throw error;
@@ -540,6 +600,167 @@ Responde SOLO con el JSON válido, sin texto adicional.
       protectiveFactors: [],
       recommendations: ['Continúa monitoreando tu bienestar'],
       predictions: ['Estado estable esperado'],
+    };
+  }
+};
+
+// Nueva función para generar respuestas de chat variadas y personalizadas
+export const generateChatResponse = async (
+  userMessage: string,
+  moodHistory: any[],
+  userPreferences?: any,
+  contextualData?: ContextualData
+): Promise<{
+  response: string;
+  aiPersonality: any;
+  suggestions: string[];
+  emotionalTone: string;
+}> => {
+  try {
+    const personality = getRandomPersonality();
+
+    const prompt = `
+Eres ${personality.name}, un ${personality.style} especializado en ${personality.expertise}. Tu tono es ${
+      personality.tone
+    }.
+
+El usuario te ha escrito: "${userMessage}"
+
+Contexto del usuario:
+- Historial de estados de ánimo: ${JSON.stringify(moodHistory.slice(0, 10))}
+- Preferencias: ${userPreferences ? JSON.stringify(userPreferences) : 'No disponibles'}
+- Contexto actual: ${contextualData ? JSON.stringify(contextualData) : 'No disponible'}
+
+Responde de manera ${personality.tone} y ${personality.style}, proporcionando:
+1. Una respuesta empática y útil (máximo 200 palabras)
+2. Sugerencias prácticas específicas (3-5 sugerencias)
+3. Un tono emocional apropiado para la situación
+4. Tu perspectiva única como ${personality.expertise}
+
+Responde en formato JSON:
+{
+  "response": "Tu respuesta aquí",
+  "suggestions": ["sugerencia 1", "sugerencia 2", "sugerencia 3"],
+  "emotionalTone": "empático/motivador/analítico/reflexivo/inspirador",
+  "aiPersonality": {
+    "name": "${personality.name}",
+    "style": "${personality.style}",
+    "expertise": "${personality.expertise}"
+  }
+}
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: ANALYSIS_MODELS.CONTEXTUAL,
+      messages: [
+        {
+          role: 'system',
+          content: `Eres ${personality.name}, un ${personality.style} especializado en ${personality.expertise}. Tu tono es ${personality.tone}. Proporciona respuestas empáticas, útiles y personalizadas con tu perspectiva única.`,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.9, // Alta temperatura para máxima creatividad
+      max_tokens: 800,
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    if (!response) {
+      throw new Error('No se recibió respuesta de OpenAI');
+    }
+
+    return JSON.parse(response);
+  } catch (error) {
+    console.error('Error generando respuesta de chat:', error);
+
+    // Respuesta de fallback con personalidad aleatoria
+    const fallbackPersonality = getRandomPersonality();
+    return {
+      response: `Hola, soy ${fallbackPersonality.name}. Entiendo que estás pasando por un momento difícil. Recuerda que es normal tener altibajos emocionales, y lo importante es cómo manejamos estos momentos.`,
+      suggestions: [
+        'Practica técnicas de respiración profunda',
+        'Conecta con alguien de confianza',
+        'Dedica tiempo a una actividad que disfrutes',
+        'Considera escribir sobre tus sentimientos',
+      ],
+      emotionalTone: 'empático',
+      aiPersonality: fallbackPersonality,
+    };
+  }
+};
+
+// Función para generar consejos diarios variados
+export const generateDailyAdvice = async (
+  moodData: any,
+  contextualData?: ContextualData
+): Promise<{
+  advice: string;
+  tip: string;
+  affirmation: string;
+  aiPersonality: any;
+}> => {
+  try {
+    const personality = getRandomPersonality();
+
+    const prompt = `
+Eres ${personality.name}, un ${personality.style} especializado en ${personality.expertise}. Tu tono es ${
+      personality.tone
+    }.
+
+Genera consejos diarios personalizados basados en:
+- Estado de ánimo actual: ${moodData.mood}/5
+- Nivel de energía: ${moodData.energy}/10
+- Nivel de estrés: ${moodData.stress}/10
+- Contexto: ${contextualData ? JSON.stringify(contextualData) : 'No disponible'}
+
+Proporciona en formato JSON:
+{
+  "advice": "Un consejo personalizado y específico (2-3 oraciones)",
+  "tip": "Un tip práctico y accionable (1 oración)",
+  "affirmation": "Una afirmación positiva y motivadora (1 oración)",
+  "aiPersonality": {
+    "name": "${personality.name}",
+    "style": "${personality.style}",
+    "expertise": "${personality.expertise}"
+  }
+}
+
+Usa tu estilo ${personality.tone} y ${personality.style} para personalizar el mensaje.
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: ANALYSIS_MODELS.CONTEXTUAL,
+      messages: [
+        {
+          role: 'system',
+          content: `Eres ${personality.name}, un ${personality.style} especializado en ${personality.expertise}. Tu tono es ${personality.tone}. Proporciona consejos diarios motivadores, prácticos y personalizados.`,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.8,
+      max_tokens: 400,
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    if (!response) {
+      throw new Error('No se recibió respuesta de OpenAI');
+    }
+
+    return JSON.parse(response);
+  } catch (error) {
+    console.error('Error generando consejo diario:', error);
+
+    const fallbackPersonality = getRandomPersonality();
+    return {
+      advice: `Hoy es una oportunidad para cuidar tu bienestar emocional. Pequeños pasos pueden generar grandes cambios.`,
+      tip: `Dedica 5 minutos a una actividad que te haga sentir bien.`,
+      affirmation: `Eres capaz de manejar cualquier desafío que se presente.`,
+      aiPersonality: fallbackPersonality,
     };
   }
 };

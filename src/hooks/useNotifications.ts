@@ -54,12 +54,20 @@ export const useNotifications = () => {
         setSettings(settingsData);
       } else {
         // Create default settings
-        await createDefaultNotificationSettings(user.uid);
-        const defaultSettings = await getNotificationSettings(user.uid);
-        setSettings(defaultSettings);
+        try {
+          await createDefaultNotificationSettings(user.uid);
+          const defaultSettings = await getNotificationSettings(user.uid);
+          setSettings(defaultSettings);
+        } catch (createError) {
+          console.error('Error creating default notification settings:', createError);
+          // Si no se pueden crear las configuraciones, continuar sin ellas
+          setSettings(null);
+        }
       }
     } catch (err) {
       console.error('Error loading notification settings:', err);
+      // Si hay error, continuar sin configuraciones
+      setSettings(null);
     }
   }, [user?.uid]);
 

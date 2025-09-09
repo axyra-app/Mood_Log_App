@@ -149,10 +149,14 @@ export const updateNotificationSettings = async (
 ): Promise<void> => {
   try {
     const settingsRef = doc(db, 'notificationSettings', userId);
-    await setDoc(settingsRef, {
-      ...settings,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
+    await setDoc(
+      settingsRef,
+      {
+        ...settings,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
   } catch (error) {
     console.error('Error updating notification settings:', error);
     throw error;
@@ -176,14 +180,20 @@ export const createDefaultNotificationSettings = async (userId: string): Promise
         start: '22:00',
         end: '08:00',
       },
-      timezone: (typeof Intl !== 'undefined' && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
+      timezone:
+        typeof Intl !== 'undefined' && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
     };
 
-    await setDoc(settingsRef, {
-      ...defaultSettings,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    // Usar setDoc con merge: false para crear el documento si no existe
+    await setDoc(
+      settingsRef,
+      {
+        ...defaultSettings,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: false }
+    );
   } catch (error) {
     console.error('Error creating default notification settings:', error);
     throw error;

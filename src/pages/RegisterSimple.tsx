@@ -182,7 +182,16 @@ const RegisterSimple: React.FC = () => {
       }, 1500);
     } catch (error: any) {
       console.error('Registration error:', error);
-      showError('Error de registro', error.message || 'Error inesperado al crear la cuenta');
+
+      // Manejar específicamente el error de email ya existente
+      if (error.message && error.message.includes('Ya existe una cuenta con este email')) {
+        showError(
+          'Email ya registrado',
+          'Ya existe una cuenta con este email. ¿Quieres iniciar sesión? Ve a la página de login.'
+        );
+      } else {
+        showError('Error de registro', error.message || 'Error inesperado al crear la cuenta');
+      }
     } finally {
       setLoading(false);
     }
@@ -688,7 +697,6 @@ const RegisterSimple: React.FC = () => {
                     </Link>
                   </label>
                 </div>
-
 
                 {/* Submit Button */}
                 <button

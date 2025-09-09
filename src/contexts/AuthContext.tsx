@@ -186,6 +186,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       setLoading(false);
+      // Manejar específicamente el error de email ya existente
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('Ya existe una cuenta con este email. ¿Quieres iniciar sesión?');
+      }
       throw new Error(getRegistrationErrorMessage(error));
     }
   };

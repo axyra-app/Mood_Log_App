@@ -25,7 +25,7 @@
     <script>
       // Handle external script errors that might affect the app
       window.addEventListener('error', function (e) {
-        if (e.message && e.message.includes('Cannot determine language')) {
+        if (e.message && (e.message.includes('Cannot determine language') || e.message.includes('content-all.js'))) {
           console.warn('External language detection error suppressed:', e.message);
           e.preventDefault();
           return false;
@@ -33,9 +33,22 @@
       });
 
       window.addEventListener('unhandledrejection', function (e) {
-        if (e.reason && e.reason.message && e.reason.message.includes('Cannot determine language')) {
+        if (
+          e.reason &&
+          e.reason.message &&
+          (e.reason.message.includes('Cannot determine language') || e.reason.message.includes('content-all.js'))
+        ) {
           console.warn('External language detection promise rejection suppressed:', e.reason.message);
           e.preventDefault();
+        }
+      });
+
+      // Additional error handling for content-all.js specifically
+      window.addEventListener('error', function (e) {
+        if (e.filename && e.filename.includes('content-all.js')) {
+          console.warn('Content-all.js error suppressed:', e.message);
+          e.preventDefault();
+          return false;
         }
       });
     </script>

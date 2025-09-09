@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AdvancedAIInsights from '../components/AdvancedAIInsights';
 import ComingSoonModal from '../components/ComingSoonModal';
-import ConfigurationModal from '../components/ConfigurationModal';
+import {
+  LazyAdvancedAIInsights,
+  LazyConfigurationModal,
+  LazyLoad,
+  LazyReminderManager,
+} from '../components/LazyWrapper';
 import NotificationDropdown from '../components/NotificationDropdown';
 import NotificationModal from '../components/NotificationModal';
+import OfflineIndicator, { SyncStatus } from '../components/OfflineIndicator';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 import {
@@ -17,7 +22,15 @@ import DashboardPsychologist from './DashboardPsychologist';
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { moodLogs, loading, error: moodError, statistics, createMoodLog, refreshMoodLogs, refreshStatistics } = useMood();
+  const {
+    moodLogs,
+    loading,
+    error: moodError,
+    statistics,
+    createMoodLog,
+    refreshMoodLogs,
+    refreshStatistics,
+  } = useMood();
 
   // Si el usuario es psicólogo, mostrar el dashboard de psicólogo
   if (user?.role === 'psychologist') {
@@ -41,6 +54,7 @@ const DashboardSimple: React.FC = () => {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showReminderManager, setShowReminderManager] = useState(false);
   const [notificationData, setNotificationData] = useState({
     type: 'success' as 'success' | 'error' | 'info',
     title: '',
@@ -114,9 +128,8 @@ const DashboardSimple: React.FC = () => {
             title: notif.title,
             message: notif.message,
             type: notif.type,
-            timestamp: notif.createdAt && typeof notif.createdAt.toDate === 'function' 
-              ? notif.createdAt.toDate() 
-              : new Date(),
+            timestamp:
+              notif.createdAt && typeof notif.createdAt.toDate === 'function' ? notif.createdAt.toDate() : new Date(),
             isRead: notif.read,
           }))
         );
@@ -142,9 +155,7 @@ const DashboardSimple: React.FC = () => {
 
   const updateRecentActivities = () => {
     const activities = moodLogs.slice(0, 3).map((log) => {
-      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate() 
-        : new Date();
+      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' ? log.createdAt.toDate() : new Date();
       return {
         id: log.id,
         action: 'Registraste tu estado de ánimo',
@@ -294,6 +305,9 @@ const DashboardSimple: React.FC = () => {
         });
         setShowComingSoonModal(true);
         break;
+      case 'reminders':
+        setShowReminderManager(true);
+        break;
     }
   };
 
@@ -311,6 +325,8 @@ const DashboardSimple: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+      <OfflineIndicator />
+
       {/* Header */}
       <header
         className={`py-6 px-6 transition-colors duration-500 ${
@@ -374,6 +390,7 @@ const DashboardSimple: React.FC = () => {
 
       {/* Main Content */}
       <div className='max-w-7xl mx-auto px-6 py-8'>
+        <SyncStatus />
         {/* Welcome Section */}
         <div className='mb-8'>
           <h2
@@ -779,6 +796,24 @@ const DashboardSimple: React.FC = () => {
                     </div>
                   </div>
                 </button>
+
+                {/* Recordatorios */}
+                <button
+                  onClick={() => handleQuickAction('reminders')}
+                  className={`w-full p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                    isDarkMode
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                  } text-white`}
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='text-2xl'>🔔</div>
+                    <div className='text-left'>
+                      <h4 className='font-bold text-lg'>Recordatorios</h4>
+                      <p className='text-sm opacity-90'>Gestiona tus recordatorios</p>
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -856,12 +891,20 @@ const DashboardSimple: React.FC = () => {
         {/* Sección de Insights de IA */}
         {showAIInsights && (
           <div className='mt-8'>
-            <AdvancedAIInsights
-              insights={[]}
-              longTermTrends={{}}
-              moodStatistics={statistics}
-              isDarkMode={isDarkMode}
-            />
+            <LazyLoad
+              fallback={
+                <div className='flex items-center justify-center p-8'>
+                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600'></div>
+                </div>
+              }
+            >
+              <LazyAdvancedAIInsights
+                insights={[]}
+                longTermTrends={{}}
+                moodStatistics={statistics}
+                isDarkMode={isDarkMode}
+              />
+            </LazyLoad>
           </div>
         )}
       </div>
@@ -876,7 +919,7 @@ const DashboardSimple: React.FC = () => {
         features={comingSoonData.features}
       />
 
-      <ConfigurationModal isOpen={showConfigModal} onClose={() => setShowConfigModal(false)} user={user} />
+      <LazyConfigurationModal isOpen={showConfigModal} onClose={() => setShowConfigModal(false)} user={user} />
 
       <NotificationModal
         isOpen={showNotificationModal}
@@ -886,6 +929,8 @@ const DashboardSimple: React.FC = () => {
         message={notificationData.message}
         icon={notificationData.icon}
       />
+
+      <LazyReminderManager isOpen={showReminderManager} onClose={() => setShowReminderManager(false)} />
     </div>
   );
 };

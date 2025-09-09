@@ -57,6 +57,15 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+    fs: {
+      strict: false,
+    },
   },
   preview: {
     port: 4173,
@@ -66,4 +75,3 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
 });
-
