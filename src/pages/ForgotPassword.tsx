@@ -1,7 +1,10 @@
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { AlertCircle, CheckCircle, Heart, Loader2, Mail, Moon, Shield, Sun, Zap } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { auth } from '../services/firebase';
+import { getPasswordResetErrorMessage } from '../utils/errorMessages';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -48,18 +51,11 @@ const ForgotPassword: React.FC = () => {
       setError('');
       setLoading(true);
 
-      // Simular envío de email con validación
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Simular diferentes respuestas según el email
-      if (email.toLowerCase().includes('test') || email.toLowerCase().includes('demo')) {
-        setError('Este email no está registrado en nuestro sistema.');
-        return;
-      }
-
+      // Enviar email de recuperación usando Firebase
+      await sendPasswordResetEmail(auth, email);
       setSuccess(true);
     } catch (error: any) {
-      setError('Error al enviar el email. Inténtalo de nuevo.');
+      setError(getPasswordResetErrorMessage(error));
     } finally {
       setLoading(false);
     }

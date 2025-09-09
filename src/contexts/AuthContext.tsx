@@ -10,6 +10,7 @@ import {
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../services/firebase';
+import { getAuthErrorMessage, getGoogleSignInErrorMessage, getRegistrationErrorMessage } from '../utils/errorMessages';
 
 interface User {
   uid: string;
@@ -113,7 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
       setLoading(false);
-      throw new Error(error.message);
+      throw new Error(getAuthErrorMessage(error));
     }
   };
 
@@ -172,7 +173,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       setLoading(false);
-      throw new Error(error.message);
+      throw new Error(getRegistrationErrorMessage(error));
     }
   };
 
@@ -183,7 +184,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
       setLoading(false);
-      throw new Error(error.message);
+      throw new Error(getGoogleSignInErrorMessage(error));
     }
   };
 
@@ -193,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signOut(auth);
     } catch (error: any) {
       setLoading(false);
-      throw new Error(error.message);
+      throw new Error(getAuthErrorMessage(error));
     }
   };
 
@@ -215,7 +216,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Actualizar el estado local sin recargar
       setUser((prev) => (prev ? { ...prev, ...updates } : null));
     } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error(getAuthErrorMessage(error));
     }
   };
 

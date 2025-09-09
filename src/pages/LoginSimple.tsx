@@ -47,7 +47,7 @@ const LoginSimple: React.FC = () => {
       await signIn(email, password);
       // La redirección se maneja en el useEffect
     } catch (error: any) {
-      setError('Error en el login: ' + error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ const LoginSimple: React.FC = () => {
       await signInWithGoogle();
       // La redirección se maneja en el useEffect
     } catch (error: any) {
-      setError('Error en el login con Google: ' + error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
