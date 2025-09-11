@@ -113,9 +113,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const userDataWithAuth: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
-                displayName: firebaseUser.displayName,
+                displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+                username: firebaseUser.email?.split('@')[0],
                 role: 'user',
               };
+              console.log('Setting Google user state:', userDataWithAuth);
               if (isMounted) setUser(userDataWithAuth);
             }
           } catch (error) {

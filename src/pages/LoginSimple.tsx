@@ -25,10 +25,21 @@ const LoginSimple: React.FC = () => {
       setShowAlreadyLoggedIn(true);
 
       // Verificar si el usuario necesita completar su perfil
+      // Para usuarios de Google, verificar si tienen username y role definidos
       const hasCompleteProfile = user.username && user.displayName && user.role;
+      const isGoogleUser = user.email && !user.username; // Usuario de Google sin username definido
 
-      if (!hasCompleteProfile) {
+      console.log('User profile check:', {
+        hasCompleteProfile,
+        isGoogleUser,
+        username: user.username,
+        displayName: user.displayName,
+        role: user.role
+      });
+
+      if (!hasCompleteProfile || isGoogleUser) {
         // Redirigir a completar perfil
+        console.log('Redirecting to complete profile');
         navigate('/complete-profile');
       } else {
         // Redirigir según el rol
