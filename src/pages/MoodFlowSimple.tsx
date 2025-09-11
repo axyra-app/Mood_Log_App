@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useOptimizedMood } from '../hooks/useOptimizedMood';
+import LogoutModal from '../components/LogoutModal';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,6 +18,8 @@ const MoodFlowSimple: React.FC = () => {
   const [sleep, setSleep] = useState(5);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: mood selection, 2: feelings description, 3: additional details
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
@@ -138,6 +141,27 @@ const MoodFlowSimple: React.FC = () => {
     }
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setLogoutLoading(true);
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      setLogoutLoading(false);
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
 
   if (!isLoaded) {
     return (
@@ -193,23 +217,15 @@ const MoodFlowSimple: React.FC = () => {
               Dashboard
             </Link>
             <button
-              onClick={async () => {
-                if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                  try {
-                    await logout();
-                    navigate('/login');
-                  } catch (error) {
-                    console.error('Error al cerrar sesión:', error);
-                  }
-                }
-              }}
-              className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 hover:scale-105 ${
+              onClick={handleLogoutClick}
+              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 flex items-center space-x-2 ${
                 isDarkMode
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-red-600 text-white hover:bg-red-700'
+                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg hover:shadow-red-500/25'
+                  : 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg hover:shadow-red-500/25'
               }`}
             >
-              Cerrar Sesión
+              <span>🚪</span>
+              <span>Cerrar Sesión</span>
             </button>
           </div>
         </div>
@@ -603,6 +619,14 @@ const MoodFlowSimple: React.FC = () => {
         )}
       </div>
 
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+        isDarkMode={isDarkMode}
+        loading={logoutLoading}
+      />
     </div>
   );
 };
