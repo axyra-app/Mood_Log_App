@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AIAnalysisModal from '../components/AIAnalysisModal';
 import { useAuth } from '../contexts/AuthContext';
-import { useMood } from '../hooks/useMood';
+import { useOptimizedMood } from '../hooks/useOptimizedMood';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
-  const { createMoodLog, getTodaysMoodLog, loading: moodLoading, error: moodError } = useMood();
+  const { createMoodLog, loading: moodLoading, error: moodError } = useOptimizedMood();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
@@ -18,10 +17,6 @@ const MoodFlowSimple: React.FC = () => {
   const [sleep, setSleep] = useState(5);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: mood selection, 2: feelings description, 3: additional details
-  const [showAIModal, setShowAIModal] = useState(false);
-  const [savedMood, setSavedMood] = useState<number | null>(null);
-  const [savedFeelings, setSavedFeelings] = useState('');
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
@@ -101,10 +96,9 @@ const MoodFlowSimple: React.FC = () => {
 
       await createMoodLog(moodData);
 
-      // Mostrar modal de análisis de IA
-      setSavedMood(currentMood);
-      setSavedFeelings(feelings);
-      setShowAIModal(true);
+      // Mostrar mensaje de éxito y redirigir
+      alert('¡Estado de ánimo guardado exitosamente!');
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Error saving mood:', error);
@@ -132,10 +126,9 @@ const MoodFlowSimple: React.FC = () => {
 
       await createMoodLog(moodData);
 
-      // Mostrar modal de análisis de IA
-      setSavedMood(currentMood);
-      setSavedFeelings('');
-      setShowAIModal(true);
+      // Mostrar mensaje de éxito y redirigir
+      alert('¡Estado de ánimo guardado exitosamente!');
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Error saving mood:', error);
@@ -145,10 +138,6 @@ const MoodFlowSimple: React.FC = () => {
     }
   };
 
-  const handleCloseAIModal = () => {
-    setShowAIModal(false);
-    navigate('/dashboard');
-  };
 
   if (!isLoaded) {
     return (
@@ -614,16 +603,6 @@ const MoodFlowSimple: React.FC = () => {
         )}
       </div>
 
-      {/* AI Analysis Modal */}
-      {savedMood && (
-        <AIAnalysisModal
-          isOpen={showAIModal}
-          onClose={handleCloseAIModal}
-          mood={savedMood}
-          feelings={savedFeelings}
-          isDarkMode={isDarkMode}
-        />
-      )}
     </div>
   );
 };

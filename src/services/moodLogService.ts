@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { MoodLog } from '../types';
 import { db } from './firebase';
-import { analyzeMoodWithAI } from './openai';
+import { analyzeMoodWithAI } from './aiService';
 
 // Mood Log Management Functions
 export const createMoodLog = async (moodData: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {

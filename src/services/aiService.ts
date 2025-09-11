@@ -10,8 +10,50 @@ export const analyzeMoodWithAI = async (
     return analysis;
   } catch (error) {
     console.error('Error analyzing mood with AI:', error);
-    throw error;
+    // Return fallback analysis instead of throwing
+    return getFallbackAnalysis(moodLog);
   }
+};
+
+const getFallbackAnalysis = (moodLog: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt'>): AIAnalysis => {
+  return {
+    id: '',
+    moodLogId: '',
+    primaryEmotion: moodLog.mood >= 4 ? 'positive' : moodLog.mood <= 2 ? 'negative' : 'neutral',
+    secondaryEmotions: moodLog.emotions || [],
+    confidence: 0.7,
+    sentiment: moodLog.mood >= 4 ? 'positive' : moodLog.mood <= 2 ? 'negative' : 'neutral',
+    suggestions: [
+      'Mantén un diario de emociones',
+      'Practica técnicas de respiración',
+      'Conecta con personas cercanas'
+    ],
+    patterns: ['Patrón diario detectado'],
+    riskLevel: moodLog.mood <= 2 ? 'high' : moodLog.mood <= 3 ? 'medium' : 'low',
+    emotionalState: moodLog.notes || 'Estado emocional registrado',
+    recommendations: [
+      'Considera hablar con un profesional si te sientes abrumado',
+      'Mantén rutinas saludables',
+      'Busca apoyo en tu red social'
+    ],
+    contextualInsights: ['Análisis contextual básico'],
+    moodTrend: 'stable',
+    energyLevel: moodLog.energy >= 7 ? 'high' : moodLog.energy >= 4 ? 'medium' : 'low',
+    stressIndicators: moodLog.stress >= 7 ? ['Alto estrés detectado'] : [],
+    copingStrategies: [
+      'Ejercicio regular',
+      'Meditación',
+      'Tiempo al aire libre'
+    ],
+    personalizedAdvice: 'Mantén el equilibrio emocional con actividades que disfrutes',
+    nextSteps: [
+      'Continúa registrando tu estado de ánimo',
+      'Identifica patrones en tus emociones',
+      'Busca ayuda profesional si es necesario'
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 };
 
 const simulateAIAnalysis = async (moodLog: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<AIAnalysis> => {

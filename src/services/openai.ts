@@ -69,9 +69,9 @@ export interface ContextualData {
 
 // Múltiples modelos de análisis con variación
 const ANALYSIS_MODELS = {
-  EMOTIONAL: 'gpt-4',
+  EMOTIONAL: 'gpt-3.5-turbo',
   BEHAVIORAL: 'gpt-3.5-turbo',
-  WELLNESS: 'gpt-4',
+  WELLNESS: 'gpt-3.5-turbo',
   CONTEXTUAL: 'gpt-3.5-turbo',
 };
 
