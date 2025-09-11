@@ -27,7 +27,7 @@ const LoginSimple: React.FC = () => {
       // Verificar si el usuario necesita completar su perfil
       // Para usuarios de Google, verificar si tienen username y role definidos
       const hasCompleteProfile = user.username && user.displayName && user.role;
-      const isGoogleUser = user.email && !user.username; // Usuario de Google sin username definido
+      const isGoogleUser = user.email && user.username && user.username === user.email.split('@')[0]; // Usuario de Google con username temporal
 
       console.log('User profile check:', {
         hasCompleteProfile,

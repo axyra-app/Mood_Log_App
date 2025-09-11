@@ -101,7 +101,12 @@ const MoodFlowSimple: React.FC = () => {
 
       // Mostrar mensaje de éxito y redirigir
       alert('¡Estado de ánimo guardado exitosamente!');
-      navigate('/dashboard');
+      // Redirigir al dashboard del usuario según su rol
+      if (user?.role === 'psychologist') {
+        navigate('/dashboard-psychologist');
+      } else {
+        navigate('/dashboard');
+      }
       
     } catch (error) {
       console.error('Error saving mood:', error);
@@ -131,7 +136,12 @@ const MoodFlowSimple: React.FC = () => {
 
       // Mostrar mensaje de éxito y redirigir
       alert('¡Estado de ánimo guardado exitosamente!');
-      navigate('/dashboard');
+      // Redirigir al dashboard del usuario según su rol
+      if (user?.role === 'psychologist') {
+        navigate('/dashboard-psychologist');
+      } else {
+        navigate('/dashboard');
+      }
       
     } catch (error) {
       console.error('Error saving mood:', error);

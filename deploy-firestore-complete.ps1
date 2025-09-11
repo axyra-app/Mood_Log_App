@@ -72,4 +72,4 @@ Write-Host "✅ Reglas de Firestore: DESPLEGADAS" -ForegroundColor Green
 Write-Host "✅ Índices de Firestore: DESPLEGADOS" -ForegroundColor Green
 Write-Host "✅ Aplicación lista para producción" -ForegroundColor Green
 Write-Host "================================================================" -ForegroundColor Yellow
-Write-Host "🚀 Tu aplicación está lista para el mercado!" -ForegroundColor Magenta
+Write-Host "Tu aplicacion esta lista para el mercado!" -ForegroundColor Magenta
