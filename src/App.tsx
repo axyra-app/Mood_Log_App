@@ -1,5 +1,5 @@
-import React from 'react';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -24,13 +24,38 @@ import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
 import TermsSimple from './pages/TermsSimple';
 
+// Analytics
+import { analyticsEvents, initializeAnalytics } from './services/analytics';
+
+// Debug (solo en desarrollo)
+import DebugInfo from './components/DebugInfo';
+
+// Componente para trackear cambios de ruta
+const AnalyticsTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Trackear cada cambio de página
+    const pageName = location.pathname === '/' ? 'Home' : location.pathname.substring(1);
+    analyticsEvents.pageView(pageName, location.pathname);
+  }, [location]);
+
+  return null;
+};
+
 function App() {
+  useEffect(() => {
+    // Inicializar analytics cuando la app se carga
+    initializeAnalytics();
+  }, []);
   return (
     <ErrorBoundary>
       <AuthProvider>
         <Router>
           <div className='App'>
+            <AnalyticsTracker />
             <PWAInstallPrompt />
+            <DebugInfo />
             <Routes>
               {/* Public routes */}
               <Route path='/' element={<HomeSimple />} />

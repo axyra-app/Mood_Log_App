@@ -1,6 +1,6 @@
 import { Info, MoreVertical, Paperclip, Phone, Send, Smile, Video } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { markAllMessagesAsRead, sendMessage, subscribeToMessages } from '../services/chatService';
+import { markAllMessagesAsRead, sendMessage, subscribeToMessages, uploadChatFile } from '../services/chatService';
 import { Chat, ChatMessage, User } from '../types';
 
 interface ChatInterfaceProps {
@@ -64,7 +64,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, currentUser, otherU
 
     try {
       // Upload file and send message with file URL
-      const { uploadChatFile } = await import('../services/chatService');
       const fileUrl = await uploadChatFile(file, chat.id!);
 
       await sendMessage({

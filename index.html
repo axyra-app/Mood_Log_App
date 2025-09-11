@@ -18,6 +18,17 @@
       rel="stylesheet"
     />
     <title>Mood Log App - Seguimiento del Estado de Ánimo</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CY8FK7SXKQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-CY8FK7SXKQ');
+    </script>
   </head>
   <body>
     <div id="root"></div>
@@ -25,18 +36,19 @@
     <script>
       // Handle external script errors that might affect the app
       window.addEventListener('error', function (e) {
-        if (e.message && (
-          e.message.includes('Cannot determine language') || 
-          e.message.includes('content-all.js') ||
-          e.message.includes('Failed to load resource') ||
-          e.message.includes('vite.svg') ||
-          e.message.includes('401') ||
-          e.message.includes('404') ||
-          e.message.includes('Cannot read properties of undefined') ||
-          e.message.includes('Missing or insufficient permissions') ||
-          e.message.includes('FirebaseError') ||
-          e.message.includes('permission-denied')
-        )) {
+        if (
+          e.message &&
+          (e.message.includes('Cannot determine language') ||
+            e.message.includes('content-all.js') ||
+            e.message.includes('Failed to load resource') ||
+            e.message.includes('vite.svg') ||
+            e.message.includes('401') ||
+            e.message.includes('404') ||
+            e.message.includes('Cannot read properties of undefined') ||
+            e.message.includes('Missing or insufficient permissions') ||
+            e.message.includes('FirebaseError') ||
+            e.message.includes('permission-denied'))
+        ) {
           console.warn('External script error suppressed:', e.message);
           e.preventDefault();
           return false;
@@ -47,16 +59,16 @@
         if (
           e.reason &&
           e.reason.message &&
-          (e.reason.message.includes('Cannot determine language') || 
-           e.reason.message.includes('content-all.js') ||
-           e.reason.message.includes('Failed to load resource') ||
-           e.reason.message.includes('vite.svg') ||
-           e.reason.message.includes('401') ||
-           e.reason.message.includes('404') ||
-           e.reason.message.includes('Cannot read properties of undefined') ||
-           e.reason.message.includes('Missing or insufficient permissions') ||
-           e.reason.message.includes('FirebaseError') ||
-           e.reason.message.includes('permission-denied'))
+          (e.reason.message.includes('Cannot determine language') ||
+            e.reason.message.includes('content-all.js') ||
+            e.reason.message.includes('Failed to load resource') ||
+            e.reason.message.includes('vite.svg') ||
+            e.reason.message.includes('401') ||
+            e.reason.message.includes('404') ||
+            e.reason.message.includes('Cannot read properties of undefined') ||
+            e.reason.message.includes('Missing or insufficient permissions') ||
+            e.reason.message.includes('FirebaseError') ||
+            e.reason.message.includes('permission-denied'))
         ) {
           console.warn('External script promise rejection suppressed:', e.reason.message);
           e.preventDefault();

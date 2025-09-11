@@ -9,26 +9,38 @@ interface ProtectedRoutePsychologistProps {
 const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('');
 
   // Timeout para evitar carga infinita
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeoutReached(true);
-    }, 5000); // 5 segundos de timeout
+    }, 10000); // 10 segundos de timeout
 
     return () => clearTimeout(timer);
   }, []);
 
+  // Debug info
+  useEffect(() => {
+    const info = `Loading: ${loading}, User: ${!!user}, Role: ${user?.role}, Timeout: ${timeoutReached}`;
+    setDebugInfo(info);
+    console.log('ProtectedRoutePsychologist Debug:', info);
+  }, [loading, user, timeoutReached]);
+
   // Si ha pasado el timeout, mostrar el contenido independientemente del loading
   if (timeoutReached) {
+    console.log('Timeout reached, checking user...');
     if (!user) {
+      console.log('No user, redirecting to login');
       return <Navigate to='/login' replace />;
     }
 
     if (user.role !== 'psychologist') {
+      console.log('User is not psychologist, redirecting to dashboard');
       return <Navigate to='/dashboard' replace />;
     }
 
+    console.log('User is psychologist, showing content');
     return <>{children}</>;
   }
 
@@ -39,19 +51,23 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
         <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
           <div className='animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4'></div>
           <p className='text-white text-lg font-semibold'>Verificando credenciales profesionales...</p>
+          <p className='text-white/70 text-sm mt-2'>Debug: {debugInfo}</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
+    console.log('No user, redirecting to login');
     return <Navigate to='/login' replace />;
   }
 
   if (user.role !== 'psychologist') {
+    console.log('User is not psychologist, redirecting to dashboard');
     return <Navigate to='/dashboard' replace />;
   }
 
+  console.log('User is psychologist, showing content');
   return <>{children}</>;
 };
 

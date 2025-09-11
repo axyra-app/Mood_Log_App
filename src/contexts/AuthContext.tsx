@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { analyticsEvents } from '../services/analytics';
 import { auth, db } from '../services/firebase';
 import { getAuthErrorMessage, getGoogleSignInErrorMessage, getRegistrationErrorMessage } from '../utils/errorMessages';
 
@@ -80,6 +81,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 role: userData.role || 'user',
                 createdAt: userData.createdAt,
                 updatedAt: userData.updatedAt,
+                // Campos profesionales para psicólogos
+                professionalTitle: userData.professionalTitle,
+                specialization: userData.specialization,
+                yearsOfExperience: userData.yearsOfExperience,
+                bio: userData.bio,
+                licenseNumber: userData.licenseNumber,
+                phone: userData.phone,
+                cvUrl: userData.cvUrl,
               };
               if (isMounted) setUser(userDataWithAuth);
             } else {
@@ -125,6 +134,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
+      // Trackear login exitoso
+      analyticsEvents.userLogin('email');
     } catch (error: any) {
       setLoading(false);
       throw new Error(getAuthErrorMessage(error));
@@ -163,26 +174,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
+      // Trackear registro exitoso
+      analyticsEvents.userSignUp('email');
+
       // Si es psicólogo, también crear en la colección de psicólogos
       if (role === 'psychologist') {
-        const psychologistData = {
-          uid: userCredential.user.uid,
-          email: email,
-          displayName: email.split('@')[0],
-          role: 'psychologist',
-          licenseNumber: professionalData?.licenseNumber || '',
-          specialization: professionalData?.specialization || '',
-          yearsOfExperience: professionalData?.yearsOfExperience ? parseInt(professionalData.yearsOfExperience) : 0,
-          bio: professionalData?.bio || '',
-          phone: professionalData?.phone || '',
-          cvUrl: professionalData?.cvUrl || '',
-          rating: 0,
-          patientsCount: 0,
-          isAvailable: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        await setDoc(doc(db, 'psychologists', userCredential.user.uid), psychologistData);
+        try {
+          console.log('Creando perfil de psicólogo...', professionalData);
+          const psychologistData = {
+            uid: userCredential.user.uid,
+            email: email,
+            displayName: email.split('@')[0],
+            role: 'psychologist',
+            licenseNumber: professionalData?.licenseNumber || '',
+            specialization: professionalData?.specialization || '',
+            yearsOfExperience: professionalData?.yearsOfExperience ? parseInt(professionalData.yearsOfExperience) : 0,
+            bio: professionalData?.bio || '',
+            phone: professionalData?.phone || '',
+            cvUrl: professionalData?.cvUrl || '',
+            rating: 0,
+            patientsCount: 0,
+            isAvailable: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          };
+          await setDoc(doc(db, 'psychologists', userCredential.user.uid), psychologistData);
+          console.log('Perfil de psicólogo creado exitosamente');
+        } catch (psychologistError) {
+          console.error('Error creando perfil de psicólogo:', psychologistError);
+          // No lanzar error aquí para no interrumpir el registro del usuario
+        }
       }
     } catch (error: any) {
       setLoading(false);
@@ -199,6 +220,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
+      // Trackear login con Google exitoso
+      analyticsEvents.userLogin('google');
     } catch (error: any) {
       setLoading(false);
       throw new Error(getGoogleSignInErrorMessage(error));
@@ -209,6 +232,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await signOut(auth);
+      // Trackear logout
+      analyticsEvents.userLogout();
     } catch (error: any) {
       setLoading(false);
       throw new Error(getAuthErrorMessage(error));
