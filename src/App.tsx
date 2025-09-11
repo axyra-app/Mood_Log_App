@@ -12,6 +12,7 @@ import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist'
 
 // Pages
 import Chat from './pages/Chat';
+import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologistSimple from './pages/DashboardPsychologistSimple';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
@@ -61,6 +62,7 @@ function App() {
               <Route path='/' element={<HomeSimple />} />
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
+              <Route path='/complete-profile' element={<CompleteProfile />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/terms' element={<TermsSimple />} />
               <Route path='/privacy' element={<PrivacySimple />} />

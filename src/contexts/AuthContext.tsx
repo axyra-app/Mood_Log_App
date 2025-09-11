@@ -219,9 +219,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // Trackear login con Google exitoso
-      analyticsEvents.userLogin('google');
+      const result = await signInWithPopup(auth, provider);
+
+      // Verificar si el usuario ya tiene un perfil completo
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+
+      if (userDoc.exists()) {
+        // Usuario existente, cargar perfil completo
+        const userData = userDoc.data();
+        const userDataWithAuth: User = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: userData.displayName || result.user.displayName,
+          username: userData.username,
+          role: userData.role || 'user',
+          createdAt: userData.createdAt,
+          updatedAt: userData.updatedAt,
+          // Campos profesionales para psicólogos
+          professionalTitle: userData.professionalTitle,
+          specialization: userData.specialization,
+          yearsOfExperience: userData.yearsOfExperience,
+          bio: userData.bio,
+          licenseNumber: userData.licenseNumber,
+          phone: userData.phone,
+          cvUrl: userData.cvUrl,
+        };
+        setUser(userDataWithAuth);
+        analyticsEvents.userLogin('google');
+      } else {
+        // Usuario nuevo, crear perfil básico y redirigir a completar perfil
+        const basicUserData = {
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
+          username: result.user.email?.split('@')[0],
+          role: 'user', // Por defecto, se completará en el formulario
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        await setDoc(doc(db, 'users', result.user.uid), basicUserData);
+
+        // Crear usuario básico para el estado
+        const userDataWithAuth: User = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName,
+          role: 'user',
+        };
+        setUser(userDataWithAuth);
+        analyticsEvents.userSignUp('google');
+      }
     } catch (error: any) {
       setLoading(false);
       throw new Error(getGoogleSignInErrorMessage(error));

@@ -47,7 +47,9 @@
             e.message.includes('Cannot read properties of undefined') ||
             e.message.includes('Missing or insufficient permissions') ||
             e.message.includes('FirebaseError') ||
-            e.message.includes('permission-denied'))
+            e.message.includes('permission-denied') ||
+            e.message.includes('Cross-Origin-Opener-Policy') ||
+            e.message.includes('Unexpected token'))
         ) {
           console.warn('External script error suppressed:', e.message);
           e.preventDefault();
@@ -68,7 +70,9 @@
             e.reason.message.includes('Cannot read properties of undefined') ||
             e.reason.message.includes('Missing or insufficient permissions') ||
             e.reason.message.includes('FirebaseError') ||
-            e.reason.message.includes('permission-denied'))
+            e.reason.message.includes('permission-denied') ||
+            e.reason.message.includes('Cross-Origin-Opener-Policy') ||
+            e.reason.message.includes('Unexpected token'))
         ) {
           console.warn('External script promise rejection suppressed:', e.reason.message);
           e.preventDefault();
