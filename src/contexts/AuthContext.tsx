@@ -91,7 +91,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 phone: userData.phone,
                 cvUrl: userData.cvUrl,
               };
-              if (isMounted) setUser(userDataWithAuth);
+              
+              // Verificar si es un usuario de Google que necesita completar perfil
+              const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
+              if (isGoogleUser && (!userData.displayName || !userData.role)) {
+                console.log('Google user needs to complete profile');
+                // No establecer el usuario para forzar redirección a completar perfil
+                if (isMounted) setUser(null);
+              } else {
+                if (isMounted) setUser(userDataWithAuth);
+              }
             } else {
               // Si no existe el documento, crear uno básico para usuarios de Google
               const basicUserData = {

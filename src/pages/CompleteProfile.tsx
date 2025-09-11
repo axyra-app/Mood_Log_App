@@ -166,14 +166,14 @@ const CompleteProfile: React.FC = () => {
 
       <div
         className={`min-h-screen transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500'
+          isDarkMode ? 'bg-gray-900' : 'bg-white'
         }`}
       >
         <div className='min-h-screen flex items-center justify-center p-4'>
           <div className='w-full max-w-2xl'>
             <div
               className={`backdrop-blur-lg rounded-2xl shadow-2xl border transition-all duration-500 ${
-                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/10 border-white/20'
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
               }`}
             >
               <div className='p-8'>
@@ -193,14 +193,14 @@ const CompleteProfile: React.FC = () => {
                   <div className='text-6xl mb-4'>👤</div>
                   <h1
                     className={`text-3xl font-bold mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-white'
+                      isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}
                   >
                     Completa tu Perfil
                   </h1>
                   <p
                     className={`text-lg transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-white/80'
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
                     Termina de configurar tu cuenta para comenzar
@@ -213,7 +213,7 @@ const CompleteProfile: React.FC = () => {
                   <div className='space-y-4'>
                     <h3
                       className={`text-xl font-semibold transition-colors duration-500 ${
-                        isDarkMode ? 'text-white' : 'text-white'
+                        isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}
                     >
                       Información Básica
@@ -222,7 +222,7 @@ const CompleteProfile: React.FC = () => {
                     <div>
                       <label
                         className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-white/90'
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
                         Nombre Completo *
@@ -237,7 +237,7 @@ const CompleteProfile: React.FC = () => {
                             ? 'border-red-500'
                             : isDarkMode
                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                            : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                         }`}
                         placeholder='Tu nombre completo'
                       />
@@ -249,7 +249,7 @@ const CompleteProfile: React.FC = () => {
                     <div>
                       <label
                         className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-white/90'
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
                         Nombre de Usuario *
@@ -264,7 +264,7 @@ const CompleteProfile: React.FC = () => {
                             ? 'border-red-500'
                             : isDarkMode
                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                            : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                         }`}
                         placeholder='tu_usuario'
                       />
@@ -274,7 +274,7 @@ const CompleteProfile: React.FC = () => {
                     <div>
                       <label
                         className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-white/90'
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
                         Tipo de Usuario *
@@ -288,7 +288,7 @@ const CompleteProfile: React.FC = () => {
                             ? 'border-red-500'
                             : isDarkMode
                             ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white/20 border-white/30 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
                         }`}
                       >
                         <option value='user'>Usuario Regular</option>
@@ -303,7 +303,7 @@ const CompleteProfile: React.FC = () => {
                     <div className='space-y-4 border-t pt-6'>
                       <h3
                         className={`text-xl font-semibold transition-colors duration-500 ${
-                          isDarkMode ? 'text-white' : 'text-white'
+                          isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}
                       >
                         Información Profesional
@@ -313,7 +313,7 @@ const CompleteProfile: React.FC = () => {
                         <div>
                           <label
                             className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                              isDarkMode ? 'text-gray-300' : 'text-white/90'
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
                             }`}
                           >
                             Título Profesional *
@@ -328,7 +328,7 @@ const CompleteProfile: React.FC = () => {
                                 ? 'border-red-500'
                                 : isDarkMode
                                 ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                                : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                             }`}
                             placeholder='Psicólogo Clínico'
                           />
@@ -340,7 +340,7 @@ const CompleteProfile: React.FC = () => {
                         <div>
                           <label
                             className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                              isDarkMode ? 'text-gray-300' : 'text-white/90'
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
                             }`}
                           >
                             Especialización *
@@ -355,7 +355,7 @@ const CompleteProfile: React.FC = () => {
                                 ? 'border-red-500'
                                 : isDarkMode
                                 ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                                : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                             }`}
                             placeholder='Terapia Cognitivo-Conductual'
                           />
@@ -369,7 +369,7 @@ const CompleteProfile: React.FC = () => {
                         <div>
                           <label
                             className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                              isDarkMode ? 'text-gray-300' : 'text-white/90'
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
                             }`}
                           >
                             Años de Experiencia *
@@ -386,7 +386,7 @@ const CompleteProfile: React.FC = () => {
                                 ? 'border-red-500'
                                 : isDarkMode
                                 ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                                : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                             }`}
                             placeholder='5'
                           />
@@ -398,7 +398,7 @@ const CompleteProfile: React.FC = () => {
                         <div>
                           <label
                             className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                              isDarkMode ? 'text-gray-300' : 'text-white/90'
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
                             }`}
                           >
                             Número de Licencia *
@@ -413,7 +413,7 @@ const CompleteProfile: React.FC = () => {
                                 ? 'border-red-500'
                                 : isDarkMode
                                 ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                                : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                             }`}
                             placeholder='PSI-12345'
                           />
@@ -426,7 +426,7 @@ const CompleteProfile: React.FC = () => {
                       <div>
                         <label
                           className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-white/90'
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}
                         >
                           Teléfono *
@@ -441,7 +441,7 @@ const CompleteProfile: React.FC = () => {
                               ? 'border-red-500'
                               : isDarkMode
                               ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                              : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                           }`}
                           placeholder='+57 300 123 4567'
                         />
@@ -451,7 +451,7 @@ const CompleteProfile: React.FC = () => {
                       <div>
                         <label
                           className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-white/90'
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}
                         >
                           Biografía Profesional *
@@ -466,7 +466,7 @@ const CompleteProfile: React.FC = () => {
                               ? 'border-red-500'
                               : isDarkMode
                               ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                              : 'bg-white/20 border-white/30 text-white placeholder-white/70'
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                           }`}
                           placeholder='Cuéntanos sobre tu experiencia y enfoque terapéutico...'
                         />
@@ -476,7 +476,7 @@ const CompleteProfile: React.FC = () => {
                       <div>
                         <label
                           className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-white/90'
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}
                         >
                           Hoja de Vida (PDF) - Opcional
@@ -489,7 +489,7 @@ const CompleteProfile: React.FC = () => {
                           className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                             isDarkMode
                               ? 'bg-gray-700 border-gray-600 text-white'
-                              : 'bg-white/20 border-white/30 text-white'
+                              : 'bg-white border-gray-300 text-gray-900'
                           }`}
                         />
                         {formData.cvFile && (
@@ -513,7 +513,7 @@ const CompleteProfile: React.FC = () => {
                       className={`w-full py-4 px-6 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                         isDarkMode
                           ? 'bg-purple-600 text-white hover:bg-purple-700'
-                          : 'bg-white text-purple-600 hover:bg-white/90'
+                          : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
                       }`}
                     >
                       {loading ? (
