@@ -325,9 +325,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         { merge: true }
       );
 
+      // Si es psicólogo, también actualizar en la colección de psicólogos
+      if (updates.role === 'psychologist' || user.role === 'psychologist') {
+        try {
+          const psychologistData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: updates.displayName || user.displayName,
+            role: 'psychologist',
+            professionalTitle: updates.professionalTitle || '',
+            specialization: updates.specialization || '',
+            yearsOfExperience: updates.yearsOfExperience || 0,
+            bio: updates.bio || '',
+            licenseNumber: updates.licenseNumber || '',
+            phone: updates.phone || '',
+            cvUrl: updates.cvUrl || '',
+            rating: 0,
+            patientsCount: 0,
+            isAvailable: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          };
+          
+          await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
+          console.log('Perfil de psicólogo actualizado exitosamente');
+        } catch (psychologistError) {
+          console.error('Error actualizando perfil de psicólogo:', psychologistError);
+          // No lanzar error aquí para no interrumpir la actualización del usuario
+        }
+      }
+
       // Actualizar el estado local sin recargar
       setUser((prev) => (prev ? { ...prev, ...updates } : null));
     } catch (error: any) {
+      console.error('Error updating user profile:', error);
       throw new Error(getAuthErrorMessage(error));
     }
   };
