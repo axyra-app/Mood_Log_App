@@ -10,46 +10,231 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
     
-    // Users collection
+    function isOwnerOrAdmin(userId) {
+      return isOwner(userId) || isAdmin();
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    function isPsychologist() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/psychologists/$(request.auth.uid));
+    }
+    
+    function isUser() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function isValidUser(userId) {
+      return isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+    }
+    
+    function isValidMoodLog(moodLog) {
+      return moodLog.data.userId == request.auth.uid;
+    }
+    
+    function isValidNotification(notification) {
+      return notification.data.userId == request.auth.uid;
+    }
+    
+    function isValidReminder(reminder) {
+      return reminder.data.userId == request.auth.uid;
+    }
+    
+    function isValidChatMessage(message) {
+      return message.data.senderId == request.auth.uid || 
+             message.data.receiverId == request.auth.uid;
+    }
+    
+    function isValidPsychologist(psychologist) {
+      return psychologist.data.userId == request.auth.uid;
+    }
+    
+    function hasValidTimestamp() {
+      return request.time > timestamp.date(2024, 1, 1);
+    }
+    
+    // Users collection - User profiles
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && 
+        request.auth.uid == userId && 
+        hasValidTimestamp();
+      allow update: if isOwner(userId) && 
+        hasValidTimestamp();
+      allow delete: if isOwner(userId) || isAdmin();
     }
     
-    // Mood logs collection
-    match /moodLogs/{moodLogId} {
-      allow read, write: if isAuthenticated() && 
-        (resource == null || resource.data.userId == request.auth.uid);
-    }
-    
-    // Notifications collection
-    match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated() && 
-        (resource == null || resource.data.userId == request.auth.uid);
-    }
-    
-    // Reminders collection
-    match /reminders/{reminderId} {
-      allow read, write: if isAuthenticated() && 
-        (resource == null || resource.data.userId == request.auth.uid);
-    }
-    
-    // Psychologists collection
+    // Psychologists collection - Psychologist profiles
     match /psychologists/{psychologistId} {
-      allow read, write: if isAuthenticated() && 
-        (resource == null || resource.data.userId == request.auth.uid);
+      allow read: if isOwner(psychologistId) || isAdmin() || isUser();
+      allow create: if isAuthenticated() && 
+        request.auth.uid == psychologistId && 
+        hasValidTimestamp();
+      allow update: if isOwner(psychologistId) && 
+        hasValidTimestamp();
+      allow delete: if isOwner(psychologistId) || isAdmin();
     }
     
-    // Chat messages collection
+    // Mood logs collection - User mood entries
+    match /moodLogs/{moodLogId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Notifications collection - User notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Reminders collection - User reminders
+    match /reminders/{reminderId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Chat messages collection - Communication between users and psychologists
     match /chatMessages/{messageId} {
-      allow read, write: if isAuthenticated() && 
+      allow read: if isAuthenticated() && 
         (resource == null || 
          resource.data.senderId == request.auth.uid || 
          resource.data.receiverId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        (request.resource.data.senderId == request.auth.uid ||
+         request.resource.data.receiverId == request.auth.uid) &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.senderId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.senderId == request.auth.uid;
     }
     
-    // Default rule for other collections
+    // Chat sessions collection - Chat room management
+    match /chatSessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || 
+         resource.data.userId == request.auth.uid || 
+         resource.data.psychologistId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        (request.resource.data.userId == request.auth.uid ||
+         request.resource.data.psychologistId == request.auth.uid) &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid ||
+         resource.data.psychologistId == request.auth.uid) &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid ||
+         resource.data.psychologistId == request.auth.uid);
+    }
+    
+    // AI Analysis collection - AI analysis results
+    match /aiAnalysis/{analysisId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Analytics collection - User analytics data
+    match /analytics/{analyticsId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Settings collection - User settings and preferences
+    match /settings/{settingId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Reports collection - User reports and exports
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        hasValidTimestamp();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        hasValidTimestamp();
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Admin collection - Admin users
+    match /admins/{adminId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System collection - System-wide data
+    match /system/{systemId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Public collection - Public data (read-only for authenticated users)
+    match /public/{publicId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Default rule - Deny all other access
     match /{document=**} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if false;
     }
   }
 }
