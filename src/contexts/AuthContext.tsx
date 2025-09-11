@@ -292,8 +292,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       analyticsEvents.userSignUp('google');
     } catch (error: any) {
       console.error('Google Sign-Up Error:', error);
-      setLoading(false);
       throw new Error(getGoogleSignInErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
   };
 

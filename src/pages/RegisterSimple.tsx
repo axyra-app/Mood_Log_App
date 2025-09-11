@@ -203,11 +203,8 @@ const RegisterSimple: React.FC = () => {
 
       await signUpWithGoogle();
       
-      // Redirigir a completar perfil después del registro con Google
-      showSuccess('¡Registro exitoso!', 'Completa tu perfil para continuar');
-      setTimeout(() => {
-        navigate('/complete-profile');
-      }, 1500);
+      // Redirigir inmediatamente a completar perfil
+      navigate('/complete-profile');
     } catch (error: any) {
       showError('Error en el registro con Google', error.message);
     } finally {
