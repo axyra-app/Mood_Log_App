@@ -8,7 +8,7 @@ import { commonValidationRules, useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
 
 const RegisterSimple: React.FC = () => {
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signUp, signUpWithGoogle } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
   const { notifications, showSuccess, showError, removeNotification } = useNotifications();
   const [formData, setFormData] = useState({
@@ -201,8 +201,8 @@ const RegisterSimple: React.FC = () => {
     try {
       setLoading(true);
 
-      await signInWithGoogle();
-      navigate('/dashboard');
+      await signUpWithGoogle();
+      // La redirección se maneja en el useEffect
     } catch (error: any) {
       showError('Error en el registro con Google', error.message);
     } finally {
@@ -729,7 +729,7 @@ const RegisterSimple: React.FC = () => {
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  🔗 CONTINUAR CON GOOGLE
+                  🔗 REGISTRARSE CON GOOGLE
                 </button>
               </form>
 

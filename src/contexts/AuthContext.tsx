@@ -37,6 +37,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, role?: 'user' | 'psychologist', professionalData?: any) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signUpWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
 }
@@ -247,6 +248,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signUpWithGoogle = async () => {
+    try {
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Para registro con Google, siempre crear perfil básico y redirigir a completar perfil
+      const basicUserData = {
+        email: result.user.email,
+        displayName: result.user.displayName || result.user.email?.split('@')[0],
+        username: result.user.email?.split('@')[0],
+        role: 'user', // Por defecto, se completará en el formulario
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      try {
+        await setDoc(doc(db, 'users', result.user.uid), basicUserData);
+        console.log('Perfil básico creado para registro con Google');
+      } catch (error) {
+        console.error('Error creando perfil básico:', error);
+      }
+      
+      // Crear usuario básico para el estado
+      const userDataWithAuth: User = {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        username: result.user.email?.split('@')[0],
+        role: 'user',
+      };
+      setUser(userDataWithAuth);
+      analyticsEvents.userSignUp('google');
+    } catch (error: any) {
+      console.error('Google Sign-Up Error:', error);
+      setLoading(false);
+      throw new Error(getGoogleSignInErrorMessage(error));
+    }
+  };
+
   const logout = async () => {
     try {
       setLoading(true);
@@ -287,6 +328,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signIn,
     signUp,
     signInWithGoogle,
+    signUpWithGoogle,
     logout,
     updateUserProfile,
   };
