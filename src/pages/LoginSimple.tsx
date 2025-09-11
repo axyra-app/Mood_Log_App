@@ -12,6 +12,7 @@ const LoginSimple: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showAlreadyLoggedIn, setShowAlreadyLoggedIn] = useState(false);
+  const [googleError, setGoogleError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,12 +71,14 @@ const LoginSimple: React.FC = () => {
   const handleGoogleSignIn = async () => {
     try {
       setError('');
+      setGoogleError('');
       setLoading(true);
 
       await signInWithGoogle();
       // La redirección se maneja en el useEffect
     } catch (error: any) {
-      setError(error.message);
+      console.error('Google Sign-In Error:', error);
+      setGoogleError(error.message);
     } finally {
       setLoading(false);
     }
@@ -283,8 +286,31 @@ const LoginSimple: React.FC = () => {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                🔗 CONTINUAR CON GOOGLE
+                {loading ? '🔄 Conectando...' : '🔗 CONTINUAR CON GOOGLE'}
               </button>
+              
+              {/* Google Error */}
+              {googleError && (
+                <div className={`mt-4 p-4 rounded-xl border-2 ${
+                  isDarkMode 
+                    ? 'bg-red-900/30 border-red-500 text-red-200' 
+                    : 'bg-red-50 border-red-300 text-red-800'
+                }`}>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">⚠️</span>
+                    <div>
+                      <p className="font-semibold">Error con Google</p>
+                      <p className="text-sm">{googleError}</p>
+                      <button
+                        onClick={() => setGoogleError('')}
+                        className="mt-2 text-sm underline hover:no-underline"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
 
             {/* Links */}
