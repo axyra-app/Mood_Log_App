@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
+import { useSimpleNotifications } from '../hooks/useSimpleNotifications';
 import { useValidation } from '../hooks/useValidation';
+import { uploadFile } from '../services/firebase';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
-  const { notifications, showSuccess, showError, removeNotification } = useNotifications();
+  const { notifications, showSuccess, showError, removeNotification } = useSimpleNotifications();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -97,8 +98,6 @@ const CompleteProfile: React.FC = () => {
       if (formData.role === 'psychologist' && formData.cvFile) {
         setUploadingFile(true);
         try {
-          // Importar dinámicamente para evitar errores de build
-          const { uploadFile } = await import('../services/firebase');
           cvUrl = await uploadFile(formData.cvFile, `psychologists/${user?.email}/cv`);
           showSuccess('Archivo subido', 'Tu hoja de vida se ha subido correctamente');
         } catch (uploadError) {
