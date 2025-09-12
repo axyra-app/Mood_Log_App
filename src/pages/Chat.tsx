@@ -16,13 +16,13 @@ import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserChats } from '../services/firestore';
-import { Chat, ChatMessage, Psychologist } from '../types';
+import { Chat as ChatType, ChatMessage, Psychologist } from '../types';
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
   const [psychologists, setPsychologists] = useState<Psychologist[]>([]);
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [chats, setChats] = useState<ChatType[]>([]);
+  const [selectedChat, setSelectedChat] = useState<ChatType | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -189,7 +189,7 @@ const Chat: React.FC = () => {
 
       // Crear nuevo chat simulado
       const chatId = `chat_${Date.now()}`;
-      const newChat: Chat = {
+      const newChat: ChatType = {
         id: chatId,
         participants: [user.uid, psychologist.id],
         lastMessageAt: new Date(),
