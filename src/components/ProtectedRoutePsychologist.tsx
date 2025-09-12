@@ -35,9 +35,23 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     }
   }, [loading, user, hasRendered]);
 
-  // Si ha pasado el timeout, mostrar el contenido independientemente del loading
-  if (timeoutReached) {
-    console.log('Timeout reached, checking user...');
+  // Si está cargando y no ha pasado el timeout, mostrar loading
+  if (loading && !timeoutReached) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500'>
+        <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
+          <div className='animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4'></div>
+          <p className='text-white text-lg font-semibold'>Verificando credenciales profesionales...</p>
+          <p className='text-white/70 text-sm mt-2'>Debug: {debugInfo}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si ha pasado el timeout o no está cargando, verificar usuario
+  if (timeoutReached || !loading) {
+    console.log('Checking user after timeout or loading complete...');
+    
     if (!user) {
       console.log('No user, redirecting to login');
       return <Navigate to='/login' replace />;
@@ -52,31 +66,9 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     return <>{children}</>;
   }
 
-  // Mostrar loading solo si no ha pasado el timeout
-  if (loading && !timeoutReached) {
-    return (
-      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500'>
-        <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
-          <div className='animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4'></div>
-          <p className='text-white text-lg font-semibold'>Verificando credenciales profesionales...</p>
-          <p className='text-white/70 text-sm mt-2'>Debug: {debugInfo}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    console.log('No user, redirecting to login');
-    return <Navigate to='/login' replace />;
-  }
-
-  if (user.role !== 'psychologist') {
-    console.log('User is not psychologist, redirecting to dashboard');
-    return <Navigate to='/dashboard' replace />;
-  }
-
-  console.log('User is psychologist, showing content');
-  return <>{children}</>;
+  // Fallback - no debería llegar aquí
+  console.log('Fallback case reached');
+  return <Navigate to='/login' replace />;
 };
 
 export default ProtectedRoutePsychologist;

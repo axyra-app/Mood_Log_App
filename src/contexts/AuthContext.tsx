@@ -66,6 +66,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (!isMounted) return;
 
+      console.log('onAuthStateChanged triggered:', { 
+        hasUser: !!firebaseUser, 
+        uid: firebaseUser?.uid,
+        email: firebaseUser?.email 
+      });
+
       try {
         if (firebaseUser) {
           try {
@@ -241,6 +247,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // No lanzar error aquí para no interrumpir el registro del usuario
         }
       }
+
+      // El loading se manejará automáticamente por onAuthStateChanged
+      console.log('Registro completado exitosamente');
     } catch (error: any) {
       setLoading(false);
       // Manejar específicamente el error de email ya existente
