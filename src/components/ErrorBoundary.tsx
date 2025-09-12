@@ -31,10 +31,16 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('404') ||
         error.message.includes('Missing or insufficient permissions') ||
         error.message.includes('FirebaseError') ||
-        error.message.includes('permission-denied')) {
+        error.message.includes('permission-denied') ||
+        error.message.includes('reading') && error.message.includes('add')) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });
       return;
+    }
+    
+    // Solo establecer error si no es un error de bucle infinito
+    if (!error.message.includes('reading') || !error.message.includes('add')) {
+      this.setState({ hasError: true, error });
     }
     
     // Reset error state after a delay to allow recovery

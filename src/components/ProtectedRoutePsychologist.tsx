@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,6 +11,7 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
   const [timeoutReached, setTimeoutReached] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
   const [hasRendered, setHasRendered] = useState(false);
+  const [renderCount, setRenderCount] = useState(0);
 
   // Timeout para evitar carga infinita
   useEffect(() => {
@@ -21,22 +22,38 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // Protección contra bucle infinito
+  useEffect(() => {
+    setRenderCount(prev => prev + 1);
+    if (renderCount > 50) {
+      console.error('ProtectedRoutePsychologist: Bucle infinito detectado, forzando timeout');
+      setTimeoutReached(true);
+    }
+  });
+
+  // Memoizar el estado para evitar re-renderizados innecesarios
+  const authState = useMemo(() => {
+    return {
+      loading,
+      hasUser: !!user,
+      userRole: user?.role,
+      timeoutReached,
+      renderCount
+    };
+  }, [loading, user?.uid, user?.role, timeoutReached, renderCount]);
+
   // Debug info
   useEffect(() => {
-    const info = `Loading: ${loading}, User: ${!!user}, Role: ${user?.role}, Timeout: ${timeoutReached}`;
+    const info = `Loading: ${authState.loading}, User: ${authState.hasUser}, Role: ${authState.userRole}, Timeout: ${authState.timeoutReached}, Renders: ${authState.renderCount}`;
     setDebugInfo(info);
     console.log('ProtectedRoutePsychologist Debug:', info);
-  }, [loading, user?.uid, user?.role, timeoutReached]);
+  }, [authState]);
 
-  // Prevenir re-renderizado excesivo
-  useEffect(() => {
-    if (!loading && user && !hasRendered) {
-      setHasRendered(true);
-    }
-  }, [loading, user, hasRendered]);
+  // Lógica simplificada para evitar bucles
+  const shouldShowLoading = authState.loading && !authState.timeoutReached;
+  const shouldCheckUser = authState.timeoutReached || !authState.loading;
 
-  // Si está cargando y no ha pasado el timeout, mostrar loading
-  if (loading && !timeoutReached) {
+  if (shouldShowLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500'>
         <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
@@ -48,16 +65,13 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     );
   }
 
-  // Si ha pasado el timeout o no está cargando, verificar usuario
-  if (timeoutReached || !loading) {
-    console.log('Checking user after timeout or loading complete...');
-    
-    if (!user) {
+  if (shouldCheckUser) {
+    if (!authState.hasUser) {
       console.log('No user, redirecting to login');
       return <Navigate to='/login' replace />;
     }
 
-    if (user.role !== 'psychologist') {
+    if (authState.userRole !== 'psychologist') {
       console.log('User is not psychologist, redirecting to dashboard');
       return <Navigate to='/dashboard' replace />;
     }
@@ -66,8 +80,7 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     return <>{children}</>;
   }
 
-  // Fallback - no debería llegar aquí
-  console.log('Fallback case reached');
+  // Fallback
   return <Navigate to='/login' replace />;
 };
 

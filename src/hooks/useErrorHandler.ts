@@ -36,7 +36,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
     return `error_${Date.now()}_${++errorIdCounter.current}`;
   }, []);
 
-  // Agregar error
+  // Agregar error con protección contra bucles
   const addError = useCallback(
     (
       message: string,
@@ -46,6 +46,14 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       retryable = false,
       retryAction?: () => void
     ) => {
+      // Protección contra bucles infinitos
+      if (message.includes('Cannot read properties of undefined') && 
+          message.includes('reading') && 
+          message.includes('add')) {
+        console.warn('Error de bucle infinito detectado, ignorando:', message);
+        return 'ignored';
+      }
+
       const errorId = generateErrorId();
       const newError: ErrorInfo = {
         id: errorId,
