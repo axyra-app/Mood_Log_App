@@ -10,6 +10,7 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
   const { user, loading } = useAuth();
   const [timeoutReached, setTimeoutReached] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
+  const [hasRendered, setHasRendered] = useState(false);
 
   // Timeout para evitar carga infinita
   useEffect(() => {
@@ -25,7 +26,14 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     const info = `Loading: ${loading}, User: ${!!user}, Role: ${user?.role}, Timeout: ${timeoutReached}`;
     setDebugInfo(info);
     console.log('ProtectedRoutePsychologist Debug:', info);
-  }, [loading, user, timeoutReached]);
+  }, [loading, user?.uid, user?.role, timeoutReached]);
+
+  // Prevenir re-renderizado excesivo
+  useEffect(() => {
+    if (!loading && user && !hasRendered) {
+      setHasRendered(true);
+    }
+  }, [loading, user, hasRendered]);
 
   // Si ha pasado el timeout, mostrar el contenido independientemente del loading
   if (timeoutReached) {

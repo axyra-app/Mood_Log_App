@@ -91,13 +91,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 phone: userData.phone,
                 cvUrl: userData.cvUrl,
               };
-              
+
               // Verificar si es un usuario de Google que necesita completar perfil
               const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
               if (isGoogleUser && (!userData.displayName || !userData.role)) {
                 console.log('Google user needs to complete profile');
-                // No establecer el usuario para forzar redirección a completar perfil
-                if (isMounted) setUser(null);
+                // Establecer el usuario con datos básicos para evitar bucle infinito
+                const basicUserData: User = {
+                  uid: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+                  username: firebaseUser.email?.split('@')[0],
+                  role: 'user', // Rol por defecto
+                };
+                if (isMounted) setUser(basicUserData);
               } else {
                 if (isMounted) setUser(userDataWithAuth);
               }
@@ -111,14 +118,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
               };
-              
+
               try {
                 await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData);
                 console.log('Perfil básico creado para usuario de Google');
               } catch (error) {
                 console.error('Error creando perfil básico:', error);
               }
-              
+
               // Crear usuario básico para el estado
               const userDataWithAuth: User = {
                 uid: firebaseUser.uid,
@@ -262,7 +269,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       // Para registro con Google, siempre crear perfil básico y redirigir a completar perfil
       const basicUserData = {
         email: result.user.email,
@@ -272,14 +279,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      
+
       try {
         await setDoc(doc(db, 'users', result.user.uid), basicUserData);
         console.log('Perfil básico creado para registro con Google');
       } catch (error) {
         console.error('Error creando perfil básico:', error);
       }
-      
+
       // Crear usuario básico para el estado
       const userDataWithAuth: User = {
         uid: result.user.uid,
@@ -346,7 +353,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           };
-          
+
           await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
           console.log('Perfil de psicólogo actualizado exitosamente');
         } catch (psychologistError) {

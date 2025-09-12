@@ -105,7 +105,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
           error.retryAction();
           removeError(errorId);
         } catch (retryError) {
-          addError('Error al reintentar la acción', 'error', 'RetryError', retryError);
+          console.error('Error al reintentar la acción:', retryError);
         }
       }
     },
