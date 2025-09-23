@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ErrorBoundaryWrapper from './ErrorBoundaryWrapper';
 
 interface ProtectedRoutePsychologistProps {
   children: React.ReactNode;
@@ -10,6 +11,8 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
   const { user, loading } = useAuth();
   const [forceResolve, setForceResolve] = useState(false);
   const [renderCount, setRenderCount] = useState(0);
+  const [isResolved, setIsResolved] = useState(false);
+  const hasResolvedRef = useRef(false);
 
   // Contador de renders para detectar bucles
   useEffect(() => {
@@ -17,33 +20,40 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     console.log(`ProtectedRoutePsychologist render #${renderCount + 1}`);
   });
 
-  // Forzar resolución después de 5 segundos o 20 renders
+  // Forzar resolución después de 3 segundos o 15 renders
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log('Forzando resolución del loading...');
-      setForceResolve(true);
-    }, 5000);
+      if (!hasResolvedRef.current) {
+        console.log('Forzando resolución del loading...');
+        setForceResolve(true);
+        setIsResolved(true);
+        hasResolvedRef.current = true;
+      }
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
 
   // Detectar bucle infinito
   useEffect(() => {
-    if (renderCount > 20) {
+    if (renderCount > 15 && !hasResolvedRef.current) {
       console.error('Bucle infinito detectado, forzando resolución');
       setForceResolve(true);
+      setIsResolved(true);
+      hasResolvedRef.current = true;
     }
   }, [renderCount]);
 
   // Lógica simplificada
-  const shouldShowLoading = loading && !forceResolve;
-  const shouldCheckUser = forceResolve || !loading;
+  const shouldShowLoading = loading && !forceResolve && !isResolved;
+  const shouldCheckUser = forceResolve || !loading || isResolved;
 
   console.log('ProtectedRoutePsychologist state:', {
     loading,
     hasUser: !!user,
     userRole: user?.role,
     forceResolve,
+    isResolved,
     renderCount
   });
 
@@ -71,7 +81,21 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     }
 
     console.log('User is psychologist, showing content');
-    return <>{children}</>;
+    // Usar ErrorBoundaryWrapper para capturar errores del componente Gr
+    return (
+      <ErrorBoundaryWrapper
+        fallback={
+          <div className='min-h-screen flex items-center justify-center bg-red-500'>
+            <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
+              <p className='text-white text-lg font-semibold'>Error cargando el dashboard</p>
+              <p className='text-white/70 text-sm mt-2'>Por favor, recarga la página</p>
+            </div>
+          </div>
+        }
+      >
+        {children}
+      </ErrorBoundaryWrapper>
+    );
   }
 
   // Fallback
