@@ -59,6 +59,17 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [forceLoadingFalse, setForceLoadingFalse] = useState(false);
+
+  // Timeout de seguridad para forzar loading = false
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('AuthContext: Timeout alcanzado, forzando loading = false');
+      setForceLoadingFalse(true);
+    }, 8000); // 8 segundos
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -162,7 +173,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Error in auth state change:', error);
         if (isMounted) setUser(null);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          console.log('AuthContext: Setting loading to false');
+          setLoading(false);
+        }
       }
     });
 
@@ -379,9 +393,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Usar el timeout forzado si es necesario
+  const effectiveLoading = forceLoadingFalse ? false : loading;
+
   const value: AuthContextType = {
     user,
-    loading,
+    loading: effectiveLoading,
     signIn,
     signUp,
     signInWithGoogle,

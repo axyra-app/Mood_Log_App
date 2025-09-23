@@ -47,9 +47,11 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       retryAction?: () => void
     ) => {
       // Protección contra bucles infinitos
-      if (message.includes('Cannot read properties of undefined') && 
-          message.includes('reading') && 
-          message.includes('add')) {
+      if (
+        message.includes('Cannot read properties of undefined') &&
+        message.includes('reading') &&
+        message.includes('add')
+      ) {
         console.warn('Error de bucle infinito detectado, ignorando:', message);
         return 'ignored';
       }
