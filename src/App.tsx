@@ -10,12 +10,19 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 
 // Pages
+import Chat from './pages/Chat';
+import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologistSimple from './pages/DashboardPsychologistSimple';
 import DashboardSimple from './pages/DashboardSimple';
+import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
+import PrivacySimple from './pages/PrivacySimple';
 import RegisterSimple from './pages/RegisterSimple';
+import Settings from './pages/Settings';
+import Statistics from './pages/Statistics';
+import TermsSimple from './pages/TermsSimple';
 
 function App() {
   return (
@@ -28,6 +35,10 @@ function App() {
               <Route path='/' element={<HomeSimple />} />
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
+              <Route path='/complete-profile' element={<CompleteProfile />} />
+              <Route path='/forgot-password' element={<ForgotPassword />} />
+              <Route path='/terms' element={<TermsSimple />} />
+              <Route path='/privacy' element={<PrivacySimple />} />
 
               {/* Protected routes */}
               <Route
@@ -51,6 +62,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MoodFlowSimple />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/statistics'
+                element={
+                  <ProtectedRoute>
+                    <Statistics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/chat'
+                element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/settings'
+                element={
+                  <ProtectedRoute>
+                    <Settings />
                   </ProtectedRoute>
                 }
               />

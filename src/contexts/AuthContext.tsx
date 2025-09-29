@@ -9,7 +9,9 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { analyticsEvents } from '../services/analytics';
 import { auth, db } from '../services/firebase';
+import { getAuthErrorMessage, getGoogleSignInErrorMessage, getRegistrationErrorMessage } from '../utils/errorMessages';
 
 interface User {
   uid: string;
@@ -73,7 +75,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (!isMounted) return;
-
 
       try {
         if (firebaseUser) {
@@ -178,6 +179,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
+      // Trackear login exitoso
+      analyticsEvents.userLogin('email');
     } catch (error: any) {
       setLoading(false);
       throw new Error(getAuthErrorMessage(error));
@@ -216,6 +219,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
+      // Trackear registro exitoso
+      analyticsEvents.userSignUp('email');
 
       // Si es psicólogo, también crear en la colección de psicólogos
       if (role === 'psychologist') {
@@ -251,7 +256,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('Ya existe una cuenta con este email. ¿Quieres iniciar sesión?');
       }
-      throw new Error('Error al registrar usuario');
+      throw new Error(getRegistrationErrorMessage(error));
     }
   };
 
@@ -264,7 +269,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
       setLoading(false);
-      throw new Error('Error al iniciar sesión con Google');
+      throw new Error(getGoogleSignInErrorMessage(error));
     }
   };
 
@@ -299,9 +304,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: 'user',
       };
       setUser(userDataWithAuth);
+      analyticsEvents.userSignUp('google');
     } catch (error: any) {
       console.error('Google Sign-Up Error:', error);
-      throw new Error('Error al registrarse con Google');
+      throw new Error(getGoogleSignInErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -311,9 +317,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await signOut(auth);
+      // Trackear logout
+      analyticsEvents.userLogout();
     } catch (error: any) {
       setLoading(false);
-      throw new Error('Error al cerrar sesión');
+      throw new Error(getAuthErrorMessage(error));
     }
   };
 
@@ -365,7 +373,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser((prev) => (prev ? { ...prev, ...updates } : null));
     } catch (error: any) {
       console.error('Error updating user profile:', error);
-      throw new Error('Error al actualizar perfil');
+      throw new Error(getAuthErrorMessage(error));
     }
   };
 
