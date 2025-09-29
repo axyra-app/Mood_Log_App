@@ -36,6 +36,19 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: false,
     minify: 'esbuild',
+    rollupOptions: {
+      external: [],
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+          ui: ['lucide-react', 'framer-motion'],
+          charts: ['recharts'],
+          utils: ['date-fns', 'react-hot-toast'],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
