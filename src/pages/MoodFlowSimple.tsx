@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useOptimizedMood } from '../hooks/useOptimizedMood';
+import { useMood } from '../hooks/useMood';
 import LogoutModal from '../components/LogoutModal';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
-  const { createMoodLog, loading: moodLoading, error: moodError } = useOptimizedMood();
+  const { createMoodLog, loading: moodLoading, error: moodError } = useMood();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);

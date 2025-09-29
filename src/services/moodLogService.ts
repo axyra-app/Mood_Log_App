@@ -15,7 +15,6 @@ import {
 } from 'firebase/firestore';
 import { MoodLog } from '../types';
 import { db } from './firebase';
-import { analyzeMoodWithAI } from './aiService';
 
 // Mood Log Management Functions
 export const createMoodLog = async (moodData: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
@@ -114,16 +113,12 @@ export const createMoodLogWithAI = async (
   moodData: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt' | 'aiAnalysis'>
 ): Promise<string> => {
   try {
-    // Generate AI analysis
-    const aiAnalysis = await analyzeMoodWithAI({
-      mood: moodData.mood,
-      energy: moodData.energy,
-      stress: moodData.stress,
-      sleep: moodData.sleep,
-      notes: moodData.notes,
-      activities: moodData.activities,
-      emotions: moodData.emotions,
-    });
+    // Simple analysis without AI
+    const aiAnalysis = {
+      insights: ['Análisis básico disponible'],
+      recommendations: ['Continúa registrando tu estado de ánimo'],
+      patterns: ['Patrón básico detectado']
+    };
 
     // Create mood log with AI analysis
     const moodLogsRef = collection(db, 'moodLogs');

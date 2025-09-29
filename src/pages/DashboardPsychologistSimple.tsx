@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
 
 const DashboardPsychologistSimple: React.FC = () => {
@@ -297,10 +296,6 @@ const DashboardPsychologistSimple: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <SEO 
-        title="Dashboard Psicólogo - Mood Log App"
-        description="Panel de control para psicólogos - Gestión de pacientes y seguimiento del estado de ánimo"
-      />
       
       {/* Header */}
       <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b`}>

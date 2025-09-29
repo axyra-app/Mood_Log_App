@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import ErrorBoundaryWrapper from './ErrorBoundaryWrapper';
+import ErrorBoundary from './ErrorBoundary';
 
 interface ProtectedRoutePsychologistProps {
   children: React.ReactNode;
@@ -81,20 +81,11 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
     }
 
     console.log('User is psychologist, showing content');
-    // Usar ErrorBoundaryWrapper para capturar errores del componente Gr
+    // Usar ErrorBoundary para capturar errores del componente
     return (
-      <ErrorBoundaryWrapper
-        fallback={
-          <div className='min-h-screen flex items-center justify-center bg-red-500'>
-            <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
-              <p className='text-white text-lg font-semibold'>Error cargando el dashboard</p>
-              <p className='text-white/70 text-sm mt-2'>Por favor, recarga la página</p>
-            </div>
-          </div>
-        }
-      >
+      <ErrorBoundary>
         {children}
-      </ErrorBoundaryWrapper>
+      </ErrorBoundary>
     );
   }
 

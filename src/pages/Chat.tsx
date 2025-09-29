@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserChats } from '../services/firestore';
 import { Chat as ChatType, ChatMessage, Psychologist } from '../types';
@@ -238,11 +237,6 @@ const Chat: React.FC = () => {
 
   return (
     <>
-      <SEO
-        title='Chat - Mood Log App'
-        description='Conecta con psicólogos profesionales para apoyo emocional'
-        keywords='chat, psicólogos, apoyo emocional, terapia online'
-      />
 
       <div className='min-h-screen bg-gray-50'>
         {/* Header */}
