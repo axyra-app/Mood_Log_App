@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { PERFORMANCE_CONFIG, BUNDLE_CONFIG } from './src/config/performance';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -41,18 +42,21 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
           ui: ['lucide-react', 'framer-motion'],
           charts: ['recharts'],
           ai: ['openai'],
-          utils: ['date-fns', 'react-hook-form'],
+          utils: ['date-fns', 'react-hook-form', 'react-hot-toast'],
+          analytics: ['@tanstack/react-query', '@sentry/react'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: BUNDLE_CONFIG.maxChunkSize,
+    target: 'esnext',
+    cssCodeSplit: true,
   },
   server: {
     port: 3000,
