@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 email: firebaseUser.email,
                 displayName: userData.displayName || firebaseUser.displayName,
                 username: userData.username,
-                role: userData.role || 'user',
+                role: userData.role,
                 createdAt: userData.createdAt,
                 updatedAt: userData.updatedAt,
                 // Campos profesionales para psicólogos
@@ -370,7 +370,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Actualizar el estado local sin recargar
-      setUser((prev) => (prev ? { ...prev, ...updates } : null));
+      setUser((prev) => {
+        const updatedUser = prev ? { ...prev, ...updates } : null;
+        console.log('User profile updated:', updatedUser);
+        return updatedUser;
+      });
     } catch (error: any) {
       console.error('Error updating user profile:', error);
       throw new Error(getAuthErrorMessage(error));

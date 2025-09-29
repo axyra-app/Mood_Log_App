@@ -1,6 +1,6 @@
-# 🧠 Mood Log App - Dashboard para Psicólogos
+# 🧠 Mood Log App
 
-Una aplicación completa de seguimiento emocional con dashboard profesional para psicólogos, construida con React, TypeScript, Firebase y Tailwind CSS.
+Una aplicación completa de seguimiento emocional con dashboard profesional para psicólogos, construida de manera robusta pero simple con React, TypeScript, Firebase y Tailwind CSS.
 
 ## ✨ Características Principales
 
