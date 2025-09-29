@@ -1,71 +1,33 @@
-import React, { useEffect } from 'react';
-import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
-import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 
 // Pages
-import Chat from './pages/Chat';
-import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologistSimple from './pages/DashboardPsychologistSimple';
 import DashboardSimple from './pages/DashboardSimple';
-import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
-import PrivacySimple from './pages/PrivacySimple';
 import RegisterSimple from './pages/RegisterSimple';
-import Settings from './pages/Settings';
-import Statistics from './pages/Statistics';
-import TermsSimple from './pages/TermsSimple';
-
-// Analytics
-import { analyticsEvents, initializeAnalytics } from './services/analytics';
-
-// Debug (solo en desarrollo)
-import DebugInfo from './components/DebugInfo';
-
-// Componente para trackear cambios de ruta
-const AnalyticsTracker = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    // Trackear cada cambio de página
-    const pageName = location.pathname === '/' ? 'Home' : location.pathname.substring(1);
-    analyticsEvents.pageView(pageName, location.pathname);
-  }, [location]);
-
-  return null;
-};
 
 function App() {
-  useEffect(() => {
-    // Inicializar analytics cuando la app se carga
-    initializeAnalytics();
-  }, []);
   return (
     <ErrorBoundary>
       <AuthProvider>
         <Router>
           <div className='App'>
-            <AnalyticsTracker />
-            <PWAInstallPrompt />
-            <DebugInfo />
             <Routes>
               {/* Public routes */}
               <Route path='/' element={<HomeSimple />} />
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
-              <Route path='/complete-profile' element={<CompleteProfile />} />
-              <Route path='/forgot-password' element={<ForgotPassword />} />
-              <Route path='/terms' element={<TermsSimple />} />
-              <Route path='/privacy' element={<PrivacySimple />} />
 
               {/* Protected routes */}
               <Route
@@ -89,30 +51,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MoodFlowSimple />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/statistics'
-                element={
-                  <ProtectedRoute>
-                    <Statistics />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/chat'
-                element={
-                  <ProtectedRoute>
-                    <Chat />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/settings'
-                element={
-                  <ProtectedRoute>
-                    <Settings />
                   </ProtectedRoute>
                 }
               />

@@ -9,10 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { analyticsEvents } from '../services/analytics';
 import { auth, db } from '../services/firebase';
-import { getAuthErrorMessage, getGoogleSignInErrorMessage, getRegistrationErrorMessage } from '../utils/errorMessages';
-import { logError } from '../utils/logger';
 
 interface User {
   uid: string;
@@ -133,7 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               try {
                 await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData);
               } catch (error) {
-                logError('Error creando perfil básico', error);
+                console.error('Error creando perfil básico:', error);
               }
 
               // Crear usuario básico para el estado
@@ -147,7 +144,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               if (isMounted) setUser(userDataWithAuth);
             }
           } catch (error) {
-            logError('Error loading user profile', error);
+            console.error('Error loading user profile:', error);
             // En caso de error, usar datos básicos de Firebase Auth
             const userData: User = {
               uid: firebaseUser.uid,
@@ -162,7 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (isMounted) setUser(null);
         }
       } catch (error) {
-        logError('Error in auth state change', error);
+        console.error('Error in auth state change:', error);
         if (isMounted) setUser(null);
       } finally {
         if (isMounted) {
@@ -181,8 +178,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
-      // Trackear login exitoso
-      analyticsEvents.userLogin('email');
     } catch (error: any) {
       setLoading(false);
       throw new Error(getAuthErrorMessage(error));
@@ -221,8 +216,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
-      // Trackear registro exitoso
-      analyticsEvents.userSignUp('email');
 
       // Si es psicólogo, también crear en la colección de psicólogos
       if (role === 'psychologist') {
@@ -246,7 +239,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
           await setDoc(doc(db, 'psychologists', userCredential.user.uid), psychologistData);
         } catch (psychologistError) {
-          logError('Error creando perfil de psicólogo', psychologistError);
+          console.error('Error creando perfil de psicólogo:', psychologistError);
           // No lanzar error aquí para no interrumpir el registro del usuario
         }
       }
@@ -258,7 +251,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('Ya existe una cuenta con este email. ¿Quieres iniciar sesión?');
       }
-      throw new Error(getRegistrationErrorMessage(error));
+      throw new Error('Error al registrar usuario');
     }
   };
 
@@ -269,9 +262,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signInWithPopup(auth, provider);
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
-      logError('Google Sign-In Error', error);
+      console.error('Google Sign-In Error:', error);
       setLoading(false);
-      throw new Error(getGoogleSignInErrorMessage(error));
+      throw new Error('Error al iniciar sesión con Google');
     }
   };
 
@@ -294,7 +287,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         await setDoc(doc(db, 'users', result.user.uid), basicUserData);
       } catch (error) {
-        logError('Error creando perfil básico', error);
+        console.error('Error creando perfil básico:', error);
       }
 
       // Crear usuario básico para el estado
@@ -306,10 +299,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: 'user',
       };
       setUser(userDataWithAuth);
-      analyticsEvents.userSignUp('google');
     } catch (error: any) {
-      logError('Google Sign-Up Error', error);
-      throw new Error(getGoogleSignInErrorMessage(error));
+      console.error('Google Sign-Up Error:', error);
+      throw new Error('Error al registrarse con Google');
     } finally {
       setLoading(false);
     }
@@ -319,11 +311,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       await signOut(auth);
-      // Trackear logout
-      analyticsEvents.userLogout();
     } catch (error: any) {
       setLoading(false);
-      throw new Error(getAuthErrorMessage(error));
+      throw new Error('Error al cerrar sesión');
     }
   };
 
@@ -366,7 +356,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
         } catch (psychologistError) {
-          logError('Error actualizando perfil de psicólogo', psychologistError);
+          console.error('Error actualizando perfil de psicólogo:', psychologistError);
           // No lanzar error aquí para no interrumpir la actualización del usuario
         }
       }
@@ -374,8 +364,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Actualizar el estado local sin recargar
       setUser((prev) => (prev ? { ...prev, ...updates } : null));
     } catch (error: any) {
-      logError('Error updating user profile', error);
-      throw new Error(getAuthErrorMessage(error));
+      console.error('Error updating user profile:', error);
+      throw new Error('Error al actualizar perfil');
     }
   };
 
