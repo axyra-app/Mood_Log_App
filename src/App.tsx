@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import React, { Suspense, useEffect } from 'react';
 import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
-=======
-import React from 'react';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
->>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -18,7 +13,6 @@ import UserDebugInfo from './components/UserDebugInfo';
 // Lazy loading de páginas para optimizar bundle
 import { LazyPages } from './hooks/useBundleOptimization';
 
-<<<<<<< HEAD
 // Analytics
 import { analyticsEvents, initializeAnalytics } from './services/analytics';
 
@@ -47,15 +41,18 @@ const AnalyticsTracker = () => {
 
   return null;
 };
-
-=======
->>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 function App() {
+  useEffect(() => {
+    // Inicializar analytics cuando la app se carga
+    initializeAnalytics();
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>
         <Router>
           <div className='App'>
+            <AnalyticsTracker />
             <UserDebugInfo />
             <Routes>
               {/* Public routes */}

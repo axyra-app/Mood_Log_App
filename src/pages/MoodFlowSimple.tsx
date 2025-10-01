@@ -1,26 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import CrisisAlert from '../components/CrisisAlert';
-=======
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
->>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
+import CrisisAlert from '../components/CrisisAlert';
 import LogoutModal from '../components/LogoutModal';
 import MoodAnalysisPanel from '../components/mood/MoodAnalysisPanel';
-import { useAuth } from '../contexts/AuthContext';
-import { useCrisisDetection } from '../hooks/useCrisisDetection';
-import { useOptimizedMood } from '../hooks/useOptimizedMood';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
-<<<<<<< HEAD
-  const { createMoodLog, loading: moodLoading, error: moodError } = useOptimizedMood();
-  const { currentAssessment, assessMoodData, dismissAlert, contactPsychologist, emergencyContact } =
-    useCrisisDetection();
-=======
   const { createMoodLog, loading: moodLoading, error: moodError } = useMood();
->>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
@@ -49,42 +37,19 @@ const MoodFlowSimple: React.FC = () => {
   ];
 
   const activityOptions = [
-    'Ejercicio',
-    'Trabajo',
-    'Estudio',
-    'Social',
-    'Relajación',
-    'Hobby',
-    'Familia',
-    'Música',
-    'Lectura',
-    'Naturaleza',
+    'Ejercicio', 'Trabajo', 'Estudio', 'Socializar', 'Descansar',
+    'Cocinar', 'Leer', 'Ver películas', 'Música', 'Pasear',
+    'Meditar', 'Jugar', 'Compras', 'Limpieza', 'Otro'
   ];
 
   const emotionOptions = [
-    'Felicidad',
-    'Tristeza',
-    'Ansiedad',
-    'Tranquilidad',
-    'Enojo',
-    'Gratitud',
-    'Miedo',
-    'Esperanza',
-    'Frustración',
-    'Paz',
+    'Felicidad', 'Tristeza', 'Ansiedad', 'Enojo', 'Miedo',
+    'Calma', 'Excitación', 'Frustración', 'Gratitud', 'Soledad',
+    'Amor', 'Esperanza', 'Desesperación', 'Orgullo', 'Vergüenza'
   ];
 
   useEffect(() => {
     setIsLoaded(true);
-    // Reset form when component mounts
-    setCurrentMood(null);
-    setFeelings('');
-    setActivities([]);
-    setEmotions([]);
-    setEnergy(5);
-    setStress(5);
-    setSleep(5);
-    setStep(1);
   }, []);
 
   const toggleDarkMode = () => {
@@ -96,24 +61,24 @@ const MoodFlowSimple: React.FC = () => {
     setStep(2);
   };
 
-  const handleActivityToggle = (activity: string) => {
-    setActivities((prev) => (prev.includes(activity) ? prev.filter((a) => a !== activity) : [...prev, activity]));
+  const handleFeelingsSubmit = () => {
+    if (feelings.trim()) {
+      setStep(3);
+    }
   };
 
-  const handleEmotionToggle = (emotion: string) => {
-    setEmotions((prev) => (prev.includes(emotion) ? prev.filter((e) => e !== emotion) : [...prev, emotion]));
+  const handleAdditionalDetailsSubmit = () => {
+    setStep(4);
   };
 
-  const handleFeelingsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentMood) return;
+  const handleSubmit = async () => {
+    if (!currentMood || !feelings.trim()) return;
 
     setLoading(true);
-
     try {
-      const moodData = {
+      const moodLogData = {
         mood: currentMood,
-        notes: feelings,
+        description: feelings,
         activities,
         emotions,
         energy,
@@ -121,492 +86,282 @@ const MoodFlowSimple: React.FC = () => {
         sleep,
       };
 
-      // Crear el mood log
-      await createMoodLog(moodData);
-
-      // Evaluar crisis después de guardar
-      await assessMoodData(moodData);
-
-      // Guardar datos para análisis y mostrar panel de análisis
-      setMoodData(moodData);
+      const result = await createMoodLog(moodLogData);
+      setMoodData(result);
       setShowAnalysis(true);
-      setStep(4);
     } catch (error) {
-      console.error('Error saving mood:', error);
-      alert('Error al guardar el mood. Inténtalo de nuevo.');
+      console.error('Error creating mood log:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSkipFeelings = async () => {
-    if (!currentMood) return;
-
-    setLoading(true);
-
-    try {
-      const moodData = {
-        mood: currentMood,
-        notes: '',
-        activities,
-        emotions,
-        energy,
-        stress,
-        sleep,
-      };
-
-      await createMoodLog(moodData);
-
-      // Mostrar mensaje de éxito y redirigir
-      alert('¡Estado de ánimo guardado exitosamente!');
-      // Redirigir al dashboard del usuario según su rol
-      if (user?.role === 'psychologist') {
-        navigate('/dashboard-psychologist');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error('Error saving mood:', error);
-      alert('Error al guardar el mood. Inténtalo de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogoutClick = () => {
-    setShowLogoutModal(true);
-  };
-
-  const handleLogoutConfirm = async () => {
+  const handleLogout = async () => {
     setLogoutLoading(true);
     try {
       await logout();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('Error logging out:', error);
     } finally {
       setLogoutLoading(false);
       setShowLogoutModal(false);
     }
   };
 
-  const handleLogoutCancel = () => {
-    setShowLogoutModal(false);
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
+  const toggleActivity = (activity: string) => {
+    setActivities(prev => 
+      prev.includes(activity) 
+        ? prev.filter(a => a !== activity)
+        : [...prev, activity]
+    );
+  };
+
+  const toggleEmotion = (emotion: string) => {
+    setEmotions(prev => 
+      prev.includes(emotion) 
+        ? prev.filter(e => e !== emotion)
+        : [...prev, emotion]
+    );
   };
 
   if (!isLoaded) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900' : 'bg-white'
-        }`}
-      >
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600'></div>
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className='flex flex-col items-center space-y-4'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600'></div>
+          <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Cargando...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      {/* Header */}
-      <header
-        className={`py-6 px-6 transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
-        } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
-      >
-        <div className='max-w-7xl mx-auto flex items-center justify-between'>
-          <Link to='/' className='flex items-center space-x-3 group'>
-            <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
-              <span className='text-white font-black text-lg'>💜</span>
-            </div>
-            <span
-              className={`text-2xl font-black transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              MOOD LOG
-            </span>
-          </Link>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Crisis Alert */}
+      <CrisisAlert />
 
-          <div className='flex items-center space-x-4'>
-            <button
-              onClick={toggleDarkMode}
-              className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-                isDarkMode
-                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {isDarkMode ? '☀️' : '🌙'}
-            </button>
-            <Link
-              to='/dashboard'
-              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 ${
-                isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <button
-              onClick={handleLogoutClick}
-              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 flex items-center space-x-2 ${
-                isDarkMode
-                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg hover:shadow-red-500/25'
-                  : 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg hover:shadow-red-500/25'
-              }`}
-            >
-              <span>🚪</span>
-              <span>Cerrar Sesión</span>
-            </button>
+      {/* Header */}
+      <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex justify-between items-center h-16'>
+            <div className='flex items-center'>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                🧠 Mood Log
+              </h1>
+            </div>
+
+            <div className='flex items-center space-x-4'>
+              {/* Modo oscuro */}
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-lg ${isDarkMode ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+
+              {/* Logout */}
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className={`p-2 rounded-lg ${isDarkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-100'}`}
+              >
+                🚪
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className='max-w-4xl mx-auto px-6 py-12'>
-        {/* Progress Indicator */}
-        <div className='mb-8'>
-          <div className='flex items-center justify-center space-x-4'>
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-                step >= 1
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                  : isDarkMode
-                  ? 'bg-gray-700 text-gray-400'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              1
+      {/* Progress Indicator */}
+      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
+        <div className='flex items-center justify-center space-x-4'>
+          {[1, 2, 3, 4].map((stepNumber) => (
+            <div key={stepNumber} className='flex items-center'>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  step >= stepNumber
+                    ? 'bg-purple-600 text-white'
+                    : isDarkMode
+                    ? 'bg-gray-700 text-gray-400'
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {stepNumber}
+              </div>
+              {stepNumber < 4 && (
+                <div
+                  className={`w-12 h-1 mx-2 ${
+                    step > stepNumber
+                      ? 'bg-purple-600'
+                      : isDarkMode
+                      ? 'bg-gray-700'
+                      : 'bg-gray-200'
+                  }`}
+                />
+              )}
             </div>
-            <div
-              className={`w-16 h-1 transition-all duration-300 ${
-                step >= 2 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-              }`}
-            ></div>
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-                step >= 2
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                  : isDarkMode
-                  ? 'bg-gray-700 text-gray-400'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              2
-            </div>
-            <div
-              className={`w-16 h-1 transition-all duration-300 ${
-                step >= 3 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-              }`}
-            ></div>
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-                step >= 3
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                  : isDarkMode
-                  ? 'bg-gray-700 text-gray-400'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              3
-            </div>
-            <div
-              className={`w-16 h-1 transition-all duration-300 ${
-                step >= 4 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-              }`}
-            ></div>
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-                step >= 4
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                  : isDarkMode
-                  ? 'bg-gray-700 text-gray-400'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              4
-            </div>
-          </div>
-          <div className='text-center mt-4'>
-            <p
-              className={`text-lg font-bold transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              {step === 1
-                ? 'PASO 1: SELECCIONA TU ESTADO DE ÁNIMO'
-                : step === 2
-                ? 'PASO 2: DESCRIBE TUS SENTIMIENTOS'
-                : step === 3
-                ? 'PASO 3: DETALLES ADICIONALES'
-                : 'PASO 4: ANÁLISIS COMPLETO'}
-            </p>
-          </div>
+          ))}
         </div>
+        <div className='text-center mt-2'>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {step === 1 && 'Selecciona tu estado de ánimo'}
+            {step === 2 && 'Describe tus sentimientos'}
+            {step === 3 && 'Detalles adicionales'}
+            {step === 4 && 'Análisis completo'}
+          </p>
+        </div>
+      </div>
 
+      {/* Main Content */}
+      <main className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+        {/* Step 1: Mood Selection */}
         {step === 1 && (
-          /* Step 1: Mood Selection */
-          <div className='text-center'>
-            <h1
-              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              ¿CÓMO TE SIENTES HOY?
-            </h1>
-            <p
-              className={`text-xl mb-12 transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}
-            >
-              Selecciona el emoji que mejor represente tu estado de ánimo actual
-            </p>
-
-            <div className='grid grid-cols-1 md:grid-cols-5 gap-6 mb-12'>
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-8`}>
+            <h2 className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-8`}>
+              ¿Cómo te sientes hoy?
+            </h2>
+            <div className='grid grid-cols-1 sm:grid-cols-5 gap-4'>
               {moodEmojis.map((emoji, index) => (
                 <button
                   key={index}
                   onClick={() => handleMoodSelect(index + 1)}
-                  className={`p-8 rounded-2xl border-4 transition-all duration-300 hover:scale-105 ${
+                  className={`p-6 rounded-xl border-2 transition-all hover:scale-105 ${
                     currentMood === index + 1
-                      ? `bg-gradient-to-r ${moodColors[index]} border-transparent scale-110 shadow-2xl`
-                      : `border-transparent hover:border-purple-500 ${
-                          isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
-                        }`
+                      ? 'border-purple-500 bg-purple-50'
+                      : isDarkMode
+                      ? 'border-gray-600 hover:border-gray-500 hover:bg-gray-700'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <div className='text-6xl mb-4'>{emoji}</div>
-                  <p
-                    className={`text-lg font-bold transition-colors duration-500 ${
-                      currentMood === index + 1 ? 'text-white' : isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {moodLabels[index]}
-                  </p>
+                  <div className='text-center'>
+                    <div className='text-6xl mb-4'>{emoji}</div>
+                    <div className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {moodLabels[index]}
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
-
-            {currentMood && (
-              <div
-                className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                }`}
-              >
-                <p
-                  className={`text-xl font-bold transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  Seleccionaste: {moodLabels[currentMood - 1]} {moodEmojis[currentMood - 1]}
-                </p>
-                <p
-                  className={`text-lg mt-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}
-                >
-                  ¡Perfecto! Ahora puedes describir cómo te sientes (opcional)
-                </p>
-              </div>
-            )}
           </div>
         )}
 
+        {/* Step 2: Feelings Description */}
         {step === 2 && (
-          /* Step 2: Feelings Description */
-          <div className='text-center'>
-            <h1
-              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              DESCRIBE TUS SENTIMIENTOS
-            </h1>
-            <p
-              className={`text-xl mb-8 transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}
-            >
-              Cuéntanos más sobre cómo te sientes. La IA analizará tus palabras y te dará sugerencias personalizadas.
-            </p>
-
-            <div
-              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-              }`}
-            >
-              <div className='flex items-center justify-center space-x-4 mb-4'>
-                <div className='text-4xl'>{moodEmojis[currentMood! - 1]}</div>
-                <div>
-                  <p
-                    className={`text-2xl font-bold transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {moodLabels[currentMood! - 1]}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setStep(3);
-              }}
-              className='max-w-2xl mx-auto'
-            >
-              <textarea
-                value={feelings}
-                onChange={(e) => setFeelings(e.target.value)}
-                placeholder='Describe cómo te sientes hoy... ¿Qué está pasando en tu vida? ¿Qué emociones experimentas? ¿Hay algo específico que te preocupa o te hace feliz?'
-                className={`w-full h-48 p-6 rounded-2xl border-2 resize-none transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/50 ${
-                  isDarkMode
-                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-purple-500'
-                    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:border-purple-500'
-                }`}
-              />
-
-              <div className='flex flex-col sm:flex-row gap-4 mt-8'>
-                <button
-                  type='button'
-                  onClick={() => setStep(3)}
-                  className={`flex-1 py-4 px-8 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 ${
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-8`}>
+            <h2 className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-8`}>
+              Cuéntanos más sobre cómo te sientes
+            </h2>
+            <div className='space-y-6'>
+              <div>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Describe tus sentimientos y pensamientos
+                </label>
+                <textarea
+                  value={feelings}
+                  onChange={(e) => setFeelings(e.target.value)}
+                  placeholder='Escribe aquí cómo te sientes, qué pensamientos tienes, qué te preocupa o qué te hace feliz...'
+                  className={`w-full h-32 p-4 rounded-lg border ${
                     isDarkMode
-                      ? 'bg-gray-700 text-white hover:bg-gray-600'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  } focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                />
+              </div>
+              <div className='flex justify-between'>
+                <button
+                  onClick={() => setStep(1)}
+                  className={`px-6 py-3 rounded-lg font-medium ${
+                    isDarkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
-                  Omitir y Continuar
+                  ← Atrás
                 </button>
-
                 <button
-                  type='submit'
-                  className={`flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-lg uppercase tracking-wider py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50`}
+                  onClick={handleFeelingsSubmit}
+                  disabled={!feelings.trim()}
+                  className={`px-6 py-3 rounded-lg font-medium ${
+                    feelings.trim()
+                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      : isDarkMode
+                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
-                  Continuar
+                  Continuar →
                 </button>
               </div>
-            </form>
-
-            <div className='mt-8'>
-              <button
-                onClick={() => setStep(1)}
-                className={`text-lg font-bold transition-colors duration-300 hover:underline ${
-                  isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'
-                }`}
-              >
-                ← Volver a seleccionar mood
-              </button>
             </div>
           </div>
         )}
 
+        {/* Step 3: Additional Details */}
         {step === 3 && (
-          /* Step 3: Additional Details */
-          <div className='text-center'>
-            <h1
-              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              DETALLES ADICIONALES
-            </h1>
-            <p
-              className={`text-xl mb-8 transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}
-            >
-              Ayúdanos a entender mejor tu día con algunos detalles adicionales
-            </p>
-
-            {/* Activities */}
-            <div
-              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-              }`}
-            >
-              <h3
-                className={`text-2xl font-bold mb-4 transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}
-              >
-                ¿Qué actividades realizaste hoy?
-              </h3>
-              <div className='grid grid-cols-2 md:grid-cols-5 gap-3'>
-                {activityOptions.map((activity) => (
-                  <button
-                    key={activity}
-                    onClick={() => handleActivityToggle(activity)}
-                    className={`p-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
-                      activities.includes(activity)
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-transparent text-white'
-                        : isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white hover:border-purple-500'
-                        : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-purple-500'
-                    }`}
-                  >
-                    {activity}
-                  </button>
-                ))}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-8`}>
+            <h2 className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-8`}>
+              Detalles adicionales
+            </h2>
+            <div className='space-y-8'>
+              {/* Activities */}
+              <div>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-4`}>
+                  ¿Qué actividades realizaste hoy?
+                </label>
+                <div className='grid grid-cols-3 sm:grid-cols-5 gap-3'>
+                  {activityOptions.map((activity) => (
+                    <button
+                      key={activity}
+                      onClick={() => toggleActivity(activity)}
+                      className={`p-3 rounded-lg text-sm font-medium transition-all ${
+                        activities.includes(activity)
+                          ? 'bg-purple-600 text-white'
+                          : isDarkMode
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {activity}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Emotions */}
-            <div
-              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-              }`}
-            >
-              <h3
-                className={`text-2xl font-bold mb-4 transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}
-              >
-                ¿Qué emociones experimentaste?
-              </h3>
-              <div className='grid grid-cols-2 md:grid-cols-5 gap-3'>
-                {emotionOptions.map((emotion) => (
-                  <button
-                    key={emotion}
-                    onClick={() => handleEmotionToggle(emotion)}
-                    className={`p-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
-                      emotions.includes(emotion)
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-transparent text-white'
-                        : isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white hover:border-purple-500'
-                        : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-purple-500'
-                    }`}
-                  >
-                    {emotion}
-                  </button>
-                ))}
+              {/* Emotions */}
+              <div>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-4`}>
+                  ¿Qué emociones experimentaste?
+                </label>
+                <div className='grid grid-cols-3 sm:grid-cols-5 gap-3'>
+                  {emotionOptions.map((emotion) => (
+                    <button
+                      key={emotion}
+                      onClick={() => toggleEmotion(emotion)}
+                      className={`p-3 rounded-lg text-sm font-medium transition-all ${
+                        emotions.includes(emotion)
+                          ? 'bg-purple-600 text-white'
+                          : isDarkMode
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {emotion}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Energy, Stress, Sleep */}
-            <div
-              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-              }`}
-            >
-              <h3
-                className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}
-              >
-                Evalúa tu día
-              </h3>
-
-              <div className='space-y-6'>
-                {/* Energy */}
+              {/* Energy, Stress, Sleep */}
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
                 <div>
-                  <label
-                    className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    Nivel de Energía: {energy}/10
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Energía (1-10)
                   </label>
                   <input
                     type='range'
@@ -614,18 +369,18 @@ const MoodFlowSimple: React.FC = () => {
                     max='10'
                     value={energy}
                     onChange={(e) => setEnergy(Number(e.target.value))}
-                    className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider'
+                    className='w-full'
                   />
+                  <div className='text-center mt-1'>
+                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {energy}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Stress */}
                 <div>
-                  <label
-                    className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    Nivel de Estrés: {stress}/10
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Estrés (1-10)
                   </label>
                   <input
                     type='range'
@@ -633,18 +388,18 @@ const MoodFlowSimple: React.FC = () => {
                     max='10'
                     value={stress}
                     onChange={(e) => setStress(Number(e.target.value))}
-                    className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider'
+                    className='w-full'
                   />
+                  <div className='text-center mt-1'>
+                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {stress}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Sleep */}
                 <div>
-                  <label
-                    className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    Calidad del Sueño: {sleep}/10
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Calidad del sueño (1-10)
                   </label>
                   <input
                     type='range'
@@ -652,146 +407,122 @@ const MoodFlowSimple: React.FC = () => {
                     max='10'
                     value={sleep}
                     onChange={(e) => setSleep(Number(e.target.value))}
-                    className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider'
+                    className='w-full'
                   />
+                  <div className='text-center mt-1'>
+                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {sleep}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <form onSubmit={handleFeelingsSubmit} className='max-w-2xl mx-auto'>
-              <div className='flex flex-col sm:flex-row gap-4'>
+              <div className='flex justify-between'>
                 <button
-                  type='button'
-                  onClick={handleSkipFeelings}
-                  disabled={loading}
-                  className={`flex-1 py-4 px-8 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 ${
+                  onClick={() => setStep(2)}
+                  className={`px-6 py-3 rounded-lg font-medium ${
                     isDarkMode
-                      ? 'bg-gray-700 text-white hover:bg-gray-600'
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {loading ? 'Guardando...' : 'Guardar sin IA'}
-                </button>
-
-                <button
-                  type='submit'
-                  disabled={loading}
-                  className={`flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-lg uppercase tracking-wider py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 ${
-                    loading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
-                  {loading ? (
-                    <div className='flex items-center justify-center space-x-2'>
-                      <div className='animate-spin text-xl'>⚡</div>
-                      <span>Analizando con IA...</span>
-                    </div>
-                  ) : (
-                    'Analizar con IA y Guardar'
-                  )}
+                  ← Atrás
+                </button>
+                <button
+                  onClick={handleAdditionalDetailsSubmit}
+                  className='px-6 py-3 rounded-lg font-medium bg-purple-600 text-white hover:bg-purple-700'
+                >
+                  Continuar →
                 </button>
               </div>
-            </form>
-
-            <div className='mt-8'>
-              <button
-                onClick={() => setStep(2)}
-                className={`text-lg font-bold transition-colors duration-300 hover:underline ${
-                  isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'
-                }`}
-              >
-                ← Volver a sentimientos
-              </button>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Step 4: Analysis Panel */}
-      {step === 4 && showAnalysis && moodData && (
-        <div className='max-w-4xl mx-auto px-6 py-12'>
-          <div className='text-center mb-8'>
-            <h1
-              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              ANÁLISIS COMPLETO
-            </h1>
-            <p
-              className={`text-xl mb-8 transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}
-            >
-              Tu estado de ánimo ha sido guardado. Aquí tienes un análisis detallado de tu bienestar.
-            </p>
+        {/* Step 4: Analysis */}
+        {step === 4 && (
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-8`}>
+            <h2 className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-8`}>
+              Análisis de tu estado de ánimo
+            </h2>
+            <div className='space-y-6'>
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                  Resumen de tu registro
+                </h3>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Estado de ánimo: <span className='font-medium'>{moodLabels[currentMood! - 1]}</span>
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Energía: <span className='font-medium'>{energy}/10</span>
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Estrés: <span className='font-medium'>{stress}/10</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Sueño: <span className='font-medium'>{sleep}/10</span>
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Actividades: <span className='font-medium'>{activities.length}</span>
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Emociones: <span className='font-medium'>{emotions.length}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className='flex justify-between'>
+                <button
+                  onClick={() => setStep(3)}
+                  className={`px-6 py-3 rounded-lg font-medium ${
+                    isDarkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  ← Atrás
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className={`px-6 py-3 rounded-lg font-medium ${
+                    loading
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                  }`}
+                >
+                  {loading ? 'Guardando...' : 'Guardar y Analizar'}
+                </button>
+              </div>
+            </div>
           </div>
+        )}
 
+        {/* Analysis Panel */}
+        {showAnalysis && moodData && (
           <MoodAnalysisPanel
-            userId={user?.uid || ''}
-            currentMoodData={moodData}
+            moodData={moodData}
+            onClose={() => setShowAnalysis(false)}
+            onBackToDashboard={handleBackToDashboard}
             isDarkMode={isDarkMode}
-            onAnalysisComplete={(analysis) => {
-              console.log('Análisis completado:', analysis);
-            }}
           />
-
-          <div className='mt-8 flex flex-col sm:flex-row gap-4 justify-center'>
-            <button
-              onClick={() => {
-                setShowAnalysis(false);
-                setStep(1);
-                // Limpiar datos
-                setCurrentMood(null);
-                setFeelings('');
-                setActivities([]);
-                setEmotions([]);
-                setEnergy(5);
-                setStress(5);
-                setSleep(5);
-                setMoodData(null);
-              }}
-              className={`px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 ${
-                isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Registrar Nuevo Estado
-            </button>
-
-            <button
-              onClick={() => {
-                // Redirigir al dashboard del usuario según su rol
-                if (user?.role === 'psychologist') {
-                  navigate('/dashboard-psychologist');
-                } else {
-                  navigate('/dashboard');
-                }
-              }}
-              className='px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50'
-            >
-              Ir al Dashboard
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Crisis Alert */}
-      {currentAssessment && (
-        <CrisisAlert
-          assessment={currentAssessment}
-          onDismiss={dismissAlert}
-          onContactPsychologist={contactPsychologist}
-          onEmergencyContact={emergencyContact}
-        />
-      )}
+        )}
+      </main>
 
       {/* Logout Modal */}
-      <LogoutModal
-        isOpen={showLogoutModal}
-        onClose={handleLogoutCancel}
-        onConfirm={handleLogoutConfirm}
-        isDarkMode={isDarkMode}
-        loading={logoutLoading}
-      />
+      {showLogoutModal && (
+        <LogoutModal
+          onConfirm={handleLogout}
+          onCancel={() => setShowLogoutModal(false)}
+          loading={logoutLoading}
+          isDarkMode={isDarkMode}
+        />
+      )}
     </div>
   );
 };
