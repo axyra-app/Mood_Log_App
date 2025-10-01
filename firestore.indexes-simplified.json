@@ -28,82 +28,6 @@
         {
           "fieldPath": "mood",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "moodLogs",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "energy",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "moodLogs",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "stress",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "moodLogs",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "sleep",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "moodLogs",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "emotions",
-          "arrayConfig": "CONTAINS"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -118,6 +42,76 @@
         {
           "fieldPath": "activities",
           "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "moodLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "emotions",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "moodLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "stress",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "moodLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sleep",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+
+    // ========================================
+    // ÍNDICES PARA PSICÓLOGOS
+    // ========================================
+    {
+      "collectionGroup": "psychologists",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "specializations",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "psychologists",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
         },
         {
           "fieldPath": "createdAt",
@@ -140,28 +134,6 @@
         {
           "fieldPath": "status",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "updatedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "patients",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "psychologistId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "riskLevel",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "updatedAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -216,29 +188,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "psychologistId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "startTime",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "appointments",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "psychologistId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "type",
           "order": "ASCENDING"
         },
         {
@@ -270,11 +220,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "participants",
-          "arrayConfig": "CONTAINS"
-        },
-        {
-          "fieldPath": "isRead",
+          "fieldPath": "conversationId",
           "order": "ASCENDING"
         },
         {
@@ -298,10 +244,6 @@
         {
           "fieldPath": "read",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -311,10 +253,6 @@
       "fields": [
         {
           "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "type",
           "order": "ASCENDING"
         },
         {
@@ -334,10 +272,6 @@
         {
           "fieldPath": "priority",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -364,30 +298,8 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "moodLogId",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "aiAnalysis",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "confidence",
-          "order": "DESCENDING"
         },
         {
           "fieldPath": "createdAt",
@@ -410,10 +322,20 @@
         {
           "fieldPath": "period",
           "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statistics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "psychologistId",
+          "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
+          "fieldPath": "period",
+          "order": "ASCENDING"
         }
       ]
     },
@@ -430,8 +352,8 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "sessionDate",
-          "order": "DESCENDING"
+          "fieldPath": "patientId",
+          "order": "ASCENDING"
         }
       ]
     },
@@ -440,29 +362,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "patientId",
+          "fieldPath": "appointmentId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "sessionDate",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "sessionNotes",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "psychologistId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "patientId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "sessionDate",
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ]
@@ -476,16 +380,12 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "psychologistId",
+          "fieldPath": "patientId",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "status",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -494,11 +394,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "patientId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
+          "fieldPath": "psychologistId",
           "order": "ASCENDING"
         },
         {
@@ -520,12 +416,8 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "urgency",
+          "fieldPath": "resolved",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -538,10 +430,6 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "urgency",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
@@ -552,11 +440,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "psychologistId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "resolved",
+          "fieldPath": "urgency",
           "order": "ASCENDING"
         },
         {
@@ -578,43 +462,17 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "isRead",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "recommendations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "priority",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "recommendations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "type",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "recommendations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
@@ -638,28 +496,6 @@
         {
           "fieldPath": "status",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "wellnessGoals",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "category",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -704,36 +540,14 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "type",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "scheduledTime",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "reminders",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "active",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "scheduledTime",
+          "fieldPath": "completed",
           "order": "ASCENDING"
         }
       ]
     },
 
     // ========================================
-    // ÍNDICES PARA AUDIT LOGS
+    // ÍNDICES PARA LOGS DE AUDITORÍA
     // ========================================
     {
       "collectionGroup": "auditLogs",
@@ -746,10 +560,6 @@
         {
           "fieldPath": "action",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -762,11 +572,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "resource",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
+          "fieldPath": "timestamp",
           "order": "DESCENDING"
         }
       ]
@@ -780,16 +586,12 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
+          "fieldPath": "psychologistId",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "type",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -798,105 +600,32 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "patientId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+
+    // ========================================
+    // ÍNDICES PARA CONFIGURACIONES DE USUARIO
+    // ========================================
+    {
+      "collectionGroup": "userSettings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "period",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-
-    // ========================================
-    // ÍNDICES PARA USUARIOS
-    // ========================================
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "role",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "role",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-
-    // ========================================
-    // ÍNDICES PARA PSICÓLOGOS
-    // ========================================
-    {
-      "collectionGroup": "psychologists",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "isAvailable",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "rating",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "psychologists",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "specialization",
-          "arrayConfig": "CONTAINS"
-        },
-        {
-          "fieldPath": "isAvailable",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "rating",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "psychologists",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "yearsOfExperience",
-          "order": "DESCENDING"
-        },
-        {
-          "fieldPath": "rating",
+          "fieldPath": "updatedAt",
           "order": "DESCENDING"
         }
       ]
     }
-  ],
-  "fieldOverrides": []
+  ]
 }

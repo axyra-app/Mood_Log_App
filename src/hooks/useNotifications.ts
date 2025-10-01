@@ -1,229 +1,176 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import {
-  createDefaultNotificationSettings,
-  deleteNotification,
-  getNotificationSettings,
-  getNotifications,
-  getUnreadNotifications,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
-  requestNotificationPermission,
-  sendBrowserNotification,
-  subscribeToNotifications,
-  updateNotificationSettings,
-} from '../services/notificationService';
-import { NotificationSettings, PushNotification } from '../types';
+import { Notification, notificationService } from '../services/notificationService';
 
-export const useNotifications = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<PushNotification[]>([]);
+interface UseNotificationsReturn {
+  notifications: Notification[];
+  unreadCount: number;
+  loading: boolean;
+  error: string | null;
+  markAsRead: (notificationId: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  handleNotificationAction: (notificationId: string, actionId: string) => Promise<void>;
+  createMoodCheckReminder: () => Promise<void>;
+  createAchievementNotification: (achievement: any) => Promise<void>;
+  stats: {
+    total: number;
+    unread: number;
+    byType: Record<string, number>;
+    byPriority: Record<string, number>;
+  } | null;
+}
+
+export const useNotifications = (userId: string): UseNotificationsReturn => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [settings, setSettings] = useState<NotificationSettings | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [stats, setStats] = useState<UseNotificationsReturn['stats']>(null);
 
-  // Load notifications
-  const loadNotifications = useCallback(async () => {
-    if (!user?.uid) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const [notificationsData, unreadData] = await Promise.all([
-        getNotifications(user.uid),
-        getUnreadNotifications(user.uid),
-      ]);
-      setNotifications(notificationsData);
-      setUnreadCount(unreadData.length);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading notifications');
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.uid]);
-
-  // Load notification settings
-  const loadSettings = useCallback(async () => {
-    if (!user?.uid) return;
-
-    try {
-      const settingsData = await getNotificationSettings(user.uid);
-      if (settingsData) {
-        setSettings(settingsData);
-      } else {
-        // Create default settings
-        try {
-          await createDefaultNotificationSettings(user.uid);
-          const defaultSettings = await getNotificationSettings(user.uid);
-          setSettings(defaultSettings);
-        } catch (createError) {
-          console.error('Error creating default notification settings:', createError);
-          // Si no se pueden crear las configuraciones, continuar sin ellas
-          setSettings(null);
-        }
-      }
-    } catch (err) {
-      console.error('Error loading notification settings:', err);
-      // Si hay error, continuar sin configuraciones
-      setSettings(null);
-    }
-  }, [user?.uid]);
-
-  // Mark notification as read
-  const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-      setNotifications((prev) => prev.map((notif) => (notif.id === notificationId ? { ...notif, read: true } : notif)));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error marking notification as read');
-    }
-  }, []);
-
-  // Mark all notifications as read
-  const markAllAsRead = useCallback(async () => {
-    if (!user?.uid) return;
-
-    try {
-      await markAllNotificationsAsRead(user.uid);
-      setUnreadCount(0);
-      setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error marking all notifications as read');
-    }
-  }, [user?.uid]);
-
-  // Delete notification
-  const deleteNotificationEntry = useCallback(async (notificationId: string) => {
-    try {
-      await deleteNotification(notificationId);
-      setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error deleting notification');
-    }
-  }, []);
-
-  // Update notification settings
-  const updateSettings = useCallback(
-    async (newSettings: Partial<NotificationSettings>) => {
-      if (!user?.uid) return;
-
-      try {
-        await updateNotificationSettings(user.uid, newSettings);
-        setSettings((prev) => (prev ? { ...prev, ...newSettings } : null));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error updating notification settings');
-      }
-    },
-    [user?.uid]
-  );
-
-  // Request notification permission
-  const requestPermission = useCallback(async () => {
-    try {
-      const permissionResult = await requestNotificationPermission();
-      setPermission(permissionResult);
-      return permissionResult;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error requesting notification permission');
-      return 'denied';
-    }
-  }, []);
-
-  // Send browser notification
-  const sendNotification = useCallback(
-    (title: string, options?: NotificationOptions) => {
-      if (permission === 'granted') {
-        sendBrowserNotification(title, options);
-      }
-    },
-    [permission]
-  );
-
-  // Get notifications by type
-  const getNotificationsByType = useCallback(
-    (type: PushNotification['type']) => {
-      return notifications.filter((notif) => notif.type === type);
-    },
-    [notifications]
-  );
-
-  // Get recent notifications
-  const getRecentNotifications = useCallback(
-    (limit: number = 5) => {
-      return notifications.slice(0, limit);
-    },
-    [notifications]
-  );
-
-  // Check if user has unread notifications
-  const hasUnreadNotifications = useCallback(() => {
-    return unreadCount > 0;
-  }, [unreadCount]);
-
-  // Get notification statistics
-  const getNotificationStats = useCallback(() => {
-    const total = notifications.length;
-    const read = notifications.filter((notif) => notif.read).length;
-    const unread = total - read;
-
-    const byType = notifications.reduce((acc, notif) => {
-      acc[notif.type] = (acc[notif.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return {
-      total,
-      read,
-      unread,
-      byType,
-      readRate: total > 0 ? (read / total) * 100 : 0,
-    };
-  }, [notifications]);
-
-  // Setup real-time subscription
+  // Cargar notificaciones
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!userId) return;
 
-    loadNotifications();
-    loadSettings();
+    const unsubscribeNotifications = notificationService.subscribeToNotifications(
+      userId,
+      (newNotifications) => {
+        setNotifications(newNotifications);
+        setLoading(false);
+        setError(null);
+      },
+      50
+    );
 
-    const unsubscribe = subscribeToNotifications(user.uid, (notificationsData) => {
-      setNotifications(notificationsData);
-      setUnreadCount(notificationsData.filter((notif) => !notif.read).length);
+    const unsubscribeUnread = notificationService.subscribeToUnreadNotifications(userId, (count) => {
+      setUnreadCount(count);
     });
 
-    return () => unsubscribe();
-  }, [user?.uid, loadNotifications, loadSettings]);
+    // Cargar estadísticas
+    notificationService
+      .getNotificationStats(userId)
+      .then(setStats)
+      .catch((err) => {
+        console.error('Error loading notification stats:', err);
+        setError('Error al cargar estadísticas de notificaciones');
+      });
 
-  // Check notification permission on mount
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
+    return () => {
+      unsubscribeNotifications();
+      unsubscribeUnread();
+    };
+  }, [userId]);
+
+  // Marcar como leída
+  const markAsRead = useCallback(async (notificationId: string) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+      setError('Error al marcar notificación como leída');
     }
   }, []);
+
+  // Marcar todas como leídas
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await notificationService.markAllAsRead(userId);
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err);
+      setError('Error al marcar todas las notificaciones como leídas');
+    }
+  }, [userId]);
+
+  // Manejar acciones de notificación
+  const handleNotificationAction = useCallback(
+    async (notificationId: string, actionId: string) => {
+      try {
+        const notification = notifications.find((n) => n.id === notificationId);
+        if (!notification) return;
+
+        const action = notification.actions?.find((a) => a.id === actionId);
+        if (!action) return;
+
+        // Marcar como leída primero
+        await markAsRead(notificationId);
+
+        // Manejar diferentes acciones
+        switch (action.action) {
+          case 'log_mood':
+            // Redirigir al mood logging
+            window.location.href = '/mood-flow';
+            break;
+          case 'contact_psychologist':
+            // Abrir chat con psicólogo
+            window.location.href = '/chat';
+            break;
+          case 'emergency_contact':
+            // Mostrar contactos de emergencia
+            alert('Contactos de emergencia:\n\nLínea Nacional de Prevención del Suicidio: 988\nCruz Roja: 065');
+            break;
+          case 'join_appointment':
+            // Unirse a cita
+            window.location.href = '/appointments';
+            break;
+          case 'view_achievement':
+            // Ver logro
+            console.log('Viewing achievement:', notification.data);
+            break;
+          case 'view_recommendation':
+            // Ver recomendación
+            console.log('Viewing recommendation:', notification.data);
+            break;
+          case 'dismiss':
+            // Descartar notificación
+            break;
+          case 'remind_later':
+            // Programar recordatorio para más tarde
+            const laterTime = new Date();
+            laterTime.setHours(laterTime.getHours() + 2);
+            await notificationService.createMoodCheckReminder(userId, laterTime);
+            break;
+          default:
+            console.log('Unknown action:', action.action);
+        }
+      } catch (err) {
+        console.error('Error handling notification action:', err);
+        setError('Error al procesar acción de notificación');
+      }
+    },
+    [notifications, userId, markAsRead]
+  );
+
+  // Crear recordatorio de mood check
+  const createMoodCheckReminder = useCallback(async () => {
+    try {
+      await notificationService.createMoodCheckReminder(userId);
+    } catch (err) {
+      console.error('Error creating mood check reminder:', err);
+      setError('Error al crear recordatorio');
+    }
+  }, [userId]);
+
+  // Crear notificación de logro
+  const createAchievementNotification = useCallback(
+    async (achievement: any) => {
+      try {
+        await notificationService.createAchievementNotification(userId, achievement);
+      } catch (err) {
+        console.error('Error creating achievement notification:', err);
+        setError('Error al crear notificación de logro');
+      }
+    },
+    [userId]
+  );
 
   return {
     notifications,
     unreadCount,
-    settings,
     loading,
     error,
-    permission,
     markAsRead,
     markAllAsRead,
-    deleteNotification: deleteNotificationEntry,
-    updateSettings,
-    requestPermission,
-    sendNotification,
-    getNotificationsByType,
-    getRecentNotifications,
-    hasUnreadNotifications,
-    getNotificationStats,
-    refreshNotifications: loadNotifications,
-    refreshSettings: loadSettings,
+    handleNotificationAction,
+    createMoodCheckReminder,
+    createAchievementNotification,
+    stats,
   };
 };

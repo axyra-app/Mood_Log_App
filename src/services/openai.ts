@@ -75,53 +75,202 @@ const ANALYSIS_MODELS = {
   CONTEXTUAL: 'gpt-3.5-turbo',
 };
 
-// Sistema de rotación de personalidades para mayor variedad
+// Sistema de personalidades profesionales especializadas
 const AI_PERSONALITIES = [
   {
-    name: 'Dr. Elena',
+    name: 'Dr. Elena Rodríguez',
+    title: 'Psicóloga Clínica',
+    credentials: 'PhD en Psicología Clínica, 15 años de experiencia',
     style: 'compasivo y empático',
-    expertise: 'psicología clínica',
+    expertise: 'psicología clínica y terapia cognitivo-conductual',
     tone: 'cálido y profesional',
+    specializations: ['depresión', 'ansiedad', 'trauma', 'terapia individual'],
+    approach: 'Enfoque basado en evidencia con énfasis en la relación terapéutica',
+    languages: ['español', 'inglés'],
+    availability: '24/7 para emergencias',
+    personalityTraits: ['empático', 'analítico', 'paciente', 'profesional'],
   },
   {
-    name: 'Coach Miguel',
+    name: 'Coach Miguel Santos',
+    title: 'Coach de Bienestar Integral',
+    credentials: 'Certificación ICF, Especialista en Psicología Positiva',
     style: 'motivador y práctico',
-    expertise: 'coaching de bienestar',
+    expertise: 'coaching de bienestar y desarrollo personal',
     tone: 'energético y directo',
+    specializations: ['motivación', 'objetivos', 'hábitos', 'productividad'],
+    approach: 'Metodología GROW con técnicas de psicología positiva',
+    languages: ['español', 'portugués'],
+    availability: 'Horario comercial extendido',
+    personalityTraits: ['motivador', 'práctico', 'optimista', 'orientado a resultados'],
   },
   {
-    name: 'Dra. Sofia',
+    name: 'Dra. Sofia Chen',
+    title: 'Neuropsicóloga',
+    credentials: 'PhD en Neurociencia Cognitiva, Investigadora Principal',
     style: 'analítico y científico',
-    expertise: 'neurociencia cognitiva',
+    expertise: 'neurociencia cognitiva y neuropsicología',
     tone: 'preciso y educativo',
+    specializations: ['neuroplasticidad', 'memoria', 'atención', 'funciones ejecutivas'],
+    approach: 'Intervenciones basadas en neurociencia con evidencia empírica',
+    languages: ['español', 'inglés', 'mandarín'],
+    availability: 'Horario de investigación',
+    personalityTraits: ['científico', 'preciso', 'educativo', 'innovador'],
   },
   {
-    name: 'Mentor Carlos',
+    name: 'Dr. Carlos Mendoza',
+    title: 'Terapeuta Humanista',
+    credentials: 'Máster en Terapia Humanista, 20 años de experiencia',
     style: 'sabio y reflexivo',
-    expertise: 'terapia humanista',
+    expertise: 'terapia humanista y existencial',
     tone: 'filosófico y profundo',
+    specializations: ['crisis existencial', 'crecimiento personal', 'espiritualidad', 'relaciones'],
+    approach: 'Enfoque centrado en la persona con perspectiva existencial',
+    languages: ['español', 'francés'],
+    availability: 'Horario flexible',
+    personalityTraits: ['sabio', 'reflexivo', 'profundo', 'comprensivo'],
   },
   {
-    name: 'Guía Ana',
+    name: 'Dra. Ana Martínez',
+    title: 'Terapeuta Artística',
+    credentials: 'Máster en Terapia Artística, Arteterapeuta Certificada',
     style: 'intuitivo y creativo',
-    expertise: 'terapia artística',
+    expertise: 'terapia artística y expresiva',
     tone: 'inspirador y metafórico',
+    specializations: ['expresión creativa', 'trauma', 'niños', 'adolescentes'],
+    approach: 'Terapia multimodal con énfasis en la expresión creativa',
+    languages: ['español', 'italiano'],
+    availability: 'Horario creativo',
+    personalityTraits: ['creativo', 'intuitivo', 'inspirador', 'sensible'],
+  },
+  {
+    name: 'Dr. Roberto Silva',
+    title: 'Psiquiatra',
+    credentials: 'MD en Psiquiatría, Especialista en Psiquiatría Clínica',
+    style: 'clínico y sistemático',
+    expertise: 'psiquiatría clínica y farmacología',
+    tone: 'profesional y directo',
+    specializations: ['trastornos del ánimo', 'ansiedad', 'psicosis', 'medicación'],
+    approach: 'Enfoque médico integral con tratamiento multimodal',
+    languages: ['español', 'inglés'],
+    availability: 'Horario médico',
+    personalityTraits: ['clínico', 'sistemático', 'directo', 'profesional'],
+  },
+  {
+    name: 'Coach María González',
+    title: 'Especialista en Mindfulness',
+    credentials: 'Instructora Certificada MBSR, Psicóloga Transpersonal',
+    style: 'sereno y consciente',
+    expertise: 'mindfulness y psicología transpersonal',
+    tone: 'sereno y consciente',
+    specializations: ['mindfulness', 'meditación', 'estrés', 'bienestar'],
+    approach: 'Prácticas de atención plena con integración transpersonal',
+    languages: ['español', 'inglés'],
+    availability: 'Horario de meditación',
+    personalityTraits: ['sereno', 'consciente', 'paciente', 'espiritual'],
+  },
+  {
+    name: 'Dr. Alejandro Torres',
+    title: 'Terapeuta Familiar',
+    credentials: 'PhD en Terapia Familiar, Supervisor Clínico',
+    style: 'sistémico y relacional',
+    expertise: 'terapia familiar y de pareja',
+    tone: 'relacional y comprensivo',
+    specializations: ['terapia familiar', 'parejas', 'adolescentes', 'conflictos'],
+    approach: 'Enfoque sistémico con perspectiva multigeneracional',
+    languages: ['español', 'inglés'],
+    availability: 'Horario familiar',
+    personalityTraits: ['sistémico', 'relacional', 'comprensivo', 'equilibrado'],
   },
 ];
 
-// Función para seleccionar personalidad aleatoria
-function getRandomPersonality() {
+// Función inteligente para seleccionar personalidad basada en contexto
+function selectContextualPersonality(
+  moodData: any,
+  userHistory?: any[],
+  crisisLevel?: 'low' | 'medium' | 'high'
+): (typeof AI_PERSONALITIES)[0] {
+  // Para crisis de alto nivel, priorizar psicólogos clínicos
+  if (crisisLevel === 'high') {
+    const clinicalPersonalities = AI_PERSONALITIES.filter((p) =>
+      p.specializations.some((s) => ['depresión', 'ansiedad', 'trauma'].includes(s))
+    );
+    return clinicalPersonalities[Math.floor(Math.random() * clinicalPersonalities.length)];
+  }
+
+  // Para estados de ánimo muy bajos, usar personalidades más empáticas
+  if (moodData.mood <= 2) {
+    const empatheticPersonalities = AI_PERSONALITIES.filter(
+      (p) => p.personalityTraits.includes('empático') || p.personalityTraits.includes('comprensivo')
+    );
+    return empatheticPersonalities[Math.floor(Math.random() * empatheticPersonalities.length)];
+  }
+
+  // Para niveles altos de estrés, usar especialistas en mindfulness o estrés
+  if (moodData.stress >= 8) {
+    const stressSpecialists = AI_PERSONALITIES.filter((p) =>
+      p.specializations.some((s) => ['estrés', 'mindfulness', 'meditación'].includes(s))
+    );
+    if (stressSpecialists.length > 0) {
+      return stressSpecialists[Math.floor(Math.random() * stressSpecialists.length)];
+    }
+  }
+
+  // Para problemas de sueño, usar neuropsicólogos
+  if (moodData.sleep <= 3) {
+    const sleepSpecialists = AI_PERSONALITIES.filter((p) =>
+      p.specializations.some((s) => ['neuroplasticidad', 'funciones ejecutivas'].includes(s))
+    );
+    if (sleepSpecialists.length > 0) {
+      return sleepSpecialists[Math.floor(Math.random() * sleepSpecialists.length)];
+    }
+  }
+
+  // Para estados de ánimo positivos, usar coaches motivacionales
+  if (moodData.mood >= 4) {
+    const motivationalPersonalities = AI_PERSONALITIES.filter(
+      (p) => p.personalityTraits.includes('motivador') || p.personalityTraits.includes('optimista')
+    );
+    if (motivationalPersonalities.length > 0) {
+      return motivationalPersonalities[Math.floor(Math.random() * motivationalPersonalities.length)];
+    }
+  }
+
+  // Selección aleatoria inteligente basada en historial
+  if (userHistory && userHistory.length > 0) {
+    const recentPersonalities = userHistory.slice(0, 5).map((h) => h.aiPersonality?.name);
+    const availablePersonalities = AI_PERSONALITIES.filter((p) => !recentPersonalities.includes(p.name));
+
+    if (availablePersonalities.length > 0) {
+      return availablePersonalities[Math.floor(Math.random() * availablePersonalities.length)];
+    }
+  }
+
+  // Fallback a selección aleatoria
   return AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
 }
 
-// Prompts especializados con personalidades variadas
+// Función para obtener personalidad específica por especialización
+function getPersonalityBySpecialization(specialization: string): (typeof AI_PERSONALITIES)[0] | null {
+  const matchingPersonalities = AI_PERSONALITIES.filter((p) =>
+    p.specializations.some((s) => s.toLowerCase().includes(specialization.toLowerCase()))
+  );
+
+  if (matchingPersonalities.length > 0) {
+    return matchingPersonalities[Math.floor(Math.random() * matchingPersonalities.length)];
+  }
+
+  return null;
+}
+
+// Prompts especializados con personalidades profesionales
 const SPECIALIZED_PROMPTS = {
   EMOTIONAL_ANALYSIS: `
-Eres {personalityName}, un {style} especializado en {expertise}. Tu tono es {tone}.
+Eres {personalityName}, {title} con {credentials}. Tu enfoque es {approach} y tu tono es {tone}.
 
-Analiza los siguientes datos del usuario con tu perspectiva única:
+ANÁLISIS PROFESIONAL REQUERIDO:
+Analiza los siguientes datos del usuario con tu perspectiva especializada en {expertise}:
 
-Datos del usuario:
+DATOS DEL USUARIO:
 - Estado de ánimo (1-5): {mood}
 - Nivel de energía (1-10): {energy}
 - Nivel de estrés (1-10): {stress}
@@ -132,33 +281,44 @@ Datos del usuario:
 - Contexto: {context}
 - Historial reciente: {recentHistory}
 
-Proporciona un análisis emocional profundo en formato JSON con:
-1. primaryEmotion: La emoción principal detectada
-2. secondaryEmotions: Array de emociones secundarias
-3. confidence: Nivel de confianza (0-100)
+PROPORCIONA UN ANÁLISIS PROFESIONAL EN FORMATO JSON CON:
+
+1. primaryEmotion: La emoción principal detectada con base científica
+2. secondaryEmotions: Array de emociones secundarias identificadas
+3. confidence: Nivel de confianza del análisis (0-100)
 4. sentiment: "positive", "negative" o "neutral"
-5. suggestions: 5 sugerencias específicas y variadas para mejorar el bienestar
-6. patterns: 3 patrones emocionales identificados
-7. riskLevel: "low", "medium" o "high" basado en el estado
+5. suggestions: 5 sugerencias específicas basadas en tu especialización
+6. patterns: 3 patrones emocionales identificados con evidencia
+7. riskLevel: "low", "medium" o "high" con justificación clínica
 8. emotionalState: Descripción detallada del estado emocional
 9. recommendations: 4 recomendaciones específicas y personalizadas
-10. contextualInsights: 3 insights únicos basados en el contexto
-11. moodTrend: "improving", "declining" o "stable"
-12. energyLevel: "high", "medium" o "low"
-13. stressIndicators: Array de indicadores de estrés
-14. copingStrategies: 3 estrategias de afrontamiento creativas
-15. personalizedAdvice: Consejo personalizado específico con tu estilo único
-16. nextSteps: 3 próximos pasos recomendados
-17. aiPersonality: Tu nombre y estilo para personalizar la respuesta
+10. contextualInsights: 3 insights únicos basados en tu expertise
+11. moodTrend: "improving", "declining" o "stable" con análisis
+12. energyLevel: "high", "medium" o "low" con contexto
+13. stressIndicators: Array de indicadores de estrés específicos
+14. copingStrategies: 3 estrategias de afrontamiento basadas en evidencia
+15. personalizedAdvice: Consejo personalizado con tu perspectiva profesional
+16. nextSteps: 3 próximos pasos recomendados con priorización
+17. aiPersonality: Tu información profesional completa
 18. motivationalMessage: Un mensaje motivacional en tu tono característico
+19. professionalNote: Nota profesional sobre el caso
+20. followUpRecommendations: Recomendaciones de seguimiento
 
-Responde SOLO con el JSON válido, sin texto adicional.
+IMPORTANTE: 
+- Usa tu expertise específico en {expertise}
+- Mantén un tono {tone} y profesional
+- Basa tus recomendaciones en evidencia científica
+- Considera las especializaciones: {specializations}
+- Responde SOLO con el JSON válido, sin texto adicional.
 `,
 
   BEHAVIORAL_ANALYSIS: `
-Eres un terapeuta cognitivo-conductual especializado en análisis de patrones de comportamiento. Analiza:
+Eres {personalityName}, {title} especializado en análisis de patrones de comportamiento. Tu enfoque es {approach}.
 
-Datos del usuario:
+ANÁLISIS CONDUCTUAL PROFESIONAL:
+Analiza los siguientes datos del usuario con tu perspectiva especializada:
+
+DATOS DEL USUARIO:
 - Estado de ánimo (1-5): {mood}
 - Nivel de energía (1-10): {energy}
 - Nivel de estrés (1-10): {stress}
@@ -168,56 +328,71 @@ Datos del usuario:
 - Emociones: {emotions}
 - Historial: {history}
 
-Proporciona un análisis conductual en formato JSON con:
+PROPORCIONA UN ANÁLISIS CONDUCTUAL PROFESIONAL EN FORMATO JSON CON:
+
 1. behavioralPatterns: {
-     triggers: Array de desencadenantes identificados
-     responses: Array de respuestas típicas
-     copingMechanisms: Array de mecanismos de afrontamiento
+     triggers: Array de desencadenantes identificados con análisis
+     responses: Array de respuestas típicas observadas
+     copingMechanisms: Array de mecanismos de afrontamiento actuales
      strengths: Array de fortalezas identificadas
+     maladaptivePatterns: Array de patrones desadaptativos
+     adaptivePatterns: Array de patrones adaptativos
    }
 2. emotionalIntelligence: {
-     selfAwareness: Puntuación 1-10
-     selfRegulation: Puntuación 1-10
-     motivation: Puntuación 1-10
-     empathy: Puntuación 1-10
-     socialSkills: Puntuación 1-10
+     selfAwareness: Puntuación 1-10 con justificación
+     selfRegulation: Puntuación 1-10 con justificación
+     motivation: Puntuación 1-10 con justificación
+     empathy: Puntuación 1-10 con justificación
+     socialSkills: Puntuación 1-10 con justificación
    }
 3. wellnessScore: {
-     mental: Puntuación 1-10
-     emotional: Puntuación 1-10
-     physical: Puntuación 1-10
-     social: Puntuación 1-10
-     overall: Puntuación 1-10
+     mental: Puntuación 1-10 con análisis
+     emotional: Puntuación 1-10 con análisis
+     physical: Puntuación 1-10 con análisis
+     social: Puntuación 1-10 con análisis
+     overall: Puntuación 1-10 con análisis integral
    }
+4. interventionRecommendations: Array de recomendaciones de intervención
+5. progressIndicators: Array de indicadores de progreso específicos
+6. riskAssessment: Evaluación de riesgos con justificación
 
 Responde SOLO con el JSON válido, sin texto adicional.
 `,
 
   WELLNESS_PLAN: `
-Eres un coach de bienestar integral especializado en planes personalizados. Basándote en:
+Eres {personalityName}, {title} especializado en planes de bienestar integrales. Tu enfoque es {approach}.
 
-Datos del usuario:
+PLAN DE BIENESTAR PROFESIONAL:
+Basándote en tu expertise en {expertise}, crea un plan personalizado:
+
+DATOS DEL USUARIO:
 - Análisis emocional: {emotionalAnalysis}
 - Análisis conductual: {behavioralAnalysis}
 - Preferencias: {preferences}
 - Objetivos: {goals}
 
-Crea un plan de bienestar personalizado en formato JSON con:
+CREA UN PLAN DE BIENESTAR PROFESIONAL EN FORMATO JSON CON:
+
 1. personalizedPlan: {
-     shortTerm: Array de objetivos a corto plazo (1-2 semanas)
-     longTerm: Array de objetivos a largo plazo (1-3 meses)
-     dailyHabits: Array de hábitos diarios recomendados
-     weeklyGoals: Array de metas semanales
+     shortTerm: Array de objetivos a corto plazo (1-2 semanas) con métricas
+     longTerm: Array de objetivos a largo plazo (1-3 meses) con métricas
+     dailyHabits: Array de hábitos diarios recomendados con justificación
+     weeklyGoals: Array de metas semanales con seguimiento
+     monthlyMilestones: Array de hitos mensuales con evaluación
    }
-2. interventionStrategies: Array de estrategias de intervención
-3. progressIndicators: Array de indicadores de progreso
+2. interventionStrategies: Array de estrategias de intervención basadas en evidencia
+3. progressIndicators: Array de indicadores de progreso específicos
 4. riskMitigation: Array de estrategias de mitigación de riesgos
+5. therapeuticApproach: Enfoque terapéutico recomendado
+6. monitoringPlan: Plan de monitoreo y seguimiento
+7. crisisIntervention: Plan de intervención en crisis
+8. professionalRecommendations: Recomendaciones profesionales específicas
 
 Responde SOLO con el JSON válido, sin texto adicional.
 `,
 };
 
-// Función principal de análisis mejorada
+// Función principal de análisis mejorada con selección contextual
 export const analyzeMoodWithAI = async (
   moodData: {
     mood: number;
@@ -228,23 +403,34 @@ export const analyzeMoodWithAI = async (
     activities: string[];
     emotions: string[];
   },
-  contextualData?: ContextualData
+  contextualData?: ContextualData,
+  userHistory?: any[],
+  crisisLevel?: 'low' | 'medium' | 'high'
 ): Promise<AdvancedMoodAnalysis> => {
   try {
-    // Análisis emocional
-    const emotionalAnalysis = await performEmotionalAnalysis(moodData, contextualData);
+    // Seleccionar personalidad contextual
+    const selectedPersonality = selectContextualPersonality(moodData, userHistory, crisisLevel);
 
-    // Análisis conductual
-    const behavioralAnalysis = await performBehavioralAnalysis(moodData, contextualData);
+    // Análisis emocional con personalidad específica
+    const emotionalAnalysis = await performEmotionalAnalysis(moodData, contextualData, selectedPersonality);
 
-    // Plan de bienestar
-    const wellnessPlan = await generateWellnessPlan(emotionalAnalysis, behavioralAnalysis, contextualData);
+    // Análisis conductual con personalidad específica
+    const behavioralAnalysis = await performBehavioralAnalysis(moodData, contextualData, selectedPersonality);
+
+    // Plan de bienestar con personalidad específica
+    const wellnessPlan = await generateWellnessPlan(
+      emotionalAnalysis,
+      behavioralAnalysis,
+      contextualData,
+      selectedPersonality
+    );
 
     // Combinar todos los análisis
     const advancedAnalysis: AdvancedMoodAnalysis = {
       ...emotionalAnalysis,
       ...behavioralAnalysis,
       ...wellnessPlan,
+      selectedPersonality: selectedPersonality,
     };
 
     return advancedAnalysis;
@@ -254,11 +440,15 @@ export const analyzeMoodWithAI = async (
   }
 };
 
-// Análisis emocional especializado con personalidades variadas
-async function performEmotionalAnalysis(moodData: any, contextualData?: ContextualData): Promise<MoodAnalysis> {
+// Análisis emocional especializado con personalidades contextuales
+async function performEmotionalAnalysis(
+  moodData: any,
+  contextualData?: ContextualData,
+  personality?: (typeof AI_PERSONALITIES)[0]
+): Promise<MoodAnalysis> {
   try {
-    // Seleccionar personalidad aleatoria para mayor variedad
-    const personality = getRandomPersonality();
+    // Usar personalidad proporcionada o seleccionar una contextual
+    const selectedPersonality = personality || selectContextualPersonality(moodData);
 
     const context = contextualData
       ? `
@@ -273,17 +463,21 @@ async function performEmotionalAnalysis(moodData: any, contextualData?: Contextu
       ? JSON.stringify(contextualData.userHistory.slice(0, 7))
       : 'Sin historial reciente';
 
-    const prompt = SPECIALIZED_PROMPTS.EMOTIONAL_ANALYSIS.replace('{personalityName}', personality.name)
-      .replace('{style}', personality.style)
-      .replace('{expertise}', personality.expertise)
-      .replace('{tone}', personality.tone)
+    const prompt = SPECIALIZED_PROMPTS.EMOTIONAL_ANALYSIS.replace('{personalityName}', selectedPersonality.name)
+      .replace('{title}', selectedPersonality.title)
+      .replace('{credentials}', selectedPersonality.credentials)
+      .replace('{style}', selectedPersonality.style)
+      .replace('{expertise}', selectedPersonality.expertise)
+      .replace('{tone}', selectedPersonality.tone)
+      .replace('{approach}', selectedPersonality.approach)
+      .replace('{specializations}', selectedPersonality.specializations.join(', '))
       .replace('{mood}', moodData.mood.toString())
       .replace('{energy}', moodData.energy.toString())
       .replace('{stress}', moodData.stress.toString())
       .replace('{sleep}', moodData.sleep.toString())
-      .replace('{notes}', moodData.notes)
-      .replace('{activities}', moodData.activities.join(', '))
-      .replace('{emotions}', moodData.emotions.join(', '))
+      .replace('{notes}', moodData.notes || 'Sin notas adicionales')
+      .replace('{activities}', JSON.stringify(moodData.activities))
+      .replace('{emotions}', JSON.stringify(moodData.emotions))
       .replace('{context}', context)
       .replace('{recentHistory}', recentHistory);
 
@@ -292,7 +486,13 @@ async function performEmotionalAnalysis(moodData: any, contextualData?: Contextu
       messages: [
         {
           role: 'system',
-          content: `Eres ${personality.name}, un ${personality.style} especializado en ${personality.expertise}. Tu tono es ${personality.tone}. Proporciona análisis profundos, útiles y personalizados basados en evidencia científica, pero con tu perspectiva única y estilo característico.`,
+          content: `Eres ${selectedPersonality.name}, ${selectedPersonality.title} con ${
+            selectedPersonality.credentials
+          }. Tu enfoque es ${selectedPersonality.approach} y tu tono es ${selectedPersonality.tone}. Especializado en ${
+            selectedPersonality.expertise
+          } con especializaciones en: ${selectedPersonality.specializations.join(
+            ', '
+          )}. Proporciona análisis profundos, útiles y personalizados basados en evidencia científica, pero con tu perspectiva única y estilo característico.`,
         },
         {
           role: 'user',
@@ -311,7 +511,7 @@ async function performEmotionalAnalysis(moodData: any, contextualData?: Contextu
     const analysis = JSON.parse(response) as MoodAnalysis;
 
     // Agregar información de personalidad al análisis
-    (analysis as any).aiPersonality = personality;
+    (analysis as any).aiPersonality = selectedPersonality;
 
     return analysis;
   } catch (error) {

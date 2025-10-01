@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // Hook para debounce
 export const useDebounce = <T>(value: T, delay: number): T => {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -50,9 +50,9 @@ export const useStableCallback = <T extends (...args: any[]) => any>(callback: T
 
 // Hook para lazy loading de imágenes
 export const useLazyImage = (src: string, placeholder?: string) => {
-  const [imageSrc, setImageSrc] = React.useState(placeholder || '');
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [isError, setIsError] = React.useState(false);
+  const [imageSrc, setImageSrc] = useState(placeholder || '');
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -74,7 +74,7 @@ export const useLazyImage = (src: string, placeholder?: string) => {
 
 // Hook para virtualización de listas
 export const useVirtualization = (itemCount: number, itemHeight: number, containerHeight: number) => {
-  const [scrollTop, setScrollTop] = React.useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
 
   const visibleStart = Math.floor(scrollTop / itemHeight);
   const visibleEnd = Math.min(visibleStart + Math.ceil(containerHeight / itemHeight) + 1, itemCount);
@@ -142,7 +142,7 @@ export const useOptimizedState = <T>(initialState: T) => {
 
 // Hook para detectar cambios en el rendimiento
 export const usePerformanceMonitor = () => {
-  const [metrics, setMetrics] = React.useState({
+  const [metrics, setMetrics] = useState({
     renderTime: 0,
     memoryUsage: 0,
     isSlow: false,
@@ -179,7 +179,7 @@ export const useMemoizedComponent = <P extends object>(
 
 // Hook para batch updates
 export const useBatchedUpdates = () => {
-  const [updates, setUpdates] = React.useState<(() => void)[]>([]);
+  const [updates, setUpdates] = useState<(() => void)[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   const batchUpdate = useCallback(

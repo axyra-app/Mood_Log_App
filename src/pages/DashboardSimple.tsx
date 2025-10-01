@@ -7,7 +7,7 @@ import {
   LazyLoad,
   LazyReminderManager,
 } from '../components/LazyWrapper';
-import NotificationDropdown from '../components/NotificationDropdown';
+import NotificationIndicator from '../components/NotificationIndicator';
 import NotificationModal from '../components/NotificationModal';
 import OfflineIndicator, { SyncStatus } from '../components/OfflineIndicator';
 import { useAuth } from '../contexts/AuthContext';
@@ -349,12 +349,7 @@ const DashboardSimple: React.FC = () => {
 
           <div className='flex items-center space-x-4'>
             {/* Notificaciones */}
-            <NotificationDropdown
-              notifications={notifications}
-              onMarkAsRead={handleMarkNotificationAsRead}
-              onDismiss={handleDismissNotification}
-              isDarkMode={isDarkMode}
-            />
+            <NotificationIndicator userId={user?.uid || ''} isDarkMode={isDarkMode} />
 
             <button
               onClick={() => setShowConfigModal(true)}
