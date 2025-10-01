@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import CrisisAlert from '../components/CrisisAlert';
+=======
+import { useAuth } from '../contexts/AuthContext';
+import { useMood } from '../hooks/useMood';
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 import LogoutModal from '../components/LogoutModal';
 import MoodAnalysisPanel from '../components/mood/MoodAnalysisPanel';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,9 +14,13 @@ import { useOptimizedMood } from '../hooks/useOptimizedMood';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
+<<<<<<< HEAD
   const { createMoodLog, loading: moodLoading, error: moodError } = useOptimizedMood();
   const { currentAssessment, assessMoodData, dismissAlert, contactPsychologist, emergencyContact } =
     useCrisisDetection();
+=======
+  const { createMoodLog, loading: moodLoading, error: moodError } = useMood();
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import ComingSoonModal from '../components/ComingSoonModal';
 import {
   LazyAdvancedAIInsights,
@@ -10,14 +11,14 @@ import {
 import NotificationIndicator from '../components/NotificationIndicator';
 import NotificationModal from '../components/NotificationModal';
 import OfflineIndicator, { SyncStatus } from '../components/OfflineIndicator';
+=======
+import { Bell } from 'lucide-react';
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 import {
-  createAchievementNotification,
-  createMoodLogNotification,
-  getUserNotifications,
-} from '../services/notifications';
-import DashboardPsychologist from './DashboardPsychologist';
+  getNotifications,
+} from '../services/notificationService';
 
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -44,16 +45,10 @@ const DashboardSimple: React.FC = () => {
   // statistics ya viene del hook useMood
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
-  const [comingSoonData, setComingSoonData] = useState({
-    title: '',
-    description: '',
-    icon: '',
-    features: [] as string[],
-  });
+  const [showComingSoonAlert, setShowComingSoonAlert] = useState(false);
+  const [comingSoonMessage, setComingSoonMessage] = useState('');
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showReminderManager, setShowReminderManager] = useState(false);
   const [notificationData, setNotificationData] = useState({
     type: 'success' as 'success' | 'error' | 'info',
@@ -110,7 +105,7 @@ const DashboardSimple: React.FC = () => {
 
   const showNotification = (type: 'success' | 'error' | 'info', title: string, message: string, icon?: string) => {
     setNotificationData({ type, title, message, icon: icon || '' });
-    setShowNotificationModal(true);
+    // Mostrar notificación simple
   };
 
   const loadUserData = async () => {
@@ -121,7 +116,7 @@ const DashboardSimple: React.FC = () => {
 
       // Cargar notificaciones reales
       try {
-        const realNotifications = await getUserNotifications(user.uid, 10);
+        const realNotifications = await getNotifications(user.uid, 10);
         setNotifications(
           realNotifications.map((notif) => ({
             id: notif.id,
@@ -185,16 +180,16 @@ const DashboardSimple: React.FC = () => {
 
       // Crear notificación real en Firestore
       try {
-        await createMoodLogNotification(user.uid, mood);
+        // Notificación de mood log creado
 
         // Verificar si es un logro (cada 5 moods)
         const totalLogs = moodLogs.length + 1;
         if (totalLogs % 5 === 0) {
-          await createAchievementNotification(user.uid, 'mood_streak', totalLogs);
+          // Logro alcanzado: {totalLogs} registros de ánimo
         }
 
         // Recargar notificaciones
-        const updatedNotifications = await getUserNotifications(user.uid, 10);
+        const updatedNotifications = await getNotifications(user.uid, 10);
         setNotifications(
           updatedNotifications.map((notif) => ({
             id: notif.id,
@@ -242,68 +237,20 @@ const DashboardSimple: React.FC = () => {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'chat':
-        setComingSoonData({
-          title: 'Chat con IA',
-          description:
-            'Próximamente podrás conversar con nuestra IA especializada en bienestar emocional. Obtén consejos personalizados, análisis de tus patrones de ánimo y apoyo 24/7.',
-          icon: '🤖',
-          features: [
-            'Conversaciones inteligentes sobre emociones',
-            'Análisis de patrones de ánimo',
-            'Consejos personalizados',
-            'Soporte 24/7',
-            'Integración con tu historial de estados de ánimo',
-          ],
-        });
-        setShowComingSoonModal(true);
+        setComingSoonMessage('Próximamente: Chat con IA especializada en bienestar emocional');
+        setShowComingSoonAlert(true);
         break;
       case 'psychologists':
-        setComingSoonData({
-          title: 'Conectar con Psicólogos',
-          description:
-            'Próximamente podrás conectarte con psicólogos profesionales certificados para recibir apoyo especializado y sesiones de terapia online.',
-          icon: '👨‍⚕️',
-          features: [
-            'Psicólogos certificados',
-            'Sesiones online',
-            'Agenda flexible',
-            'Seguimiento personalizado',
-            'Integración con tu perfil de ánimo',
-          ],
-        });
-        setShowComingSoonModal(true);
+        setComingSoonMessage('Próximamente: Conecta con psicólogos profesionales certificados');
+        setShowComingSoonAlert(true);
         break;
       case 'statistics':
-        setComingSoonData({
-          title: 'Estadísticas Avanzadas',
-          description:
-            'Próximamente tendrás acceso a estadísticas detalladas, gráficos interactivos y análisis profundos de tu bienestar emocional.',
-          icon: '📊',
-          features: [
-            'Gráficos interactivos',
-            'Análisis de tendencias',
-            'Reportes personalizados',
-            'Comparativas temporales',
-            'Insights de IA',
-          ],
-        });
-        setShowComingSoonModal(true);
+        setComingSoonMessage('Próximamente: Estadísticas avanzadas y análisis detallados');
+        setShowComingSoonAlert(true);
         break;
       case 'goals':
-        setComingSoonData({
-          title: 'Objetivos de Bienestar',
-          description:
-            'Próximamente podrás establecer y seguir objetivos personalizados de bienestar emocional con seguimiento inteligente y recordatorios.',
-          icon: '🎯',
-          features: [
-            'Objetivos personalizados',
-            'Seguimiento automático',
-            'Recordatorios inteligentes',
-            'Celebración de logros',
-            'Integración con IA',
-          ],
-        });
-        setShowComingSoonModal(true);
+        setComingSoonMessage('Próximamente: Objetivos de bienestar con seguimiento inteligente');
+        setShowComingSoonAlert(true);
         break;
       case 'reminders':
         setShowReminderManager(true);
@@ -325,7 +272,6 @@ const DashboardSimple: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      <OfflineIndicator />
 
       {/* Header */}
       <header
@@ -349,7 +295,15 @@ const DashboardSimple: React.FC = () => {
 
           <div className='flex items-center space-x-4'>
             {/* Notificaciones */}
+<<<<<<< HEAD
             <NotificationIndicator userId={user?.uid || ''} isDarkMode={isDarkMode} />
+=======
+            <div className="relative">
+              <button className="p-2 text-gray-600 hover:text-gray-900">
+                <Bell className="h-6 w-6" />
+              </button>
+            </div>
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 
             <button
               onClick={() => setShowConfigModal(true)}
@@ -385,7 +339,6 @@ const DashboardSimple: React.FC = () => {
 
       {/* Main Content */}
       <div className='max-w-7xl mx-auto px-6 py-8'>
-        <SyncStatus />
         {/* Welcome Section */}
         <div className='mb-8'>
           <h2
@@ -886,46 +839,32 @@ const DashboardSimple: React.FC = () => {
         {/* Sección de Insights de IA */}
         {showAIInsights && (
           <div className='mt-8'>
-            <LazyLoad
-              fallback={
-                <div className='flex items-center justify-center p-8'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600'></div>
-                </div>
-              }
-            >
-              <LazyAdvancedAIInsights
-                insights={[]}
-                longTermTrends={{}}
-                moodStatistics={statistics}
-                isDarkMode={isDarkMode}
-              />
-            </LazyLoad>
+            <div className='bg-white rounded-lg p-6 shadow-sm'>
+              <h3 className='text-lg font-semibold mb-4'>Insights de IA</h3>
+              <p className='text-gray-600'>Próximamente: Análisis inteligente de tus patrones emocionales</p>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Modales */}
-      <ComingSoonModal
-        isOpen={showComingSoonModal}
-        onClose={() => setShowComingSoonModal(false)}
-        title={comingSoonData.title}
-        description={comingSoonData.description}
-        icon={comingSoonData.icon}
-        features={comingSoonData.features}
-      />
+      {/* Alertas */}
+      {showComingSoonAlert && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-2">🚀 Próximamente</h3>
+            <p className="text-gray-600 mb-4">{comingSoonMessage}</p>
+            <button
+              onClick={() => setShowComingSoonAlert(false)}
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
 
-      <LazyConfigurationModal isOpen={showConfigModal} onClose={() => setShowConfigModal(false)} user={user} />
 
-      <NotificationModal
-        isOpen={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-        type={notificationData.type}
-        title={notificationData.title}
-        message={notificationData.message}
-        icon={notificationData.icon}
-      />
 
-      <LazyReminderManager isOpen={showReminderManager} onClose={() => setShowReminderManager(false)} />
     </div>
   );
 };

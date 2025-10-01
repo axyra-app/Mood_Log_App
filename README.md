@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 # 🧠 Mood Log App - Aplicación de Seguimiento Emocional
 
 Una aplicación web progresiva (PWA) profesional para el seguimiento del estado de ánimo con inteligencia artificial, que conecta usuarios con psicólogos profesionales.
+=======
+# 🧠 Mood Log App
+
+Una aplicación completa de seguimiento emocional con dashboard profesional para psicólogos, construida de manera robusta pero simple con React, TypeScript, Firebase y Tailwind CSS.
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 
 ## ✨ **Características Principales**
 

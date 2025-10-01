@@ -59,18 +59,22 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [forceLoadingFalse, setForceLoadingFalse] = useState(false);
+
+  // Timeout de seguridad para forzar loading = false
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForceLoadingFalse(true);
+    }, 8000); // 8 segundos
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (!isMounted) return;
-
-      console.log('onAuthStateChanged triggered:', { 
-        hasUser: !!firebaseUser, 
-        uid: firebaseUser?.uid,
-        email: firebaseUser?.email 
-      });
 
       try {
         if (firebaseUser) {
@@ -85,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 email: firebaseUser.email,
                 displayName: userData.displayName || firebaseUser.displayName,
                 username: userData.username,
-                role: userData.role || 'user',
+                role: userData.role,
                 createdAt: userData.createdAt,
                 updatedAt: userData.updatedAt,
                 // Campos profesionales para psicólogos
@@ -101,7 +105,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // Verificar si es un usuario de Google que necesita completar perfil
               const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
               if (isGoogleUser && (!userData.displayName || !userData.role)) {
-                console.log('Google user needs to complete profile');
                 // Establecer el usuario con datos básicos para evitar bucle infinito
                 const basicUserData: User = {
                   uid: firebaseUser.uid,
@@ -127,7 +130,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
               try {
                 await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData);
-                console.log('Perfil básico creado para usuario de Google');
               } catch (error) {
                 console.error('Error creando perfil básico:', error);
               }
@@ -140,7 +142,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 username: firebaseUser.email?.split('@')[0],
                 role: 'user',
               };
-              console.log('Setting Google user state:', userDataWithAuth);
               if (isMounted) setUser(userDataWithAuth);
             }
           } catch (error) {
@@ -162,7 +163,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Error in auth state change:', error);
         if (isMounted) setUser(null);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     });
 
@@ -222,7 +225,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Si es psicólogo, también crear en la colección de psicólogos
       if (role === 'psychologist') {
         try {
-          console.log('Creando perfil de psicólogo...', professionalData);
           const psychologistData = {
             uid: userCredential.user.uid,
             email: email,
@@ -241,7 +243,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             updatedAt: serverTimestamp(),
           };
           await setDoc(doc(db, 'psychologists', userCredential.user.uid), psychologistData);
-          console.log('Perfil de psicólogo creado exitosamente');
         } catch (psychologistError) {
           console.error('Error creando perfil de psicólogo:', psychologistError);
           // No lanzar error aquí para no interrumpir el registro del usuario
@@ -249,7 +250,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // El loading se manejará automáticamente por onAuthStateChanged
-      console.log('Registro completado exitosamente');
     } catch (error: any) {
       setLoading(false);
       // Manejar específicamente el error de email ya existente
@@ -291,7 +291,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       try {
         await setDoc(doc(db, 'users', result.user.uid), basicUserData);
-        console.log('Perfil básico creado para registro con Google');
       } catch (error) {
         console.error('Error creando perfil básico:', error);
       }
@@ -364,7 +363,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
 
           await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
-          console.log('Perfil de psicólogo actualizado exitosamente');
         } catch (psychologistError) {
           console.error('Error actualizando perfil de psicólogo:', psychologistError);
           // No lanzar error aquí para no interrumpir la actualización del usuario
@@ -372,16 +370,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Actualizar el estado local sin recargar
-      setUser((prev) => (prev ? { ...prev, ...updates } : null));
+      setUser((prev) => {
+        const updatedUser = prev ? { ...prev, ...updates } : null;
+        console.log('User profile updated:', updatedUser);
+        return updatedUser;
+      });
     } catch (error: any) {
       console.error('Error updating user profile:', error);
       throw new Error(getAuthErrorMessage(error));
     }
   };
 
+  // Usar el timeout forzado si es necesario
+  const effectiveLoading = forceLoadingFalse ? false : loading;
+
   const value: AuthContextType = {
     user,
-    loading,
+    loading: effectiveLoading,
     signIn,
     signUp,
     signInWithGoogle,

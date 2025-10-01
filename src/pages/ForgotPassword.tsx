@@ -2,7 +2,6 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { AlertCircle, CheckCircle, Heart, Loader2, Mail, Moon, Shield, Sun, Zap } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import SEO from '../components/SEO';
 import { auth } from '../services/firebase';
 import { getPasswordResetErrorMessage } from '../utils/errorMessages';
 
@@ -64,11 +63,6 @@ const ForgotPassword: React.FC = () => {
   if (success) {
     return (
       <>
-        <SEO
-          title='Email Enviado - Mood Log App'
-          description='Email de recuperación de contraseña enviado exitosamente.'
-          keywords='recuperar contraseña, email enviado, mood log app'
-        />
 
         <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
           {/* Header */}
@@ -250,11 +244,6 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <>
-      <SEO
-        title='Recuperar Contraseña - Mood Log App'
-        description='Recupera tu contraseña de Mood Log App de forma segura y rápida.'
-        keywords='recuperar contraseña, forgot password, mood log app, reset password'
-      />
 
       <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         {/* Header */}

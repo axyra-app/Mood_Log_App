@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ErrorBoundary from './ErrorBoundary';
 
 interface ProtectedRoutePsychologistProps {
   children: React.ReactNode;
@@ -8,50 +9,53 @@ interface ProtectedRoutePsychologistProps {
 
 const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const [timeoutReached, setTimeoutReached] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('');
-  const [hasRendered, setHasRendered] = useState(false);
+  const [forceResolve, setForceResolve] = useState(false);
   const [renderCount, setRenderCount] = useState(0);
+  const [isResolved, setIsResolved] = useState(false);
+  const hasResolvedRef = useRef(false);
 
-  // Timeout para evitar carga infinita
+  // Contador de renders para detectar bucles
+  useEffect(() => {
+    setRenderCount(prev => prev + 1);
+    console.log(`ProtectedRoutePsychologist render #${renderCount + 1}`);
+  });
+
+  // Forzar resolución después de 3 segundos o 15 renders
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTimeoutReached(true);
-    }, 10000); // 10 segundos de timeout
+      if (!hasResolvedRef.current) {
+        console.log('Forzando resolución del loading...');
+        setForceResolve(true);
+        setIsResolved(true);
+        hasResolvedRef.current = true;
+      }
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Protección contra bucle infinito
+  // Detectar bucle infinito
   useEffect(() => {
-    setRenderCount(prev => prev + 1);
-    if (renderCount > 50) {
-      console.error('ProtectedRoutePsychologist: Bucle infinito detectado, forzando timeout');
-      setTimeoutReached(true);
+    if (renderCount > 15 && !hasResolvedRef.current) {
+      console.error('Bucle infinito detectado, forzando resolución');
+      setForceResolve(true);
+      setIsResolved(true);
+      hasResolvedRef.current = true;
     }
+  }, [renderCount]);
+
+  // Lógica simplificada
+  const shouldShowLoading = loading && !forceResolve && !isResolved;
+  const shouldCheckUser = forceResolve || !loading || isResolved;
+
+  console.log('ProtectedRoutePsychologist state:', {
+    loading,
+    hasUser: !!user,
+    userRole: user?.role,
+    forceResolve,
+    isResolved,
+    renderCount
   });
-
-  // Memoizar el estado para evitar re-renderizados innecesarios
-  const authState = useMemo(() => {
-    return {
-      loading,
-      hasUser: !!user,
-      userRole: user?.role,
-      timeoutReached,
-      renderCount
-    };
-  }, [loading, user?.uid, user?.role, timeoutReached, renderCount]);
-
-  // Debug info
-  useEffect(() => {
-    const info = `Loading: ${authState.loading}, User: ${authState.hasUser}, Role: ${authState.userRole}, Timeout: ${authState.timeoutReached}, Renders: ${authState.renderCount}`;
-    setDebugInfo(info);
-    console.log('ProtectedRoutePsychologist Debug:', info);
-  }, [authState]);
-
-  // Lógica simplificada para evitar bucles
-  const shouldShowLoading = authState.loading && !authState.timeoutReached;
-  const shouldCheckUser = authState.timeoutReached || !authState.loading;
 
   if (shouldShowLoading) {
     return (
@@ -59,25 +63,30 @@ const ProtectedRoutePsychologist: React.FC<ProtectedRoutePsychologistProps> = ({
         <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
           <div className='animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4'></div>
           <p className='text-white text-lg font-semibold'>Verificando credenciales profesionales...</p>
-          <p className='text-white/70 text-sm mt-2'>Debug: {debugInfo}</p>
+          <p className='text-white/70 text-sm mt-2'>Render: {renderCount}</p>
         </div>
       </div>
     );
   }
 
   if (shouldCheckUser) {
-    if (!authState.hasUser) {
+    if (!user) {
       console.log('No user, redirecting to login');
       return <Navigate to='/login' replace />;
     }
 
-    if (authState.userRole !== 'psychologist') {
+    if (user.role !== 'psychologist') {
       console.log('User is not psychologist, redirecting to dashboard');
       return <Navigate to='/dashboard' replace />;
     }
 
     console.log('User is psychologist, showing content');
-    return <>{children}</>;
+    // Usar ErrorBoundary para capturar errores del componente
+    return (
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
+    );
   }
 
   // Fallback

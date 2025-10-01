@@ -1,7 +1,6 @@
 import { ArrowLeft, Bell, Calendar, Download, Mail, MapPin, Palette, Phone, Save, Shield, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 import { useNotifications } from '../hooks/useNotifications';
@@ -184,11 +183,6 @@ const Settings: React.FC = () => {
 
   return (
     <>
-      <SEO
-        title='Configuraciones - Mood Log App'
-        description='Personaliza tu experiencia y gestiona tu privacidad'
-        keywords='configuraciones, privacidad, perfil, notificaciones'
-      />
 
       <div className='min-h-screen bg-gray-50'>
         {/* Header */}
