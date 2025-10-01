@@ -27,7 +27,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 
@@ -159,11 +158,6 @@ const Statistics: React.FC = () => {
 
   return (
     <>
-      <SEO
-        title='Estadísticas - Mood Log App'
-        description='Analiza tus patrones emocionales y progreso de bienestar'
-        keywords='estadísticas, análisis emocional, progreso, bienestar'
-      />
 
       <div className='min-h-screen bg-gray-50'>
         {/* Header */}

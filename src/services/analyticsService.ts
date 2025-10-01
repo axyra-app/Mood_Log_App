@@ -1,509 +1,373 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
-import { EmotionalPattern, MoodLog, MoodTrend, WellnessInsights } from '../types';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 
-// Analytics Functions
-export const calculateMoodTrend = async (
-  userId: string,
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'weekly'
-): Promise<MoodTrend> => {
-  try {
-    const moodLogsRef = collection(db, 'moodLogs');
-    const now = new Date();
-    let startDate = new Date();
+export interface ReportData {
+  id?: string;
+  userId?: string;
+  psychologistId?: string;
+  type: 'mood_trends' | 'patient_progress' | 'crisis_analysis' | 'appointment_summary' | 'wellness_overview';
+  title: string;
+  description: string;
+  period: {
+    start: Date;
+    end: Date;
+  };
+  data: any;
+  insights: string[];
+  recommendations: string[];
+  generatedAt: Date;
+  generatedBy: string;
+}
 
-    // Calculate start date based on period
-    switch (period) {
-      case 'daily':
-        startDate.setDate(now.getDate() - 1);
-        break;
-      case 'weekly':
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case 'monthly':
-        startDate.setMonth(now.getMonth() - 1);
-        break;
-      case 'yearly':
-        startDate.setFullYear(now.getFullYear() - 1);
-        break;
+export interface AnalyticsData {
+  moodTrends: {
+    period: string;
+    average: number;
+    trend: 'up' | 'down' | 'stable';
+    change: number;
+    dataPoints: number;
+  }[];
+  activityPatterns: {
+    activity: string;
+    frequency: number;
+    correlation: number;
+    impact: 'positive' | 'negative' | 'neutral';
+  }[];
+  emotionalPatterns: {
+    emotion: string;
+    frequency: number;
+    intensity: number;
+    triggers: string[];
+  }[];
+  wellnessMetrics: {
+    sleep: {
+      average: number;
+      trend: 'up' | 'down' | 'stable';
+      quality: 'poor' | 'fair' | 'good' | 'excellent';
+    };
+    energy: {
+      average: number;
+      trend: 'up' | 'down' | 'stable';
+      peakHours: string[];
+    };
+    stress: {
+      average: number;
+      trend: 'up' | 'down' | 'stable';
+      triggers: string[];
+    };
+  };
+  crisisIndicators: {
+    totalAlerts: number;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    trend: 'up' | 'down' | 'stable';
+    commonTriggers: string[];
+  };
+  achievements: {
+    total: number;
+    recent: any[];
+    categories: Record<string, number>;
+  };
+}
+
+class AnalyticsService {
+  // Generar reporte de tendencias de mood
+  async generateMoodTrendsReport(userId: string, startDate: Date, endDate: Date): Promise<ReportData> {
+    try {
+      const moodLogsQuery = query(
+        collection(db, 'moodLogs'),
+        where('userId', '==', userId),
+        where('createdAt', '>=', startDate),
+        where('createdAt', '<=', endDate),
+        orderBy('createdAt', 'asc')
+      );
+
+      const snapshot = await getDocs(moodLogsQuery);
+      const moodLogs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      }));
+
+      const analytics = this.calculateMoodTrends(moodLogs);
+      const insights = this.generateMoodInsights(analytics);
+      const recommendations = this.generateMoodRecommendations(analytics);
+
+      const report: ReportData = {
+        userId,
+        type: 'mood_trends',
+        title: 'Reporte de Tendencias de Estado de Ánimo',
+        description: `Análisis de tendencias de estado de ánimo del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}`,
+        period: { start: startDate, end: endDate },
+        data: analytics,
+        insights,
+        recommendations,
+        generatedAt: new Date(),
+        generatedBy: 'system',
+      };
+
+      return report;
+    } catch (error) {
+      console.error('Error generating mood trends report:', error);
+      throw error;
+    }
+  }
+
+  // Calcular tendencias de mood
+  private calculateMoodTrends(moodLogs: any[]): any {
+    if (moodLogs.length === 0) {
+      return {
+        average: 0,
+        trend: 'stable',
+        change: 0,
+        dataPoints: 0,
+        weeklyTrends: [],
+        dailyPatterns: [],
+      };
     }
 
-    const q = query(
-      moodLogsRef,
-      where('userId', '==', userId),
-      where('createdAt', '>=', startDate),
-      orderBy('createdAt', 'asc')
-    );
+    const totalMood = moodLogs.reduce((sum, log) => sum + log.mood, 0);
+    const average = totalMood / moodLogs.length;
 
-    const querySnapshot = await getDocs(q);
-    const moodLogs = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as MoodLog[];
+    // Calcular tendencia general
+    const firstHalf = moodLogs.slice(0, Math.floor(moodLogs.length / 2));
+    const secondHalf = moodLogs.slice(Math.floor(moodLogs.length / 2));
 
-    // Process data for trend analysis
-    const data = moodLogs.map((log) => ({
-      date: log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate().toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0],
-      mood: log.mood,
-      energy: log.energy || 0,
-      stress: log.stress || 0,
-      sleep: log.sleep || 0,
-      activities: log.activities || [],
-      emotions: log.emotions || [],
-    }));
+    const firstHalfAvg = firstHalf.reduce((sum, log) => sum + log.mood, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, log) => sum + log.mood, 0) / secondHalf.length;
 
-    const averageMood = data.length > 0 ? data.reduce((sum, item) => sum + item.mood, 0) / data.length : 0;
-
-    // Calculate trend
-    let trend: 'improving' | 'declining' | 'stable' = 'stable';
-    if (data.length >= 2) {
-      const firstHalf = data.slice(0, Math.floor(data.length / 2));
-      const secondHalf = data.slice(Math.floor(data.length / 2));
-
-      const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.mood, 0) / firstHalf.length;
-      const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.mood, 0) / secondHalf.length;
-
-      const difference = secondHalfAvg - firstHalfAvg;
-      if (difference > 0.2) trend = 'improving';
-      else if (difference < -0.2) trend = 'declining';
-    }
-
-    // Calculate volatility (standard deviation)
-    const variance =
-      data.length > 0 ? data.reduce((sum, item) => sum + Math.pow(item.mood - averageMood, 2), 0) / data.length : 0;
-    const volatility = Math.sqrt(variance) / 5; // Normalize to 0-1 scale
+    const change = secondHalfAvg - firstHalfAvg;
+    const trend: 'up' | 'down' | 'stable' = change > 0.2 ? 'up' : change < -0.2 ? 'down' : 'stable';
 
     return {
-      period,
-      data,
-      averageMood,
+      average,
       trend,
-      volatility,
+      change: Math.abs(change),
+      dataPoints: moodLogs.length,
+      weeklyTrends: this.calculateWeeklyTrends(moodLogs),
+      dailyPatterns: this.calculateDailyPatterns(moodLogs),
     };
-  } catch (error) {
-    console.error('Error calculating mood trend:', error);
-    throw error;
   }
-};
 
-export const analyzeEmotionalPatterns = async (userId: string): Promise<EmotionalPattern[]> => {
-  try {
-    const moodLogsRef = collection(db, 'moodLogs');
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const q = query(
-      moodLogsRef,
-      where('userId', '==', userId),
-      where('createdAt', '>=', thirtyDaysAgo),
-      orderBy('createdAt', 'asc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    const moodLogs = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as MoodLog[];
-
-    // Analyze emotional patterns
-    const emotionStats: Record<
-      string,
-      { count: number; totalIntensity: number; times: string[]; days: string[]; activities: string[] }
-    > = {};
+  // Calcular tendencias semanales
+  private calculateWeeklyTrends(moodLogs: any[]): any[] {
+    const weeks: { [key: string]: number[] } = {};
 
     moodLogs.forEach((log) => {
-      const date = log.createdAt.toDate();
-      const timeOfDay = date.getHours() < 12 ? 'morning' : date.getHours() < 18 ? 'afternoon' : 'evening';
-      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const weekStart = new Date(log.createdAt);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekKey = weekStart.toISOString().split('T')[0];
 
-      log.emotions.forEach((emotion) => {
-        if (!emotionStats[emotion]) {
-          emotionStats[emotion] = {
-            count: 0,
-            totalIntensity: 0,
-            times: [],
-            days: [],
-            activities: [],
-          };
+      if (!weeks[weekKey]) {
+        weeks[weekKey] = [];
+      }
+      weeks[weekKey].push(log.mood);
+    });
+
+    return Object.entries(weeks).map(([week, moods]) => ({
+      week,
+      average: moods.reduce((sum, mood) => sum + mood, 0) / moods.length,
+      count: moods.length,
+    }));
+  }
+
+  // Calcular patrones diarios
+  private calculateDailyPatterns(moodLogs: any[]): any[] {
+    const days: { [key: string]: number[] } = {};
+
+    moodLogs.forEach((log) => {
+      const dayOfWeek = log.createdAt.getDay();
+      const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][dayOfWeek];
+
+      if (!days[dayName]) {
+        days[dayName] = [];
+      }
+      days[dayName].push(log.mood);
+    });
+
+    return Object.entries(days).map(([day, moods]) => ({
+      day,
+      average: moods.reduce((sum, mood) => sum + mood, 0) / moods.length,
+      count: moods.length,
+    }));
+  }
+
+  // Generar insights de mood
+  private generateMoodInsights(analytics: any): string[] {
+    const insights: string[] = [];
+
+    if (analytics.trend === 'up') {
+      insights.push('Tu estado de ánimo ha mejorado significativamente en el período analizado.');
+    } else if (analytics.trend === 'down') {
+      insights.push('Se observa una tendencia descendente en tu estado de ánimo que requiere atención.');
+    } else {
+      insights.push('Tu estado de ánimo se mantiene estable, lo cual es positivo.');
+    }
+
+    if (analytics.dataPoints < 7) {
+      insights.push(
+        'Se recomienda registrar tu estado de ánimo más frecuentemente para obtener análisis más precisos.'
+      );
+    }
+
+    return insights;
+  }
+
+  // Generar recomendaciones de mood
+  private generateMoodRecommendations(analytics: any): string[] {
+    const recommendations: string[] = [];
+
+    if (analytics.trend === 'down') {
+      recommendations.push('Considera aumentar las actividades que te generan bienestar.');
+      recommendations.push('Es importante mantener contacto regular con tu psicólogo.');
+    }
+
+    if (analytics.average < 3) {
+      recommendations.push('Se sugiere implementar técnicas de relajación y mindfulness.');
+      recommendations.push('Mantén una rutina de sueño regular y ejercicio moderado.');
+    }
+
+    return recommendations;
+  }
+
+  // Obtener analytics en tiempo real
+  async getRealTimeAnalytics(userId: string): Promise<AnalyticsData> {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const moodLogsQuery = query(
+        collection(db, 'moodLogs'),
+        where('userId', '==', userId),
+        where('createdAt', '>=', thirtyDaysAgo),
+        orderBy('createdAt', 'desc')
+      );
+
+      const snapshot = await getDocs(moodLogsQuery);
+      const moodLogs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      }));
+
+      return this.calculateAnalyticsData(moodLogs);
+    } catch (error) {
+      console.error('Error getting real-time analytics:', error);
+      throw error;
+    }
+  }
+
+  // Calcular datos de analytics
+  private calculateAnalyticsData(moodLogs: any[]): AnalyticsData {
+    const moodTrends = this.calculateMoodTrends(moodLogs);
+    const activityPatterns = this.calculateActivityPatterns(moodLogs);
+    const emotionalPatterns = this.calculateEmotionalPatterns(moodLogs);
+    const wellnessMetrics = this.calculateWellnessMetrics(moodLogs);
+
+    return {
+      moodTrends: [moodTrends],
+      activityPatterns,
+      emotionalPatterns,
+      wellnessMetrics,
+      crisisIndicators: {
+        totalAlerts: 0,
+        severity: 'low',
+        trend: 'stable',
+        commonTriggers: [],
+      },
+      achievements: {
+        total: 0,
+        recent: [],
+        categories: {},
+      },
+    };
+  }
+
+  // Calcular patrones de actividad
+  private calculateActivityPatterns(moodLogs: any[]): any[] {
+    const activityCount: { [key: string]: number } = {};
+    const activityMoodCorrelation: { [key: string]: number[] } = {};
+
+    moodLogs.forEach((log) => {
+      log.activities?.forEach((activity: string) => {
+        activityCount[activity] = (activityCount[activity] || 0) + 1;
+        if (!activityMoodCorrelation[activity]) {
+          activityMoodCorrelation[activity] = [];
         }
-
-        emotionStats[emotion].count++;
-        emotionStats[emotion].totalIntensity += log.mood;
-        emotionStats[emotion].times.push(timeOfDay);
-        emotionStats[emotion].days.push(dayOfWeek);
-        emotionStats[emotion].activities.push(...log.activities);
+        activityMoodCorrelation[activity].push(log.mood);
       });
     });
 
-    // Convert to EmotionalPattern objects
-    const patterns: EmotionalPattern[] = Object.entries(emotionStats).map(([emotion, stats]) => {
-      const frequency = stats.count / moodLogs.length;
-      const intensity = stats.totalIntensity / stats.count;
+    return Object.entries(activityCount).map(([activity, frequency]) => {
+      const moods = activityMoodCorrelation[activity];
+      const avgMood = moods.reduce((sum, mood) => sum + mood, 0) / moods.length;
+      const correlation = avgMood > 3.5 ? 1 : avgMood < 2.5 ? -1 : 0;
 
-      // Find most common triggers
-      const activityCounts: Record<string, number> = {};
-      stats.activities.forEach((activity) => {
-        activityCounts[activity] = (activityCounts[activity] || 0) + 1;
+      return {
+        activity,
+        frequency,
+        correlation,
+        impact: correlation > 0 ? 'positive' : correlation < 0 ? 'negative' : 'neutral',
+      };
+    });
+  }
+
+  // Calcular patrones emocionales
+  private calculateEmotionalPatterns(moodLogs: any[]): any[] {
+    const emotionCount: { [key: string]: number } = {};
+    const emotionIntensity: { [key: string]: number[] } = {};
+
+    moodLogs.forEach((log) => {
+      log.emotions?.forEach((emotion: string) => {
+        emotionCount[emotion] = (emotionCount[emotion] || 0) + 1;
+        if (!emotionIntensity[emotion]) {
+          emotionIntensity[emotion] = [];
+        }
+        emotionIntensity[emotion].push(log.mood);
       });
+    });
 
-      const triggers = Object.entries(activityCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5)
-        .map(([activity]) => activity);
-
-      // Find most common times
-      const timeCounts: Record<string, number> = {};
-      stats.times.forEach((time) => {
-        timeCounts[time] = (timeCounts[time] || 0) + 1;
-      });
-
-      const commonTimes = Object.entries(timeCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 3)
-        .map(([time]) => time);
-
-      // Find most common days
-      const dayCounts: Record<string, number> = {};
-      stats.days.forEach((day) => {
-        dayCounts[day] = (dayCounts[day] || 0) + 1;
-      });
-
-      const commonDays = Object.entries(dayCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 3)
-        .map(([day]) => day);
-
-      // Calculate correlations with activities
-      const correlations = Object.entries(activityCounts)
-        .map(([activity, count]) => ({
-          activity,
-          strength: count / stats.count - 1 / Object.keys(activityCounts).length,
-        }))
-        .sort((a, b) => b.strength - a.strength);
+    return Object.entries(emotionCount).map(([emotion, frequency]) => {
+      const intensities = emotionIntensity[emotion];
+      const avgIntensity = intensities.reduce((sum, intensity) => sum + intensity, 0) / intensities.length;
 
       return {
         emotion,
         frequency,
-        intensity,
-        triggers,
-        timeOfDay: commonTimes,
-        dayOfWeek: commonDays,
-        correlation: correlations,
+        intensity: avgIntensity,
+        triggers: [],
       };
     });
-
-    return patterns.sort((a, b) => b.frequency - a.frequency);
-  } catch (error) {
-    console.error('Error analyzing emotional patterns:', error);
-    throw error;
   }
-};
 
-export const generateWellnessInsights = async (userId: string): Promise<WellnessInsights> => {
-  try {
-    const [moodTrend, emotionalPatterns] = await Promise.all([
-      calculateMoodTrend(userId, 'weekly'),
-      analyzeEmotionalPatterns(userId),
-    ]);
-
-    // Calculate overall wellness score
-    const moodScore = (moodTrend.averageMood / 5) * 40; // 40% weight
-    const trendScore = moodTrend.trend === 'improving' ? 30 : moodTrend.trend === 'stable' ? 20 : 10; // 30% weight
-    const stabilityScore = (1 - moodTrend.volatility) * 30; // 30% weight
-    const overallScore = Math.round(moodScore + trendScore + stabilityScore);
-
-    // Identify strengths and areas for improvement
-    const strengths: string[] = [];
-    const areasForImprovement: string[] = [];
-
-    if (moodTrend.averageMood >= 4) {
-      strengths.push('Estado de ánimo positivo consistente');
-    } else if (moodTrend.averageMood <= 2) {
-      areasForImprovement.push('Mejorar el estado de ánimo general');
-    }
-
-    if (moodTrend.trend === 'improving') {
-      strengths.push('Progreso emocional positivo');
-    } else if (moodTrend.trend === 'declining') {
-      areasForImprovement.push('Reversar la tendencia negativa');
-    }
-
-    if (moodTrend.volatility < 0.3) {
-      strengths.push('Estabilidad emocional');
-    } else {
-      areasForImprovement.push('Reducir la variabilidad emocional');
-    }
-
-    // Generate recommendations based on patterns
-    const recommendations: string[] = [];
-
-    emotionalPatterns.forEach((pattern) => {
-      if (pattern.frequency > 0.3 && pattern.intensity < 3) {
-        recommendations.push(`Considera actividades que te ayuden a manejar mejor la emoción de ${pattern.emotion}`);
-      }
-
-      if (pattern.triggers.length > 0) {
-        recommendations.push(
-          `Evita o modifica las actividades que desencadenan ${pattern.emotion}: ${pattern.triggers
-            .slice(0, 3)
-            .join(', ')}`
-        );
-      }
-    });
-
-    // Identify risk and protective factors
-    const riskFactors: string[] = [];
-    const protectiveFactors: string[] = [];
-
-    if (moodTrend.averageMood <= 2) {
-      riskFactors.push('Estado de ánimo persistentemente bajo');
-    }
-
-    if (moodTrend.volatility > 0.5) {
-      riskFactors.push('Alta variabilidad emocional');
-    }
-
-    if (moodTrend.trend === 'improving') {
-      protectiveFactors.push('Tendencia de mejora emocional');
-    }
-
-    if (emotionalPatterns.some((p) => p.emotion === 'gratitude' || p.emotion === 'joy')) {
-      protectiveFactors.push('Presencia de emociones positivas');
-    }
-
-    // Generate goals
-    const shortTermGoals: string[] = [];
-    const longTermGoals: string[] = [];
-
-    if (moodTrend.averageMood < 3) {
-      shortTermGoals.push('Aumentar el estado de ánimo promedio a 3 o más');
-    }
-
-    if (moodTrend.volatility > 0.4) {
-      shortTermGoals.push('Reducir la variabilidad emocional');
-    }
-
-    longTermGoals.push('Mantener un estado de ánimo estable y positivo');
-    longTermGoals.push('Desarrollar estrategias de afrontamiento saludables');
+  // Calcular métricas de bienestar
+  private calculateWellnessMetrics(moodLogs: any[]): any {
+    const sleepValues = moodLogs.map((log) => log.sleep).filter((sleep) => sleep !== undefined);
+    const energyValues = moodLogs.map((log) => log.energy).filter((energy) => energy !== undefined);
+    const stressValues = moodLogs.map((log) => log.stress).filter((stress) => stress !== undefined);
 
     return {
-      overallScore,
-      strengths,
-      areasForImprovement,
-      recommendations,
-      riskFactors,
-      protectiveFactors,
-      patterns: emotionalPatterns,
-      trends: [moodTrend],
-      goals: {
-        shortTerm: shortTermGoals,
-        longTerm: longTermGoals,
+      sleep: {
+        average: sleepValues.length > 0 ? sleepValues.reduce((sum, sleep) => sum + sleep, 0) / sleepValues.length : 0,
+        trend: 'stable',
+        quality:
+          sleepValues.length > 0 && sleepValues.reduce((sum, sleep) => sum + sleep, 0) / sleepValues.length > 3.5
+            ? 'good'
+            : 'fair',
+      },
+      energy: {
+        average:
+          energyValues.length > 0 ? energyValues.reduce((sum, energy) => sum + energy, 0) / energyValues.length : 0,
+        trend: 'stable',
+        peakHours: [],
+      },
+      stress: {
+        average:
+          stressValues.length > 0 ? stressValues.reduce((sum, stress) => sum + stress, 0) / stressValues.length : 0,
+        trend: 'stable',
+        triggers: [],
       },
     };
-  } catch (error) {
-    console.error('Error generating wellness insights:', error);
-    throw error;
   }
-};
+}
 
-export const getMoodStatistics = async (userId: string, days: number = 30) => {
-  try {
-    const moodLogsRef = collection(db, 'moodLogs');
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const q = query(
-      moodLogsRef,
-      where('userId', '==', userId),
-      where('createdAt', '>=', startDate),
-      orderBy('createdAt', 'asc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    const moodLogs = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as MoodLog[];
-
-    if (moodLogs.length === 0) {
-      return {
-        totalEntries: 0,
-        averageMood: 0,
-        moodDistribution: {},
-        weeklyAverages: [],
-        mostCommonEmotions: [],
-        mostCommonActivities: [],
-        moodByDayOfWeek: {},
-        moodByTimeOfDay: {},
-      };
-    }
-
-    // Calculate basic statistics
-    const totalEntries = moodLogs.length;
-    const averageMood = moodLogs.reduce((sum, log) => sum + log.mood, 0) / totalEntries;
-
-    // Mood distribution
-    const moodDistribution: Record<number, number> = {};
-    moodLogs.forEach((log) => {
-      moodDistribution[log.mood] = (moodDistribution[log.mood] || 0) + 1;
-    });
-
-    // Weekly averages
-    const weeklyAverages: { week: string; averageMood: number }[] = [];
-    const weeks = new Map<string, number[]>();
-
-    moodLogs.forEach((log) => {
-      const date = log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate() 
-        : new Date();
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay());
-      const weekKey = weekStart.toISOString().split('T')[0];
-
-      if (!weeks.has(weekKey)) {
-        weeks.set(weekKey, []);
-      }
-      weeks.get(weekKey)!.push(log.mood);
-    });
-
-    weeks.forEach((moods, week) => {
-      weeklyAverages.push({
-        week,
-        averageMood: moods.reduce((sum, mood) => sum + mood, 0) / moods.length,
-      });
-    });
-
-    // Most common emotions
-    const emotionCounts: Record<string, number> = {};
-    moodLogs.forEach((log) => {
-      log.emotions.forEach((emotion) => {
-        emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
-      });
-    });
-
-    const mostCommonEmotions = Object.entries(emotionCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-      .map(([emotion, count]) => ({ emotion, count }));
-
-    // Most common activities
-    const activityCounts: Record<string, number> = {};
-    moodLogs.forEach((log) => {
-      log.activities.forEach((activity) => {
-        activityCounts[activity] = (activityCounts[activity] || 0) + 1;
-      });
-    });
-
-    const mostCommonActivities = Object.entries(activityCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-      .map(([activity, count]) => ({ activity, count }));
-
-    // Mood by day of week
-    const moodByDayOfWeek: Record<string, number[]> = {};
-    moodLogs.forEach((log) => {
-      const dayOfWeek = log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-        : new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      if (!moodByDayOfWeek[dayOfWeek]) {
-        moodByDayOfWeek[dayOfWeek] = [];
-      }
-      moodByDayOfWeek[dayOfWeek].push(log.mood);
-    });
-
-    // Calculate averages for each day
-    const moodByDayOfWeekAvg: Record<string, number> = {};
-    Object.entries(moodByDayOfWeek).forEach(([day, moods]) => {
-      moodByDayOfWeekAvg[day] = moods.reduce((sum, mood) => sum + mood, 0) / moods.length;
-    });
-
-    // Mood by time of day
-    const moodByTimeOfDay: Record<string, number[]> = {};
-    moodLogs.forEach((log) => {
-      const hour = log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate().getHours()
-        : new Date().getHours();
-      let timeOfDay: string;
-      if (hour < 6) timeOfDay = 'night';
-      else if (hour < 12) timeOfDay = 'morning';
-      else if (hour < 18) timeOfDay = 'afternoon';
-      else timeOfDay = 'evening';
-
-      if (!moodByTimeOfDay[timeOfDay]) {
-        moodByTimeOfDay[timeOfDay] = [];
-      }
-      moodByTimeOfDay[timeOfDay].push(log.mood);
-    });
-
-    // Calculate averages for each time
-    const moodByTimeOfDayAvg: Record<string, number> = {};
-    Object.entries(moodByTimeOfDay).forEach(([time, moods]) => {
-      moodByTimeOfDayAvg[time] = moods.reduce((sum, mood) => sum + mood, 0) / moods.length;
-    });
-
-    return {
-      totalEntries,
-      averageMood: Math.round(averageMood * 100) / 100,
-      moodDistribution,
-      weeklyAverages,
-      mostCommonEmotions,
-      mostCommonActivities,
-      moodByDayOfWeek: moodByDayOfWeekAvg,
-      moodByTimeOfDay: moodByTimeOfDayAvg,
-    };
-  } catch (error) {
-    console.error('Error getting mood statistics:', error);
-    throw error;
-  }
-};
-
-// Save analytics data for caching
-export const saveAnalyticsCache = async (userId: string, insights: WellnessInsights): Promise<void> => {
-  try {
-    const cacheRef = doc(db, 'analyticsCache', userId);
-    await updateDoc(cacheRef, {
-      insights,
-      lastUpdated: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Error saving analytics cache:', error);
-    throw error;
-  }
-};
-
-export const getAnalyticsCache = async (userId: string): Promise<WellnessInsights | null> => {
-  try {
-    const cacheRef = doc(db, 'analyticsCache', userId);
-    const cacheSnap = await getDoc(cacheRef);
-
-    if (cacheSnap.exists()) {
-      const data = cacheSnap.data();
-      const lastUpdated = data.lastUpdated && typeof data.lastUpdated.toDate === 'function' 
-        ? data.lastUpdated.toDate() 
-        : new Date();
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-
-      // Return cached data if it's less than a day old
-      if (lastUpdated > oneDayAgo) {
-        return data.insights as WellnessInsights;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting analytics cache:', error);
-    throw error;
-  }
-};
+export const analyticsService = new AnalyticsService();

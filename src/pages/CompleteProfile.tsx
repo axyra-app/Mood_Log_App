@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
-import { useSimpleNotifications } from '../hooks/useSimpleNotifications';
+import { useNotifications } from '../hooks/useNotifications';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
-  const { notifications, showSuccess, showError, removeNotification } = useSimpleNotifications();
+  const { notifications, showSuccess, showError, removeNotification } = useNotifications();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',

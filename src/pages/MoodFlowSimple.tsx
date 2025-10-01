@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+import CrisisAlert from '../components/CrisisAlert';
+=======
 import { useAuth } from '../contexts/AuthContext';
-import { useOptimizedMood } from '../hooks/useOptimizedMood';
+import { useMood } from '../hooks/useMood';
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
 import LogoutModal from '../components/LogoutModal';
+import MoodAnalysisPanel from '../components/mood/MoodAnalysisPanel';
+import { useAuth } from '../contexts/AuthContext';
+import { useCrisisDetection } from '../hooks/useCrisisDetection';
+import { useOptimizedMood } from '../hooks/useOptimizedMood';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
+<<<<<<< HEAD
   const { createMoodLog, loading: moodLoading, error: moodError } = useOptimizedMood();
+  const { currentAssessment, assessMoodData, dismissAlert, contactPsychologist, emergencyContact } =
+    useCrisisDetection();
+=======
+  const { createMoodLog, loading: moodLoading, error: moodError } = useMood();
+>>>>>>> 62d64a6f11cb728c67a6343b64d431bef6bed5ad
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
@@ -17,29 +31,47 @@ const MoodFlowSimple: React.FC = () => {
   const [stress, setStress] = useState(5);
   const [sleep, setSleep] = useState(5);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: mood selection, 2: feelings description, 3: additional details
+  const [step, setStep] = useState(1); // 1: mood selection, 2: feelings description, 3: additional details, 4: analysis
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [moodData, setMoodData] = useState<any>(null);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
   const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
   const moodColors = [
     'from-red-500 to-red-600',
-    'from-orange-500 to-orange-600', 
+    'from-orange-500 to-orange-600',
     'from-yellow-500 to-yellow-600',
     'from-green-500 to-green-600',
-    'from-blue-500 to-blue-600'
+    'from-blue-500 to-blue-600',
   ];
 
   const activityOptions = [
-    'Ejercicio', 'Trabajo', 'Estudio', 'Social', 'Relajación', 
-    'Hobby', 'Familia', 'Música', 'Lectura', 'Naturaleza'
+    'Ejercicio',
+    'Trabajo',
+    'Estudio',
+    'Social',
+    'Relajación',
+    'Hobby',
+    'Familia',
+    'Música',
+    'Lectura',
+    'Naturaleza',
   ];
 
   const emotionOptions = [
-    'Felicidad', 'Tristeza', 'Ansiedad', 'Tranquilidad', 'Enojo',
-    'Gratitud', 'Miedo', 'Esperanza', 'Frustración', 'Paz'
+    'Felicidad',
+    'Tristeza',
+    'Ansiedad',
+    'Tranquilidad',
+    'Enojo',
+    'Gratitud',
+    'Miedo',
+    'Esperanza',
+    'Frustración',
+    'Paz',
   ];
 
   useEffect(() => {
@@ -65,19 +97,11 @@ const MoodFlowSimple: React.FC = () => {
   };
 
   const handleActivityToggle = (activity: string) => {
-    setActivities(prev => 
-      prev.includes(activity) 
-        ? prev.filter(a => a !== activity)
-        : [...prev, activity]
-    );
+    setActivities((prev) => (prev.includes(activity) ? prev.filter((a) => a !== activity) : [...prev, activity]));
   };
 
   const handleEmotionToggle = (emotion: string) => {
-    setEmotions(prev => 
-      prev.includes(emotion) 
-        ? prev.filter(e => e !== emotion)
-        : [...prev, emotion]
-    );
+    setEmotions((prev) => (prev.includes(emotion) ? prev.filter((e) => e !== emotion) : [...prev, emotion]));
   };
 
   const handleFeelingsSubmit = async (e: React.FormEvent) => {
@@ -97,17 +121,16 @@ const MoodFlowSimple: React.FC = () => {
         sleep,
       };
 
+      // Crear el mood log
       await createMoodLog(moodData);
 
-      // Mostrar mensaje de éxito y redirigir
-      alert('¡Estado de ánimo guardado exitosamente!');
-      // Redirigir al dashboard del usuario según su rol
-      if (user?.role === 'psychologist') {
-        navigate('/dashboard-psychologist');
-      } else {
-        navigate('/dashboard');
-      }
-      
+      // Evaluar crisis después de guardar
+      await assessMoodData(moodData);
+
+      // Guardar datos para análisis y mostrar panel de análisis
+      setMoodData(moodData);
+      setShowAnalysis(true);
+      setStep(4);
     } catch (error) {
       console.error('Error saving mood:', error);
       alert('Error al guardar el mood. Inténtalo de nuevo.');
@@ -142,7 +165,6 @@ const MoodFlowSimple: React.FC = () => {
       } else {
         navigate('/dashboard');
       }
-      
     } catch (error) {
       console.error('Error saving mood:', error);
       alert('Error al guardar el mood. Inténtalo de nuevo.');
@@ -172,56 +194,55 @@ const MoodFlowSimple: React.FC = () => {
     setShowLogoutModal(false);
   };
 
-
   if (!isLoaded) {
     return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-900' : 'bg-white'
-      }`}>
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      <div
+        className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
+          isDarkMode ? 'bg-gray-900' : 'bg-white'
+        }`}
+      >
+        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600'></div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${
-      isDarkMode ? 'bg-gray-900' : 'bg-white'
-    }`}>
+    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Header */}
-      <header className={`py-6 px-6 transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
-      } backdrop-blur-lg border-b ${
-        isDarkMode ? 'border-gray-700' : 'border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-black text-lg">💜</span>
+      <header
+        className={`py-6 px-6 transition-colors duration-500 ${
+          isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
+        } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+      >
+        <div className='max-w-7xl mx-auto flex items-center justify-between'>
+          <Link to='/' className='flex items-center space-x-3 group'>
+            <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
+              <span className='text-white font-black text-lg'>💜</span>
             </div>
-            <span className={`text-2xl font-black transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+            <span
+              className={`text-2xl font-black transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
               MOOD LOG
             </span>
           </Link>
-          
-          <div className="flex items-center space-x-4">
+
+          <div className='flex items-center space-x-4'>
             <button
               onClick={toggleDarkMode}
               className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-                isDarkMode 
-                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' 
+                isDarkMode
+                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {isDarkMode ? '☀️' : '🌙'}
             </button>
             <Link
-              to="/dashboard"
+              to='/dashboard'
               className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 ${
-                isDarkMode
-                  ? 'bg-gray-700 text-white hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Dashboard
@@ -242,78 +263,106 @@ const MoodFlowSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className='max-w-4xl mx-auto px-6 py-12'>
         {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center space-x-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-              step >= 1 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
-                : isDarkMode 
-                  ? 'bg-gray-700 text-gray-400' 
+        <div className='mb-8'>
+          <div className='flex items-center justify-center space-x-4'>
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
+                step >= 1
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : isDarkMode
+                  ? 'bg-gray-700 text-gray-400'
                   : 'bg-gray-200 text-gray-500'
-            }`}>
+              }`}
+            >
               1
             </div>
-            <div className={`w-16 h-1 transition-all duration-300 ${
-              step >= 2 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
-                : isDarkMode 
-                  ? 'bg-gray-700' 
-                  : 'bg-gray-200'
-            }`}></div>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-              step >= 2 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
-                : isDarkMode 
-                  ? 'bg-gray-700 text-gray-400' 
+            <div
+              className={`w-16 h-1 transition-all duration-300 ${
+                step >= 2 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+              }`}
+            ></div>
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
+                step >= 2
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : isDarkMode
+                  ? 'bg-gray-700 text-gray-400'
                   : 'bg-gray-200 text-gray-500'
-            }`}>
+              }`}
+            >
               2
             </div>
-            <div className={`w-16 h-1 transition-all duration-300 ${
-              step >= 3 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
-                : isDarkMode 
-                  ? 'bg-gray-700' 
-                  : 'bg-gray-200'
-            }`}></div>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
-              step >= 3 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
-                : isDarkMode 
-                  ? 'bg-gray-700 text-gray-400' 
+            <div
+              className={`w-16 h-1 transition-all duration-300 ${
+                step >= 3 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+              }`}
+            ></div>
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
+                step >= 3
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : isDarkMode
+                  ? 'bg-gray-700 text-gray-400'
                   : 'bg-gray-200 text-gray-500'
-            }`}>
+              }`}
+            >
               3
             </div>
+            <div
+              className={`w-16 h-1 transition-all duration-300 ${
+                step >= 4 ? 'bg-gradient-to-r from-purple-600 to-pink-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+              }`}
+            ></div>
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg transition-all duration-300 ${
+                step >= 4
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : isDarkMode
+                  ? 'bg-gray-700 text-gray-400'
+                  : 'bg-gray-200 text-gray-500'
+              }`}
+            >
+              4
+            </div>
           </div>
-          <div className="text-center mt-4">
-            <p className={`text-lg font-bold transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              {step === 1 ? 'PASO 1: SELECCIONA TU ESTADO DE ÁNIMO' : 
-               step === 2 ? 'PASO 2: DESCRIBE TUS SENTIMIENTOS' : 
-               'PASO 3: DETALLES ADICIONALES'}
+          <div className='text-center mt-4'>
+            <p
+              className={`text-lg font-bold transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
+              {step === 1
+                ? 'PASO 1: SELECCIONA TU ESTADO DE ÁNIMO'
+                : step === 2
+                ? 'PASO 2: DESCRIBE TUS SENTIMIENTOS'
+                : step === 3
+                ? 'PASO 3: DETALLES ADICIONALES'
+                : 'PASO 4: ANÁLISIS COMPLETO'}
             </p>
           </div>
         </div>
 
         {step === 1 && (
           /* Step 1: Mood Selection */
-          <div className="text-center">
-            <h1 className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+          <div className='text-center'>
+            <h1
+              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
               ¿CÓMO TE SIENTES HOY?
             </h1>
-            <p className={`text-xl mb-12 transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
+            <p
+              className={`text-xl mb-12 transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
               Selecciona el emoji que mejor represente tu estado de ánimo actual
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+            <div className='grid grid-cols-1 md:grid-cols-5 gap-6 mb-12'>
               {moodEmojis.map((emoji, index) => (
                 <button
                   key={index}
@@ -322,20 +371,16 @@ const MoodFlowSimple: React.FC = () => {
                     currentMood === index + 1
                       ? `bg-gradient-to-r ${moodColors[index]} border-transparent scale-110 shadow-2xl`
                       : `border-transparent hover:border-purple-500 ${
-                          isDarkMode
-                            ? 'bg-gray-800 hover:bg-gray-700'
-                            : 'bg-gray-100 hover:bg-gray-200'
+                          isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
                         }`
                   }`}
                 >
-                  <div className="text-6xl mb-4">{emoji}</div>
-                  <p className={`text-lg font-bold transition-colors duration-500 ${
-                    currentMood === index + 1
-                      ? 'text-white'
-                      : isDarkMode
-                        ? 'text-white'
-                        : 'text-gray-900'
-                  }`}>
+                  <div className='text-6xl mb-4'>{emoji}</div>
+                  <p
+                    className={`text-lg font-bold transition-colors duration-500 ${
+                      currentMood === index + 1 ? 'text-white' : isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
                     {moodLabels[index]}
                   </p>
                 </button>
@@ -343,19 +388,23 @@ const MoodFlowSimple: React.FC = () => {
             </div>
 
             {currentMood && (
-              <div className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                isDarkMode
-                  ? 'bg-gray-800 border-gray-700'
-                  : 'bg-white border-gray-200'
-              }`}>
-                <p className={`text-xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+              <div
+                className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
+                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                }`}
+              >
+                <p
+                  className={`text-xl font-bold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   Seleccionaste: {moodLabels[currentMood - 1]} {moodEmojis[currentMood - 1]}
                 </p>
-                <p className={`text-lg mt-2 transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>
+                <p
+                  className={`text-lg mt-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}
+                >
                   ¡Perfecto! Ahora puedes describir cómo te sientes (opcional)
                 </p>
               </div>
@@ -365,50 +414,62 @@ const MoodFlowSimple: React.FC = () => {
 
         {step === 2 && (
           /* Step 2: Feelings Description */
-          <div className="text-center">
-            <h1 className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+          <div className='text-center'>
+            <h1
+              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
               DESCRIBE TUS SENTIMIENTOS
             </h1>
-            <p className={`text-xl mb-8 transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
+            <p
+              className={`text-xl mb-8 transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
               Cuéntanos más sobre cómo te sientes. La IA analizará tus palabras y te dará sugerencias personalizadas.
             </p>
 
-            <div className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-              isDarkMode
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}>
-              <div className="flex items-center justify-center space-x-4 mb-4">
-                <div className="text-4xl">{moodEmojis[currentMood! - 1]}</div>
+            <div
+              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <div className='flex items-center justify-center space-x-4 mb-4'>
+                <div className='text-4xl'>{moodEmojis[currentMood! - 1]}</div>
                 <div>
-                  <p className={`text-2xl font-bold transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <p
+                    className={`text-2xl font-bold transition-colors duration-500 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
                     {moodLabels[currentMood! - 1]}
                   </p>
                 </div>
               </div>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); setStep(3); }} className="max-w-2xl mx-auto">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setStep(3);
+              }}
+              className='max-w-2xl mx-auto'
+            >
               <textarea
                 value={feelings}
                 onChange={(e) => setFeelings(e.target.value)}
-                placeholder="Describe cómo te sientes hoy... ¿Qué está pasando en tu vida? ¿Qué emociones experimentas? ¿Hay algo específico que te preocupa o te hace feliz?"
+                placeholder='Describe cómo te sientes hoy... ¿Qué está pasando en tu vida? ¿Qué emociones experimentas? ¿Hay algo específico que te preocupa o te hace feliz?'
                 className={`w-full h-48 p-6 rounded-2xl border-2 resize-none transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/50 ${
                   isDarkMode
                     ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-purple-500'
                     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:border-purple-500'
                 }`}
               />
-              
-              <div className="flex flex-col sm:flex-row gap-4 mt-8">
+
+              <div className='flex flex-col sm:flex-row gap-4 mt-8'>
                 <button
-                  type="button"
+                  type='button'
                   onClick={() => setStep(3)}
                   className={`flex-1 py-4 px-8 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 ${
                     isDarkMode
@@ -418,9 +479,9 @@ const MoodFlowSimple: React.FC = () => {
                 >
                   Omitir y Continuar
                 </button>
-                
+
                 <button
-                  type="submit"
+                  type='submit'
                   className={`flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-lg uppercase tracking-wider py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50`}
                 >
                   Continuar
@@ -428,7 +489,7 @@ const MoodFlowSimple: React.FC = () => {
               </div>
             </form>
 
-            <div className="mt-8">
+            <div className='mt-8'>
               <button
                 onClick={() => setStep(1)}
                 className={`text-lg font-bold transition-colors duration-300 hover:underline ${
@@ -443,30 +504,36 @@ const MoodFlowSimple: React.FC = () => {
 
         {step === 3 && (
           /* Step 3: Additional Details */
-          <div className="text-center">
-            <h1 className={`text-5xl font-black mb-6 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+          <div className='text-center'>
+            <h1
+              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
               DETALLES ADICIONALES
             </h1>
-            <p className={`text-xl mb-8 transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
+            <p
+              className={`text-xl mb-8 transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
               Ayúdanos a entender mejor tu día con algunos detalles adicionales
             </p>
 
             {/* Activities */}
-            <div className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-              isDarkMode
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
+            <div
+              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <h3
+                className={`text-2xl font-bold mb-4 transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
                 ¿Qué actividades realizaste hoy?
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className='grid grid-cols-2 md:grid-cols-5 gap-3'>
                 {activityOptions.map((activity) => (
                   <button
                     key={activity}
@@ -475,8 +542,8 @@ const MoodFlowSimple: React.FC = () => {
                       activities.includes(activity)
                         ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-transparent text-white'
                         : isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-white hover:border-purple-500'
-                          : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-purple-500'
+                        ? 'bg-gray-700 border-gray-600 text-white hover:border-purple-500'
+                        : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-purple-500'
                     }`}
                   >
                     {activity}
@@ -486,17 +553,19 @@ const MoodFlowSimple: React.FC = () => {
             </div>
 
             {/* Emotions */}
-            <div className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-              isDarkMode
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
+            <div
+              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <h3
+                className={`text-2xl font-bold mb-4 transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
                 ¿Qué emociones experimentaste?
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className='grid grid-cols-2 md:grid-cols-5 gap-3'>
                 {emotionOptions.map((emotion) => (
                   <button
                     key={emotion}
@@ -505,8 +574,8 @@ const MoodFlowSimple: React.FC = () => {
                       emotions.includes(emotion)
                         ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-transparent text-white'
                         : isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-white hover:border-purple-500'
-                          : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-purple-500'
+                        ? 'bg-gray-700 border-gray-600 text-white hover:border-purple-500'
+                        : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-purple-500'
                     }`}
                   >
                     {emotion}
@@ -516,75 +585,83 @@ const MoodFlowSimple: React.FC = () => {
             </div>
 
             {/* Energy, Stress, Sleep */}
-            <div className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
-              isDarkMode
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
+            <div
+              className={`p-6 rounded-2xl border-2 mb-8 transition-all duration-300 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <h3
+                className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
                 Evalúa tu día
               </h3>
-              
-              <div className="space-y-6">
+
+              <div className='space-y-6'>
                 {/* Energy */}
                 <div>
-                  <label className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <label
+                    className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
                     Nivel de Energía: {energy}/10
                   </label>
                   <input
-                    type="range"
-                    min="1"
-                    max="10"
+                    type='range'
+                    min='1'
+                    max='10'
                     value={energy}
                     onChange={(e) => setEnergy(Number(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider'
                   />
                 </div>
 
                 {/* Stress */}
                 <div>
-                  <label className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <label
+                    className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
                     Nivel de Estrés: {stress}/10
                   </label>
                   <input
-                    type="range"
-                    min="1"
-                    max="10"
+                    type='range'
+                    min='1'
+                    max='10'
                     value={stress}
                     onChange={(e) => setStress(Number(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider'
                   />
                 </div>
 
                 {/* Sleep */}
                 <div>
-                  <label className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <label
+                    className={`text-lg font-bold block mb-2 transition-colors duration-500 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
                     Calidad del Sueño: {sleep}/10
                   </label>
                   <input
-                    type="range"
-                    min="1"
-                    max="10"
+                    type='range'
+                    min='1'
+                    max='10'
                     value={sleep}
                     onChange={(e) => setSleep(Number(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className='w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider'
                   />
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleFeelingsSubmit} className="max-w-2xl mx-auto">
-              <div className="flex flex-col sm:flex-row gap-4">
+            <form onSubmit={handleFeelingsSubmit} className='max-w-2xl mx-auto'>
+              <div className='flex flex-col sm:flex-row gap-4'>
                 <button
-                  type="button"
+                  type='button'
                   onClick={handleSkipFeelings}
                   disabled={loading}
                   className={`flex-1 py-4 px-8 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 ${
@@ -595,17 +672,17 @@ const MoodFlowSimple: React.FC = () => {
                 >
                   {loading ? 'Guardando...' : 'Guardar sin IA'}
                 </button>
-                
+
                 <button
-                  type="submit"
+                  type='submit'
                   disabled={loading}
                   className={`flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-lg uppercase tracking-wider py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 ${
                     loading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="animate-spin text-xl">⚡</div>
+                    <div className='flex items-center justify-center space-x-2'>
+                      <div className='animate-spin text-xl'>⚡</div>
                       <span>Analizando con IA...</span>
                     </div>
                   ) : (
@@ -615,7 +692,7 @@ const MoodFlowSimple: React.FC = () => {
               </div>
             </form>
 
-            <div className="mt-8">
+            <div className='mt-8'>
               <button
                 onClick={() => setStep(2)}
                 className={`text-lg font-bold transition-colors duration-300 hover:underline ${
@@ -628,6 +705,84 @@ const MoodFlowSimple: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Step 4: Analysis Panel */}
+      {step === 4 && showAnalysis && moodData && (
+        <div className='max-w-4xl mx-auto px-6 py-12'>
+          <div className='text-center mb-8'>
+            <h1
+              className={`text-5xl font-black mb-6 transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
+              ANÁLISIS COMPLETO
+            </h1>
+            <p
+              className={`text-xl mb-8 transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
+              Tu estado de ánimo ha sido guardado. Aquí tienes un análisis detallado de tu bienestar.
+            </p>
+          </div>
+
+          <MoodAnalysisPanel
+            userId={user?.uid || ''}
+            currentMoodData={moodData}
+            isDarkMode={isDarkMode}
+            onAnalysisComplete={(analysis) => {
+              console.log('Análisis completado:', analysis);
+            }}
+          />
+
+          <div className='mt-8 flex flex-col sm:flex-row gap-4 justify-center'>
+            <button
+              onClick={() => {
+                setShowAnalysis(false);
+                setStep(1);
+                // Limpiar datos
+                setCurrentMood(null);
+                setFeelings('');
+                setActivities([]);
+                setEmotions([]);
+                setEnergy(5);
+                setStress(5);
+                setSleep(5);
+                setMoodData(null);
+              }}
+              className={`px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 ${
+                isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Registrar Nuevo Estado
+            </button>
+
+            <button
+              onClick={() => {
+                // Redirigir al dashboard del usuario según su rol
+                if (user?.role === 'psychologist') {
+                  navigate('/dashboard-psychologist');
+                } else {
+                  navigate('/dashboard');
+                }
+              }}
+              className='px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50'
+            >
+              Ir al Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Crisis Alert */}
+      {currentAssessment && (
+        <CrisisAlert
+          assessment={currentAssessment}
+          onDismiss={dismissAlert}
+          onContactPsychologist={contactPsychologist}
+          onEmergencyContact={emergencyContact}
+        />
+      )}
 
       {/* Logout Modal */}
       <LogoutModal
