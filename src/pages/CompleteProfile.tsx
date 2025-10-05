@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
+import { useNotifications } from '../hooks/useNotificationsSimple';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
 

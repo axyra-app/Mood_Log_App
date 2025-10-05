@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './AppDebug';
+import App from './App';
 import './index.css';
 
 // Render the app sin validaciones de entorno que puedan causar errores
