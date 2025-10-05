@@ -87,3 +87,4 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, isDarkM
 };
 
 export default Modal;
+

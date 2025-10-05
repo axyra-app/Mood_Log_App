@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect } from 'react';
-import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -10,117 +10,44 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 import UserDebugInfo from './components/UserDebugInfo';
 
-// Lazy loading de páginas para optimizar bundle
-import { LazyPages } from './hooks/useBundleOptimization';
+// Pages
+import Chat from './pages/Chat';
+import CompleteProfile from './pages/CompleteProfile';
+import DashboardPsychologist from './pages/DashboardPsychologist';
+import DashboardSimple from './pages/DashboardSimple';
+import ForgotPassword from './pages/ForgotPassword';
+import HomeSimple from './pages/HomeSimple';
+import LoginSimple from './pages/LoginSimple';
+import MoodFlowSimple from './pages/MoodFlowSimple';
+import PrivacySimple from './pages/PrivacySimple';
+import RegisterSimple from './pages/RegisterSimple';
+import Settings from './pages/Settings';
+import Statistics from './pages/Statistics';
+import TermsSimple from './pages/TermsSimple';
 
-// Analytics
-import { analyticsEvents, initializeAnalytics } from './services/analytics';
-
-// Debug (solo en desarrollo)
-import DebugInfo from './components/DebugInfo';
-
-// Componente de loading para lazy components
-const PageLoadingFallback: React.FC<{ isDarkMode?: boolean }> = ({ isDarkMode = false }) => (
-  <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-    <div className='flex flex-col items-center space-y-4'>
-      <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600'></div>
-      <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Cargando página...</p>
-    </div>
-  </div>
-);
-
-// Componente para trackear cambios de ruta
-const AnalyticsTracker = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    // Trackear cada cambio de página
-    const pageName = location.pathname === '/' ? 'Home' : location.pathname.substring(1);
-    analyticsEvents.pageView(pageName, location.pathname);
-  }, [location]);
-
-  return null;
-};
 function App() {
-  useEffect(() => {
-    // Inicializar analytics cuando la app se carga
-    initializeAnalytics();
-  }, []);
-
   return (
     <ErrorBoundary>
       <AuthProvider>
         <Router>
           <div className='App'>
-            <AnalyticsTracker />
             <UserDebugInfo />
             <Routes>
               {/* Public routes */}
-              <Route
-                path='/'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.Home />
-                  </Suspense>
-                }
-              />
-              <Route
-                path='/login'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.Login />
-                  </Suspense>
-                }
-              />
-              <Route
-                path='/register'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.Register />
-                  </Suspense>
-                }
-              />
-              <Route
-                path='/complete-profile'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.CompleteProfile />
-                  </Suspense>
-                }
-              />
-              <Route
-                path='/forgot-password'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.ForgotPassword />
-                  </Suspense>
-                }
-              />
-              <Route
-                path='/terms'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.Terms />
-                  </Suspense>
-                }
-              />
-              <Route
-                path='/privacy'
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <LazyPages.Privacy />
-                  </Suspense>
-                }
-              />
+              <Route path='/' element={<HomeSimple />} />
+              <Route path='/login' element={<LoginSimple />} />
+              <Route path='/register' element={<RegisterSimple />} />
+              <Route path='/complete-profile' element={<CompleteProfile />} />
+              <Route path='/forgot-password' element={<ForgotPassword />} />
+              <Route path='/terms' element={<TermsSimple />} />
+              <Route path='/privacy' element={<PrivacySimple />} />
 
               {/* Protected routes */}
               <Route
                 path='/dashboard'
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <LazyPages.Dashboard />
-                    </Suspense>
+                    <DashboardSimple />
                   </ProtectedRoute>
                 }
               />
@@ -128,9 +55,7 @@ function App() {
                 path='/dashboard-psychologist'
                 element={
                   <ProtectedRoutePsychologist>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <LazyPages.DashboardPsychologist />
-                    </Suspense>
+                    <DashboardPsychologist />
                   </ProtectedRoutePsychologist>
                 }
               />
@@ -138,9 +63,7 @@ function App() {
                 path='/mood-flow'
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <LazyPages.MoodFlow />
-                    </Suspense>
+                    <MoodFlowSimple />
                   </ProtectedRoute>
                 }
               />
@@ -148,9 +71,7 @@ function App() {
                 path='/statistics'
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <LazyPages.Statistics />
-                    </Suspense>
+                    <Statistics />
                   </ProtectedRoute>
                 }
               />
@@ -158,9 +79,7 @@ function App() {
                 path='/chat'
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <LazyPages.Chat />
-                    </Suspense>
+                    <Chat />
                   </ProtectedRoute>
                 }
               />
@@ -168,9 +87,7 @@ function App() {
                 path='/settings'
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <LazyPages.Settings />
-                    </Suspense>
+                    <Settings />
                   </ProtectedRoute>
                 }
               />

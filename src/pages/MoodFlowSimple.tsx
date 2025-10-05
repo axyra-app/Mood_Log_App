@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useMood } from '../hooks/useMood';
+import { useNavigate } from 'react-router-dom';
 import CrisisAlert from '../components/CrisisAlert';
 import LogoutModal from '../components/LogoutModal';
-import MoodAnalysisPanel from '../components/mood/MoodAnalysisPanel';
+import { useAuth } from '../contexts/AuthContext';
+import { useMood } from '../hooks/useMood';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -37,15 +36,39 @@ const MoodFlowSimple: React.FC = () => {
   ];
 
   const activityOptions = [
-    'Ejercicio', 'Trabajo', 'Estudio', 'Socializar', 'Descansar',
-    'Cocinar', 'Leer', 'Ver películas', 'Música', 'Pasear',
-    'Meditar', 'Jugar', 'Compras', 'Limpieza', 'Otro'
+    'Ejercicio',
+    'Trabajo',
+    'Estudio',
+    'Socializar',
+    'Descansar',
+    'Cocinar',
+    'Leer',
+    'Ver películas',
+    'Música',
+    'Pasear',
+    'Meditar',
+    'Jugar',
+    'Compras',
+    'Limpieza',
+    'Otro',
   ];
 
   const emotionOptions = [
-    'Felicidad', 'Tristeza', 'Ansiedad', 'Enojo', 'Miedo',
-    'Calma', 'Excitación', 'Frustración', 'Gratitud', 'Soledad',
-    'Amor', 'Esperanza', 'Desesperación', 'Orgullo', 'Vergüenza'
+    'Felicidad',
+    'Tristeza',
+    'Ansiedad',
+    'Enojo',
+    'Miedo',
+    'Calma',
+    'Excitación',
+    'Frustración',
+    'Gratitud',
+    'Soledad',
+    'Amor',
+    'Esperanza',
+    'Desesperación',
+    'Orgullo',
+    'Vergüenza',
   ];
 
   useEffect(() => {
@@ -114,19 +137,11 @@ const MoodFlowSimple: React.FC = () => {
   };
 
   const toggleActivity = (activity: string) => {
-    setActivities(prev => 
-      prev.includes(activity) 
-        ? prev.filter(a => a !== activity)
-        : [...prev, activity]
-    );
+    setActivities((prev) => (prev.includes(activity) ? prev.filter((a) => a !== activity) : [...prev, activity]));
   };
 
   const toggleEmotion = (emotion: string) => {
-    setEmotions(prev => 
-      prev.includes(emotion) 
-        ? prev.filter(e => e !== emotion)
-        : [...prev, emotion]
-    );
+    setEmotions((prev) => (prev.includes(emotion) ? prev.filter((e) => e !== emotion) : [...prev, emotion]));
   };
 
   if (!isLoaded) {
@@ -134,9 +149,7 @@ const MoodFlowSimple: React.FC = () => {
       <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className='flex flex-col items-center space-y-4'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600'></div>
-          <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Cargando...
-          </p>
+          <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Cargando...</p>
         </div>
       </div>
     );
@@ -148,20 +161,24 @@ const MoodFlowSimple: React.FC = () => {
       <CrisisAlert />
 
       {/* Header */}
-      <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+      <header
+        className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}
+      >
         <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center'>
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                🧠 Mood Log
-              </h1>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>🧠 Mood Log</h1>
             </div>
 
             <div className='flex items-center space-x-4'>
               {/* Modo oscuro */}
               <button
                 onClick={toggleDarkMode}
-                className={`p-2 rounded-lg ${isDarkMode ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg ${
+                  isDarkMode ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
@@ -169,7 +186,9 @@ const MoodFlowSimple: React.FC = () => {
               {/* Logout */}
               <button
                 onClick={() => setShowLogoutModal(true)}
-                className={`p-2 rounded-lg ${isDarkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg ${
+                  isDarkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-100'
+                }`}
               >
                 🚪
               </button>
@@ -197,11 +216,7 @@ const MoodFlowSimple: React.FC = () => {
               {stepNumber < 4 && (
                 <div
                   className={`w-12 h-1 mx-2 ${
-                    step > stepNumber
-                      ? 'bg-purple-600'
-                      : isDarkMode
-                      ? 'bg-gray-700'
-                      : 'bg-gray-200'
+                    step > stepNumber ? 'bg-purple-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
                   }`}
                 />
               )}
@@ -372,9 +387,7 @@ const MoodFlowSimple: React.FC = () => {
                     className='w-full'
                   />
                   <div className='text-center mt-1'>
-                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {energy}
-                    </span>
+                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{energy}</span>
                   </div>
                 </div>
 
@@ -391,9 +404,7 @@ const MoodFlowSimple: React.FC = () => {
                     className='w-full'
                   />
                   <div className='text-center mt-1'>
-                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {stress}
-                    </span>
+                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stress}</span>
                   </div>
                 </div>
 
@@ -410,9 +421,7 @@ const MoodFlowSimple: React.FC = () => {
                     className='w-full'
                   />
                   <div className='text-center mt-1'>
-                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {sleep}
-                    </span>
+                    <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{sleep}</span>
                   </div>
                 </div>
               </div>
@@ -491,9 +500,7 @@ const MoodFlowSimple: React.FC = () => {
                   onClick={handleSubmit}
                   disabled={loading}
                   className={`px-6 py-3 rounded-lg font-medium ${
-                    loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                    loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 text-white hover:bg-purple-700'
                   }`}
                 >
                   {loading ? 'Guardando...' : 'Guardar y Analizar'}
@@ -505,12 +512,10 @@ const MoodFlowSimple: React.FC = () => {
 
         {/* Analysis Panel */}
         {showAnalysis && moodData && (
-          <MoodAnalysisPanel
-            moodData={moodData}
-            onClose={() => setShowAnalysis(false)}
-            onBackToDashboard={handleBackToDashboard}
-            isDarkMode={isDarkMode}
-          />
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">Análisis de Estado de Ánimo</h3>
+            <p className="text-gray-600">Análisis básico disponible</p>
+          </div>
         )}
       </main>
 

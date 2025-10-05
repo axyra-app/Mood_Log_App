@@ -12,8 +12,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SEO from '../components/SEO';
-import UserSettingsModal from '../components/UserSettingsModal';
 import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
 import { useAuth } from '../contexts/AuthContext';
@@ -230,14 +228,7 @@ const DashboardPsychologist: React.FC = () => {
 
   return (
     <>
-      <SEO title='Dashboard Psicólogo - Mood Log' description='Panel de control para psicólogos' />
 
-      {/* Settings Modal */}
-      <UserSettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-        isDarkMode={isDarkMode}
-      />
 
       <div
         className={`min-h-screen transition-colors duration-500 ${

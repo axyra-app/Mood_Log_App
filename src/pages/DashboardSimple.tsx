@@ -1,9 +1,8 @@
+import { BarChart3, Calendar, LogOut, MessageCircle, Moon, Settings, Sun } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Calendar, BarChart3, MessageCircle, Settings, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
-import NotificationIndicator from '../components/NotificationIndicator';
 
 const DashboardSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -137,23 +136,31 @@ const DashboardSimple: React.FC = () => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+      <header
+        className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}
+      >
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center'>
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                🧠 Mood Log
-              </h1>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>🧠 Mood Log</h1>
             </div>
 
             <div className='flex items-center space-x-4'>
               {/* Notificaciones */}
-              <NotificationIndicator userId={user?.uid || ''} isDarkMode={isDarkMode} />
+              <div className="relative">
+                <button className="p-2 text-gray-600 hover:text-gray-900">
+                  <MessageCircle className="h-6 w-6" />
+                </button>
+              </div>
 
               {/* Modo oscuro */}
               <button
                 onClick={toggleDarkMode}
-                className={`p-2 rounded-lg ${isDarkMode ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg ${
+                  isDarkMode ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
                 {isDarkMode ? <Sun className='h-5 w-5' /> : <Moon className='h-5 w-5' />}
               </button>
@@ -161,7 +168,9 @@ const DashboardSimple: React.FC = () => {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className={`p-2 rounded-lg ${isDarkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg ${
+                  isDarkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-100'
+                }`}
               >
                 <LogOut className='h-5 w-5' />
               </button>
@@ -268,19 +277,18 @@ const DashboardSimple: React.FC = () => {
             </h3>
             <div className='space-y-3'>
               {recentActivities.map((activity) => (
-                <div key={activity.id} className={`flex items-center p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <div
+                  key={activity.id}
+                  className={`flex items-center p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}
+                >
                   <span className='text-2xl mr-3'>{activity.emoji}</span>
                   <div className='flex-1'>
-                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {activity.label}
-                    </p>
+                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{activity.label}</p>
                     <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       {activity.description}
                     </p>
                   </div>
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {activity.time}
-                  </span>
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{activity.time}</span>
                 </div>
               ))}
             </div>
@@ -291,7 +299,9 @@ const DashboardSimple: React.FC = () => {
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
           <Link
             to='/mood-flow'
-            className={`${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'} rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+            className={`${
+              isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'
+            } rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
           >
             <div className='flex items-center mb-4'>
               <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-purple-900' : 'bg-purple-100'}`}>
@@ -301,14 +311,14 @@ const DashboardSimple: React.FC = () => {
             <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
               Registrar Estado
             </h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Registra cómo te sientes hoy
-            </p>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Registra cómo te sientes hoy</p>
           </Link>
 
           <Link
             to='/statistics'
-            className={`${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'} rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+            className={`${
+              isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'
+            } rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
           >
             <div className='flex items-center mb-4'>
               <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900' : 'bg-blue-100'}`}>
@@ -318,31 +328,29 @@ const DashboardSimple: React.FC = () => {
             <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
               Estadísticas
             </h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Ve tus tendencias y progreso
-            </p>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Ve tus tendencias y progreso</p>
           </Link>
 
           <Link
             to='/chat'
-            className={`${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'} rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+            className={`${
+              isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'
+            } rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
           >
             <div className='flex items-center mb-4'>
               <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-green-900' : 'bg-green-100'}`}>
                 <MessageCircle className={`h-6 w-6 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
               </div>
             </div>
-            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              Chat
-            </h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Habla con psicólogos
-            </p>
+            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Chat</h3>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Habla con psicólogos</p>
           </Link>
 
           <Link
             to='/settings'
-            className={`${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'} rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+            className={`${
+              isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'
+            } rounded-xl shadow-sm p-6 transition-colors border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
           >
             <div className='flex items-center mb-4'>
               <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
@@ -352,9 +360,7 @@ const DashboardSimple: React.FC = () => {
             <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
               Configuración
             </h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Personaliza tu experiencia
-            </p>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Personaliza tu experiencia</p>
           </Link>
         </div>
       </main>
