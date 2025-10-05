@@ -15,7 +15,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
+import { useNotifications } from '../hooks/useNotificationsSimple';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
@@ -30,8 +30,9 @@ const DashboardPsychologist: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Hook de notificaciones
-  const { unreadCount } = useNotifications(user?.uid || '');
+  // Hook de notificaciones simplificado
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter(n => n.type === 'info').length;
 
   // Datos estáticos simulados (en producción vendrían de Firebase)
   const patients = [

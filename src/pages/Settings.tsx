@@ -3,11 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
-import { useNotifications } from '../hooks/useNotifications';
+import { useNotifications } from '../hooks/useNotificationsSimple';
 
 const Settings: React.FC = () => {
   const { user, logout, updateUserProfile } = useAuth();
-  const { settings, updateSettings, loading: notificationsLoading } = useNotifications();
+  const { notifications, showSuccess, showError, removeNotification } = useNotifications();
   const { exportMoodData } = useMood();
   const [activeTab, setActiveTab] = useState('profile');
   const [profile, setProfile] = useState({
