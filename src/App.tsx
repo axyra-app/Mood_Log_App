@@ -8,7 +8,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
-import AuthDebug from './components/AuthDebug';
+import UserDebugInfo from './components/UserDebugInfo';
 
 // Pages
 import Chat from './pages/Chat';
