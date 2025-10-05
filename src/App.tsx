@@ -8,7 +8,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
-import UserDebugInfo from './components/UserDebugInfo';
+import AuthDebug from './components/AuthDebug';
 
 // Pages
 import Chat from './pages/Chat';
@@ -32,6 +32,7 @@ function App() {
         <Router>
           <div className='App'>
             <UserDebugInfo />
+            <AuthDebug />
             <Routes>
               {/* Public routes */}
               <Route path='/' element={<HomeSimple />} />
