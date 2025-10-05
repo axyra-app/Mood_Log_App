@@ -327,3 +327,4 @@ export const getFirestoreErrorMessage = (error: any): string => {
 export const getStorageErrorMessage = (error: any): string => {
   return ErrorHandler.getUserMessage(error);
 };
+
