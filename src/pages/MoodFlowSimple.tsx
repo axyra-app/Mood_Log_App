@@ -101,7 +101,7 @@ const MoodFlowSimple: React.FC = () => {
     try {
       const moodLogData = {
         mood: currentMood,
-        description: feelings,
+        notes: feelings,
         activities,
         emotions,
         energy,

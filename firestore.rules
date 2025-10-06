@@ -40,10 +40,10 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
         get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
       
-      // Validaciones para escritura
+      // Validaciones para escritura - usar request.resource para documentos nuevos
       allow create: if request.auth != null && 
-        request.auth.uid == resource.data.userId &&
-        isValidMoodLog(resource.data);
+        request.auth.uid == request.resource.data.userId &&
+        isValidMoodLog(request.resource.data);
     }
     
     // ========================================
@@ -255,8 +255,8 @@ service cloud.firestore {
     
     // Validar mood log
     function isValidMoodLog(data) {
-      return data.keys().hasAll(['userId', 'mood', 'createdAt']) &&
-             data.mood is number && data.mood >= 1 && data.mood <= 5 &&
+      return data.keys().hasAll(['userId', 'mood']) &&
+             data.mood is number && data.mood >= 1 && data.mood <= 10 &&
              data.userId is string && data.userId.size() > 0;
     }
     
