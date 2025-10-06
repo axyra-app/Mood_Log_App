@@ -19,8 +19,11 @@ service cloud.firestore {
     // REGLAS PARA PERFILES DE PSICÓLOGOS
     // ========================================
     match /psychologists/{psychologistId} {
-      // Solo el psicólogo puede leer/escribir su propio perfil
-      allow read, write: if request.auth != null && request.auth.uid == psychologistId;
+      // Cualquier usuario autenticado puede leer psicólogos disponibles
+      allow read: if request.auth != null;
+      
+      // Solo el psicólogo puede escribir su propio perfil
+      allow write: if request.auth != null && request.auth.uid == psychologistId;
       
       // Los pacientes pueden leer datos básicos de su psicólogo asignado
       allow read: if request.auth != null && 
@@ -68,16 +71,18 @@ service cloud.firestore {
     // REGLAS PARA CITAS
     // ========================================
     match /appointments/{appointmentId} {
-      // El psicólogo y el paciente pueden leer/escribir sus citas
+      // El usuario puede leer/escribir sus propias citas
       allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.patientId || 
-         request.auth.uid == resource.data.psychologistId);
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer/escribir citas donde son asignados
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
       
       // Validaciones para creación
       allow create: if request.auth != null && 
-        (request.auth.uid == resource.data.patientId || 
-         request.auth.uid == resource.data.psychologistId) &&
-        isValidAppointment(resource.data);
+        request.auth.uid == request.resource.data.userId &&
+        isValidAppointment(request.resource.data);
     }
     
     // ========================================
@@ -98,15 +103,36 @@ service cloud.firestore {
     // REGLAS PARA NOTIFICACIONES
     // ========================================
     match /notifications/{notificationId} {
-      // Solo el usuario destinatario puede leer/escribir sus notificaciones
+      // El usuario destinatario puede leer/escribir sus notificaciones
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       
-      // Los psicólogos pueden crear notificaciones para sus pacientes
+      // Los psicólogos pueden leer/escribir notificaciones donde son mencionados
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // Permitir crear notificaciones
       allow create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId ||
-         (exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
-          get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid));
+        (request.auth.uid == request.resource.data.userId ||
+         request.auth.uid == request.resource.data.psychologistId);
+    }
+    
+    // ========================================
+    // REGLAS PARA SESIONES DE CHAT
+    // ========================================
+    match /chatSessions/{sessionId} {
+      // El usuario puede leer/escribir sus propias sesiones de chat
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer/escribir sesiones donde participan
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // Permitir crear nuevas sesiones
+      allow create: if request.auth != null && 
+        (request.auth.uid == request.resource.data.userId ||
+         request.auth.uid == request.resource.data.psychologistId);
     }
     
     // ========================================
@@ -306,11 +332,9 @@ service cloud.firestore {
     
     // Validar cita
     function isValidAppointment(data) {
-      return data.keys().hasAll(['patientId', 'psychologistId', 'startTime', 'endTime']) &&
-             data.patientId is string && data.patientId.size() > 0 &&
-             data.psychologistId is string && data.psychologistId.size() > 0 &&
-             data.startTime is timestamp && data.endTime is timestamp &&
-             data.startTime < data.endTime;
+      return data.keys().hasAll(['userId', 'appointmentDate']) &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.appointmentDate is timestamp;
     }
     
     // Validar mensaje
