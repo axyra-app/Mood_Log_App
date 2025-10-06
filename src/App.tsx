@@ -11,7 +11,9 @@ import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist'
 import UserDebugInfo from './components/UserDebugInfo';
 
 // Pages
+import AIChat from './pages/AIChat';
 import Chat from './pages/Chat';
+import ChatSelection from './pages/ChatSelection';
 import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
@@ -78,6 +80,22 @@ function App() {
               />
               <Route
                 path='/chat'
+                element={
+                  <ProtectedRoute>
+                    <ChatSelection />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/chat/ai/:doctorType'
+                element={
+                  <ProtectedRoute>
+                    <AIChat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/chat/psychologist'
                 element={
                   <ProtectedRoute>
                     <Chat />

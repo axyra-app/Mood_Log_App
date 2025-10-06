@@ -193,6 +193,9 @@ export interface Chat {
   lastMessageAt: Date;
   isActive: boolean;
   createdAt: Date;
+  chatType: 'ai' | 'psychologist'; // Tipo de chat: IA o psicólogo real
+  aiDoctorType?: 'general' | 'specialist'; // Tipo de doctor IA
+  psychologistId?: string; // ID del psicólogo si es chat real
 }
 
 // Statistics Types

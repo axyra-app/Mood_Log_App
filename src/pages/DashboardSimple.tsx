@@ -58,8 +58,8 @@ const DashboardSimple: React.FC = () => {
       action: () => navigate('/statistics'),
     },
     {
-      title: 'Chat con Psicólogo',
-      description: 'Habla con un profesional',
+      title: 'Chat de Apoyo',
+      description: 'IA o psicólogo real',
       icon: '💬',
       color: 'bg-gradient-to-r from-green-500 to-emerald-500',
       action: () => navigate('/chat'),
