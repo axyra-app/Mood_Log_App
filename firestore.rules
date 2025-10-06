@@ -224,6 +224,42 @@ service cloud.firestore {
     }
     
     // ========================================
+    // REGLAS PARA CHATS
+    // ========================================
+    match /chats/{chatId} {
+      // El usuario puede leer/escribir sus propios chats
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer chats de sus pacientes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+      
+      // Permitir crear nuevos chats
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+    }
+    
+    // ========================================
+    // REGLAS PARA MENSAJES
+    // ========================================
+    match /messages/{messageId} {
+      // El usuario puede leer/escribir mensajes en sus chats
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer mensajes de sus pacientes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+      
+      // Permitir crear nuevos mensajes
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+    }
+    
+    // ========================================
     // REGLAS PARA AUDIT LOGS
     // ========================================
     match /auditLogs/{logId} {

@@ -39,6 +39,13 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('Could not establish connection') ||
         error.message.includes('Heart is not defined') ||
         error.message.includes('ReferenceError: Heart is not defined') ||
+        error.message.includes('settings is not defined') ||
+        error.message.includes('ReferenceError: settings is not defined') ||
+        error.message.includes('getMessagesRealtime is not defined') ||
+        error.message.includes('ReferenceError: getMessagesRealtime is not defined') ||
+        error.message.includes('commonActivities') ||
+        error.message.includes('Cannot read properties of undefined (reading \'commonActivities\')') ||
+        error.message.includes('AbortError: The play() request was interrupted') ||
         (error.message.includes('reading') && error.message.includes('add'))) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });
