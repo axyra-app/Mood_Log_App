@@ -358,6 +358,54 @@ service cloud.firestore {
              data.userId is string && data.userId.size() > 0;
     }
     
+    // ========================================
+    // REGLAS PARA ENTRADAS DEL DIARIO
+    // ========================================
+    match /journalEntries/{entryId} {
+      // El usuario puede leer/escribir sus propias entradas del diario
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer entradas del diario de sus pacientes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidJournalEntry(request.resource.data);
+    }
+
+    // ========================================
+    // REGLAS PARA PLANTILLAS DEL DIARIO
+    // ========================================
+    match /journalTemplates/{templateId} {
+      // Cualquier usuario autenticado puede leer plantillas
+      allow read: if request.auth != null;
+      // Solo los administradores o el sistema pueden crear/escribir plantillas
+      allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ========================================
+    // REGLAS PARA PROMPTS DEL DIARIO
+    // ========================================
+    match /journalPrompts/{promptId} {
+      // Cualquier usuario autenticado puede leer prompts
+      allow read: if request.auth != null;
+      // Solo los administradores o el sistema pueden crear/escribir prompts
+      allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Validar entrada del diario
+    function isValidJournalEntry(data) {
+      return data.keys().hasAll(['userId', 'title', 'content', 'date']) &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0 &&
+             data.date is timestamp;
+    }
+    
     // Validar paciente
     function isValidPatient(data) {
       return data.keys().hasAll(['userId', 'psychologistId', 'status']) &&

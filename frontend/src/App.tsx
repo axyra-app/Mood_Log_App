@@ -17,6 +17,7 @@ import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
+import Journal from './pages/Journal';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
@@ -112,6 +113,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/journal'
+                element={
+                  <ProtectedRoute>
+                    <Journal />
                   </ProtectedRoute>
                 }
               />

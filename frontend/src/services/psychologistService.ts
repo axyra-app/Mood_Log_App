@@ -77,29 +77,34 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
     const psychologists: Psychologist[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
-      const psychologistData = docSnapshot.data();
-      
-      // Obtener datos del usuario
-      const userRef = doc(db, 'users', psychologistData.userId);
-      const userSnap = await getDoc(userRef);
-      
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
+      try {
+        const psychologistData = docSnapshot.data();
         
-        const psychologist: Psychologist = {
+        // Obtener datos del usuario
+        const userRef = doc(db, 'users', psychologistData.userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          
+          const psychologist: Psychologist = {
           id: docSnapshot.id,
           userId: psychologistData.userId,
           name: psychologistData.name || userData.displayName || userData.username || 'Psicólogo',
           email: psychologistData.email || userData.email || '',
           phone: psychologistData.phone || userData.phone || '',
           license: psychologistData.license || '',
-          specialization: psychologistData.specialization || ['Psicología General'],
+          specialization: Array.isArray(psychologistData.specialization) 
+            ? psychologistData.specialization 
+            : ['Psicología General'],
           experience: psychologistData.experience || 1,
           bio: psychologistData.bio || 'Psicólogo profesional disponible para consultas.',
           profileImage: psychologistData.profileImage || userData.photoURL || '',
           isAvailable: psychologistData.isAvailable !== false, // Default true si no está definido
           workingHours: psychologistData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
-          languages: psychologistData.languages || ['Español'],
+          languages: Array.isArray(psychologistData.languages) 
+            ? psychologistData.languages 
+            : ['Español'],
           consultationFee: psychologistData.consultationFee || 0,
           rating: psychologistData.rating || 5.0,
           totalPatients: psychologistData.totalPatients || 0,
@@ -109,6 +114,10 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
         };
         
         psychologists.push(psychologist);
+        }
+      } catch (error) {
+        console.error('Error processing psychologist data:', error);
+        // Continuar con el siguiente psicólogo
       }
     }
 
