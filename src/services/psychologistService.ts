@@ -67,22 +67,12 @@ export interface ChatMessage {
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
     const psychologistsRef = collection(db, 'psychologists');
-    // Primero intentar obtener psicólogos verificados y disponibles
-    let q = query(
-      psychologistsRef,
-      where('isAvailable', '==', true),
-      where('isVerified', '==', true),
-      orderBy('rating', 'desc')
-    );
-
-    let querySnapshot = await getDocs(q);
     
-    // Si no hay resultados, obtener todos los psicólogos registrados
-    if (querySnapshot.empty) {
-      console.log('No se encontraron psicólogos verificados, buscando todos los registrados...');
-      q = query(psychologistsRef, orderBy('createdAt', 'desc'));
-      querySnapshot = await getDocs(q);
-    }
+    // Temporalmente obtener todos los psicólogos sin filtros complejos
+    // hasta que se construyan los índices
+    console.log('🔍 Obteniendo psicólogos (modo temporal sin índices)...');
+    const q = query(psychologistsRef);
+    const querySnapshot = await getDocs(q);
 
     const psychologists: Psychologist[] = [];
 

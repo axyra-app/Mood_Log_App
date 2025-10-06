@@ -222,17 +222,20 @@ const removePsychologistNotification = async (appointmentId: string, psychologis
 export const getUserAppointments = async (userId: string): Promise<Appointment[]> => {
   try {
     const appointmentsRef = collection(db, 'appointments');
-    const q = query(
-      appointmentsRef,
-      where('userId', '==', userId),
-      orderBy('appointmentDate', 'desc')
-    );
-
+    
+    // Temporalmente obtener todas las citas sin filtros complejos
+    // hasta que se construyan los índices
+    console.log('🔍 Obteniendo citas (modo temporal sin índices)...');
+    const q = query(appointmentsRef);
     const querySnapshot = await getDocs(q);
+    
     const appointments: Appointment[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
       const appointmentData = docSnapshot.data();
+      
+      // Filtrar solo las citas del usuario actual
+      if (appointmentData.userId !== userId) continue;
       
       const appointment: Appointment = {
         id: docSnapshot.id,
@@ -254,6 +257,9 @@ export const getUserAppointments = async (userId: string): Promise<Appointment[]
       
       appointments.push(appointment);
     }
+
+    // Ordenar por fecha de cita (descendente)
+    appointments.sort((a, b) => b.appointmentDate.getTime() - a.appointmentDate.getTime());
 
     return appointments;
   } catch (error) {
