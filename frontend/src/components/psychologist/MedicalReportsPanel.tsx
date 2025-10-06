@@ -1,7 +1,7 @@
 import { AlertTriangle, Calendar, CheckCircle, FileText, Plus, Search } from 'lucide-react';
 import React, { useState } from 'react';
-import { useMedicalReports } from '../hooks/useMedicalReports';
-import { MedicalReport } from '../types';
+import { useMedicalReports } from '../../hooks/useMedicalReports';
+import { MedicalReport } from '../../types';
 
 interface MedicalReportsPanelProps {
   psychologistId: string;
