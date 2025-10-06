@@ -1,401 +1,334 @@
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
-  onSnapshot,
-  orderBy,
   query,
-  serverTimestamp,
-  updateDoc,
   where,
-  writeBatch,
+  orderBy,
+  limit,
+  onSnapshot,
+  updateDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
-import { Appointment, Patient, SessionNote, TreatmentPlan } from '../types';
 import { db } from './firebase';
 
-// Patient Management Functions
-export const createPatient = async (patientData: Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
-  try {
-    const patientsRef = collection(db, 'patients');
-    const docRef = await addDoc(patientsRef, {
-      ...patientData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating patient:', error);
-    throw error;
-  }
-};
+export interface Patient {
+  id: string;
+  userId: string;
+  psychologistId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  age?: number;
+  gender?: string;
+  diagnosis?: string;
+  treatmentStart?: Date;
+  lastSession?: Date;
+  nextAppointment?: Date;
+  totalSessions: number;
+  averageMood: number;
+  lastMood: number;
+  lastMoodDate?: Date;
+  riskLevel: 'low' | 'medium' | 'high';
+  progress: number;
+  notes?: string;
+  emergencyContact?: string;
+  medications?: string[];
+  goals?: string[];
+  moodHistory: number[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-export const getPatient = async (patientId: string): Promise<Patient | null> => {
-  try {
-    const patientRef = doc(db, 'patients', patientId);
-    const patientSnap = await getDoc(patientRef);
+export interface MoodLog {
+  id: string;
+  userId: string;
+  mood: number;
+  energy?: number;
+  stress?: number;
+  sleep?: number;
+  notes?: string;
+  activities?: string[];
+  emotions?: string[];
+  createdAt: Date;
+  aiAnalysis?: string;
+}
 
-    if (patientSnap.exists()) {
-      return { id: patientSnap.id, ...patientSnap.data() } as Patient;
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting patient:', error);
-    throw error;
-  }
-};
-
+// Obtener todos los pacientes de un psicólogo
 export const getPatientsByPsychologist = async (psychologistId: string): Promise<Patient[]> => {
   try {
     const patientsRef = collection(db, 'patients');
-    const q = query(patientsRef, where('psychologistId', '==', psychologistId), orderBy('updatedAt', 'desc'));
+    const q = query(
+      patientsRef,
+      where('psychologistId', '==', psychologistId),
+      where('isActive', '==', true),
+      orderBy('lastMoodDate', 'desc')
+    );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Patient[];
+    const patients: Patient[] = [];
+
+    for (const docSnapshot of querySnapshot.docs) {
+      const patientData = docSnapshot.data();
+      
+      // Obtener datos del usuario
+      const userRef = doc(db, 'users', patientData.userId);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        
+        // Obtener último mood log
+        const moodLogsRef = collection(db, 'moodLogs');
+        const moodQuery = query(
+          moodLogsRef,
+          where('userId', '==', patientData.userId),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+        
+        const moodSnapshot = await getDocs(moodQuery);
+        const lastMoodLog = moodSnapshot.docs[0]?.data() as MoodLog;
+        
+        // Obtener historial de mood (últimos 7 días)
+        const moodHistoryQuery = query(
+          moodLogsRef,
+          where('userId', '==', patientData.userId),
+          orderBy('createdAt', 'desc'),
+          limit(7)
+        );
+        
+        const moodHistorySnapshot = await getDocs(moodHistoryQuery);
+        const moodHistory = moodHistorySnapshot.docs.map(doc => doc.data().mood);
+        
+        // Calcular estadísticas
+        const allMoodLogsQuery = query(
+          moodLogsRef,
+          where('userId', '==', patientData.userId),
+          orderBy('createdAt', 'desc')
+        );
+        
+        const allMoodLogsSnapshot = await getDocs(allMoodLogsQuery);
+        const allMoodLogs = allMoodLogsSnapshot.docs.map(doc => doc.data());
+        
+        const averageMood = allMoodLogs.length > 0 
+          ? allMoodLogs.reduce((sum, log) => sum + log.mood, 0) / allMoodLogs.length 
+          : 0;
+        
+        const riskLevel = determineRiskLevel(lastMoodLog, averageMood, allMoodLogs);
+        
+        const patient: Patient = {
+          id: docSnapshot.id,
+          userId: patientData.userId,
+          psychologistId: patientData.psychologistId,
+          name: userData.displayName || userData.username || 'Usuario',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          age: userData.age || 0,
+          gender: userData.gender || '',
+          diagnosis: patientData.diagnosis || '',
+          treatmentStart: patientData.treatmentStart?.toDate() || new Date(),
+          lastSession: patientData.lastSession?.toDate() || new Date(),
+          nextAppointment: patientData.nextAppointment?.toDate(),
+          totalSessions: patientData.totalSessions || 0,
+          averageMood: Math.round(averageMood * 10) / 10,
+          lastMood: lastMoodLog?.mood || 0,
+          lastMoodDate: lastMoodLog?.createdAt?.toDate() || new Date(),
+          riskLevel,
+          progress: calculateProgress(allMoodLogs),
+          notes: patientData.notes || '',
+          emergencyContact: patientData.emergencyContact || '',
+          medications: patientData.medications || [],
+          goals: patientData.goals || [],
+          moodHistory: moodHistory.length > 0 ? moodHistory : [0],
+          isActive: patientData.isActive || true,
+          createdAt: patientData.createdAt?.toDate() || new Date(),
+          updatedAt: patientData.updatedAt?.toDate() || new Date(),
+        };
+        
+        patients.push(patient);
+      }
+    }
+
+    return patients;
   } catch (error) {
     console.error('Error getting patients by psychologist:', error);
     throw error;
   }
 };
 
-export const updatePatient = async (patientId: string, updates: Partial<Patient>): Promise<void> => {
-  try {
-    const patientRef = doc(db, 'patients', patientId);
-    await updateDoc(patientRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Error updating patient:', error);
-    throw error;
+// Determinar nivel de riesgo basado en mood logs
+const determineRiskLevel = (lastMoodLog: MoodLog | undefined, averageMood: number, allMoodLogs: any[]): 'low' | 'medium' | 'high' => {
+  if (!lastMoodLog) return 'medium';
+  
+  // Factores de riesgo
+  const lowMood = lastMoodLog.mood <= 2;
+  const decliningTrend = allMoodLogs.length >= 3 && 
+    allMoodLogs.slice(0, 3).every(log => log.mood < averageMood);
+  const highStress = lastMoodLog.stress && lastMoodLog.stress >= 8;
+  const poorSleep = lastMoodLog.sleep && lastMoodLog.sleep <= 3;
+  const crisisKeywords = lastMoodLog.notes?.toLowerCase().includes('suicidio') || 
+    lastMoodLog.notes?.toLowerCase().includes('morir') ||
+    lastMoodLog.notes?.toLowerCase().includes('no vale la pena');
+  
+  if (crisisKeywords || (lowMood && highStress)) {
+    return 'high';
   }
+  
+  if (lowMood || decliningTrend || (highStress && poorSleep)) {
+    return 'medium';
+  }
+  
+  return 'low';
 };
 
-export const deletePatient = async (patientId: string): Promise<void> => {
-  try {
-    const patientRef = doc(db, 'patients', patientId);
-    await deleteDoc(patientRef);
-  } catch (error) {
-    console.error('Error deleting patient:', error);
-    throw error;
-  }
+// Calcular progreso basado en tendencia de mood
+const calculateProgress = (allMoodLogs: any[]): number => {
+  if (allMoodLogs.length < 2) return 0;
+  
+  const recent = allMoodLogs.slice(0, 7);
+  const older = allMoodLogs.slice(7, 14);
+  
+  if (recent.length === 0 || older.length === 0) return 50;
+  
+  const recentAvg = recent.reduce((sum, log) => sum + log.mood, 0) / recent.length;
+  const olderAvg = older.reduce((sum, log) => sum + log.mood, 0) / older.length;
+  
+  const improvement = recentAvg - olderAvg;
+  const progress = Math.max(0, Math.min(100, 50 + (improvement * 20)));
+  
+  return Math.round(progress);
 };
 
-// Real-time patient updates
+// Suscribirse a cambios en pacientes en tiempo real
 export const subscribeToPatients = (psychologistId: string, callback: (patients: Patient[]) => void) => {
   const patientsRef = collection(db, 'patients');
-  const q = query(patientsRef, where('psychologistId', '==', psychologistId), orderBy('updatedAt', 'desc'));
+  const q = query(
+    patientsRef,
+    where('psychologistId', '==', psychologistId),
+    where('isActive', '==', true),
+    orderBy('lastMoodDate', 'desc')
+  );
 
-  return onSnapshot(q, (querySnapshot) => {
-    const patients = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Patient[];
+  return onSnapshot(q, async (querySnapshot) => {
+    const patients: Patient[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const patientData = docSnapshot.data();
+      
+      try {
+        // Obtener datos del usuario
+        const userRef = doc(db, 'users', patientData.userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          
+          // Obtener último mood log
+          const moodLogsRef = collection(db, 'moodLogs');
+          const moodQuery = query(
+            moodLogsRef,
+            where('userId', '==', patientData.userId),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+          );
+          
+          const moodSnapshot = await getDocs(moodQuery);
+          const lastMoodLog = moodSnapshot.docs[0]?.data() as MoodLog;
+          
+          // Obtener historial de mood (últimos 7 días)
+          const moodHistoryQuery = query(
+            moodLogsRef,
+            where('userId', '==', patientData.userId),
+            orderBy('createdAt', 'desc'),
+            limit(7)
+          );
+          
+          const moodHistorySnapshot = await getDocs(moodHistoryQuery);
+          const moodHistory = moodHistorySnapshot.docs.map(doc => doc.data().mood);
+          
+          // Calcular estadísticas
+          const allMoodLogsQuery = query(
+            moodLogsRef,
+            where('userId', '==', patientData.userId),
+            orderBy('createdAt', 'desc')
+          );
+          
+          const allMoodLogsSnapshot = await getDocs(allMoodLogsQuery);
+          const allMoodLogs = allMoodLogsSnapshot.docs.map(doc => doc.data());
+          
+          const averageMood = allMoodLogs.length > 0 
+            ? allMoodLogs.reduce((sum, log) => sum + log.mood, 0) / allMoodLogs.length 
+            : 0;
+          
+          const riskLevel = determineRiskLevel(lastMoodLog, averageMood, allMoodLogs);
+          
+          const patient: Patient = {
+            id: docSnapshot.id,
+            userId: patientData.userId,
+            psychologistId: patientData.psychologistId,
+            name: userData.displayName || userData.username || 'Usuario',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            age: userData.age || 0,
+            gender: userData.gender || '',
+            diagnosis: patientData.diagnosis || '',
+            treatmentStart: patientData.treatmentStart?.toDate() || new Date(),
+            lastSession: patientData.lastSession?.toDate() || new Date(),
+            nextAppointment: patientData.nextAppointment?.toDate(),
+            totalSessions: patientData.totalSessions || 0,
+            averageMood: Math.round(averageMood * 10) / 10,
+            lastMood: lastMoodLog?.mood || 0,
+            lastMoodDate: lastMoodLog?.createdAt?.toDate() || new Date(),
+            riskLevel,
+            progress: calculateProgress(allMoodLogs),
+            notes: patientData.notes || '',
+            emergencyContact: patientData.emergencyContact || '',
+            medications: patientData.medications || [],
+            goals: patientData.goals || [],
+            moodHistory: moodHistory.length > 0 ? moodHistory : [0],
+            isActive: patientData.isActive || true,
+            createdAt: patientData.createdAt?.toDate() || new Date(),
+            updatedAt: patientData.updatedAt?.toDate() || new Date(),
+          };
+          
+          patients.push(patient);
+        }
+      } catch (error) {
+        console.error('Error processing patient:', error);
+      }
+    }
+    
     callback(patients);
   });
 };
 
-// Session Notes Functions
-export const createSessionNote = async (
-  sessionData: Omit<SessionNote, 'id' | 'createdAt' | 'updatedAt'>
-): Promise<string> => {
+// Actualizar notas del paciente
+export const updatePatientNotes = async (patientId: string, notes: string): Promise<void> => {
   try {
-    const sessionsRef = collection(db, 'sessionNotes');
-    const docRef = await addDoc(sessionsRef, {
-      ...sessionData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating session note:', error);
-    throw error;
-  }
-};
-
-export const getSessionNotes = async (patientId: string): Promise<SessionNote[]> => {
-  try {
-    const sessionsRef = collection(db, 'sessionNotes');
-    const q = query(sessionsRef, where('patientId', '==', patientId), orderBy('sessionDate', 'desc'));
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as SessionNote[];
-  } catch (error) {
-    console.error('Error getting session notes:', error);
-    throw error;
-  }
-};
-
-export const updateSessionNote = async (sessionId: string, updates: Partial<SessionNote>): Promise<void> => {
-  try {
-    const sessionRef = doc(db, 'sessionNotes', sessionId);
-    await updateDoc(sessionRef, {
-      ...updates,
+    const patientRef = doc(db, 'patients', patientId);
+    await updateDoc(patientRef, {
+      notes,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error updating session note:', error);
+    console.error('Error updating patient notes:', error);
     throw error;
   }
 };
 
-export const deleteSessionNote = async (noteId: string): Promise<void> => {
+// Actualizar próxima cita
+export const updateNextAppointment = async (patientId: string, appointmentDate: Date): Promise<void> => {
   try {
-    const noteRef = doc(db, 'sessionNotes', noteId);
-    await deleteDoc(noteRef);
-  } catch (error) {
-    console.error('Error deleting session note:', error);
-    throw error;
-  }
-};
-
-// Treatment Plan Functions
-export const createTreatmentPlan = async (
-  planData: Omit<TreatmentPlan, 'id' | 'createdAt' | 'updatedAt'>
-): Promise<string> => {
-  try {
-    const plansRef = collection(db, 'treatmentPlans');
-    const docRef = await addDoc(plansRef, {
-      ...planData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating treatment plan:', error);
-    throw error;
-  }
-};
-
-export const getTreatmentPlans = async (patientId: string): Promise<TreatmentPlan[]> => {
-  try {
-    const plansRef = collection(db, 'treatmentPlans');
-    const q = query(plansRef, where('patientId', '==', patientId), orderBy('createdAt', 'desc'));
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as TreatmentPlan[];
-  } catch (error) {
-    console.error('Error getting treatment plans:', error);
-    throw error;
-  }
-};
-
-export const updateTreatmentPlan = async (planId: string, updates: Partial<TreatmentPlan>): Promise<void> => {
-  try {
-    const planRef = doc(db, 'treatmentPlans', planId);
-    await updateDoc(planRef, {
-      ...updates,
+    const patientRef = doc(db, 'patients', patientId);
+    await updateDoc(patientRef, {
+      nextAppointment: appointmentDate,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error updating treatment plan:', error);
-    throw error;
-  }
-};
-
-export const deleteTreatmentPlan = async (planId: string): Promise<void> => {
-  try {
-    const planRef = doc(db, 'treatmentPlans', planId);
-    await deleteDoc(planRef);
-  } catch (error) {
-    console.error('Error deleting treatment plan:', error);
-    throw error;
-  }
-};
-
-// Appointment Functions
-export const createAppointment = async (
-  appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>
-): Promise<string> => {
-  try {
-    const appointmentsRef = collection(db, 'appointments');
-    const docRef = await addDoc(appointmentsRef, {
-      ...appointmentData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating appointment:', error);
-    throw error;
-  }
-};
-
-export const getAppointments = async (
-  psychologistId: string,
-  startDate?: Date,
-  endDate?: Date
-): Promise<Appointment[]> => {
-  try {
-    const appointmentsRef = collection(db, 'appointments');
-    let q = query(appointmentsRef, where('psychologistId', '==', psychologistId), orderBy('startTime', 'asc'));
-
-    if (startDate) {
-      q = query(q, where('startTime', '>=', startDate));
-    }
-
-    if (endDate) {
-      q = query(q, where('startTime', '<=', endDate));
-    }
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Appointment[];
-  } catch (error) {
-    console.error('Error getting appointments:', error);
-    throw error;
-  }
-};
-
-export const updateAppointment = async (appointmentId: string, updates: Partial<Appointment>): Promise<void> => {
-  try {
-    const appointmentRef = doc(db, 'appointments', appointmentId);
-    await updateDoc(appointmentRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Error updating appointment:', error);
-    throw error;
-  }
-};
-
-export const cancelAppointment = async (appointmentId: string, reason?: string): Promise<void> => {
-  try {
-    const appointmentRef = doc(db, 'appointments', appointmentId);
-    await updateDoc(appointmentRef, {
-      status: 'cancelled',
-      notes: reason ? `Cancelled: ${reason}` : 'Cancelled',
-      updatedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Error cancelling appointment:', error);
-    throw error;
-  }
-};
-
-// Real-time appointment updates
-export const subscribeToAppointments = (psychologistId: string, callback: (appointments: Appointment[]) => void) => {
-  const appointmentsRef = collection(db, 'appointments');
-  const q = query(appointmentsRef, where('psychologistId', '==', psychologistId), orderBy('startTime', 'asc'));
-
-  return onSnapshot(q, (querySnapshot) => {
-    const appointments = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Appointment[];
-    callback(appointments);
-  });
-};
-
-// Patient Statistics
-export const getPatientStatistics = async (patientId: string) => {
-  try {
-    const [sessionNotes, treatmentPlans, appointments] = await Promise.all([
-      getSessionNotes(patientId),
-      getTreatmentPlans(patientId),
-      getAppointmentsByPatient(patientId),
-    ]);
-
-    const totalSessions = sessionNotes.length;
-    const activePlans = treatmentPlans.filter((plan) => plan.status === 'active').length;
-    const upcomingAppointments = appointments.filter(
-      (apt) => apt.status === 'scheduled' || apt.status === 'confirmed'
-    ).length;
-
-    const averageMoodBefore = sessionNotes.reduce((sum, note) => sum + note.moodBefore, 0) / totalSessions || 0;
-    const averageMoodAfter = sessionNotes.reduce((sum, note) => sum + note.moodAfter, 0) / totalSessions || 0;
-    const averageProgress = sessionNotes.reduce((sum, note) => sum + note.progress, 0) / totalSessions || 0;
-
-    return {
-      totalSessions,
-      activePlans,
-      upcomingAppointments,
-      averageMoodBefore,
-      averageMoodAfter,
-      averageProgress,
-      moodImprovement: averageMoodAfter - averageMoodBefore,
-    };
-  } catch (error) {
-    console.error('Error getting patient statistics:', error);
-    throw error;
-  }
-};
-
-export const getAppointmentsByPatient = async (patientId: string): Promise<Appointment[]> => {
-  try {
-    const appointmentsRef = collection(db, 'appointments');
-    const q = query(appointmentsRef, where('patientId', '==', patientId), orderBy('startTime', 'desc'));
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Appointment[];
-  } catch (error) {
-    console.error('Error getting appointments by patient:', error);
-    throw error;
-  }
-};
-
-// Batch operations for better performance
-export const createPatientWithInitialData = async (
-  patientData: Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>,
-  initialSessionNote?: Omit<SessionNote, 'id' | 'patientId' | 'psychologistId' | 'createdAt' | 'updatedAt'>,
-  initialTreatmentPlan?: Omit<TreatmentPlan, 'id' | 'patientId' | 'psychologistId' | 'createdAt' | 'updatedAt'>
-) => {
-  try {
-    const batch = writeBatch(db);
-
-    // Create patient
-    const patientRef = doc(collection(db, 'patients'));
-    batch.set(patientRef, {
-      ...patientData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
-    // Create initial session note if provided
-    if (initialSessionNote) {
-      const sessionRef = doc(collection(db, 'sessionNotes'));
-      batch.set(sessionRef, {
-        ...initialSessionNote,
-        patientId: patientRef.id,
-        psychologistId: patientData.psychologistId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
-
-    // Create initial treatment plan if provided
-    if (initialTreatmentPlan) {
-      const planRef = doc(collection(db, 'treatmentPlans'));
-      batch.set(planRef, {
-        ...initialTreatmentPlan,
-        patientId: patientRef.id,
-        psychologistId: patientData.psychologistId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
-
-    await batch.commit();
-    return patientRef.id;
-  } catch (error) {
-    console.error('Error creating patient with initial data:', error);
+    console.error('Error updating next appointment:', error);
     throw error;
   }
 };

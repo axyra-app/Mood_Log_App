@@ -47,6 +47,8 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('commonActivities') ||
         error.message.includes('Cannot read properties of undefined (reading \'commonActivities\')') ||
         error.message.includes('AbortError: The play() request was interrupted') ||
+        error.message.includes('Moon is not defined') ||
+        error.message.includes('ReferenceError: Moon is not defined') ||
         (error.message.includes('reading') && error.message.includes('add'))) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });

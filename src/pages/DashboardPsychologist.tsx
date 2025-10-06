@@ -16,6 +16,7 @@ import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotificationsSimple';
+import { usePatients } from '../hooks/usePatients';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
@@ -34,8 +35,17 @@ const DashboardPsychologist: React.FC = () => {
   const { notifications } = useNotifications();
   const unreadCount = notifications.filter(n => n.type === 'info').length;
 
-  // Datos estáticos simulados (en producción vendrían de Firebase)
-  const patients = [
+  // Hook de pacientes reales
+  const { 
+    patients, 
+    loading: patientsLoading, 
+    getPatientsByRiskLevel, 
+    getPatientsNeedingAttention, 
+    getStatistics 
+  } = usePatients();
+
+  // Datos estáticos simulados (en producción vendrían de Firebase) - SOLO PARA FALLBACK
+  const fallbackPatients = [
     {
       id: '1',
       name: 'María González',
@@ -149,14 +159,22 @@ const DashboardPsychologist: React.FC = () => {
     },
   ];
 
+  // Estadísticas reales
+  const realStats = getStatistics();
+  const highRiskPatients = getPatientsByRiskLevel('high');
+  const patientsNeedingAttention = getPatientsNeedingAttention();
+
+  // Usar pacientes reales o fallback si no hay datos
+  const displayPatients = patients.length > 0 ? patients : fallbackPatients;
+
   const stats = {
-    totalPatients: patients.length,
-    activePatients: patients.filter((p) => p.isActive).length,
+    totalPatients: realStats.totalPatients || displayPatients.length,
+    activePatients: realStats.activePatients || displayPatients.filter((p) => p.isActive).length,
     todayAppointments: appointments.filter((a) => a.date === '2024-01-22').length,
     weeklyAppointments: appointments.length,
-    averageMood: patients.reduce((sum, p) => sum + p.averageMood, 0) / patients.length,
+    averageMood: realStats.averageMood || (displayPatients.reduce((sum, p) => sum + p.averageMood, 0) / displayPatients.length),
     satisfactionRate: 92,
-    riskPatients: patients.filter((p) => p.riskLevel === 'high').length,
+    riskPatients: realStats.highRiskPatients || displayPatients.filter((p) => p.riskLevel === 'high').length,
     unreadMessages: 3,
     unreadNotifications: unreadCount,
   };
@@ -170,7 +188,7 @@ const DashboardPsychologist: React.FC = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const filteredPatients = patients.filter((patient) => {
+  const filteredPatients = displayPatients.filter((patient) => {
     const matchesSearch =
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.email.toLowerCase().includes(searchTerm.toLowerCase());

@@ -58,6 +58,7 @@
             e.message.includes('getMessagesRealtime is not defined') ||
             e.message.includes('commonActivities') ||
             e.message.includes('AbortError: The play() request was interrupted') ||
+            e.message.includes('Moon is not defined') ||
             e.message.includes('Unexpected token'))
         ) {
           console.warn('External script error suppressed:', e.message);
@@ -89,6 +90,7 @@
             e.reason.message.includes('getMessagesRealtime is not defined') ||
             e.reason.message.includes('commonActivities') ||
             e.reason.message.includes('AbortError: The play() request was interrupted') ||
+            e.reason.message.includes('Moon is not defined') ||
             e.reason.message.includes('Unexpected token'))
         ) {
           console.warn('External script promise rejection suppressed:', e.reason.message);

@@ -1,4 +1,4 @@
-import { MessageCircle, Bot, User, ArrowRight, Shield, Clock, Star } from 'lucide-react';
+import { MessageCircle, Bot, User, ArrowRight, Shield, Clock, Star, Sun, Moon } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';

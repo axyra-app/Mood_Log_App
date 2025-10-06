@@ -1,4 +1,4 @@
-import { ArrowLeft, Bot, Send, User, Clock, Shield, Star } from 'lucide-react';
+import { ArrowLeft, Bot, Send, User, Clock, Shield, Star, Sun, Moon } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
