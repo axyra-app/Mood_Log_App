@@ -2,10 +2,12 @@ import { BarChart3, Calendar, LogOut, MessageCircle, Moon, Settings, Sun } from 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useMood } from '../hooks/useMood';
 
 const DashboardSimple: React.FC = () => {
   // Versión actualizada con corrección de importación Heart
   const { user, logout } = useAuth();
+  const { moodLogs, loading: moodLoading, getMoodStreak, getAverageMood } = useMood();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -13,6 +15,19 @@ const DashboardSimple: React.FC = () => {
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  // Calcular estadísticas reales
+  const weeklyLogs = moodLogs.filter(log => {
+    const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
+      ? log.createdAt.toDate() 
+      : new Date(log.createdAt);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return logDate >= weekAgo;
+  });
+
+  const averageMood = getAverageMood(7);
+  const streak = getMoodStreak();
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -151,7 +166,7 @@ const DashboardSimple: React.FC = () => {
                 <p className={`text-2xl font-bold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  0
+                  {moodLoading ? '...' : weeklyLogs.length}
                 </p>
               </div>
               <BarChart3 className={`w-8 h-8 ${
@@ -173,7 +188,7 @@ const DashboardSimple: React.FC = () => {
                 <p className={`text-2xl font-bold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  -
+                  {moodLoading ? '...' : averageMood ? averageMood.toFixed(1) : '-'}
                 </p>
               </div>
               <div className={`w-8 h-8 flex items-center justify-center text-2xl ${
@@ -197,7 +212,7 @@ const DashboardSimple: React.FC = () => {
                 <p className={`text-2xl font-bold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  0
+                  {moodLoading ? '...' : streak}
                 </p>
               </div>
               <Calendar className={`w-8 h-8 ${
@@ -219,25 +234,93 @@ const DashboardSimple: React.FC = () => {
             </h3>
           </div>
           <div className="p-6">
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">📝</div>
-              <p className={`text-lg ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Aún no tienes registros de estado de ánimo
-              </p>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
-              }`}>
-                Comienza registrando cómo te sientes hoy
-              </p>
-              <button
-                onClick={() => navigate('/mood-flow')}
-                className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
-              >
-                Registrar Estado de Ánimo
-              </button>
-            </div>
+            {moodLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Cargando actividad...
+                </p>
+              </div>
+            ) : moodLogs.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">📝</div>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Aún no tienes registros de estado de ánimo
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Comienza registrando cómo te sientes hoy
+                </p>
+                <button
+                  onClick={() => navigate('/mood-flow')}
+                  className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
+                >
+                  Registrar Estado de Ánimo
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {moodLogs.slice(0, 5).map((log, index) => {
+                  const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
+                    ? log.createdAt.toDate() 
+                    : new Date(log.createdAt);
+                  const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
+                  const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
+                  
+                  return (
+                    <div key={log.id || index} className={`p-4 rounded-lg border ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{moodEmojis[log.mood - 1]}</span>
+                          <div>
+                            <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {moodLabels[log.mood - 1]} ({log.mood}/5)
+                            </p>
+                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {logDate.toLocaleDateString('es-ES', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Energía: {log.energy}/10
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Estrés: {log.stress}/10
+                          </p>
+                        </div>
+                      </div>
+                      {log.notes && (
+                        <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          "{log.notes}"
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {moodLogs.length > 5 && (
+                  <div className="text-center pt-4">
+                    <button
+                      onClick={() => navigate('/statistics')}
+                      className={`px-4 py-2 rounded-lg font-medium ${
+                        isDarkMode 
+                          ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Ver todos los registros ({moodLogs.length})
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
