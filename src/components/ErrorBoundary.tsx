@@ -38,6 +38,7 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('Cross-Origin-Opener-Policy') ||
         error.message.includes('Could not establish connection') ||
         error.message.includes('Heart is not defined') ||
+        error.message.includes('ReferenceError: Heart is not defined') ||
         (error.message.includes('reading') && error.message.includes('add'))) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });
