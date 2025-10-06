@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
+import AppointmentSection from '../components/AppointmentSection';
 
 const DashboardSimple: React.FC = () => {
   // Versión actualizada con corrección de importación Heart
@@ -220,6 +221,11 @@ const DashboardSimple: React.FC = () => {
               }`} />
             </div>
           </div>
+        </div>
+
+        {/* Appointment Section */}
+        <div className="mb-8">
+          <AppointmentSection />
         </div>
 
         {/* Recent Activity */}

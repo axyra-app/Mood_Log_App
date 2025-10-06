@@ -14,6 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
+import PsychologistNotifications from '../components/PsychologistNotifications';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotificationsSimple';
 import { usePatients } from '../hooks/usePatients';
@@ -495,12 +496,15 @@ const DashboardPsychologist: React.FC = () => {
                   📊 Resumen General
                 </h2>
 
-                <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+                <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
                   {/* Crisis Alerts Panel */}
                   <CrisisAlertsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
 
                   {/* Patient Stats Panel */}
                   <PatientStatsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
+
+                  {/* Notifications Panel */}
+                  <PsychologistNotifications />
                 </div>
 
                 {/* Recent Activity */}

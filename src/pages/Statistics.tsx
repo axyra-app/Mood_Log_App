@@ -112,6 +112,52 @@ const Statistics: React.FC = () => {
 
   const patterns = calculateRealPatterns();
 
+  // Generar datos para gráficos basados en mood logs reales
+  const generateChartData = () => {
+    if (!statistics || !statistics.weeklyAverages) {
+      return {
+        weeklyData: [],
+        monthlyData: [],
+        activitiesData: [],
+        emotionsData: []
+      };
+    }
+
+    // Datos semanales
+    const weeklyData = statistics.weeklyAverages.map(week => ({
+      date: week.week,
+      mood: week.averageMood
+    }));
+
+    // Datos mensuales (simulados basados en datos semanales)
+    const monthlyData = weeklyData.map((week, index) => ({
+      month: `Semana ${index + 1}`,
+      mood: week.mood,
+      entries: Math.floor(Math.random() * 10) + 1 // Simulado
+    }));
+
+    // Datos de actividades
+    const activitiesData = statistics.mostCommonActivities?.map(activity => ({
+      name: activity.activity,
+      value: activity.count
+    })) || [];
+
+    // Datos de emociones
+    const emotionsData = statistics.mostCommonEmotions?.map(emotion => ({
+      name: emotion.emotion,
+      value: emotion.count
+    })) || [];
+
+    return {
+      weeklyData,
+      monthlyData,
+      activitiesData,
+      emotionsData
+    };
+  };
+
+  const chartData = generateChartData();
+
   const COLORS = ['#8B5CF6', '#EC4899', '#06B6D4', '#10B981', '#F59E0B'];
 
   const handleDownloadReport = () => {
@@ -324,34 +370,41 @@ const Statistics: React.FC = () => {
             {/* Gráfico de tendencia semanal */}
             <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Tendencia Semanal</h3>
-              <ResponsiveContainer width='100%' height={300}>
-                <LineChart data={statistics?.weeklyData || []}>
-                  <CartesianGrid strokeDasharray='3 3' />
-                  <XAxis dataKey='date' />
-                  <YAxis domain={[1, 5]} />
-                  <Tooltip />
-                  <Line
-                    type='monotone'
-                    dataKey='mood'
-                    stroke='#8B5CF6'
-                    strokeWidth={3}
-                    dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {chartData.weeklyData.length > 0 ? (
+                <ResponsiveContainer width='100%' height={300}>
+                  <LineChart data={chartData.weeklyData}>
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='date' />
+                    <YAxis domain={[1, 5]} />
+                    <Tooltip />
+                    <Line
+                      type='monotone'
+                      dataKey='mood'
+                      stroke='#8B5CF6'
+                      strokeWidth={3}
+                      dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className='flex items-center justify-center h-[300px] text-gray-500'>
+                  <div className='text-center'>
+                    <div className='text-4xl mb-2'>📈</div>
+                    <p>No hay datos semanales disponibles</p>
+                    <p className='text-sm'>Registra más estados de ánimo para ver tendencias</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Gráfico de actividades */}
             <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Actividades Frecuentes</h3>
-              {statistics?.patterns?.commonActivities && statistics.patterns.commonActivities.length > 0 ? (
+              {chartData.activitiesData.length > 0 ? (
                 <ResponsiveContainer width='100%' height={300}>
                   <PieChart>
                     <Pie
-                      data={statistics.patterns.commonActivities.map((activity: string, index: number) => ({
-                        name: activity,
-                        value: Math.random() * 100, // En producción, usar datos reales
-                      }))}
+                      data={chartData.activitiesData}
                       cx='50%'
                       cy='50%'
                       labelLine={false}
@@ -360,7 +413,7 @@ const Statistics: React.FC = () => {
                       fill='#8884d8'
                       dataKey='value'
                     >
-                      {statistics.patterns.commonActivities.map((_: any, index: number) => (
+                      {chartData.activitiesData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -382,15 +435,25 @@ const Statistics: React.FC = () => {
           {/* Gráfico mensual */}
           <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>Progreso Mensual</h3>
-            <ResponsiveContainer width='100%' height={300}>
-              <BarChart data={statistics?.monthlyData || []}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='month' />
-                <YAxis domain={[1, 5]} />
-                <Tooltip />
-                <Bar dataKey='averageMood' fill='#8B5CF6' radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.monthlyData.length > 0 ? (
+              <ResponsiveContainer width='100%' height={300}>
+                <BarChart data={chartData.monthlyData}>
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='month' />
+                  <YAxis domain={[1, 5]} />
+                  <Tooltip />
+                  <Bar dataKey='mood' fill='#8B5CF6' radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className='flex items-center justify-center h-[300px] text-gray-500'>
+                <div className='text-center'>
+                  <div className='text-4xl mb-2'>📊</div>
+                  <p>No hay datos mensuales disponibles</p>
+                  <p className='text-sm'>Registra más estados de ánimo para ver progreso</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Patrones y insights */}
