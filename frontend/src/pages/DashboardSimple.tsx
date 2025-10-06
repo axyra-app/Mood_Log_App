@@ -194,7 +194,9 @@ const DashboardSimple: React.FC = () => {
                 </p>
               </div>
               <div className="w-8 h-8 flex items-center justify-center">
-                <img src="/logo.png" alt="Mood Log Logo" className="h-8 w-8" />
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-lg">🧠</span>
+                </div>
               </div>
             </div>
           </div>

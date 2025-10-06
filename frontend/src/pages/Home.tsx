@@ -10,7 +10,9 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 sm:py-4">
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Mood Log Logo" className="h-6 w-6 sm:h-8 sm:w-8" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-lg sm:text-xl">🧠</span>
+              </div>
               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">MOOD LOG</h1>
             </div>
             <div className="flex space-x-2 sm:space-x-4">
@@ -160,7 +162,9 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <img src="/logo.png" alt="Mood Log Logo" className="h-5 w-5 sm:h-6 sm:w-6" />
+              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded flex items-center justify-center">
+                <span className="text-white text-xs sm:text-sm">🧠</span>
+              </div>
               <span className="text-gray-900 font-semibold text-sm sm:text-base">MOOD LOG</span>
             </div>
             <div className="flex space-x-4 sm:space-x-6">
