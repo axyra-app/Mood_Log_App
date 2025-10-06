@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Brain, Users, Shield, BarChart3, MessageCircle, Calendar, Star, ArrowRight } from 'lucide-react';
+import { Brain, Users, Shield, BarChart3, MessageCircle, Calendar, Star, ArrowRight } from 'lucide-react';
 
 const Home: React.FC = () => {
   return (
@@ -10,7 +10,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-purple-600" />
+              <img src="/logo.png" alt="Mood Log Logo" className="h-8 w-8" />
               <h1 className="text-2xl font-bold text-gray-900">MOOD LOG</h1>
             </div>
             <div className="flex space-x-4">
@@ -157,7 +157,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <Heart className="h-6 w-6 text-purple-600" />
+              <img src="/logo.png" alt="Mood Log Logo" className="h-6 w-6" />
               <span className="text-gray-900 font-semibold">MOOD LOG</span>
             </div>
             <div className="flex space-x-6">

@@ -6,7 +6,7 @@ import { useMood } from '../hooks/useMood';
 import AppointmentSection from '../components/AppointmentSection';
 
 const DashboardSimple: React.FC = () => {
-  // Versión actualizada con corrección de importación Heart
+  // Dashboard con logo personalizado
   const { user, logout } = useAuth();
   const { moodLogs, loading: moodLoading, getMoodStreak, getAverageMood } = useMood();
   const navigate = useNavigate();
@@ -192,10 +192,8 @@ const DashboardSimple: React.FC = () => {
                   {moodLoading ? '...' : averageMood ? averageMood.toFixed(1) : '-'}
                 </p>
               </div>
-              <div className={`w-8 h-8 flex items-center justify-center text-2xl ${
-                isDarkMode ? 'text-pink-400' : 'text-pink-500'
-              }`}>
-                ❤️
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img src="/logo.png" alt="Mood Log Logo" className="h-8 w-8" />
               </div>
             </div>
           </div>
