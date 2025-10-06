@@ -274,7 +274,7 @@ const Statistics: React.FC = () => {
             <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Tendencia Semanal</h3>
               <ResponsiveContainer width='100%' height={300}>
-                <LineChart data={statistics.weeklyData}>
+                <LineChart data={statistics?.weeklyData || []}>
                   <CartesianGrid strokeDasharray='3 3' />
                   <XAxis dataKey='date' />
                   <YAxis domain={[1, 5]} />
@@ -293,28 +293,38 @@ const Statistics: React.FC = () => {
             {/* Gráfico de actividades */}
             <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Actividades Frecuentes</h3>
-              <ResponsiveContainer width='100%' height={300}>
-                <PieChart>
-                  <Pie
-                    data={statistics.patterns.commonActivities.map((activity: string, index: number) => ({
-                      name: activity,
-                      value: Math.random() * 100, // En producción, usar datos reales
-                    }))}
-                    cx='50%'
-                    cy='50%'
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill='#8884d8'
-                    dataKey='value'
-                  >
-                    {statistics.patterns.commonActivities.map((_: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {statistics?.patterns?.commonActivities && statistics.patterns.commonActivities.length > 0 ? (
+                <ResponsiveContainer width='100%' height={300}>
+                  <PieChart>
+                    <Pie
+                      data={statistics.patterns.commonActivities.map((activity: string, index: number) => ({
+                        name: activity,
+                        value: Math.random() * 100, // En producción, usar datos reales
+                      }))}
+                      cx='50%'
+                      cy='50%'
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill='#8884d8'
+                      dataKey='value'
+                    >
+                      {statistics.patterns.commonActivities.map((_: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className='flex items-center justify-center h-[300px] text-gray-500'>
+                  <div className='text-center'>
+                    <div className='text-4xl mb-2'>📊</div>
+                    <p>No hay datos de actividades disponibles</p>
+                    <p className='text-sm'>Registra más estados de ánimo para ver estadísticas</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -322,7 +332,7 @@ const Statistics: React.FC = () => {
           <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>Progreso Mensual</h3>
             <ResponsiveContainer width='100%' height={300}>
-              <BarChart data={statistics.monthlyData}>
+              <BarChart data={statistics?.monthlyData || []}>
                 <CartesianGrid strokeDasharray='3 3' />
                 <XAxis dataKey='month' />
                 <YAxis domain={[1, 5]} />
@@ -366,20 +376,28 @@ const Statistics: React.FC = () => {
             <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Emociones Frecuentes</h3>
               <div className='space-y-3'>
-                {statistics.patterns.commonEmotions.map((emotion: string, index: number) => (
-                  <div key={index} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
-                    <span className='font-medium text-gray-900'>{emotion}</span>
-                    <div className='flex items-center space-x-2'>
-                      <div className='w-20 bg-gray-200 rounded-full h-2'>
-                        <div
-                          className='bg-purple-600 h-2 rounded-full'
-                          style={{ width: `${Math.random() * 100}%` }}
-                        ></div>
+                {statistics?.patterns?.commonEmotions && statistics.patterns.commonEmotions.length > 0 ? (
+                  statistics.patterns.commonEmotions.map((emotion: string, index: number) => (
+                    <div key={index} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                      <span className='font-medium text-gray-900'>{emotion}</span>
+                      <div className='flex items-center space-x-2'>
+                        <div className='w-20 bg-gray-200 rounded-full h-2'>
+                          <div
+                            className='bg-purple-600 h-2 rounded-full'
+                            style={{ width: `${Math.random() * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className='text-sm text-gray-600'>{Math.round(Math.random() * 100)}%</span>
                       </div>
-                      <span className='text-sm text-gray-600'>{Math.round(Math.random() * 100)}%</span>
                     </div>
+                  ))
+                ) : (
+                  <div className='text-center py-8 text-gray-500'>
+                    <div className='text-4xl mb-2'>😊</div>
+                    <p>No hay datos de emociones disponibles</p>
+                    <p className='text-sm'>Registra más estados de ánimo para ver estadísticas</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

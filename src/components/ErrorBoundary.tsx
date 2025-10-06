@@ -20,6 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Versión actualizada con supresión mejorada de errores
     
     // Suprimir errores específicos que no deberían mostrar el error boundary
     if (error.message.includes('Cannot read properties of undefined') ||
