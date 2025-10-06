@@ -218,7 +218,7 @@ const ChatSelection: React.FC = () => {
           <div className={`mt-4 p-4 rounded-lg ${isDarkMode ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'}`}>
             <p className={`text-sm ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>
               <strong>⚠️ En caso de emergencia:</strong> Si tienes pensamientos de autolesión o suicidio, 
-              contacta inmediatamente con la línea de crisis: <strong>988</strong> (España: 717 003 717) 
+              contacta inmediatamente con la línea de crisis: <strong>106</strong> (Colombia) 
               o acude a urgencias del hospital más cercano.
             </p>
           </div>

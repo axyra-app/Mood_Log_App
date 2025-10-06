@@ -47,19 +47,25 @@ export const generateAIResponse = async (
     // Análisis básico del mensaje del usuario
     const message = userMessage.toLowerCase();
     
-    // Respuestas contextuales basadas en palabras clave
-    if (message.includes('ansiedad') || message.includes('ansioso')) {
+    // Detectar urgencia primero
+    const urgency = detectUrgency(userMessage);
+    if (urgency === 'high' || urgency === 'medium') {
+      return generateUrgentResponse(urgency);
+    }
+    
+    // Respuestas contextuales basadas en palabras clave y contexto
+    if (message.includes('ansiedad') || message.includes('ansioso') || message.includes('nervioso')) {
       return {
-        message: `Hola, entiendo que estás experimentando ansiedad. Como ${doctor.name}, especialista en ${doctor.specialty}, te recomiendo algunas técnicas de respiración y relajación. ¿Podrías contarme más sobre cuándo sientes esta ansiedad?`,
+        message: `Entiendo que estás experimentando ansiedad. Como ${doctor.name}, especialista en ${doctor.specialty}, puedo ayudarte con esto. La ansiedad es una respuesta natural del cuerpo, pero cuando es excesiva puede afectar tu bienestar. Te sugiero algunas técnicas que pueden ayudarte:`,
         suggestions: [
-          'Técnicas de respiración',
-          'Ejercicios de relajación',
-          'Identificar desencadenantes'
+          'Técnica 4-7-8 de respiración',
+          'Ejercicios de relajación muscular',
+          'Identificar patrones de pensamiento'
         ],
         followUpQuestions: [
-          '¿Cuándo comenzó esta sensación?',
-          '¿Hay algo específico que la desencadene?',
-          '¿Has probado alguna técnica antes?'
+          '¿Cuándo comenzó esta sensación de ansiedad?',
+          '¿Hay situaciones específicas que la desencadenen?',
+          '¿Cómo afecta tu día a día?'
         ]
       };
     }
@@ -80,18 +86,18 @@ export const generateAIResponse = async (
       };
     }
 
-    if (message.includes('estrés') || message.includes('estresado')) {
+    if (message.includes('estrés') || message.includes('estresado') || message.includes('estres') || message.includes('cansancio') || message.includes('cansado') || message.includes('trabajo') || message.includes('torneo') || message.includes('dolor')) {
       return {
-        message: `El estrés es muy común en la vida moderna. Como ${doctor.name}, puedo ayudarte a desarrollar estrategias para manejarlo mejor. ¿Qué situaciones específicas te están causando más estrés?`,
+        message: `Veo que estás experimentando estrés y cansancio, especialmente después de tu torneo de ultimate. Es normal sentirse agotado después de actividad física intensa. Como ${doctor.name}, te recomiendo un enfoque integral para recuperarte:`,
         suggestions: [
-          'Gestión del tiempo',
-          'Técnicas de mindfulness',
-          'Ejercicio regular'
+          'Descanso y recuperación muscular',
+          'Hidratación adecuada',
+          'Técnicas de relajación para el estrés laboral'
         ],
         followUpQuestions: [
-          '¿En qué momento del día sientes más estrés?',
-          '¿Cómo afecta tu trabajo o estudios?',
-          '¿Tienes tiempo para actividades de relajación?'
+          '¿Cuánto tiempo hace del torneo?',
+          '¿Qué tipo de trabajo te causa más estrés?',
+          '¿Tienes tiempo para descansar adecuadamente?'
         ]
       };
     }
@@ -175,7 +181,7 @@ export const detectUrgency = (message: string): 'low' | 'medium' | 'high' => {
 export const generateUrgentResponse = (urgency: 'medium' | 'high'): AIResponse => {
   if (urgency === 'high') {
     return {
-      message: 'Entiendo que estás pasando por un momento muy difícil. Tu vida tiene valor y hay ayuda disponible. Por favor, contacta inmediatamente con: Línea Nacional de Prevención del Suicidio: 988 (España: 717 003 717). También puedes acudir a urgencias del hospital más cercano. No estás solo/a.',
+      message: 'Entiendo que estás pasando por un momento muy difícil. Tu vida tiene valor y hay ayuda disponible. Por favor, contacta inmediatamente con: Línea Nacional de Prevención del Suicidio: 106 (Colombia). También puedes acudir a urgencias del hospital más cercano. No estás solo/a.',
       suggestions: [
         'Llamar línea de crisis',
         'Ir a urgencias',
