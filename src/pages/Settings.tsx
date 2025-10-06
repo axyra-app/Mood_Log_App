@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
-import { useNotifications } from '../hooks/useNotificationsSimple';
+import { useNotifications } from '../hooks/useNotifications';
 
 const Settings: React.FC = () => {
   const { user, logout, updateUserProfile } = useAuth();

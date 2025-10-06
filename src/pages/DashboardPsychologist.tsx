@@ -16,7 +16,7 @@ import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
 import PsychologistNotifications from '../components/PsychologistNotifications';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotificationsSimple';
+import { useNotifications } from '../hooks/useNotifications';
 import { usePatients } from '../hooks/usePatients';
 
 const DashboardPsychologist: React.FC = () => {

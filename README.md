@@ -118,16 +118,22 @@ La aplicación es una PWA completa:
 
 ## 📊 **Estructura del Proyecto**
 
+Ver `PROJECT_STRUCTURE.md` para la estructura completa y detallada.
+
+**Estructura simplificada:**
 ```
 src/
-├── components/          # Componentes reutilizables
-│   ├── psychologist/   # Componentes para psicólogos
-│   └── ui/            # Componentes de interfaz
-├── services/          # Servicios (Firebase, IA)
-├── contexts/          # Contextos de React
-├── hooks/            # Custom hooks
-├── pages/            # Páginas principales
-└── types/            # Definiciones TypeScript
+├── 📁 components/          # Componentes reutilizables
+│   ├── 📁 auth/          # Autenticación
+│   ├── 📁 psychologist/  # Componentes para psicólogos
+│   └── 📁 ui/            # Componentes de interfaz básicos
+├── 📁 services/          # Servicios (Firebase, IA, APIs)
+├── 📁 contexts/          # Contextos de React
+├── 📁 hooks/            # Custom hooks personalizados
+├── 📁 pages/            # Páginas principales de la app
+├── 📁 types/            # Definiciones TypeScript
+├── 📁 utils/            # Utilidades y helpers
+└── 📁 config/           # Configuraciones
 ```
 
 ## 🔒 **Seguridad**

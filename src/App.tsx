@@ -4,11 +4,9 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
 // Components
-import AuthDebug from './components/AuthDebug';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
-import UserDebugInfo from './components/UserDebugInfo';
 
 // Pages
 import AIChat from './pages/AIChat';
@@ -18,7 +16,6 @@ import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
-import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
@@ -34,11 +31,9 @@ function App() {
       <AuthProvider>
         <Router>
           <div className='App'>
-            <UserDebugInfo />
-            <AuthDebug />
             <Routes>
               {/* Public routes */}
-              <Route path='/' element={<HomeSimple />} />
+              <Route path='/' element={<LoginSimple />} />
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
               <Route path='/complete-profile' element={<CompleteProfile />} />
