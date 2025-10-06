@@ -16,6 +16,7 @@ import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
+import Home from './pages/Home';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
@@ -33,7 +34,7 @@ function App() {
           <div className='App'>
             <Routes>
               {/* Public routes */}
-              <Route path='/' element={<LoginSimple />} />
+              <Route path='/' element={<Home />} />
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
               <Route path='/complete-profile' element={<CompleteProfile />} />
