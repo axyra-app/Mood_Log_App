@@ -9,6 +9,9 @@ import {
   Settings,
   TrendingUp,
   Users,
+  LogOut,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -18,21 +21,16 @@ import PsychologistNotifications from '../components/PsychologistNotifications';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { usePatients } from '../hooks/usePatients';
+import Logo from '../components/Logo';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [showPatientModal, setShowPatientModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  // Hook de notificaciones simplificado
+  // Hook de notificaciones
   const { notifications } = useNotifications();
   const unreadCount = notifications.filter(n => n.type === 'info').length;
 
@@ -45,1005 +43,319 @@ const DashboardPsychologist: React.FC = () => {
     getStatistics 
   } = usePatients();
 
-  // Datos estáticos simulados (en producción vendrían de Firebase) - SOLO PARA FALLBACK
-  const fallbackPatients = [
-    {
-      id: '1',
-      name: 'María González',
-      email: 'maria.gonzalez@email.com',
-      phone: '+52 55 1234 5678',
-      lastSession: '2024-01-15',
-      moodTrend: 'Mejorando',
-      nextAppointment: '2024-01-22',
-      totalSessions: 12,
-      averageMood: 4.2,
-      lastMood: 4,
-      riskLevel: 'low',
-      notes: 'Progreso excelente en manejo de ansiedad',
-      age: 28,
-      gender: 'Femenino',
-      diagnosis: 'Trastorno de ansiedad generalizada',
-      treatmentStart: '2023-10-15',
-      progress: 85,
-      emergencyContact: '+52 55 9876 5432',
-      medications: ['Sertralina 50mg'],
-      goals: ['Reducir ansiedad', 'Mejorar sueño', 'Aumentar confianza'],
-      lastMoodDate: '2024-01-20',
-      moodHistory: [3, 4, 3, 4, 4, 4, 4],
-      isActive: true,
-    },
-    {
-      id: '2',
-      name: 'Carlos Rodríguez',
-      email: 'carlos.rodriguez@email.com',
-      phone: '+52 55 2345 6789',
-      lastSession: '2024-01-18',
-      moodTrend: 'Estable',
-      nextAppointment: '2024-01-25',
-      totalSessions: 8,
-      averageMood: 3.8,
-      lastMood: 4,
-      riskLevel: 'medium',
-      notes: 'Necesita más trabajo en técnicas de relajación',
-      age: 35,
-      gender: 'Masculino',
-      diagnosis: 'Depresión moderada',
-      treatmentStart: '2023-12-01',
-      progress: 65,
-      emergencyContact: '+52 55 8765 4321',
-      medications: ['Fluoxetina 20mg'],
-      goals: ['Mejorar estado de ánimo', 'Aumentar actividad física'],
-      lastMoodDate: '2024-01-19',
-      moodHistory: [3, 3, 4, 3, 4, 3, 4],
-      isActive: true,
-    },
-    {
-      id: '3',
-      name: 'Ana Martínez',
-      email: 'ana.martinez@email.com',
-      phone: '+52 55 3456 7890',
-      lastSession: '2024-01-20',
-      moodTrend: 'Declinando',
-      nextAppointment: '2024-01-23',
-      totalSessions: 15,
-      averageMood: 2.5,
-      lastMood: 2,
-      riskLevel: 'high',
-      notes: 'Requiere atención inmediata - crisis emocional',
-      age: 24,
-      gender: 'Femenino',
-      diagnosis: 'Trastorno límite de personalidad',
-      treatmentStart: '2023-09-10',
-      progress: 40,
-      emergencyContact: '+52 55 7654 3210',
-      medications: ['Quetiapina 100mg', 'Lorazepam 1mg'],
-      goals: ['Estabilizar emociones', 'Reducir autolesiones'],
-      lastMoodDate: '2024-01-21',
-      moodHistory: [2, 2, 3, 2, 2, 1, 2],
-      isActive: true,
-    },
-  ];
-
-  const appointments = [
-    {
-      id: '1',
-      patientId: '1',
-      patientName: 'María González',
-      date: '2024-01-22',
-      time: '10:00',
-      duration: 60,
-      type: 'Individual',
-      status: 'confirmed',
-      notes: 'Seguimiento de técnicas de relajación',
-    },
-    {
-      id: '2',
-      patientId: '2',
-      patientName: 'Carlos Rodríguez',
-      date: '2024-01-22',
-      time: '11:30',
-      duration: 60,
-      type: 'Individual',
-      status: 'confirmed',
-      notes: 'Evaluación de progreso',
-    },
-    {
-      id: '3',
-      patientId: '3',
-      patientName: 'Ana Martínez',
-      date: '2024-01-23',
-      time: '09:00',
-      duration: 90,
-      type: 'Individual',
-      status: 'urgent',
-      notes: 'Sesión de crisis - URGENTE',
-    },
-  ];
-
   // Estadísticas reales
   const realStats = getStatistics();
   const highRiskPatients = getPatientsByRiskLevel('high');
+  const mediumRiskPatients = getPatientsByRiskLevel('medium');
+  const lowRiskPatients = getPatientsByRiskLevel('low');
   const patientsNeedingAttention = getPatientsNeedingAttention();
 
-  // Usar pacientes reales o fallback si no hay datos
-  const displayPatients = patients.length > 0 ? patients : fallbackPatients;
+  // Usar datos reales
+  const hasRealData = patients.length > 0;
 
   const stats = {
-    totalPatients: realStats.totalPatients || displayPatients.length,
-    activePatients: realStats.activePatients || displayPatients.filter((p) => p.isActive).length,
-    todayAppointments: appointments.filter((a) => a.date === '2024-01-22').length,
-    weeklyAppointments: appointments.length,
-    averageMood: realStats.averageMood || (displayPatients.reduce((sum, p) => sum + p.averageMood, 0) / displayPatients.length),
-    satisfactionRate: 92,
-    riskPatients: realStats.highRiskPatients || displayPatients.filter((p) => p.riskLevel === 'high').length,
-    unreadMessages: 3,
-    unreadNotifications: unreadCount,
+    totalPatients: realStats.totalPatients || 0,
+    activePatients: realStats.activePatients || 0,
+    averageMood: realStats.averageMood || 0,
+    riskPatients: highRiskPatients.length,
   };
 
   useEffect(() => {
     setIsLoaded(true);
-    setLoading(false);
   }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const filteredPatients = displayPatients.filter((patient) => {
-    const matchesSearch =
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filterStatus === 'all' ||
-      (filterStatus === 'active' && patient.isActive) ||
-      (filterStatus === 'risk' && patient.riskLevel === 'high');
-    return matchesSearch && matchesFilter;
-  });
-
-  const getRiskColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high':
-        return 'text-red-600 bg-red-100';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'low':
-        return 'text-green-600 bg-green-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
-  const getRiskText = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high':
-        return 'Alto Riesgo';
-      case 'medium':
-        return 'Riesgo Medio';
-      case 'low':
-        return 'Bajo Riesgo';
-      default:
-        return 'Sin Riesgo';
-    }
-  };
-
-  const tabs = [
-    { id: 'overview', label: 'Resumen', icon: BarChart3 },
-    { id: 'patients', label: 'Pacientes', icon: Users },
-    { id: 'appointments', label: 'Citas', icon: Calendar },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'alerts', label: 'Alertas', icon: AlertTriangle },
-  ];
+  const filteredPatients = patients.filter(patient =>
+    patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (!isLoaded) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900' : 'bg-white'
-        }`}
-      >
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600'></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white"></div>
       </div>
     );
   }
 
   return (
-    <>
-
-
-      <div
-        className={`min-h-screen transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-        }`}
-      >
-        {/* Header */}
-        <header
-          className={`py-6 px-6 transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
-          } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
-        >
-          <div className='max-w-7xl mx-auto flex items-center justify-between'>
-            <Link to='/' className='flex items-center space-x-3 group'>
-              <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
-                <span className='text-white font-black text-lg'>🧠</span>
-              </div>
-              <span
-                className={`text-2xl font-black transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}
-              >
-                MOOD LOG - PSICÓLOGO
-              </span>
-            </Link>
-
-            <div className='flex items-center space-x-4'>
-              {/* Notificaciones */}
-              <div className='relative'>
-                <Bell
-                  className={`w-6 h-6 transition-colors duration-300 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
-                />
-                {stats.unreadNotifications > 0 && (
-                  <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium'>
-                    {stats.unreadNotifications > 99 ? '99+' : stats.unreadNotifications}
-                  </span>
-                )}
-              </div>
-
-              {/* Configuración */}
-              <button
-                onClick={() => setShowSettingsModal(true)}
-                className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-                  isDarkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <Settings className='w-6 h-6' />
-              </button>
-
-              {/* Dark Mode Toggle */}
+    <div className={`min-h-screen transition-colors duration-500 ${
+      isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+    }`}>
+      {/* Header */}
+      <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg border-b ${
+        isDarkMode ? 'border-gray-700' : 'border-gray-200'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-3 sm:py-4">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Logo size="lg" />
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">MOOD LOG - Psicólogo</h1>
+            </div>
+            
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={toggleDarkMode}
-                className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-                  isDarkMode
-                    ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
                 }`}
               >
-                {isDarkMode ? '☀️' : '🌙'}
+                {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
-
-              {/* User Info */}
-              <div className={`px-4 py-2 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <p className='text-sm font-medium'>{user?.email}</p>
-                <p className='text-xs opacity-75'>Psicólogo</p>
-              </div>
-
-              {/* Logout */}
+              
               <button
-                onClick={logout}
-                className='px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium'
+                onClick={handleLogout}
+                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base"
               >
-                Cerrar Sesión
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Cerrar Sesión</span>
+                <span className="sm:hidden">Salir</span>
               </button>
             </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <div className='max-w-7xl mx-auto p-6'>
-          {/* Stats Cards */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-            <div
-              className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-                isDarkMode ? 'bg-gray-800' : 'bg-white'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p
-                    className={`text-sm font-medium transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}
-                  >
-                    Total Pacientes
-                  </p>
-                  <p
-                    className={`text-2xl font-bold transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {stats.totalPatients}
-                  </p>
-                </div>
-                <Users
-                  className={`w-8 h-8 transition-colors duration-500 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}
-                />
-              </div>
-            </div>
-
-            <div
-              className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-                isDarkMode ? 'bg-gray-800' : 'bg-white'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p
-                    className={`text-sm font-medium transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}
-                  >
-                    Citas Hoy
-                  </p>
-                  <p
-                    className={`text-2xl font-bold transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {stats.todayAppointments}
-                  </p>
-                </div>
-                <Calendar
-                  className={`w-8 h-8 transition-colors duration-500 ${
-                    isDarkMode ? 'text-green-400' : 'text-green-600'
-                  }`}
-                />
-              </div>
-            </div>
-
-            <div
-              className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-                isDarkMode ? 'bg-gray-800' : 'bg-white'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p
-                    className={`text-sm font-medium transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}
-                  >
-                    Mood Promedio
-                  </p>
-                  <p
-                    className={`text-2xl font-bold transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {stats.averageMood.toFixed(1)}/5
-                  </p>
-                </div>
-                <TrendingUp
-                  className={`w-8 h-8 transition-colors duration-500 ${
-                    isDarkMode ? 'text-purple-400' : 'text-purple-600'
-                  }`}
-                />
-              </div>
-            </div>
-
-            <div
-              className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-                isDarkMode ? 'bg-gray-800' : 'bg-white'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p
-                    className={`text-sm font-medium transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}
-                  >
-                    Pacientes en Riesgo
-                  </p>
-                  <p
-                    className={`text-2xl font-bold transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {stats.riskPatients}
-                  </p>
-                </div>
-                <AlertTriangle
-                  className={`w-8 h-8 transition-colors duration-500 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div
-            className={`mb-6 rounded-xl p-1 transition-colors duration-500 ${
-              isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-            }`}
-          >
-            <div className='flex space-x-1'>
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === tab.id
-                        ? isDarkMode
-                          ? 'bg-gray-700 text-white shadow-sm'
-                          : 'bg-white text-gray-900 shadow-sm'
-                        : isDarkMode
-                        ? 'text-gray-400 hover:text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <Icon className='w-4 h-4' />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div
-            className={`rounded-xl shadow-sm transition-colors duration-500 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
-          >
-            {/* Overview Tab */}
-            {activeTab === 'overview' && (
-              <div className='p-6'>
-                <h2
-                  className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  📊 Resumen General
-                </h2>
-
-                <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-                  {/* Crisis Alerts Panel */}
-                  <CrisisAlertsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
-
-                  {/* Patient Stats Panel */}
-                  <PatientStatsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
-
-                  {/* Notifications Panel */}
-                  <PsychologistNotifications />
-                </div>
-
-                {/* Recent Activity */}
-                <div className='mt-8'>
-                  <h3
-                    className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    📈 Actividad Reciente
-                  </h3>
-                  <div className='space-y-3'>
-                    {patients.slice(0, 3).map((patient) => (
-                      <div
-                        key={patient.id}
-                        className={`p-4 rounded-lg border transition-colors duration-500 ${
-                          isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        <div className='flex items-center justify-between'>
-                          <div>
-                            <h4
-                              className={`font-medium transition-colors duration-500 ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                              }`}
-                            >
-                              {patient.name}
-                            </h4>
-                            <p
-                              className={`text-sm transition-colors duration-500 ${
-                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                              }`}
-                            >
-                              Última sesión: {patient.lastSession}
-                            </p>
-                          </div>
-                          <div className='flex items-center space-x-2'>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
-                                patient.riskLevel
-                              )}`}
-                            >
-                              {getRiskText(patient.riskLevel)}
-                            </span>
-                            <span
-                              className={`text-sm font-medium transition-colors duration-500 ${
-                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                              }`}
-                            >
-                              Mood: {patient.lastMood}/5
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Patients Tab */}
-            {activeTab === 'patients' && (
-              <div className='p-6'>
-                <div className='flex items-center justify-between mb-6'>
-                  <h2
-                    className={`text-2xl font-bold transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    👥 Gestión de Pacientes
-                  </h2>
-
-                  <div className='flex items-center space-x-4'>
-                    {/* Search */}
-                    <div className='relative'>
-                      <Search
-                        className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}
-                      />
-                      <input
-                        type='text'
-                        placeholder='Buscar pacientes...'
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`pl-10 pr-4 py-2 rounded-lg border transition-colors duration-500 ${
-                          isDarkMode
-                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                        }`}
-                      />
-                    </div>
-
-                    {/* Filter */}
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className={`px-3 py-2 rounded-lg border transition-colors duration-500 ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                    >
-                      <option value='all'>Todos</option>
-                      <option value='active'>Activos</option>
-                      <option value='risk'>En Riesgo</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Patients List */}
-                <div className='space-y-4'>
-                  {filteredPatients.map((patient) => (
-                    <div
-                      key={patient.id}
-                      className={`p-6 rounded-xl border transition-colors duration-500 ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                      }`}
-                    >
-                      <div className='flex items-center justify-between'>
-                        <div className='flex-1'>
-                          <div className='flex items-center space-x-4 mb-2'>
-                            <h3
-                              className={`text-lg font-semibold transition-colors duration-500 ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                              }`}
-                            >
-                              {patient.name}
-                            </h3>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(
-                                patient.riskLevel
-                              )}`}
-                            >
-                              {getRiskText(patient.riskLevel)}
-                            </span>
-                          </div>
-
-                          <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-sm'>
-                            <div>
-                              <p
-                                className={`font-medium transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                                }`}
-                              >
-                                📧 {patient.email}
-                              </p>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                📞 {patient.phone}
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                📅 Última sesión: {patient.lastSession}
-                              </p>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                📊 Mood promedio: {patient.averageMood}/5
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                🎯 Progreso: {patient.progress}%
-                              </p>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                📝 Sesiones: {patient.totalSessions}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className='flex items-center space-x-2'>
-                          <button
-                            onClick={() => {
-                              setSelectedPatient(patient);
-                              setShowPatientModal(true);
-                            }}
-                            className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium'
-                          >
-                            Ver Detalles
-                          </button>
-                          <button className='px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium'>
-                            <MessageCircle className='w-4 h-4' />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Appointments Tab */}
-            {activeTab === 'appointments' && (
-              <div className='p-6'>
-                <h2
-                  className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  📅 Gestión de Citas
-                </h2>
-
-                <div className='space-y-4'>
-                  {appointments.map((appointment) => (
-                    <div
-                      key={appointment.id}
-                      className={`p-6 rounded-xl border transition-colors duration-500 ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                      }`}
-                    >
-                      <div className='flex items-center justify-between'>
-                        <div className='flex-1'>
-                          <div className='flex items-center space-x-4 mb-2'>
-                            <h3
-                              className={`text-lg font-semibold transition-colors duration-500 ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                              }`}
-                            >
-                              {appointment.patientName}
-                            </h3>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                appointment.status === 'urgent'
-                                  ? 'text-red-600 bg-red-100'
-                                  : appointment.status === 'confirmed'
-                                  ? 'text-green-600 bg-green-100'
-                                  : 'text-yellow-600 bg-yellow-100'
-                              }`}
-                            >
-                              {appointment.status === 'urgent'
-                                ? 'URGENTE'
-                                : appointment.status === 'confirmed'
-                                ? 'Confirmada'
-                                : 'Pendiente'}
-                            </span>
-                          </div>
-
-                          <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-sm'>
-                            <div>
-                              <p
-                                className={`font-medium transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                                }`}
-                              >
-                                📅 {appointment.date}
-                              </p>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                🕐 {appointment.time}
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                ⏱️ Duración: {appointment.duration} min
-                              </p>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                📋 Tipo: {appointment.type}
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className={`transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              >
-                                📝 {appointment.notes}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className='flex items-center space-x-2'>
-                          <button className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium'>
-                            <Phone className='w-4 h-4' />
-                          </button>
-                          <button className='px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium'>
-                            <MessageCircle className='w-4 h-4' />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Analytics Tab */}
-            {activeTab === 'analytics' && (
-              <div className='p-6'>
-                <h2
-                  className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  📊 Analytics y Reportes
-                </h2>
-
-                <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-                  {/* Mood Trends */}
-                  <div
-                    className={`p-6 rounded-xl border transition-colors duration-500 ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <h3
-                      className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
-                      📈 Tendencias de Mood
-                    </h3>
-                    <div className='space-y-3'>
-                      {patients.map((patient) => (
-                        <div key={patient.id} className='flex items-center justify-between'>
-                          <span
-                            className={`text-sm transition-colors duration-500 ${
-                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                            }`}
-                          >
-                            {patient.name}
-                          </span>
-                          <div className='flex items-center space-x-2'>
-                            <div className='w-20 h-2 bg-gray-200 rounded-full overflow-hidden'>
-                              <div
-                                className='h-full bg-gradient-to-r from-red-500 to-green-500'
-                                style={{ width: `${(patient.averageMood / 5) * 100}%` }}
-                              />
-                            </div>
-                            <span
-                              className={`text-sm font-medium transition-colors duration-500 ${
-                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                              }`}
-                            >
-                              {patient.averageMood.toFixed(1)}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Session Statistics */}
-                  <div
-                    className={`p-6 rounded-xl border transition-colors duration-500 ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <h3
-                      className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
-                      📊 Estadísticas de Sesiones
-                    </h3>
-                    <div className='space-y-4'>
-                      <div className='flex items-center justify-between'>
-                        <span
-                          className={`text-sm transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          Total de sesiones esta semana
-                        </span>
-                        <span
-                          className={`text-lg font-bold transition-colors duration-500 ${
-                            isDarkMode ? 'text-white' : 'text-gray-900'
-                          }`}
-                        >
-                          {stats.weeklyAppointments}
-                        </span>
-                      </div>
-                      <div className='flex items-center justify-between'>
-                        <span
-                          className={`text-sm transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          Tasa de satisfacción
-                        </span>
-                        <span
-                          className={`text-lg font-bold transition-colors duration-500 ${
-                            isDarkMode ? 'text-white' : 'text-gray-900'
-                          }`}
-                        >
-                          {stats.satisfactionRate}%
-                        </span>
-                      </div>
-                      <div className='flex items-center justify-between'>
-                        <span
-                          className={`text-sm transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          Pacientes activos
-                        </span>
-                        <span
-                          className={`text-lg font-bold transition-colors duration-500 ${
-                            isDarkMode ? 'text-white' : 'text-gray-900'
-                          }`}
-                        >
-                          {stats.activePatients}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Alerts Tab */}
-            {activeTab === 'alerts' && (
-              <div className='p-6'>
-                <h2
-                  className={`text-2xl font-bold mb-6 transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  🚨 Alertas y Crisis
-                </h2>
-
-                <div className='space-y-4'>
-                  {patients
-                    .filter((p) => p.riskLevel === 'high')
-                    .map((patient) => (
-                      <div
-                        key={patient.id}
-                        className={`p-6 rounded-xl border-2 border-red-500 transition-colors duration-500 ${
-                          isDarkMode ? 'bg-red-900/20' : 'bg-red-50'
-                        }`}
-                      >
-                        <div className='flex items-center justify-between'>
-                          <div className='flex-1'>
-                            <div className='flex items-center space-x-4 mb-2'>
-                              <AlertTriangle className='w-6 h-6 text-red-600' />
-                              <h3
-                                className={`text-lg font-semibold transition-colors duration-500 ${
-                                  isDarkMode ? 'text-white' : 'text-gray-900'
-                                }`}
-                              >
-                                {patient.name} - ALERTA DE CRISIS
-                              </h3>
-                              <span className='px-2 py-1 rounded-full text-xs font-medium text-red-600 bg-red-100'>
-                                ALTO RIESGO
-                              </span>
-                            </div>
-
-                            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
-                              <div>
-                                <p
-                                  className={`font-medium transition-colors duration-500 ${
-                                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                                  }`}
-                                >
-                                  📧 {patient.email}
-                                </p>
-                                <p
-                                  className={`transition-colors duration-500 ${
-                                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                  }`}
-                                >
-                                  📞 {patient.phone}
-                                </p>
-                              </div>
-                              <div>
-                                <p
-                                  className={`transition-colors duration-500 ${
-                                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                  }`}
-                                >
-                                  🚨 Contacto de emergencia: {patient.emergencyContact}
-                                </p>
-                                <p
-                                  className={`transition-colors duration-500 ${
-                                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                  }`}
-                                >
-                                  📊 Mood actual: {patient.lastMood}/5
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className='mt-3'>
-                              <p
-                                className={`text-sm transition-colors duration-500 ${
-                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                                }`}
-                              >
-                                <strong>Notas:</strong> {patient.notes}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className='flex items-center space-x-2'>
-                            <button className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium'>
-                              <Phone className='w-4 h-4' />
-                            </button>
-                            <button className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium'>
-                              <MessageCircle className='w-4 h-4' />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
-      </div>
-    </>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        {/* Welcome Section */}
+        <div className="mb-6 sm:mb-8">
+          <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            ¡Hola, Dr. {user?.displayName || user?.email?.split('@')[0] || 'Psicólogo'}! 👋
+          </h2>
+          <p className={`text-base sm:text-lg ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Panel de control para gestión de pacientes y seguimiento terapéutico.
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-xs sm:text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Total Pacientes
+                </p>
+                <p className={`text-xl sm:text-2xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {patientsLoading ? '...' : stats.totalPatients}
+                </p>
+              </div>
+              <Users className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                isDarkMode ? 'text-blue-400' : 'text-blue-500'
+              }`} />
+            </div>
+          </div>
+
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-xs sm:text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Pacientes Activos
+                </p>
+                <p className={`text-xl sm:text-2xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {patientsLoading ? '...' : stats.activePatients}
+                </p>
+              </div>
+              <TrendingUp className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                isDarkMode ? 'text-green-400' : 'text-green-500'
+              }`} />
+            </div>
+          </div>
+
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-xs sm:text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Estado de Ánimo Promedio
+                </p>
+                <p className={`text-xl sm:text-2xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {patientsLoading ? '...' : stats.averageMood ? stats.averageMood.toFixed(1) : '-'}
+                </p>
+              </div>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
+                <Logo size="md" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-xs sm:text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Pacientes en Riesgo
+                </p>
+                <p className={`text-xl sm:text-2xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {patientsLoading ? '...' : stats.riskPatients}
+                </p>
+              </div>
+              <AlertTriangle className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                isDarkMode ? 'text-red-400' : 'text-red-500'
+              }`} />
+            </div>
+          </div>
+        </div>
+
+        {/* Panels Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          {/* Crisis Alerts Panel */}
+          <CrisisAlertsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
+
+          {/* Patient Stats Panel */}
+          <PatientStatsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
+
+          {/* Notifications Panel */}
+          <PsychologistNotifications />
+        </div>
+
+        {/* Patients Section */}
+        <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        } p-4 sm:p-6`}>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+            <h3 className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-0 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              Lista de Pacientes
+            </h3>
+            
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <input
+                  type="text"
+                  placeholder="Buscar pacientes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+
+          {patientsLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            </div>
+          ) : !hasRealData ? (
+            <div className="text-center py-8">
+              <Users className={`w-16 h-16 mx-auto mb-4 ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
+              <h4 className={`text-lg font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                No tienes pacientes asignados
+              </h4>
+              <p className={`text-sm ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                Los pacientes aparecerán aquí cuando se registren y te asignen como su psicólogo.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredPatients.map((patient) => (
+                <div
+                  key={patient.id}
+                  className={`p-4 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        patient.riskLevel === 'high' ? 'bg-red-100 text-red-600' :
+                        patient.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className={`font-medium ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {patient.name || 'Paciente'}
+                        </h4>
+                        <p className={`text-sm ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {patient.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        patient.riskLevel === 'high' ? 'bg-red-100 text-red-800' :
+                        patient.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {patient.riskLevel === 'high' ? 'Alto Riesgo' :
+                         patient.riskLevel === 'medium' ? 'Riesgo Medio' :
+                         'Bajo Riesgo'}
+                      </span>
+                      <button
+                        onClick={() => navigate(`/chat/psychologist/${user?.uid}`)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 };
 

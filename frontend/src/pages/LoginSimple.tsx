@@ -1,6 +1,7 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Logo from '../components/Logo';
 
 const LoginSimple: React.FC = () => {
   const { signIn, signInWithGoogle, user, logout } = useAuth();
@@ -117,9 +118,7 @@ const LoginSimple: React.FC = () => {
       >
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
           <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
-            <div className='w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
-              <span className='text-white font-black text-sm sm:text-lg'>💜</span>
-            </div>
+            <Logo size="lg" />
             <span
               className={`text-lg sm:text-xl lg:text-2xl font-black transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'

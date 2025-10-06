@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { commonValidationRules, useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
+import Logo from '../components/Logo';
 
 const RegisterSimple: React.FC = () => {
   const { signUp, signUpWithGoogle } = useAuth();
@@ -245,9 +246,7 @@ const RegisterSimple: React.FC = () => {
         >
           <div className='max-w-7xl mx-auto flex items-center justify-between'>
             <Link to='/' className='flex items-center space-x-3 group'>
-              <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
-                <span className='text-white font-black text-lg'>💜</span>
-              </div>
+              <Logo size="lg" />
               <span
                 className={`text-2xl font-black transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
