@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoImage from '../assets/logo.png';
 
 interface LogoProps {
   className?: string;
@@ -7,7 +8,6 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
   const [imageError, setImageError] = useState(false);
-  const [currentFormat, setCurrentFormat] = useState<'webp' | 'png'>('webp');
 
   const sizeClasses = {
     sm: 'h-5 w-5',
@@ -21,17 +21,6 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
     lg: 'text-lg sm:text-xl'
   };
 
-  const handleError = () => {
-    if (currentFormat === 'webp') {
-      // Intentar con PNG
-      setCurrentFormat('png');
-      setImageError(false);
-    } else {
-      // Usar fallback con emoji
-      setImageError(true);
-    }
-  };
-
   if (imageError) {
     // Fallback con emoji
     return (
@@ -41,14 +30,12 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
     );
   }
 
-  const logoSrc = currentFormat === 'webp' ? '/logo.webp' : '/logo.png';
-
   return (
     <img 
-      src={logoSrc} 
+      src={logoImage} 
       alt="Mood Log Logo" 
       className={`${sizeClasses[size]} ${className}`}
-      onError={handleError}
+      onError={() => setImageError(true)}
       onLoad={() => setImageError(false)}
     />
   );
