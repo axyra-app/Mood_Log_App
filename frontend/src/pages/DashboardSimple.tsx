@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 import AppointmentSection from '../components/AppointmentSection';
+import Logo from '../components/Logo';
 
 const DashboardSimple: React.FC = () => {
   // Dashboard con logo personalizado
@@ -194,9 +195,7 @@ const DashboardSimple: React.FC = () => {
                 </p>
               </div>
               <div className="w-8 h-8 flex items-center justify-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-lg">🧠</span>
-                </div>
+                <Logo size="lg" />
               </div>
             </div>
           </div>
