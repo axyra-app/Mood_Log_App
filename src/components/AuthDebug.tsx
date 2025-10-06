@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 const AuthDebug: React.FC = () => {
   const { user, loading } = useAuth();
 
+  // Solo mostrar en desarrollo
+  if (import.meta.env.PROD) return null;
+
   return (
     <div style={{
       position: 'fixed',
