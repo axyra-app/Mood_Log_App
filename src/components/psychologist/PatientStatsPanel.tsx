@@ -283,3 +283,4 @@ const PatientStatsPanel: React.FC<PatientStatsPanelProps> = ({ psychologistId, i
 export default PatientStatsPanel;
 
 
+

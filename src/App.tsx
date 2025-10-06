@@ -22,6 +22,7 @@ import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
+import PsychologistSelection from './pages/PsychologistSelection';
 import RegisterSimple from './pages/RegisterSimple';
 import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
@@ -96,6 +97,14 @@ function App() {
               />
               <Route
                 path='/chat/psychologist'
+                element={
+                  <ProtectedRoute>
+                    <PsychologistSelection />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/chat/psychologist/:psychologistId'
                 element={
                   <ProtectedRoute>
                     <Chat />
