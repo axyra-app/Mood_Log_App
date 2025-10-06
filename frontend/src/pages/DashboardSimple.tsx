@@ -91,30 +91,31 @@ const DashboardSimple: React.FC = () => {
         isDarkMode ? 'border-gray-700' : 'border-gray-200'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl">🧠</span>
+          <div className="flex justify-between items-center py-3 sm:py-4">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-lg sm:text-xl">🧠</span>
               </div>
-              <h1 className="text-2xl font-bold">MOOD LOG</h1>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">MOOD LOG</h1>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors ${
                   isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
                 }`}
               >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
               
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Cerrar Sesión</span>
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Cerrar Sesión</span>
+                <span className="sm:hidden">Salir</span>
               </button>
             </div>
           </div>
@@ -122,15 +123,15 @@ const DashboardSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className={`text-3xl font-bold mb-2 ${
+        <div className="mb-6 sm:mb-8">
+          <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             ¡Hola, {user?.displayName || user?.email?.split('@')[0] || 'Usuario'}! 👋
           </h2>
-          <p className={`text-lg ${
+          <p className={`text-base sm:text-lg ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             ¿Cómo te sientes hoy? Registra tu estado de ánimo y mantén un seguimiento de tu bienestar emocional.
@@ -138,22 +139,22 @@ const DashboardSimple: React.FC = () => {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {quickActions.map((action, index) => (
             <button
               key={index}
               onClick={action.action}
-              className={`${action.color} p-6 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg`}
+              className={`${action.color} p-4 sm:p-6 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg`}
             >
-              <div className="text-4xl mb-3">{action.icon}</div>
-              <h3 className="text-lg font-semibold mb-2">{action.title}</h3>
-              <p className="text-sm opacity-90">{action.description}</p>
+              <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{action.icon}</div>
+              <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">{action.title}</h3>
+              <p className="text-xs sm:text-sm opacity-90">{action.description}</p>
             </button>
           ))}
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg border ${
             isDarkMode ? 'border-gray-700' : 'border-gray-200'
           }`}>
