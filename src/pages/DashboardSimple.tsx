@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, Heart, LogOut, MessageCircle, Moon, Settings, Sun } from 'lucide-react';
+import { BarChart3, Calendar, LogOut, MessageCircle, Moon, Settings, Sun } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -176,9 +176,11 @@ const DashboardSimple: React.FC = () => {
                   -
                 </p>
               </div>
-              <Heart className={`w-8 h-8 ${
+              <div className={`w-8 h-8 flex items-center justify-center text-2xl ${
                 isDarkMode ? 'text-pink-400' : 'text-pink-500'
-              }`} />
+              }`}>
+                ❤️
+              </div>
             </div>
           </div>
 
