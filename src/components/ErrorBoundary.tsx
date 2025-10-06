@@ -32,7 +32,8 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('Missing or insufficient permissions') ||
         error.message.includes('FirebaseError') ||
         error.message.includes('permission-denied') ||
-        error.message.includes('reading') && error.message.includes('add')) {
+        error.message.includes('overallRisk') ||
+        (error.message.includes('reading') && error.message.includes('add'))) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });
       return;

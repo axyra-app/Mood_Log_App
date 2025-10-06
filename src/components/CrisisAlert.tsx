@@ -7,6 +7,7 @@ interface CrisisAlertProps {
   onDismiss: () => void;
   onContactPsychologist: () => void;
   onEmergencyContact: () => void;
+  isDarkMode?: boolean;
 }
 
 const CrisisAlert: React.FC<CrisisAlertProps> = ({
@@ -14,6 +15,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({
   onDismiss,
   onContactPsychologist,
   onEmergencyContact,
+  isDarkMode = false,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -64,7 +66,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({
     }
   };
 
-  if (!isVisible) return null;
+  if (!isVisible || !assessment) return null;
 
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
