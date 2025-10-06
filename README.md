@@ -45,21 +45,25 @@ git clone <repository-url>
 cd mood-log-app
 ```
 
-2. **Instala las dependencias**
+2. **Instala todas las dependencias**
 
 ```bash
-npm install
+npm run install:all
 ```
 
 3. **Configura Firebase**
 
-   - Las credenciales ya están configuradas en `src/services/firebase.ts`
+   - Las credenciales ya están configuradas en `frontend/src/services/firebase.ts`
    - Ver `FIREBASE-SETUP.md` para detalles de configuración
 
 4. **Ejecuta el servidor de desarrollo**
 
 ```bash
+# Para el frontend
 npm run dev
+
+# Para el backend (en otra terminal)
+npm run backend:dev
 ```
 
 La aplicación estará disponible en `http://localhost:5173`
@@ -122,18 +126,20 @@ Ver `PROJECT_STRUCTURE.md` para la estructura completa y detallada.
 
 **Estructura simplificada:**
 ```
-src/
-├── 📁 components/          # Componentes reutilizables
-│   ├── 📁 auth/          # Autenticación
-│   ├── 📁 psychologist/  # Componentes para psicólogos
-│   └── 📁 ui/            # Componentes de interfaz básicos
-├── 📁 services/          # Servicios (Firebase, IA, APIs)
-├── 📁 contexts/          # Contextos de React
-├── 📁 hooks/            # Custom hooks personalizados
-├── 📁 pages/            # Páginas principales de la app
-├── 📁 types/            # Definiciones TypeScript
-├── 📁 utils/            # Utilidades y helpers
-└── 📁 config/           # Configuraciones
+Mood log app/
+├── 📁 frontend/          # Aplicación React + TypeScript
+│   ├── 📁 src/           # Código fuente del frontend
+│   │   ├── 📁 components/ # Componentes React
+│   │   ├── 📁 pages/     # Páginas de la aplicación
+│   │   ├── 📁 services/  # Servicios (Firebase, IA, APIs)
+│   │   ├── 📁 hooks/     # Custom hooks personalizados
+│   │   ├── 📁 contexts/  # React contexts
+│   │   ├── 📁 types/     # Definiciones TypeScript
+│   │   └── 📁 utils/    # Utilidades y helpers
+│   └── 📄 Archivos de configuración del frontend
+├── 📁 backend/           # Backend Node.js + Prisma
+├── 📁 docs/              # Documentación
+└── 📄 Archivos de configuración raíz
 ```
 
 ## 🔒 **Seguridad**
