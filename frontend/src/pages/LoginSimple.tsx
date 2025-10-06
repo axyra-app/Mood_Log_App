@@ -111,17 +111,17 @@ const LoginSimple: React.FC = () => {
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Header */}
       <header
-        className={`py-6 px-6 transition-colors duration-500 ${
+        className={`py-4 sm:py-6 px-4 sm:px-6 transition-colors duration-500 ${
           isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
         } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
       >
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
-          <Link to='/' className='flex items-center space-x-3 group'>
-            <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
-              <span className='text-white font-black text-lg'>💜</span>
+          <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
+            <div className='w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300'>
+              <span className='text-white font-black text-sm sm:text-lg'>💜</span>
             </div>
             <span
-              className={`text-2xl font-black transition-colors duration-500 ${
+              className={`text-lg sm:text-xl lg:text-2xl font-black transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}
             >
@@ -131,7 +131,7 @@ const LoginSimple: React.FC = () => {
 
           <button
             onClick={toggleDarkMode}
-            className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
+            className={`p-2 sm:p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
               isDarkMode
                 ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -145,17 +145,17 @@ const LoginSimple: React.FC = () => {
       {/* Main Content */}
       <div className='flex min-h-[calc(100vh-80px)]'>
         {/* Centered Form */}
-        <div className='flex-1 flex items-center justify-center p-8'>
+        <div className='flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8'>
           <div className='w-full max-w-md'>
-            <div className='text-center mb-8'>
+            <div className='text-center mb-6 sm:mb-8'>
               <h1
-                className={`text-4xl font-black mb-4 transition-colors duration-500 ${
+                className={`text-2xl sm:text-3xl lg:text-4xl font-black mb-3 sm:mb-4 transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}
               >
                 INICIAR SESIÓN
               </h1>
-              <p className={`text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-base sm:text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Accede a tu cuenta y comienza tu transformación
               </p>
 
@@ -201,11 +201,11 @@ const LoginSimple: React.FC = () => {
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className='space-y-6'>
+            <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
               {/* Email */}
               <div>
                 <label
-                  className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
+                  className={`block text-xs sm:text-sm font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}
                 >
@@ -215,7 +215,7 @@ const LoginSimple: React.FC = () => {
                   type='email'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
+                  className={`w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 text-sm sm:text-base ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                       : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
@@ -227,7 +227,7 @@ const LoginSimple: React.FC = () => {
               {/* Password */}
               <div>
                 <label
-                  className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
+                  className={`block text-xs sm:text-sm font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}
                 >
@@ -238,7 +238,7 @@ const LoginSimple: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full px-4 py-4 pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
+                    className={`w-full px-3 py-3 sm:px-4 sm:py-4 pr-10 sm:pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 text-sm sm:text-base ${
                       isDarkMode
                         ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                         : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
@@ -277,7 +277,7 @@ const LoginSimple: React.FC = () => {
               <button
                 type='submit'
                 disabled={loading}
-                className={`w-full py-4 px-6 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-black text-base sm:text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDarkMode
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-2xl hover:shadow-purple-500/50'
                     : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-2xl hover:shadow-purple-500/50'
@@ -291,7 +291,7 @@ const LoginSimple: React.FC = () => {
                 type='button'
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className={`w-full py-4 px-6 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
+                className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
                   isDarkMode
                     ? 'border-gray-600 text-white hover:bg-gray-800'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -325,16 +325,16 @@ const LoginSimple: React.FC = () => {
             </form>
 
             {/* Links */}
-            <div className='mt-8 text-center space-y-4'>
+            <div className='mt-6 sm:mt-8 text-center space-y-3 sm:space-y-4'>
               <Link
                 to='/forgot-password'
-                className={`block text-sm font-semibold transition-colors duration-300 hover:underline ${
+                className={`block text-xs sm:text-sm font-semibold transition-colors duration-300 hover:underline ${
                   isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'
                 }`}
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-              <p className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-xs sm:text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 ¿No tienes cuenta?{' '}
                 <Link
                   to='/register'
