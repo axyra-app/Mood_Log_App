@@ -361,6 +361,102 @@ export interface RegisterForm {
   bio?: string;
 }
 
+// Journal Types (Notion-style)
+export interface JournalEntry {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  date: Date;
+  tags: string[];
+  mood?: number; // 1-10 scale
+  energy?: number; // 1-10 scale
+  stress?: number; // 1-10 scale
+  sleep?: number; // 1-10 scale
+  activities: string[];
+  emotions: string[];
+  aiSuggestions?: string[];
+  aiAnalysis?: {
+    sentiment: 'positive' | 'negative' | 'neutral';
+    themes: string[];
+    insights: string[];
+    recommendations: string[];
+  };
+  isPrivate: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface JournalTemplate {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  tags: string[];
+  category: 'daily' | 'weekly' | 'monthly' | 'reflection' | 'gratitude' | 'goal-setting';
+  isDefault: boolean;
+  createdBy: string; // userId or 'system'
+  createdAt: Date;
+}
+
+export interface JournalPrompt {
+  id: string;
+  title: string;
+  content: string;
+  category: 'daily' | 'reflection' | 'gratitude' | 'goal-setting' | 'emotional' | 'creative';
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedTime: number; // in minutes
+  tags: string[];
+}
+
+// Medical Report Types
+export interface MedicalReport {
+  id: string;
+  patientId: string;
+  psychologistId: string;
+  reportType: 'initial' | 'progress' | 'discharge' | 'emergency';
+  title: string;
+  content: string;
+  diagnosis?: string;
+  treatmentPlan?: string;
+  recommendations: string[];
+  medications?: string[];
+  nextAppointment?: Date;
+  riskAssessment: 'low' | 'medium' | 'high';
+  attachments?: string[]; // file URLs
+  isConfidential: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PatientHistory {
+  id: string;
+  patientId: string;
+  psychologistId: string;
+  medicalHistory: {
+    mentalHealth: string[];
+    physicalHealth: string[];
+    medications: string[];
+    allergies: string[];
+    familyHistory: string[];
+  };
+  psychologicalHistory: {
+    previousTherapy: string[];
+    diagnoses: string[];
+    treatments: string[];
+    hospitalizations: string[];
+  };
+  socialHistory: {
+    education: string;
+    occupation: string;
+    relationships: string;
+    livingSituation: string;
+    substanceUse: string[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Component Props Types
 export interface ButtonProps {
   children: React.ReactNode;

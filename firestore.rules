@@ -298,6 +298,42 @@ service cloud.firestore {
     }
     
     // ========================================
+    // REGLAS PARA INFORMES MÉDICOS
+    // ========================================
+    match /medicalReports/{reportId} {
+      // Solo el psicólogo puede leer/escribir informes médicos
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // El paciente puede leer sus propios informes médicos
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.patientId;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.psychologistId &&
+        isValidMedicalReport(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA HISTORIAL DEL PACIENTE
+    // ========================================
+    match /patientHistory/{historyId} {
+      // Solo el psicólogo puede leer/escribir historial del paciente
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // El paciente puede leer su propio historial
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.patientId;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.psychologistId &&
+        isValidPatientHistory(request.resource.data);
+    }
+    
+    // ========================================
     // REGLAS PARA REPORTES
     // ========================================
     match /reports/{reportId} {
@@ -343,6 +379,32 @@ service cloud.firestore {
              data.participants is list && data.participants.size() >= 2 &&
              data.content is string && data.content.size() > 0 &&
              data.timestamp is timestamp;
+    }
+    
+    // Validar informe médico
+    function isValidMedicalReport(data) {
+      return data.keys().hasAll(['patientId', 'psychologistId', 'reportType', 'title', 'content']) &&
+             data.patientId is string && data.patientId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
+             data.reportType in ['initial', 'progress', 'discharge', 'emergency'] &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0;
+    }
+    
+    // Validar historial del paciente
+    function isValidPatientHistory(data) {
+      return data.keys().hasAll(['patientId', 'psychologistId']) &&
+             data.patientId is string && data.patientId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0;
+    }
+    
+    // Validar alerta de crisis
+    function isValidCrisisAlert(data) {
+      return data.keys().hasAll(['patientId', 'psychologistId', 'urgency', 'signals']) &&
+             data.patientId is string && data.patientId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
+             data.urgency in ['low', 'medium', 'high', 'critical'] &&
+             data.signals is list && data.signals.size() > 0;
     }
   }
 }

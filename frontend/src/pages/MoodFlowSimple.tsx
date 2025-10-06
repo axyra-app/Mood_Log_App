@@ -112,12 +112,6 @@ const MoodFlowSimple: React.FC = () => {
       const result = await createMoodLog(moodLogData);
       setMoodData(result);
       setShowAnalysis(true);
-      
-      // Mostrar análisis por 3 segundos y luego redirigir al dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
-      
     } catch (error) {
       console.error('Error creating mood log:', error);
     } finally {
@@ -518,21 +512,25 @@ const MoodFlowSimple: React.FC = () => {
 
         {/* Analysis Panel */}
         {showAnalysis && moodData && (
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm border ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
-          }`}>
+          <div
+            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm border ${
+              isDarkMode ? 'border-gray-700' : 'border-gray-200'
+            }`}
+          >
             <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ✅ Mood Log Guardado Exitosamente
             </h3>
-            
-            <div className="space-y-4">
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-green-900/20' : 'bg-green-50'} border ${
-                isDarkMode ? 'border-green-800' : 'border-green-200'
-              }`}>
+
+            <div className='space-y-4'>
+              <div
+                className={`p-4 rounded-lg ${isDarkMode ? 'bg-green-900/20' : 'bg-green-50'} border ${
+                  isDarkMode ? 'border-green-800' : 'border-green-200'
+                }`}
+              >
                 <h4 className={`font-medium ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>
                   📊 Análisis de tu Estado de Ánimo
                 </h4>
-                <div className="mt-2 space-y-2">
+                <div className='mt-2 space-y-2'>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     <strong>Estado:</strong> {moodLabels[currentMood! - 1]} ({currentMood}/5)
                   </p>
@@ -548,13 +546,13 @@ const MoodFlowSimple: React.FC = () => {
                 </div>
               </div>
 
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
-                isDarkMode ? 'border-blue-800' : 'border-blue-200'
-              }`}>
-                <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>
-                  💡 Recomendaciones
-                </h4>
-                <div className="mt-2 space-y-1">
+              <div
+                className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
+                  isDarkMode ? 'border-blue-800' : 'border-blue-200'
+                }`}
+              >
+                <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>💡 Recomendaciones</h4>
+                <div className='mt-2 space-y-1'>
                   {currentMood! >= 4 && (
                     <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       ✨ ¡Excelente estado de ánimo! Mantén las actividades que te hacen sentir bien.
@@ -578,10 +576,10 @@ const MoodFlowSimple: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center pt-4">
+              <div className='flex justify-center pt-4'>
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200 font-medium"
+                  className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200 font-medium'
                 >
                   🏠 Ir al Dashboard
                 </button>

@@ -1,7 +1,8 @@
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { AlertCircle, CheckCircle, Heart, Loader2, Mail, Moon, Shield, Sun, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Mail, Moon, Shield, Sun, Zap } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Logo from '../components/Logo';
 import { auth } from '../services/firebase';
 import { getPasswordResetErrorMessage } from '../utils/errorMessages';
 
@@ -63,7 +64,6 @@ const ForgotPassword: React.FC = () => {
   if (success) {
     return (
       <>
-
         <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
           {/* Header */}
           <header
@@ -74,15 +74,7 @@ const ForgotPassword: React.FC = () => {
             <nav className='container mx-auto px-6 py-6'>
               <div className='flex items-center justify-between'>
                 <Link to='/' className='flex items-center space-x-3 group'>
-                  <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${
-                      isDarkMode
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600'
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                    }`}
-                  >
-                    <Heart className='w-7 h-7 text-white' />
-                  </div>
+                  <Logo size='lg' />
                   <span
                     className={`text-3xl font-black transition-colors duration-500 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
@@ -244,7 +236,6 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <>
-
       <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         {/* Header */}
         <header
@@ -255,15 +246,7 @@ const ForgotPassword: React.FC = () => {
           <nav className='container mx-auto px-6 py-6'>
             <div className='flex items-center justify-between'>
               <Link to='/' className='flex items-center space-x-3 group'>
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${
-                    isDarkMode
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600'
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                  }`}
-                >
-                  <Heart className='w-7 h-7 text-white' />
-                </div>
+                <Logo size='lg' />
                 <span
                   className={`text-3xl font-black transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
@@ -437,14 +420,27 @@ const ForgotPassword: React.FC = () => {
                     ¿NECESITAS AYUDA?
                   </h3>
                 </div>
-                <p
-                  className={`text-sm font-bold transition-colors duration-500 ${
+                <div
+                  className={`text-sm font-bold space-y-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-blue-300' : 'text-blue-700'
                   }`}
                 >
-                  Si tienes problemas para acceder a tu cuenta, también puedes contactar a nuestro equipo de soporte.
-                  <span className='block mt-2'>Email: support@moodlogapp.com</span>
-                </p>
+                  <p>Si tienes problemas para acceder a tu cuenta, también puedes:</p>
+                  <ul className='list-disc list-inside space-y-1 ml-4'>
+                    <li>Contactar a nuestro equipo de soporte</li>
+                    <li>Verificar que el email esté escrito correctamente</li>
+                    <li>Revisar tu carpeta de spam o correo no deseado</li>
+                    <li>Esperar unos minutos antes de intentar nuevamente</li>
+                  </ul>
+                  <div
+                    className={`mt-4 p-3 rounded-xl border ${
+                      isDarkMode ? 'bg-blue-800/30 border-blue-600' : 'bg-blue-100 border-blue-300'
+                    }`}
+                  >
+                    <p className='font-black'>📧 Email de soporte:</p>
+                    <p className='text-purple-600 font-bold'>support@moodlogapp.com</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
