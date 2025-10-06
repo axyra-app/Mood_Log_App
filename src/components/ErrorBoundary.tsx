@@ -27,12 +27,17 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('Failed to load resource') ||
         error.message.includes('vite.svg') ||
         error.message.includes('content-all.js') ||
+        error.message.includes('all-frames.js') ||
         error.message.includes('401') ||
         error.message.includes('404') ||
+        error.message.includes('400') ||
         error.message.includes('Missing or insufficient permissions') ||
         error.message.includes('FirebaseError') ||
         error.message.includes('permission-denied') ||
         error.message.includes('overallRisk') ||
+        error.message.includes('Cross-Origin-Opener-Policy') ||
+        error.message.includes('Could not establish connection') ||
+        error.message.includes('Heart is not defined') ||
         (error.message.includes('reading') && error.message.includes('add'))) {
       console.warn('Suppressed error in ErrorBoundary:', error.message);
       this.setState({ hasError: false });

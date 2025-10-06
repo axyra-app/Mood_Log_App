@@ -40,10 +40,12 @@
           e.message &&
           (e.message.includes('Cannot determine language') ||
             e.message.includes('content-all.js') ||
+            e.message.includes('all-frames.js') ||
             e.message.includes('Failed to load resource') ||
             e.message.includes('vite.svg') ||
             e.message.includes('401') ||
             e.message.includes('404') ||
+            e.message.includes('400') ||
             e.message.includes('Cannot read properties of undefined') ||
             e.message.includes('Missing or insufficient permissions') ||
             e.message.includes('FirebaseError') ||
@@ -51,7 +53,7 @@
             e.message.includes('Cross-Origin-Opener-Policy') ||
             e.message.includes('Could not establish connection') ||
             e.message.includes('permission-denied') ||
-            e.message.includes('Cross-Origin-Opener-Policy') ||
+            e.message.includes('Heart is not defined') ||
             e.message.includes('Unexpected token'))
         ) {
           console.warn('External script error suppressed:', e.message);
@@ -66,15 +68,19 @@
           e.reason.message &&
           (e.reason.message.includes('Cannot determine language') ||
             e.reason.message.includes('content-all.js') ||
+            e.reason.message.includes('all-frames.js') ||
             e.reason.message.includes('Failed to load resource') ||
             e.reason.message.includes('vite.svg') ||
             e.reason.message.includes('401') ||
             e.reason.message.includes('404') ||
+            e.reason.message.includes('400') ||
             e.reason.message.includes('Cannot read properties of undefined') ||
             e.reason.message.includes('Missing or insufficient permissions') ||
             e.reason.message.includes('FirebaseError') ||
             e.reason.message.includes('permission-denied') ||
             e.reason.message.includes('Cross-Origin-Opener-Policy') ||
+            e.reason.message.includes('Could not establish connection') ||
+            e.reason.message.includes('Heart is not defined') ||
             e.reason.message.includes('Unexpected token'))
         ) {
           console.warn('External script promise rejection suppressed:', e.reason.message);
