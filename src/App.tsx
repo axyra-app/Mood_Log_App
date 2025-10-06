@@ -1,10 +1,10 @@
-import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
 
 // Components
+import AuthDebug from './components/AuthDebug';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
