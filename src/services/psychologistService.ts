@@ -67,14 +67,23 @@ export interface ChatMessage {
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
     const psychologistsRef = collection(db, 'psychologists');
-    const q = query(
+    // Primero intentar obtener psicólogos verificados y disponibles
+    let q = query(
       psychologistsRef,
       where('isAvailable', '==', true),
       where('isVerified', '==', true),
       orderBy('rating', 'desc')
     );
 
-    const querySnapshot = await getDocs(q);
+    let querySnapshot = await getDocs(q);
+    
+    // Si no hay resultados, obtener todos los psicólogos registrados
+    if (querySnapshot.empty) {
+      console.log('No se encontraron psicólogos verificados, buscando todos los registrados...');
+      q = query(psychologistsRef, orderBy('createdAt', 'desc'));
+      querySnapshot = await getDocs(q);
+    }
+
     const psychologists: Psychologist[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
@@ -90,21 +99,21 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
         const psychologist: Psychologist = {
           id: docSnapshot.id,
           userId: psychologistData.userId,
-          name: userData.displayName || userData.username || 'Psicólogo',
-          email: userData.email || '',
-          phone: userData.phone || '',
+          name: psychologistData.name || userData.displayName || userData.username || 'Psicólogo',
+          email: psychologistData.email || userData.email || '',
+          phone: psychologistData.phone || userData.phone || '',
           license: psychologistData.license || '',
-          specialization: psychologistData.specialization || [],
-          experience: psychologistData.experience || 0,
-          bio: psychologistData.bio || '',
-          profileImage: userData.photoURL || '',
-          isAvailable: psychologistData.isAvailable || false,
-          workingHours: psychologistData.workingHours || { start: '09:00', end: '18:00', timezone: 'UTC' },
+          specialization: psychologistData.specialization || ['Psicología General'],
+          experience: psychologistData.experience || 1,
+          bio: psychologistData.bio || 'Psicólogo profesional disponible para consultas.',
+          profileImage: psychologistData.profileImage || userData.photoURL || '',
+          isAvailable: psychologistData.isAvailable !== false, // Default true si no está definido
+          workingHours: psychologistData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
           languages: psychologistData.languages || ['Español'],
           consultationFee: psychologistData.consultationFee || 0,
-          rating: psychologistData.rating || 0,
+          rating: psychologistData.rating || 5.0,
           totalPatients: psychologistData.totalPatients || 0,
-          isVerified: psychologistData.isVerified || false,
+          isVerified: psychologistData.isVerified !== false, // Default true si no está definido
           createdAt: psychologistData.createdAt?.toDate() || new Date(),
           updatedAt: psychologistData.updatedAt?.toDate() || new Date(),
         };
@@ -113,9 +122,10 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
       }
     }
 
+    console.log(`✅ Encontrados ${psychologists.length} psicólogos`);
     return psychologists;
   } catch (error) {
-    console.error('Error getting available psychologists:', error);
+    console.error('❌ Error getting available psychologists:', error);
     throw error;
   }
 };

@@ -15,7 +15,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
 import PsychologistNotifications from '../components/PsychologistNotifications';
-import SampleDataInitializer from '../components/SampleDataInitializer';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotificationsSimple';
 import { usePatients } from '../hooks/usePatients';
@@ -1044,9 +1043,6 @@ const DashboardPsychologist: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      {/* Sample Data Initializer - Solo en desarrollo */}
-      {!import.meta.env.PROD && <SampleDataInitializer />}
     </>
   );
 };
