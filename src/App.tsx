@@ -14,7 +14,7 @@ import UserDebugInfo from './components/UserDebugInfo';
 import Chat from './pages/Chat';
 import CompleteProfile from './pages/CompleteProfile';
 import DashboardPsychologist from './pages/DashboardPsychologist';
-import DashboardSimple from './pages/HomeSimple';
+import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import HomeSimple from './pages/HomeSimple';
 import LoginSimple from './pages/LoginSimple';

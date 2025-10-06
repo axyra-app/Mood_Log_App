@@ -175,6 +175,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  // Cerrar sesión automáticamente cuando se cierra la ventana/pestaña
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (auth.currentUser) {
+        signOut(auth).catch(console.error);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && auth.currentUser) {
+        // Opcional: cerrar sesión cuando la pestaña se oculta
+        // signOut(auth).catch(console.error);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
