@@ -15,8 +15,9 @@ service cloud.firestore {
         get(/databases/$(database)/documents/patients/$(userId)).data.psychologistId == request.auth.uid;
       
       // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
-      // para mostrar psicólogos disponibles
+      // para mostrar psicólogos disponibles (regla simplificada)
       allow read: if request.auth != null && 
+        resource.data.keys().hasAll(['role']) &&
         resource.data.role == 'psychologist';
     }
     

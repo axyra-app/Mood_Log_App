@@ -71,8 +71,14 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
     // Temporalmente obtener todos los usuarios y filtrar en memoria
     // hasta que se construya el índice para role: 'psychologist'
     const usersRef = collection(db, 'users');
+    console.log('📋 Colección users obtenida');
+    
     const q = query(usersRef);
+    console.log('📋 Query creada');
+    
+    console.log('📋 Ejecutando getDocs...');
     const querySnapshot = await getDocs(q);
+    console.log('📋 Query ejecutada exitosamente, documentos encontrados:', querySnapshot.docs.length);
 
     const psychologists: Psychologist[] = [];
 
