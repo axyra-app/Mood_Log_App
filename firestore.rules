@@ -10,6 +10,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
       // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
+      // para mostrar psicólogos disponibles (regla muy simplificada)
       allow read: if request.auth != null && 
         resource.data.role == 'psychologist';
     }
@@ -41,21 +42,39 @@ service cloud.firestore {
     }
     
     // ========================================
-    // REGLAS PARA REGISTROS DE ESTADO DE ÁNIMO
+    // REGLAS PARA MOOD LOGS
     // ========================================
-    match /moodLogs/{logId} {
-      // Solo el usuario puede leer/escribir sus propios registros
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+    match /moodLogs/{moodLogId} {
+      // El usuario puede leer/escribir sus propios mood logs
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
       
-      // Permitir crear nuevos registros
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-      
-      // Los psicólogos pueden leer registros de sus pacientes
+      // Los psicólogos pueden leer mood logs de sus pacientes
       allow read: if request.auth != null && 
         exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
         get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+      
+      // Validaciones para escritura - usar request.resource para documentos nuevos
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidMoodLog(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA PACIENTES
+    // ========================================
+    match /patients/{patientId} {
+      // Solo el psicólogo asignado puede gestionar el paciente
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // El paciente puede leer su propia información básica
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId &&
+        isValidPatient(resource.data);
     }
     
     // ========================================
@@ -66,27 +85,46 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       
-      // El psicólogo puede leer/escribir citas de sus pacientes
+      // Los psicólogos pueden leer/escribir citas donde son asignados
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.psychologistId;
       
-      // Permitir crear nuevas citas
+      // Validaciones para creación
       allow create: if request.auth != null && 
-        (request.auth.uid == request.resource.data.userId ||
-         request.auth.uid == request.resource.data.psychologistId);
+        request.auth.uid == request.resource.data.userId &&
+        isValidAppointment(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA MENSAJES DE CHAT
+    // ========================================
+    match /messages/{messageId} {
+      // Solo los participantes pueden leer/escribir mensajes
+      allow read, write: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid in resource.data.participants &&
+        isValidMessage(resource.data);
     }
     
     // ========================================
     // REGLAS PARA NOTIFICACIONES
     // ========================================
     match /notifications/{notificationId} {
-      // El usuario puede leer/escribir sus propias notificaciones
+      // El usuario destinatario puede leer/escribir sus notificaciones
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       
-      // Permitir crear nuevas notificaciones
+      // Los psicólogos pueden leer/escribir notificaciones donde son mencionados
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // Permitir crear notificaciones
       allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
+        (request.auth.uid == request.resource.data.userId ||
+         request.auth.uid == request.resource.data.psychologistId);
     }
     
     // ========================================
@@ -97,136 +135,64 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       
-      // El psicólogo puede leer/escribir sesiones de chat de sus pacientes
+      // Los psicólogos pueden leer/escribir sesiones donde participan
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.psychologistId;
       
-      // Permitir crear nuevas sesiones de chat
+      // Permitir crear nuevas sesiones
       allow create: if request.auth != null && 
         (request.auth.uid == request.resource.data.userId ||
          request.auth.uid == request.resource.data.psychologistId);
     }
     
     // ========================================
-    // REGLAS PARA CHATS
+    // REGLAS PARA ANÁLISIS DE IA
     // ========================================
-    match /chats/{chatId} {
-      // El usuario puede leer/escribir chats donde participa
-      allow read, write: if request.auth != null && 
-        request.auth.uid in resource.data.participants;
-      
-      // Permitir crear nuevos chats donde el usuario participa
-      allow create: if request.auth != null && 
-        request.auth.uid in request.resource.data.participants;
-    }
-    
-    // ========================================
-    // REGLAS PARA MENSAJES
-    // ========================================
-    match /messages/{messageId} {
-      // El usuario puede leer/escribir mensajes donde participa
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.senderId || 
-         request.auth.uid == resource.data.receiverId);
-      
-      // Permitir crear nuevos mensajes
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.senderId;
-    }
-    
-    // ========================================
-    // REGLAS PARA DIARIO
-    // ========================================
-    match /journalEntries/{entryId} {
-      // El usuario puede leer/escribir sus propias entradas del diario
+    match /aiAnalysis/{analysisId} {
+      // El usuario puede leer/escribir sus propios análisis
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       
-      // Permitir crear nuevas entradas del diario
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-    }
-    
-    match /journalTemplates/{templateId} {
-      // Todos los usuarios autenticados pueden leer plantillas del diario
-      allow read: if request.auth != null;
-      
-      // Solo el sistema puede crear plantillas por defecto
-      allow create: if request.auth != null && 
-        request.resource.data.createdBy == 'system';
-    }
-    
-    match /journalPrompts/{promptId} {
-      // Todos los usuarios autenticados pueden leer prompts del diario
-      allow read: if request.auth != null;
-      
-      // Solo el sistema puede crear prompts por defecto
-      allow create: if request.auth != null && 
-        request.resource.data.createdBy == 'system';
-    }
-    
-    // ========================================
-    // REGLAS PARA PACIENTES
-    // ========================================
-    match /patients/{patientId} {
-      // El paciente puede leer/escribir su propio perfil
-      allow read, write: if request.auth != null && 
-        request.auth.uid == patientId;
-      
-      // El psicólogo asignado puede leer/escribir el perfil del paciente
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      // Permitir crear nuevos perfiles de pacientes
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA INFORMES MÉDICOS
-    // ========================================
-    match /medicalReports/{reportId} {
-      // Solo el psicólogo puede leer/escribir informes médicos
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      // El paciente puede leer sus propios informes médicos
+      // Los psicólogos pueden leer análisis de sus pacientes
       allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
-      
-      // Permitir crear nuevos informes médicos
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.psychologistId;
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA HISTORIAL DE PACIENTES
+    // REGLAS PARA ESTADÍSTICAS
     // ========================================
-    match /patientHistory/{historyId} {
-      // Solo el psicólogo puede leer/escribir historial de pacientes
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      // El paciente puede leer su propio historial
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
-      
-      // Permitir crear nuevo historial de pacientes
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.psychologistId;
-    }
-    
-    // ========================================
-    // REGLAS PARA RECORDATORIOS
-    // ========================================
-    match /reminders/{reminderId} {
-      // Solo el usuario puede leer/escribir sus propios recordatorios
+    match /statistics/{statId} {
+      // El usuario puede leer/escribir sus propias estadísticas
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       
-      // Permitir crear nuevos recordatorios
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
+      // Los psicólogos pueden leer estadísticas de sus pacientes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+    }
+    
+    // ========================================
+    // REGLAS PARA CONFIGURACIONES DE USUARIO
+    // ========================================
+    match /userSettings/{settingsId} {
+      // Solo el usuario puede leer/escribir sus configuraciones
+      allow read, write: if request.auth != null && 
+        request.auth.uid == settingsId;
+    }
+    
+    // ========================================
+    // REGLAS PARA NOTAS DE SESIÓN
+    // ========================================
+    match /sessionNotes/{noteId} {
+      // Solo el psicólogo puede leer/escribir notas de sesión
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // El paciente puede leer sus propias notas de sesión
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.patientId;
     }
     
     // ========================================
@@ -265,9 +231,9 @@ service cloud.firestore {
       
       // Los psicólogos pueden crear recomendaciones para sus pacientes
       allow create: if request.auth != null && 
-        (request.auth.uid == request.resource.data.userId ||
-         (exists(/databases/$(database)/documents/patients/$(request.resource.data.userId)) &&
-          get(/databases/$(database)/documents/patients/$(request.resource.data.userId)).data.psychologistId == request.auth.uid));
+        (request.auth.uid == resource.data.userId ||
+         (exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+          get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid));
     }
     
     // ========================================
@@ -285,6 +251,42 @@ service cloud.firestore {
     }
     
     // ========================================
+    // REGLAS PARA RECORDATORIOS
+    // ========================================
+    match /reminders/{reminderId} {
+      // Solo el usuario puede leer/escribir sus recordatorios
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // ========================================
+    // REGLAS PARA CHATS
+    // ========================================
+    match /chats/{chatId} {
+      // El usuario puede leer/escribir chats donde participa
+      allow read, write: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
+      
+      // Permitir crear nuevos chats donde el usuario participa
+      allow create: if request.auth != null && 
+        request.auth.uid in request.resource.data.participants;
+    }
+    
+    // ========================================
+    // REGLAS PARA MENSAJES
+    // ========================================
+    match /messages/{messageId} {
+      // El usuario puede leer/escribir mensajes donde participa
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId);
+      
+      // Permitir crear nuevos mensajes
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId;
+    }
+    
+    // ========================================
     // REGLAS PARA AUDIT LOGS
     // ========================================
     match /auditLogs/{logId} {
@@ -294,6 +296,168 @@ service cloud.firestore {
       
       // Solo el sistema puede escribir logs de auditoría
       allow write: if false; // Los logs se escriben desde el backend
+    }
+    
+    // ========================================
+    // REGLAS PARA INFORMES MÉDICOS
+    // ========================================
+    match /medicalReports/{reportId} {
+      // Solo el psicólogo puede leer/escribir informes médicos
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // El paciente puede leer sus propios informes médicos
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.patientId;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.psychologistId &&
+        isValidMedicalReport(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA HISTORIAL DEL PACIENTE
+    // ========================================
+    match /patientHistory/{historyId} {
+      // Solo el psicólogo puede leer/escribir historial del paciente
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.psychologistId;
+      
+      // El paciente puede leer su propio historial
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.patientId;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.psychologistId &&
+        isValidPatientHistory(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA REPORTES
+    // ========================================
+    match /reports/{reportId} {
+      // El usuario puede leer/escribir sus propios reportes
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer reportes de sus pacientes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+    }
+    
+    // ========================================
+    // REGLAS PARA ENTRADAS DEL DIARIO
+    // ========================================
+    match /journalEntries/{entryId} {
+      // El usuario puede leer/escribir sus propias entradas del diario
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Los psicólogos pueden leer entradas del diario de sus pacientes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
+        get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidJournalEntry(request.resource.data);
+    }
+
+    // ========================================
+    // REGLAS PARA PLANTILLAS DEL DIARIO
+    // ========================================
+    match /journalTemplates/{templateId} {
+      // Cualquier usuario autenticado puede leer plantillas
+      allow read: if request.auth != null;
+      // Permitir creación para usuarios autenticados (temporalmente)
+      allow create: if request.auth != null;
+      // Solo los administradores pueden actualizar/eliminar
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ========================================
+    // REGLAS PARA PROMPTS DEL DIARIO
+    // ========================================
+    match /journalPrompts/{promptId} {
+      // Cualquier usuario autenticado puede leer prompts
+      allow read: if request.auth != null;
+      // Permitir creación para usuarios autenticados (temporalmente)
+      allow create: if request.auth != null;
+      // Solo los administradores pueden actualizar/eliminar
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // ========================================
+    // FUNCIONES DE VALIDACIÓN
+    // ========================================
+    
+    // Validar mood log
+    function isValidMoodLog(data) {
+      return data.keys().hasAll(['userId', 'mood']) &&
+             data.mood is number && data.mood >= 1 && data.mood <= 10 &&
+             data.userId is string && data.userId.size() > 0;
+    }
+    
+    // Validar entrada del diario
+    function isValidJournalEntry(data) {
+      return data.keys().hasAll(['userId', 'title', 'content', 'date']) &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0 &&
+             data.date is timestamp;
+    }
+    
+    // Validar paciente
+    function isValidPatient(data) {
+      return data.keys().hasAll(['userId', 'psychologistId', 'status']) &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
+             data.status in ['active', 'inactive', 'discharged'];
+    }
+    
+    // Validar cita
+    function isValidAppointment(data) {
+      return data.keys().hasAll(['userId', 'appointmentDate']) &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.appointmentDate is timestamp;
+    }
+    
+    // Validar mensaje
+    function isValidMessage(data) {
+      return data.keys().hasAll(['participants', 'content', 'timestamp']) &&
+             data.participants is list && data.participants.size() >= 2 &&
+             data.content is string && data.content.size() > 0 &&
+             data.timestamp is timestamp;
+    }
+    
+    // Validar informe médico
+    function isValidMedicalReport(data) {
+      return data.keys().hasAll(['patientId', 'psychologistId', 'reportType', 'title', 'content']) &&
+             data.patientId is string && data.patientId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
+             data.reportType in ['initial', 'progress', 'discharge', 'emergency'] &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0;
+    }
+    
+    // Validar historial del paciente
+    function isValidPatientHistory(data) {
+      return data.keys().hasAll(['patientId', 'psychologistId']) &&
+             data.patientId is string && data.patientId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0;
+    }
+    
+    // Validar alerta de crisis
+    function isValidCrisisAlert(data) {
+      return data.keys().hasAll(['patientId', 'psychologistId', 'urgency', 'signals']) &&
+             data.patientId is string && data.patientId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
+             data.urgency in ['low', 'medium', 'high', 'critical'] &&
+             data.signals is list && data.signals.size() > 0;
     }
   }
 }
