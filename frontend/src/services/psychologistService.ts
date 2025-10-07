@@ -66,14 +66,13 @@ export interface ChatMessage {
 // Obtener todos los psicólogos disponibles
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
-    console.log('🔍 Buscando psicólogos reales registrados...');
+    console.log('🔍 Buscando psicólogos en colección psychologists...');
     
-    // Temporalmente obtener todos los usuarios y filtrar en memoria
-    // hasta que se construya el índice para role: 'psychologist'
-    const usersRef = collection(db, 'users');
-    console.log('📋 Colección users obtenida');
+    // Usar la colección psychologists que tiene reglas más permisivas
+    const psychologistsRef = collection(db, 'psychologists');
+    console.log('📋 Colección psychologists obtenida');
     
-    const q = query(usersRef);
+    const q = query(psychologistsRef);
     console.log('📋 Query creada');
     
     console.log('📋 Ejecutando getDocs...');
@@ -84,47 +83,42 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
 
     for (const docSnapshot of querySnapshot.docs) {
       try {
-        const userData = docSnapshot.data();
-        
-        // Filtrar solo usuarios con role: 'psychologist'
-        if (userData.role !== 'psychologist') {
-          continue;
-        }
+        const psychologistData = docSnapshot.data();
         
         // Validar que tenemos los datos necesarios
-        if (!userData.email || !userData.displayName) {
-          console.warn('User data missing required fields:', docSnapshot.id);
+        if (!psychologistData.name) {
+          console.warn('Psychologist data missing name:', docSnapshot.id);
           continue;
         }
         
         const psychologist: Psychologist = {
           id: docSnapshot.id,
-          userId: docSnapshot.id,
-          name: userData.displayName || userData.username || 'Psicólogo',
-          email: userData.email || '',
-          phone: userData.phone || '',
-          license: userData.license || '',
-          specialization: Array.isArray(userData.specialization) 
-            ? userData.specialization 
+          userId: psychologistData.userId || docSnapshot.id,
+          name: psychologistData.name || 'Psicólogo',
+          email: psychologistData.email || '',
+          phone: psychologistData.phone || '',
+          license: psychologistData.license || '',
+          specialization: Array.isArray(psychologistData.specialization) 
+            ? psychologistData.specialization 
             : ['Psicología General'],
-          experience: userData.experience || 1,
-          bio: userData.bio || 'Psicólogo profesional disponible para consultas.',
-          profileImage: userData.photoURL || '',
-          isAvailable: userData.isAvailable !== false,
-          workingHours: userData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
-          languages: Array.isArray(userData.languages) 
-            ? userData.languages 
+          experience: psychologistData.experience || 1,
+          bio: psychologistData.bio || 'Psicólogo profesional disponible para consultas.',
+          profileImage: psychologistData.profileImage || '',
+          isAvailable: psychologistData.isAvailable !== false,
+          workingHours: psychologistData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
+          languages: Array.isArray(psychologistData.languages) 
+            ? psychologistData.languages 
             : ['Español'],
-          consultationFee: userData.consultationFee || 0,
-          rating: userData.rating || 5.0,
-          totalPatients: userData.totalPatients || 0,
-          isVerified: userData.isVerified !== false,
-          createdAt: userData.createdAt?.toDate() || new Date(),
-          updatedAt: userData.updatedAt?.toDate() || new Date(),
+          consultationFee: psychologistData.consultationFee || 0,
+          rating: psychologistData.rating || 5.0,
+          totalPatients: psychologistData.totalPatients || 0,
+          isVerified: psychologistData.isVerified !== false,
+          createdAt: psychologistData.createdAt?.toDate() || new Date(),
+          updatedAt: psychologistData.updatedAt?.toDate() || new Date(),
         };
         
         psychologists.push(psychologist);
-        console.log(`✅ Psicólogo real encontrado: ${psychologist.name}`);
+        console.log(`✅ Psicólogo encontrado: ${psychologist.name}`);
       } catch (error) {
         console.error('Error processing psychologist data:', error);
         // Continuar con el siguiente psicólogo
