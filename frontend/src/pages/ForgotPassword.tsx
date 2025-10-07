@@ -52,7 +52,10 @@ const ForgotPassword: React.FC = () => {
       setLoading(true);
 
       // Enviar email de recuperación usando Firebase
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email, {
+        url: `${window.location.origin}/login`,
+        handleCodeInApp: false,
+      });
       setSuccess(true);
     } catch (error: any) {
       setError(getPasswordResetErrorMessage(error));
@@ -135,7 +138,14 @@ const ForgotPassword: React.FC = () => {
                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
-                    Te hemos enviado un enlace para restablecer tu contraseña
+                    Te hemos enviado un enlace seguro para restablecer tu contraseña
+                  </p>
+                  <p
+                    className={`text-lg font-medium mt-4 transition-colors duration-500 ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                    }`}
+                  >
+                    📧 Revisa tu bandeja de entrada y carpeta de spam
                   </p>
                 </div>
 
@@ -153,15 +163,26 @@ const ForgotPassword: React.FC = () => {
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}
                     >
-                      REVISA TU EMAIL
+                      📋 SIGUE ESTOS PASOS
                     </h2>
-                    <p
-                      className={`text-lg font-bold transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                      }`}
-                    >
-                      Enviamos un enlace de recuperación a:
-                    </p>
+                    <div className={`space-y-4 text-left ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <div className='flex items-start space-x-3'>
+                        <div className='w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5'>1</div>
+                        <p className='font-medium'>Revisa tu bandeja de entrada y carpeta de <strong>spam</strong></p>
+                      </div>
+                      <div className='flex items-start space-x-3'>
+                        <div className='w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5'>2</div>
+                        <p className='font-medium'>Busca el email de <strong>"Reset your password for Mood Log App"</strong></p>
+                      </div>
+                      <div className='flex items-start space-x-3'>
+                        <div className='w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5'>3</div>
+                        <p className='font-medium'>Haz clic en el enlace del email</p>
+                      </div>
+                      <div className='flex items-start space-x-3'>
+                        <div className='w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5'>4</div>
+                        <p className='font-medium'>Crea una nueva contraseña segura</p>
+                      </div>
+                    </div>
                     <p
                       className={`text-xl font-black mt-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-purple-400' : 'text-purple-600'
@@ -191,10 +212,12 @@ const ForgotPassword: React.FC = () => {
                         isDarkMode ? 'text-green-300' : 'text-green-700'
                       }`}
                     >
-                      <li>• Revisa tu bandeja de entrada</li>
-                      <li>• Si no ves el email, revisa tu carpeta de spam</li>
-                      <li>• El enlace expira en 24 horas</li>
-                      <li>• Haz clic en el enlace para restablecer tu contraseña</li>
+                      <li>• 📧 Revisa tu bandeja de entrada PRIMERO</li>
+                      <li>• 🗑️ Si no ves el email, revisa tu carpeta de SPAM</li>
+                      <li>• ⏰ El enlace expira en 24 horas</li>
+                      <li>• 🔗 Haz clic en el enlace para restablecer tu contraseña</li>
+                      <li>• ✅ Si está en spam, márcalo como "No es spam"</li>
+                      <li>• 📱 El email viene de: noreply@mood-log-app-01.firebaseapp.com</li>
                     </ul>
                   </div>
 
