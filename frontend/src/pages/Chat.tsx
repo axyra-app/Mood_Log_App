@@ -15,7 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserChats } from '../services/firestore';
-import { subscribeToMessages } from '../services/chatService';
+import { subscribeToMessages, sendMessage, createChat } from '../services/chatService';
 import { usePsychologists } from '../hooks/usePsychologists';
 import { Chat as ChatType, ChatMessage, Psychologist } from '../types';
 
@@ -93,26 +93,25 @@ const Chat: React.FC = () => {
         messageType: 'text',
       };
 
-      // Agregar mensaje localmente
-      setMessages((prev) => [...prev, newMessageObj]);
+      // Enviar mensaje real a Firebase
+      try {
+        await sendMessage({
+          chatId: selectedChat.id,
+          senderId: user.uid,
+          receiverId: selectedChat.participants.find((p) => p !== user.uid) || '',
+          content: newMessage.trim(),
+          messageType: 'text',
+        });
+        
+        console.log('📤 Mensaje enviado a Firebase:', newMessageObj);
+      } catch (error) {
+        console.error('❌ Error enviando mensaje a Firebase:', error);
+        // Agregar mensaje localmente como fallback
+        setMessages((prev) => [...prev, newMessageObj]);
+      }
+      
       setNewMessage('');
       scrollToBottom();
-
-      // Simular respuesta automática del psicólogo después de 2 segundos
-      setTimeout(() => {
-        const psychologistResponse: ChatMessage = {
-          id: `msg_${Date.now() + 1}`,
-          chatId: selectedChat.id,
-          senderId: selectedChat.participants.find((p) => p !== user.uid) || '',
-          receiverId: user.uid,
-          content: 'Gracias por tu mensaje. Estoy aquí para ayudarte. ¿Cómo te sientes hoy?',
-          timestamp: new Date(),
-          isRead: false,
-          messageType: 'text',
-        };
-        setMessages((prev) => [...prev, psychologistResponse]);
-        scrollToBottom();
-      }, 2000);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -142,9 +141,15 @@ const Chat: React.FC = () => {
         return;
       }
 
-      // Crear nuevo chat simulado
-      const chatId = `chat_${Date.now()}`;
-      console.log('📋 Chat ID generado:', chatId);
+      // Crear nuevo chat real en Firebase
+      console.log('📋 Creando chat real en Firebase...');
+      
+      const chatId = await createChat({
+        participants: [user.uid, psychologist.id],
+        isActive: true,
+      });
+      
+      console.log('📋 Chat ID generado por Firebase:', chatId);
       
       const newChat: ChatType = {
         id: chatId,
@@ -154,7 +159,7 @@ const Chat: React.FC = () => {
         createdAt: new Date(),
       };
 
-      console.log('📋 Nuevo chat creado:', newChat);
+      console.log('📋 Nuevo chat creado en Firebase:', newChat);
       setChats((prev) => [newChat, ...prev]);
       setSelectedChat(newChat);
       setMessages([]); // Limpiar mensajes anteriores
