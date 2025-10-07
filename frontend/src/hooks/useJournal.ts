@@ -45,11 +45,9 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
       const journalTemplates = await getJournalTemplates();
-      console.log('📋 Database templates:', journalTemplates.length);
       
       // Always use default templates for now to avoid duplication
       const defaultTemplates = getDefaultTemplates();
-      console.log('📋 Default templates:', defaultTemplates.length);
       setTemplates(defaultTemplates);
     } catch (err) {
       console.error('❌ Error loading templates:', err);
@@ -68,11 +66,9 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
       const journalPrompts = await getJournalPrompts(category);
-      console.log('💡 Database prompts:', journalPrompts.length);
       
       // Always use default prompts for now to avoid duplication
       const defaultPrompts = getDefaultPrompts();
-      console.log('💡 Default prompts:', defaultPrompts.length);
       setPrompts(defaultPrompts);
     } catch (err) {
       console.error('❌ Error loading prompts:', err);

@@ -66,24 +66,19 @@ export interface ChatMessage {
 // Obtener todos los psicólogos disponibles
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
-    console.log('🔍 Obteniendo psicólogos (modo temporal sin índices)...');
     // Usar la colección psychologists que tiene reglas más permisivas
     const psychologistsRef = collection(db, 'psychologists');
     const q = query(psychologistsRef);
     const querySnapshot = await getDocs(q);
-    console.log('✅ Consulta exitosa, documentos encontrados:', querySnapshot.docs.length);
 
     const psychologists: Psychologist[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
       try {
-        console.log('🔍 Procesando psicólogo ID:', docSnapshot.id);
         const psychologistData = docSnapshot.data();
-        console.log('📋 Datos del psicólogo:', psychologistData);
         
         // Validar que tenemos los datos necesarios (más flexible)
         if (!psychologistData.name && !psychologistData.displayName && !psychologistData.email) {
-          console.log('⚠️ Psicólogo sin datos básicos, saltando...');
           continue;
         }
         
