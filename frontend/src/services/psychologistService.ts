@@ -13,82 +13,6 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { initializeDefaultPsychologists } from './psychologistDefaultData';
-import { cleanupCorruptedPsychologists, checkPsychologistsHealth } from './psychologistCleanup';
-
-// Función de respaldo para psicólogos en memoria
-const getFallbackPsychologists = (): Psychologist[] => {
-  console.log('🔄 Creando psicólogos de respaldo en memoria...');
-  
-  const fallbackPsychologists: Psychologist[] = [
-    {
-      id: 'fallback-1',
-      userId: 'default-psychologist-1',
-      name: 'Dra. María González',
-      email: 'maria.gonzalez@moodlogapp.com',
-      phone: '+57 300 123 4567',
-      license: 'PSI-001234',
-      specialization: ['Psicología Clínica', 'Terapia Cognitivo-Conductual'],
-      experience: 8,
-      bio: 'Psicóloga clínica especializada en terapia cognitivo-conductual con más de 8 años de experiencia. Me enfoco en ayudar a las personas a desarrollar estrategias efectivas para manejar la ansiedad, depresión y estrés.',
-      profileImage: '',
-      isAvailable: true,
-      workingHours: { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
-      languages: ['Español', 'Inglés'],
-      consultationFee: 150000,
-      rating: 4.8,
-      totalPatients: 0,
-      isVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'fallback-2',
-      userId: 'default-psychologist-2',
-      name: 'Dr. Carlos Rodríguez',
-      email: 'carlos.rodriguez@moodlogapp.com',
-      phone: '+57 300 234 5678',
-      license: 'PSI-002345',
-      specialization: ['Psicología Organizacional', 'Coaching'],
-      experience: 6,
-      bio: 'Psicólogo organizacional y coach certificado. Especializado en desarrollo personal, manejo del estrés laboral y mejora del rendimiento profesional.',
-      profileImage: '',
-      isAvailable: true,
-      workingHours: { start: '08:00', end: '18:00', timezone: 'America/Bogota' },
-      languages: ['Español'],
-      consultationFee: 120000,
-      rating: 4.6,
-      totalPatients: 0,
-      isVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'fallback-3',
-      userId: 'default-psychologist-3',
-      name: 'Dra. Ana Martínez',
-      email: 'ana.martinez@moodlogapp.com',
-      phone: '+57 300 345 6789',
-      license: 'PSI-003456',
-      specialization: ['Psicología Infantil', 'Terapia Familiar'],
-      experience: 10,
-      bio: 'Psicóloga infantil y familiar con amplia experiencia en terapia con niños, adolescentes y familias. Especializada en problemas de comportamiento y desarrollo emocional.',
-      profileImage: '',
-      isAvailable: true,
-      workingHours: { start: '10:00', end: '19:00', timezone: 'America/Bogota' },
-      languages: ['Español'],
-      consultationFee: 180000,
-      rating: 4.9,
-      totalPatients: 0,
-      isVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
-  
-  console.log(`✅ ${fallbackPsychologists.length} psicólogos de respaldo creados en memoria`);
-  return fallbackPsychologists;
-};
 
 export interface Psychologist {
   id: string;
@@ -142,92 +66,64 @@ export interface ChatMessage {
 // Obtener todos los psicólogos disponibles
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
-    const psychologistsRef = collection(db, 'psychologists');
+    console.log('🔍 Buscando psicólogos reales registrados...');
     
-    // Temporalmente obtener todos los psicólogos sin filtros complejos
-    // hasta que se construyan los índices
-    console.log('🔍 Obteniendo psicólogos (modo temporal sin índices)...');
-    const q = query(psychologistsRef);
+    // Buscar usuarios con role: 'psychologist' en la colección users
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('role', '==', 'psychologist'));
     const querySnapshot = await getDocs(q);
 
     const psychologists: Psychologist[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
       try {
-        const psychologistData = docSnapshot.data();
+        const userData = docSnapshot.data();
         
-        // Validar que tenemos userId
-        if (!psychologistData.userId) {
-          console.warn('Psychologist data missing userId:', docSnapshot.id, 'Skipping...');
-          continue; // Saltar este psicólogo
+        // Validar que tenemos los datos necesarios
+        if (!userData.email || !userData.displayName) {
+          console.warn('User data missing required fields:', docSnapshot.id);
+          continue;
         }
         
-        // Obtener datos del usuario
-        const userRef = doc(db, 'users', psychologistData.userId);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          
-          const psychologist: Psychologist = {
+        const psychologist: Psychologist = {
           id: docSnapshot.id,
-          userId: psychologistData.userId,
-          name: psychologistData.name || userData.displayName || userData.username || 'Psicólogo',
-          email: psychologistData.email || userData.email || '',
-          phone: psychologistData.phone || userData.phone || '',
-          license: psychologistData.license || '',
-          specialization: Array.isArray(psychologistData.specialization) 
-            ? psychologistData.specialization 
+          userId: docSnapshot.id,
+          name: userData.displayName || userData.username || 'Psicólogo',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          license: userData.license || '',
+          specialization: Array.isArray(userData.specialization) 
+            ? userData.specialization 
             : ['Psicología General'],
-          experience: psychologistData.experience || 1,
-          bio: psychologistData.bio || 'Psicólogo profesional disponible para consultas.',
-          profileImage: psychologistData.profileImage || userData.photoURL || '',
-          isAvailable: psychologistData.isAvailable !== false, // Default true si no está definido
-          workingHours: psychologistData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
-          languages: Array.isArray(psychologistData.languages) 
-            ? psychologistData.languages 
+          experience: userData.experience || 1,
+          bio: userData.bio || 'Psicólogo profesional disponible para consultas.',
+          profileImage: userData.photoURL || '',
+          isAvailable: userData.isAvailable !== false,
+          workingHours: userData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
+          languages: Array.isArray(userData.languages) 
+            ? userData.languages 
             : ['Español'],
-          consultationFee: psychologistData.consultationFee || 0,
-          rating: psychologistData.rating || 5.0,
-          totalPatients: psychologistData.totalPatients || 0,
-          isVerified: psychologistData.isVerified !== false, // Default true si no está definido
-          createdAt: psychologistData.createdAt?.toDate() || new Date(),
-          updatedAt: psychologistData.updatedAt?.toDate() || new Date(),
+          consultationFee: userData.consultationFee || 0,
+          rating: userData.rating || 5.0,
+          totalPatients: userData.totalPatients || 0,
+          isVerified: userData.isVerified !== false,
+          createdAt: userData.createdAt?.toDate() || new Date(),
+          updatedAt: userData.updatedAt?.toDate() || new Date(),
         };
         
         psychologists.push(psychologist);
-        }
+        console.log(`✅ Psicólogo real encontrado: ${psychologist.name}`);
       } catch (error) {
         console.error('Error processing psychologist data:', error);
         // Continuar con el siguiente psicólogo
       }
     }
 
-    console.log(`✅ Encontrados ${psychologists.length} psicólogos`);
+    console.log(`✅ Encontrados ${psychologists.length} psicólogos reales`);
     
-    // Si no hay psicólogos válidos, inicializar datos por defecto
+    // Si no hay psicólogos reales, mostrar mensaje informativo
     if (psychologists.length === 0) {
-      console.log('🔄 No se encontraron psicólogos válidos, verificando datos corruptos...');
-      
-      try {
-        // Verificar si hay datos corruptos
-        const healthCheck = await checkPsychologistsHealth();
-        
-        if (healthCheck.corrupted > 0) {
-          console.log(`🧹 Se encontraron ${healthCheck.corrupted} psicólogos corruptos, limpiando...`);
-          await cleanupCorruptedPsychologists();
-        }
-        
-        // Intentar inicializar datos por defecto
-        const defaultPsychologists = await initializeDefaultPsychologists();
-        return defaultPsychologists;
-      } catch (error) {
-        console.error('❌ Error inicializando psicólogos por defecto:', error);
-        
-        // Fallback: retornar psicólogos en memoria si Firebase falla
-        console.log('🔄 Usando psicólogos de respaldo en memoria...');
-        return getFallbackPsychologists();
-      }
+      console.log('ℹ️ No hay psicólogos registrados en el sistema');
     }
     
     return psychologists;
