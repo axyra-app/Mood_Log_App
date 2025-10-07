@@ -13,6 +13,8 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { initializeDefaultPsychologists } from './psychologistDefaultData';
+import { cleanupCorruptedPsychologists, checkPsychologistsHealth } from './psychologistCleanup';
 
 export interface Psychologist {
   id: string;
@@ -128,6 +130,30 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
     }
 
     console.log(`✅ Encontrados ${psychologists.length} psicólogos`);
+    
+    // Si no hay psicólogos válidos, inicializar datos por defecto
+    if (psychologists.length === 0) {
+      console.log('🔄 No se encontraron psicólogos válidos, verificando datos corruptos...');
+      
+      try {
+        // Verificar si hay datos corruptos
+        const healthCheck = await checkPsychologistsHealth();
+        
+        if (healthCheck.corrupted > 0) {
+          console.log(`🧹 Se encontraron ${healthCheck.corrupted} psicólogos corruptos, limpiando...`);
+          await cleanupCorruptedPsychologists();
+        }
+        
+        // Intentar inicializar datos por defecto
+        const defaultPsychologists = await initializeDefaultPsychologists();
+        return defaultPsychologists;
+      } catch (error) {
+        console.error('❌ Error inicializando psicólogos por defecto:', error);
+        // Retornar array vacío si falla la inicialización
+        return [];
+      }
+    }
+    
     return psychologists;
   } catch (error) {
     console.error('❌ Error getting available psychologists:', error);
