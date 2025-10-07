@@ -144,7 +144,7 @@ export const defaultJournalPrompts = [
 // Función para inicializar datos por defecto
 export const initializeDefaultJournalData = async () => {
   try {
-    console.log('🔄 Inicializando datos por defecto del diario...');
+    // Inicializando datos por defecto del diario...
 
     // Verificar si ya existen plantillas
     const templatesRef = collection(db, 'journalTemplates');
@@ -152,7 +152,7 @@ export const initializeDefaultJournalData = async () => {
     const templatesSnapshot = await getDocs(templatesQuery);
 
     if (templatesSnapshot.empty) {
-      console.log('📝 Creando plantillas por defecto...');
+      // Creando plantillas por defecto...
       for (const template of defaultJournalTemplates) {
         await addDoc(templatesRef, {
           ...template,
@@ -161,7 +161,7 @@ export const initializeDefaultJournalData = async () => {
       }
       // Plantillas creadas exitosamente
     } else {
-      console.log('📝 Las plantillas ya existen');
+      // Las plantillas ya existen
     }
 
     // Verificar si ya existen prompts
@@ -182,7 +182,7 @@ export const initializeDefaultJournalData = async () => {
       // Los prompts ya existen
     }
 
-    console.log('🎉 Inicialización de datos del diario completada');
+    // Inicialización de datos del diario completada
   } catch (error) {
     console.error('❌ Error inicializando datos del diario:', error);
     throw error;

@@ -144,7 +144,8 @@ const CompleteProfile: React.FC = () => {
       }, 1500);
     } catch (error: any) {
       console.error('Profile completion error:', error);
-      showError('Error', error.message || 'Error al completar el perfil');
+      // Use toast instead of showError to avoid function errors
+      toast.error(error.message || 'Error al completar el perfil');
     } finally {
       setLoading(false);
     }

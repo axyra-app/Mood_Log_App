@@ -50,6 +50,12 @@ export const useMood = () => {
     async (moodData: Omit<MoodLog, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.uid) throw new Error('User not authenticated');
 
+      // Prevent duplicate submissions
+      if (loading) {
+        console.warn('⚠️ Mood log creation already in progress, ignoring duplicate request');
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -68,7 +74,7 @@ export const useMood = () => {
         setLoading(false);
       }
     },
-    [user?.uid, loadMoodLogs, loadStatistics]
+    [user?.uid, loadMoodLogs, loadStatistics, loading]
   );
 
   // Update mood log

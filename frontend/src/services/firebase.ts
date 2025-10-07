@@ -15,13 +15,10 @@ const firebaseConfig = {
   measurementId: "G-2T3QQ2ESWM"
 };
 
-// Debug: Log configuration
-console.log('🔥 Firebase Config:', firebaseConfig);
-console.log('🌍 Environment Variables:', {
-  VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? '✅ Set' : '❌ Missing',
-  VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? '✅ Set' : '❌ Missing',
-  VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing',
-});
+// Debug: Log configuration (only in development)
+if (import.meta.env.DEV) {
+  console.log('🔥 Firebase Config:', firebaseConfig);
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
