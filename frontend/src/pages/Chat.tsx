@@ -15,6 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserChats } from '../services/firestore';
+import { subscribeToMessages } from '../services/chatService';
 import { usePsychologists } from '../hooks/usePsychologists';
 import { Chat as ChatType, ChatMessage, Psychologist } from '../types';
 
@@ -38,7 +39,7 @@ const Chat: React.FC = () => {
 
   useEffect(() => {
     if (selectedChat) {
-      const unsubscribe = getMessagesRealtime(selectedChat.id, (newMessages) => {
+      const unsubscribe = subscribeToMessages(selectedChat.id, (newMessages) => {
         setMessages(newMessages);
         scrollToBottom();
       });
