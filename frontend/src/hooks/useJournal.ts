@@ -45,16 +45,18 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
       const journalTemplates = await getJournalTemplates();
-      // If no templates in database, use default ones
-      if (journalTemplates.length === 0) {
-        setTemplates(getDefaultTemplates());
-      } else {
-        setTemplates(journalTemplates);
-      }
+      console.log('📋 Database templates:', journalTemplates.length);
+      
+      // Always use default templates for now to avoid duplication
+      const defaultTemplates = getDefaultTemplates();
+      console.log('📋 Default templates:', defaultTemplates.length);
+      setTemplates(defaultTemplates);
     } catch (err) {
+      console.error('❌ Error loading templates:', err);
       setError(err instanceof Error ? err.message : 'Error loading templates');
       // Fallback to default templates
-      setTemplates(getDefaultTemplates());
+      const defaultTemplates = getDefaultTemplates();
+      setTemplates(defaultTemplates);
     } finally {
       setLoading(false);
     }

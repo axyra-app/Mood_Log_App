@@ -22,11 +22,35 @@ export const createJournalEntry = async (
 ): Promise<JournalEntry> => {
   try {
     const journalRef = collection(db, 'journalEntries');
-    const docRef = await addDoc(journalRef, {
-      ...entryData,
+    
+    // Clean data to remove undefined values
+    const cleanData = {
+      userId: entryData.userId,
+      title: entryData.title,
+      content: entryData.content,
+      date: entryData.date,
+      tags: entryData.tags || [],
+      mood: entryData.mood || null,
+      energy: entryData.energy || null,
+      stress: entryData.stress || null,
+      sleep: entryData.sleep || null,
+      activities: entryData.activities || [],
+      emotions: entryData.emotions || [],
+      aiSuggestions: entryData.aiSuggestions || [],
+      aiAnalysis: entryData.aiAnalysis || null,
+      isPrivate: entryData.isPrivate || false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+    };
+
+    // Remove null values to avoid Firebase errors
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === null || cleanData[key] === undefined) {
+        delete cleanData[key];
+      }
     });
+
+    const docRef = await addDoc(journalRef, cleanData);
 
     const newEntry: JournalEntry = {
       id: docRef.id,
