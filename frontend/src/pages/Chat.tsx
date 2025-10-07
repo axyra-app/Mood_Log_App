@@ -12,14 +12,16 @@ import {
   Video,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserChats } from '../services/firestore';
+import { usePsychologists } from '../hooks/usePsychologists';
 import { Chat as ChatType, ChatMessage, Psychologist } from '../types';
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
-  const [psychologists, setPsychologists] = useState<Psychologist[]>([]);
+  const { psychologistId } = useParams<{ psychologistId: string }>();
+  const { psychologists, loading: psychologistsLoading } = usePsychologists();
   const [chats, setChats] = useState<ChatType[]>([]);
   const [selectedChat, setSelectedChat] = useState<ChatType | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -29,10 +31,10 @@ const Chat: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user && psychologists.length > 0) {
       loadData();
     }
-  }, [user]);
+  }, [user, psychologists]);
 
   useEffect(() => {
     if (selectedChat) {
@@ -49,64 +51,11 @@ const Chat: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simular datos de psicólogos para desarrollo
-      const mockPsychologists: Psychologist[] = [
-        {
-          id: 'psych1',
-          uid: 'psych1',
-          email: 'maria.gonzalez@psicologia.com',
-          displayName: 'Dra. María González',
-          role: 'psychologist',
-          licenseNumber: 'PSI-12345',
-          specialization: 'Ansiedad y Estrés',
-          yearsOfExperience: 8,
-          bio: 'Especialista en terapia cognitivo-conductual con más de 8 años de experiencia.',
-          rating: 4.9,
-          patientsCount: 150,
-          isAvailable: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 'psych2',
-          uid: 'psych2',
-          email: 'carlos.rodriguez@psicologia.com',
-          displayName: 'Lic. Carlos Rodríguez',
-          role: 'psychologist',
-          licenseNumber: 'PSI-67890',
-          specialization: 'Terapia de Pareja',
-          yearsOfExperience: 5,
-          bio: 'Especialista en terapia de pareja y relaciones interpersonales.',
-          rating: 4.8,
-          patientsCount: 120,
-          isAvailable: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 'psych3',
-          uid: 'psych3',
-          email: 'ana.martinez@psicologia.com',
-          displayName: 'Dra. Ana Martínez',
-          role: 'psychologist',
-          licenseNumber: 'PSI-11111',
-          specialization: 'Depresión y Trauma',
-          yearsOfExperience: 12,
-          bio: 'Experta en tratamiento de depresión y trauma con enfoque EMDR.',
-          rating: 4.9,
-          patientsCount: 200,
-          isAvailable: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+      // Los psicólogos ya se cargan desde usePsychologists hook
+      console.log('📋 Psicólogos cargados:', psychologists.length);
 
-      const [psychs, userChats] = await Promise.all([
-        Promise.resolve(mockPsychologists), // Usar datos mock
-        getUserChats(user.uid).catch(() => []), // Fallback a array vacío
-      ]);
-
-      setPsychologists(psychs);
+      // Cargar chats del usuario
+      const userChats = await getUserChats(user.uid).catch(() => []);
       setChats(userChats);
 
       // Seleccionar el primer chat si existe
@@ -206,7 +155,7 @@ const Chat: React.FC = () => {
         chatId: chatId,
         senderId: psychologist.id,
         receiverId: user.uid,
-        content: `¡Hola! Soy ${psychologist.displayName}. Estoy aquí para ayudarte con tu bienestar emocional. ¿En qué puedo asistirte hoy?`,
+        content: `¡Hola! Soy ${psychologist.name}. Estoy aquí para ayudarte con tu bienestar emocional. ¿En qué puedo asistirte hoy?`,
         timestamp: new Date(),
         isRead: false,
         messageType: 'text',
@@ -220,11 +169,11 @@ const Chat: React.FC = () => {
 
   const filteredPsychologists = psychologists.filter(
     (psych) =>
-      psych.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      psych.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
+      psych.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      psych.specialization?.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (loading) {
+  if (loading || psychologistsLoading) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='text-center'>
@@ -290,13 +239,13 @@ const Chat: React.FC = () => {
                       <div className='flex items-center space-x-3'>
                         <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center'>
                           <span className='text-white font-semibold text-sm'>
-                            {psychologist.displayName?.charAt(0) || 'P'}
+                            {psychologist.name?.charAt(0) || 'P'}
                           </span>
                         </div>
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center space-x-2'>
                             <p className='font-medium text-gray-900 truncate'>
-                              {psychologist.displayName || 'Psicólogo'}
+                              {psychologist.name || 'Psicólogo'}
                             </p>
                             {psychologist.isAvailable ? (
                               <CircleDot className='w-3 h-3 text-green-500' />
