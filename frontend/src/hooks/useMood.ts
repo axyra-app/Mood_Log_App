@@ -159,28 +159,60 @@ export const useMood = () => {
 
   // Get mood streak
   const getMoodStreak = useCallback(() => {
-    if (moodLogs.length === 0) return 0;
+    console.log('🔍 Calculando racha de días consecutivos...');
+    console.log('📊 Total de registros:', moodLogs.length);
+    
+    if (moodLogs.length === 0) {
+      console.log('❌ No hay registros, racha = 0');
+      return 0;
+    }
 
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    console.log('📅 Fecha de hoy:', today.toDateString());
 
-    for (let i = 0; i < moodLogs.length; i++) {
-      const logDate = moodLogs[i].createdAt && typeof moodLogs[i].createdAt.toDate === 'function' 
-        ? moodLogs[i].createdAt.toDate() 
-        : new Date();
+    // Ordenar logs por fecha (más reciente primero)
+    const sortedLogs = [...moodLogs].sort((a, b) => {
+      const dateA = a.createdAt && typeof a.createdAt.toDate === 'function' 
+        ? a.createdAt.toDate() 
+        : new Date(a.createdAt);
+      const dateB = b.createdAt && typeof b.createdAt.toDate === 'function' 
+        ? b.createdAt.toDate() 
+        : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    console.log('📋 Registros ordenados por fecha:');
+    sortedLogs.forEach((log, index) => {
+      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate() 
+        : new Date(log.createdAt);
+      logDate.setHours(0, 0, 0, 0);
+      console.log(`  ${index + 1}. ${logDate.toDateString()} - Estado: ${log.mood}`);
+    });
+
+    for (let i = 0; i < sortedLogs.length; i++) {
+      const logDate = sortedLogs[i].createdAt && typeof sortedLogs[i].createdAt.toDate === 'function' 
+        ? sortedLogs[i].createdAt.toDate() 
+        : new Date(sortedLogs[i].createdAt);
       logDate.setHours(0, 0, 0, 0);
 
       const expectedDate = new Date(today);
       expectedDate.setDate(expectedDate.getDate() - i);
 
+      console.log(`🔍 Día ${i + 1}: Esperado ${expectedDate.toDateString()}, Encontrado ${logDate.toDateString()}`);
+
       if (logDate.getTime() === expectedDate.getTime()) {
         streak++;
+        console.log(`✅ Día consecutivo encontrado! Racha actual: ${streak}`);
       } else {
+        console.log(`❌ Día no consecutivo. Racha final: ${streak}`);
         break;
       }
     }
 
+    console.log(`🎯 Racha final calculada: ${streak} días`);
     return streak;
   }, [moodLogs]);
 

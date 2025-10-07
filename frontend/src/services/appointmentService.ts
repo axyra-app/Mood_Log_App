@@ -221,11 +221,14 @@ const removePsychologistNotification = async (appointmentId: string, psychologis
 // Obtener citas de un usuario
 export const getUserAppointments = async (userId: string): Promise<Appointment[]> => {
   try {
+    console.log('🔍 Obteniendo citas para userId:', userId);
     const appointmentsRef = collection(db, 'appointments');
     
     // Usar filtro por userId para evitar problemas de permisos
     const q = query(appointmentsRef, where('userId', '==', userId));
+    console.log('🔍 Ejecutando consulta de citas...');
     const querySnapshot = await getDocs(q);
+    console.log('✅ Consulta exitosa, documentos encontrados:', querySnapshot.docs.length);
     
     const appointments: Appointment[] = [];
 
