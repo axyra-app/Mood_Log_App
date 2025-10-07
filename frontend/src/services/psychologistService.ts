@@ -88,9 +88,11 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
         
         // Validar que tenemos los datos necesarios (más flexible)
         if (!psychologistData.name && !psychologistData.displayName && !psychologistData.email) {
-          console.warn('Psychologist data missing required fields:', docSnapshot.id);
+          console.warn('❌ Psychologist data missing required fields:', docSnapshot.id, psychologistData);
           continue;
         }
+        
+        console.log('✅ Psychologist data validation passed for:', docSnapshot.id);
         
         const psychologist: Psychologist = {
           id: docSnapshot.id,
