@@ -223,19 +223,15 @@ export const getUserAppointments = async (userId: string): Promise<Appointment[]
   try {
     const appointmentsRef = collection(db, 'appointments');
     
-    // Temporalmente obtener todas las citas sin filtros complejos
-    // hasta que se construyan los índices
-    console.log('🔍 Obteniendo citas (modo temporal sin índices)...');
-    const q = query(appointmentsRef);
+    // Usar filtro por userId para evitar problemas de permisos
+    console.log('🔍 Obteniendo citas del usuario...');
+    const q = query(appointmentsRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     
     const appointments: Appointment[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
       const appointmentData = docSnapshot.data();
-      
-      // Filtrar solo las citas del usuario actual
-      if (appointmentData.userId !== userId) continue;
       
       const appointment: Appointment = {
         id: docSnapshot.id,

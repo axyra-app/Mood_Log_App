@@ -68,7 +68,8 @@ export const deleteJournalEntry = async (entryId: string): Promise<void> => {
 export const getJournalEntries = async (userId: string, limitCount: number = 10): Promise<JournalEntry[]> => {
   try {
     const journalRef = collection(db, 'journalEntries');
-    const q = query(journalRef, where('userId', '==', userId), orderBy('date', 'desc'), limit(limitCount));
+    // Consulta simplificada sin orderBy para evitar índices compuestos
+    const q = query(journalRef, where('userId', '==', userId), limit(limitCount));
 
     const querySnapshot = await getDocs(q);
     const entries: JournalEntry[] = [];
@@ -95,6 +96,9 @@ export const getJournalEntries = async (userId: string, limitCount: number = 10)
         updatedAt: data.updatedAt?.toDate() || new Date(),
       });
     });
+
+    // Ordenar en memoria por fecha descendente
+    entries.sort((a, b) => b.date.getTime() - a.date.getTime());
 
     return entries;
   } catch (error) {

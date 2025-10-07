@@ -82,8 +82,8 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
         
         // Validar que tenemos userId
         if (!psychologistData.userId) {
-          console.warn('Psychologist data missing userId:', docSnapshot.id);
-          return; // Saltar este psicólogo
+          console.warn('Psychologist data missing userId:', docSnapshot.id, 'Skipping...');
+          continue; // Saltar este psicólogo
         }
         
         // Obtener datos del usuario
