@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   BookOpen,
   Calendar,
   ChevronDown,
@@ -16,13 +17,16 @@ import {
   Trash2,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import JournalEditor from '../components/JournalEditor';
+import Logo from '../components/Logo';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } =
     useJournal(user?.uid || '');
 
@@ -128,12 +132,27 @@ const Journal: React.FC = () => {
       {/* Header */}
       <div className='bg-white border-b border-gray-200'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between py-6'>
-            <div className='flex items-center space-x-3'>
-              <BookOpen className='w-8 h-8 text-purple-600' />
-              <div>
-                <h1 className='text-2xl font-bold text-gray-900'>Mi Diario</h1>
-                <p className='text-gray-600'>Reflexiona sobre tus días y emociones</p>
+          <div className='flex items-center justify-between py-4 sm:py-6'>
+            <div className='flex items-center space-x-2 sm:space-x-4'>
+              {/* Botón de regreso */}
+              <button
+                onClick={() => navigate('/dashboard')}
+                className='flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors'
+              >
+                <ArrowLeft className='w-4 h-4 sm:w-5 sm:h-5' />
+                <span className='hidden sm:inline text-sm sm:text-base'>Volver al Dashboard</span>
+                <span className='sm:hidden text-sm'>Volver</span>
+              </button>
+              
+              {/* Logo y título */}
+              <div className='flex items-center space-x-2 sm:space-x-3'>
+                <div className='w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
+                  <Logo size='sm' />
+                </div>
+                <div>
+                  <h1 className='text-lg sm:text-2xl font-bold text-gray-900'>Mi Diario</h1>
+                  <p className='hidden sm:block text-gray-600 text-sm'>Reflexiona sobre tus días y emociones</p>
+                </div>
               </div>
             </div>
 
