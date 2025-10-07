@@ -53,18 +53,13 @@ const Chat: React.FC = () => {
     setLoading(true);
     try {
       // Los psicólogos ya se cargan desde usePsychologists hook
-      console.log('📋 Chat - Psicólogos cargados:', psychologists.length);
-      console.log('📋 Chat - Psicólogos disponibles:', psychologists.map(p => ({ id: p.id, name: p.name })));
-
       // Cargar chats del usuario
       const userChats = await getUserChats(user.uid).catch(() => []);
-      console.log('📋 Chat - Chats del usuario:', userChats.length);
       setChats(userChats);
 
       // Seleccionar el primer chat si existe
       if (userChats.length > 0) {
         setSelectedChat(userChats[0]);
-        console.log('📋 Chat - Chat seleccionado:', userChats[0].id);
       }
     } catch (error) {
       console.error('❌ Error loading chat data:', error);
@@ -102,8 +97,6 @@ const Chat: React.FC = () => {
           content: newMessage.trim(),
           messageType: 'text',
         });
-        
-        console.log('📤 Mensaje enviado a Firebase:', newMessageObj);
       } catch (error) {
         console.error('❌ Error enviando mensaje a Firebase:', error);
         // Agregar mensaje localmente como fallback
@@ -127,8 +120,6 @@ const Chat: React.FC = () => {
   const startNewChat = async (psychologist: Psychologist) => {
     if (!user) return;
 
-    console.log('🚀 Iniciando nuevo chat con psicólogo:', psychologist.name, psychologist.id);
-
     try {
       // Verificar si ya existe un chat con este psicólogo
       const existingChat = chats.find(
@@ -136,20 +127,15 @@ const Chat: React.FC = () => {
       );
 
       if (existingChat) {
-        console.log('📋 Chat existente encontrado:', existingChat.id);
         setSelectedChat(existingChat);
         return;
       }
 
       // Crear nuevo chat real en Firebase
-      console.log('📋 Creando chat real en Firebase...');
-      
       const chatId = await createChat({
         participants: [user.uid, psychologist.id],
         isActive: true,
       });
-      
-      console.log('📋 Chat ID generado por Firebase:', chatId);
       
       const newChat: ChatType = {
         id: chatId,
@@ -159,7 +145,6 @@ const Chat: React.FC = () => {
         createdAt: new Date(),
       };
 
-      console.log('📋 Nuevo chat creado en Firebase:', newChat);
       setChats((prev) => [newChat, ...prev]);
       setSelectedChat(newChat);
       setMessages([]); // Limpiar mensajes anteriores
@@ -176,9 +161,7 @@ const Chat: React.FC = () => {
         messageType: 'text',
       };
 
-      console.log('📋 Mensaje de bienvenida:', welcomeMessage);
       setMessages([welcomeMessage]);
-      console.log('✅ Chat iniciado exitosamente');
     } catch (error) {
       console.error('❌ Error starting new chat:', error);
     }

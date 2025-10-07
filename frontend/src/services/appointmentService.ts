@@ -224,7 +224,6 @@ export const getUserAppointments = async (userId: string): Promise<Appointment[]
     const appointmentsRef = collection(db, 'appointments');
     
     // Usar filtro por userId para evitar problemas de permisos
-    console.log('🔍 Obteniendo citas del usuario...');
     const q = query(appointmentsRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     

@@ -66,33 +66,21 @@ export interface ChatMessage {
 // Obtener todos los psicólogos disponibles
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
-    console.log('🔍 Buscando psicólogos en colección psychologists...');
-    
     // Usar la colección psychologists que tiene reglas más permisivas
     const psychologistsRef = collection(db, 'psychologists');
-    console.log('📋 Colección psychologists obtenida');
-    
     const q = query(psychologistsRef);
-    console.log('📋 Query creada');
-    
-    console.log('📋 Ejecutando getDocs...');
     const querySnapshot = await getDocs(q);
-    console.log('📋 Query ejecutada exitosamente, documentos encontrados:', querySnapshot.docs.length);
 
     const psychologists: Psychologist[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
       try {
         const psychologistData = docSnapshot.data();
-        console.log('📋 Datos del psicólogo:', docSnapshot.id, psychologistData);
         
         // Validar que tenemos los datos necesarios (más flexible)
         if (!psychologistData.name && !psychologistData.displayName && !psychologistData.email) {
-          console.warn('❌ Psychologist data missing required fields:', docSnapshot.id, psychologistData);
           continue;
         }
-        
-        console.log('✅ Psychologist data validation passed for:', docSnapshot.id);
         
         const psychologist: Psychologist = {
           id: docSnapshot.id,
@@ -121,20 +109,12 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
         };
         
         psychologists.push(psychologist);
-        console.log(`✅ Psicólogo encontrado: ${psychologist.name}`);
       } catch (error) {
         console.error('Error processing psychologist data:', error);
         // Continuar con el siguiente psicólogo
       }
     }
 
-    console.log(`✅ Encontrados ${psychologists.length} psicólogos reales`);
-    
-    // Si no hay psicólogos reales, mostrar mensaje informativo
-    if (psychologists.length === 0) {
-      console.log('ℹ️ No hay psicólogos registrados en el sistema');
-    }
-    
     return psychologists;
   } catch (error) {
     console.error('❌ Error getting available psychologists:', error);
