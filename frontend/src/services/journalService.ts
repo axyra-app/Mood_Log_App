@@ -69,8 +69,19 @@ export const createJournalEntry = async (
 export const updateJournalEntry = async (entryId: string, updates: Partial<JournalEntry>): Promise<void> => {
   try {
     const entryRef = doc(db, 'journalEntries', entryId);
+    
+    // Clean data to remove undefined values
+    const cleanUpdates = { ...updates };
+    
+    // Remove undefined values to avoid Firebase errors
+    Object.keys(cleanUpdates).forEach(key => {
+      if (cleanUpdates[key] === undefined) {
+        delete cleanUpdates[key];
+      }
+    });
+    
     await updateDoc(entryRef, {
-      ...updates,
+      ...cleanUpdates,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {

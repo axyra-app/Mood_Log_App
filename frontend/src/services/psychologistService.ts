@@ -68,9 +68,10 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
     console.log('🔍 Buscando psicólogos reales registrados...');
     
-    // Buscar usuarios con role: 'psychologist' en la colección users
+    // Temporalmente obtener todos los usuarios y filtrar en memoria
+    // hasta que se construya el índice para role: 'psychologist'
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('role', '==', 'psychologist'));
+    const q = query(usersRef);
     const querySnapshot = await getDocs(q);
 
     const psychologists: Psychologist[] = [];
@@ -78,6 +79,11 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
     for (const docSnapshot of querySnapshot.docs) {
       try {
         const userData = docSnapshot.data();
+        
+        // Filtrar solo usuarios con role: 'psychologist'
+        if (userData.role !== 'psychologist') {
+          continue;
+        }
         
         // Validar que tenemos los datos necesarios
         if (!userData.email || !userData.displayName) {
