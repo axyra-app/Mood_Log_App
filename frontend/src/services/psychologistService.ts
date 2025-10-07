@@ -80,6 +80,12 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
       try {
         const psychologistData = docSnapshot.data();
         
+        // Validar que tenemos userId
+        if (!psychologistData.userId) {
+          console.warn('Psychologist data missing userId:', docSnapshot.id);
+          return; // Saltar este psicólogo
+        }
+        
         // Obtener datos del usuario
         const userRef = doc(db, 'users', psychologistData.userId);
         const userSnap = await getDoc(userRef);

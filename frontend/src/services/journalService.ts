@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import { db } from './firebase';
+import { initializeDefaultJournalData } from './journalDefaultData';
 
 // Journal Entry Service
 export const createJournalEntry = async (
@@ -160,6 +161,28 @@ export const getJournalTemplates = async (): Promise<JournalTemplate[]> => {
       });
     });
 
+    // Si no hay plantillas, inicializar datos por defecto
+    if (templates.length === 0) {
+      console.log('🔄 No hay plantillas, inicializando datos por defecto...');
+      await initializeDefaultJournalData();
+      // Recargar después de inicializar
+      const newQuerySnapshot = await getDocs(q);
+      newQuerySnapshot.forEach((doc) => {
+        const data = doc.data();
+        templates.push({
+          id: doc.id,
+          title: data.title,
+          description: data.description,
+          content: data.content,
+          tags: data.tags || [],
+          category: data.category,
+          isDefault: data.isDefault || false,
+          createdBy: data.createdBy,
+          createdAt: data.createdAt?.toDate() || new Date(),
+        });
+      });
+    }
+
     return templates;
   } catch (error) {
     console.error('Error getting journal templates:', error);
@@ -192,6 +215,26 @@ export const getJournalPrompts = async (category?: string): Promise<JournalPromp
         tags: data.tags || [],
       });
     });
+
+    // Si no hay prompts, inicializar datos por defecto
+    if (prompts.length === 0) {
+      console.log('🔄 No hay prompts, inicializando datos por defecto...');
+      await initializeDefaultJournalData();
+      // Recargar después de inicializar
+      const newQuerySnapshot = await getDocs(q);
+      newQuerySnapshot.forEach((doc) => {
+        const data = doc.data();
+        prompts.push({
+          id: doc.id,
+          title: data.title,
+          content: data.content,
+          category: data.category,
+          difficulty: data.difficulty,
+          estimatedTime: data.estimatedTime,
+          tags: data.tags || [],
+        });
+      });
+    }
 
     return prompts;
   } catch (error) {

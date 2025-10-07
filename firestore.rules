@@ -383,8 +383,10 @@ service cloud.firestore {
     match /journalTemplates/{templateId} {
       // Cualquier usuario autenticado puede leer plantillas
       allow read: if request.auth != null;
-      // Solo los administradores o el sistema pueden crear/escribir plantillas
-      allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
+      // Permitir creación para usuarios autenticados (temporalmente)
+      allow create: if request.auth != null;
+      // Solo los administradores pueden actualizar/eliminar
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
     }
 
     // ========================================
@@ -393,8 +395,10 @@ service cloud.firestore {
     match /journalPrompts/{promptId} {
       // Cualquier usuario autenticado puede leer prompts
       allow read: if request.auth != null;
-      // Solo los administradores o el sistema pueden crear/escribir prompts
-      allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
+      // Permitir creación para usuarios autenticados (temporalmente)
+      allow create: if request.auth != null;
+      // Solo los administradores pueden actualizar/eliminar
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
     }
     
     // Validar entrada del diario
