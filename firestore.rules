@@ -13,6 +13,11 @@ service cloud.firestore {
       allow read: if request.auth != null && 
         exists(/databases/$(database)/documents/patients/$(userId)) &&
         get(/databases/$(database)/documents/patients/$(userId)).data.psychologistId == request.auth.uid;
+      
+      // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
+      // para mostrar psicólogos disponibles
+      allow read: if request.auth != null && 
+        resource.data.role == 'psychologist';
     }
     
     // ========================================
