@@ -28,63 +28,6 @@ Una aplicación web progresiva (PWA) profesional para el seguimiento del estado 
 - **UI**: Tailwind CSS + Lucide React
 - **PWA**: Vite PWA Plugin
 
-## 🚀 **Instalación y Desarrollo**
-
-### **Prerrequisitos**
-
-- Node.js 18+
-- npm o yarn
-- Cuenta de Firebase
-
-### **Configuración**
-
-1. **Clona el repositorio**
-
-```bash
-git clone <repository-url>
-cd mood-log-app
-```
-
-2. **Instala todas las dependencias**
-
-```bash
-npm run install:all
-```
-
-3. **Configura Firebase**
-
-   - Las credenciales ya están configuradas en `frontend/src/services/firebase.ts`
-   - Ver `FIREBASE-SETUP.md` para detalles de configuración
-
-4. **Ejecuta el servidor de desarrollo**
-
-```bash
-# Para el frontend
-npm run dev
-
-# Para el backend (en otra terminal)
-npm run backend:dev
-```
-
-La aplicación estará disponible en `http://localhost:5173`
-
-## 🔧 **Configuración de Firebase**
-
-### **Desplegar Reglas e Índices:**
-
-```bash
-# Desplegar reglas de Firestore
-firebase deploy --only firestore:rules
-
-# Desplegar índices de Firestore
-firebase deploy --only firestore:indexes
-
-# Desplegar todo
-firebase deploy
-```
-
-Ver `FIREBASE-SETUP.md` para configuración completa.
-
 ## 📱 **PWA**
 
 La aplicación es una PWA completa:
@@ -92,16 +35,6 @@ La aplicación es una PWA completa:
 - **Instalable**: Los usuarios pueden instalar la app desde el navegador
 - **Offline**: Funciona sin conexión a internet
 - **Notificaciones**: Sistema de notificaciones push
-
-## 🧠 **Sistema de IA**
-
-### **Personalidades de IA:**
-
-- **Dr. Elena**: Psicóloga clínica compasiva
-- **Coach Miguel**: Coach motivador y práctico
-- **Dra. Sofia**: Neurocientífica analítica
-- **Mentor Carlos**: Terapeuta humanista reflexivo
-- **Guía Ana**: Terapeuta artística creativa
 
 ### **Análisis Multidimensional:**
 
@@ -120,49 +53,12 @@ La aplicación es una PWA completa:
 - Disturbios del sueño ≤ 3: **RIESGO MEDIO**
 - Estrés ≥ 8: **RIESGO MEDIO**
 
-## 📊 **Estructura del Proyecto**
-
-Ver `PROJECT_STRUCTURE.md` para la estructura completa y detallada.
-
-**Estructura simplificada:**
-```
-Mood log app/
-├── 📁 frontend/          # Aplicación React + TypeScript
-│   ├── 📁 src/           # Código fuente del frontend
-│   │   ├── 📁 components/ # Componentes React
-│   │   ├── 📁 pages/     # Páginas de la aplicación
-│   │   ├── 📁 services/  # Servicios (Firebase, IA, APIs)
-│   │   ├── 📁 hooks/     # Custom hooks personalizados
-│   │   ├── 📁 contexts/  # React contexts
-│   │   ├── 📁 types/     # Definiciones TypeScript
-│   │   └── 📁 utils/    # Utilidades y helpers
-│   └── 📄 Archivos de configuración del frontend
-├── 📁 backend/           # Backend Node.js + Prisma
-├── 📁 docs/              # Documentación
-└── 📄 Archivos de configuración raíz
-```
-
 ## 🔒 **Seguridad**
 
 - **Autenticación Firebase**: Sistema seguro de autenticación
 - **Reglas de Firestore**: Protección de datos sensibles
 - **Roles diferenciados**: Usuario regular vs Psicólogo
 - **Encriptación**: Datos protegidos en tránsito y en reposo
-
-## 🚀 **Despliegue**
-
-### **Vercel (Recomendado)**
-
-1. Conectar repositorio con Vercel
-2. Desplegar automáticamente
-3. La aplicación estará disponible en tu dominio de Vercel
-
-### **Firebase Hosting**
-
-```bash
-npm run build
-firebase deploy --only hosting
-```
 
 ## 📈 **Roadmap**
 
@@ -173,26 +69,8 @@ firebase deploy --only hosting
 - [ ] Integración con wearables
 - [ ] Análisis de patrones avanzados
 
-## 🤝 **Contribución**
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
 ## 📄 **Licencia**
 
 Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
-
-## 🆘 **Soporte**
-
-Si tienes problemas o preguntas:
-
-1. Revisa la documentación
-2. Busca en los issues existentes
-3. Crea un nuevo issue con detalles específicos
-
----
 
 **Mood Log App** - Tu compañero personal para el bienestar mental 💙

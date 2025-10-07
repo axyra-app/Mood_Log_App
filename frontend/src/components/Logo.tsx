@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import logoImage from '../assets/logo.png';
 
 interface LogoProps {
   className?: string;
@@ -32,7 +31,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
 
   return (
     <img 
-      src={logoImage} 
+      src="/logo.png" 
       alt="Mood Log Logo" 
       className={`${sizeClasses[size]} ${className}`}
       onError={() => setImageError(true)}
