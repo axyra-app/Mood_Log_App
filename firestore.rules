@@ -3,21 +3,15 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ========================================
-    // REGLAS PARA USUARIOS
+    // REGLAS PARA USUARIOS (SIMPLIFICADAS)
     // ========================================
     match /users/{userId} {
       // Solo el usuario puede leer/escribir su propio perfil
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
-      // Los psicólogos pueden leer datos básicos de sus pacientes
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/patients/$(userId)) &&
-        get(/databases/$(database)/documents/patients/$(userId)).data.psychologistId == request.auth.uid;
-      
       // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
-      // para mostrar psicólogos disponibles (regla simplificada)
+      // para mostrar psicólogos disponibles (regla muy simplificada)
       allow read: if request.auth != null && 
-        resource.data.keys().hasAll(['role']) &&
         resource.data.role == 'psychologist';
     }
     
