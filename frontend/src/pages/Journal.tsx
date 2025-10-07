@@ -19,7 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
-import JournalEditor from './JournalEditor';
+import JournalEditor from '../components/JournalEditor';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
