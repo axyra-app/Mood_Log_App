@@ -47,6 +47,11 @@ const Journal: React.FC = () => {
     }
   }, [entries, getJournalStats]);
 
+  // Debug: Log templates count
+  useEffect(() => {
+    console.log('📋 Templates loaded:', templates.length, templates.map(t => t.title));
+  }, [templates]);
+
   const filteredEntries = entries.filter((entry) => {
     const matchesSearch =
       entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,19 +224,21 @@ const Journal: React.FC = () => {
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
             {showTemplates && (
               <div className='mb-6'>
-                <h3 className='text-lg font-semibold text-gray-900 mb-3'>Plantillas</h3>
+                <h3 className='text-lg font-semibold text-gray-900 mb-3'>
+                  Plantillas ({templates.length})
+                </h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                  {templates.map((template) => (
+                  {templates.map((template, index) => (
                     <div
-                      key={template.id}
+                      key={`${template.id}-${index}`}
                       onClick={() => handleTemplateSelect(template)}
                       className='p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-colors'
                     >
                       <h4 className='font-semibold text-gray-900 mb-2'>{template.title}</h4>
                       <p className='text-sm text-gray-600 mb-2'>{template.description}</p>
                       <div className='flex flex-wrap gap-1'>
-                        {template.tags.slice(0, 3).map((tag, index) => (
-                          <span key={index} className='px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs'>
+                        {template.tags.slice(0, 3).map((tag, tagIndex) => (
+                          <span key={`${template.id}-tag-${tagIndex}`} className='px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs'>
                             {tag}
                           </span>
                         ))}
