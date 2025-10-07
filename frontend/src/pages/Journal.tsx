@@ -47,10 +47,14 @@ const Journal: React.FC = () => {
     }
   }, [entries, getJournalStats]);
 
-  // Debug: Log templates count
+  // Debug: Log templates and prompts count
   useEffect(() => {
     console.log('📋 Templates loaded:', templates.length, templates.map(t => t.title));
   }, [templates]);
+
+  useEffect(() => {
+    console.log('💡 Prompts loaded:', prompts.length, prompts.map(p => p.title));
+  }, [prompts]);
 
   const filteredEntries = entries.filter((entry) => {
     const matchesSearch =
@@ -251,7 +255,9 @@ const Journal: React.FC = () => {
 
             {showPrompts && (
               <div>
-                <h3 className='text-lg font-semibold text-gray-900 mb-3'>Prompts de Escritura</h3>
+                <h3 className='text-lg font-semibold text-gray-900 mb-3'>
+                  Prompts de Escritura ({prompts.length})
+                </h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
                   {prompts.map((prompt) => (
                     <div
