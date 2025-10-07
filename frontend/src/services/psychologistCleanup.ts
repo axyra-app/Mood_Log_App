@@ -25,7 +25,7 @@ export const cleanupCorruptedPsychologists = async (): Promise<void> => {
         try {
           await deleteDoc(doc(db, 'psychologists', docSnapshot.id));
           cleanedCount++;
-          console.log(`✅ Psicólogo corrupto eliminado: ${docSnapshot.id}`);
+          // Psicólogo corrupto eliminado exitosamente
         } catch (error) {
           console.error(`❌ Error eliminando psicólogo ${docSnapshot.id}:`, error);
         }
@@ -47,7 +47,7 @@ export const checkPsychologistsHealth = async (): Promise<{
   corruptedIds: string[];
 }> => {
   try {
-    console.log('🔍 Verificando estado de los psicólogos...');
+    // Verificando estado de los psicólogos...
 
     const psychologistsRef = collection(db, 'psychologists');
     const q = query(psychologistsRef);

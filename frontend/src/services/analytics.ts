@@ -93,7 +93,7 @@ export const analyticsEvents = {
 // Función para inicializar analytics (opcional)
 export const initializeAnalytics = () => {
   if (isAnalyticsAvailable()) {
-    console.log('✅ Google Analytics inicializado correctamente');
+    // Google Analytics inicializado correctamente
   } else {
     console.warn('⚠️ Google Analytics no está disponible');
   }

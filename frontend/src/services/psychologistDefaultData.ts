@@ -90,7 +90,7 @@ export const initializeDefaultPsychologists = async (): Promise<Psychologist[]> 
           };
 
           psychologists.push(psychologist);
-          console.log(`✅ Psicólogo creado: ${psychologistData.name}`);
+          // Psicólogo creado exitosamente
         } else {
           // Si ya existe, agregarlo a la lista
           const doc = existingSnapshot.docs[0];
@@ -117,7 +117,7 @@ export const initializeDefaultPsychologists = async (): Promise<Psychologist[]> 
             updatedAt: data.updatedAt?.toDate() || new Date(),
           };
           psychologists.push(psychologist);
-          console.log(`✅ Psicólogo encontrado: ${psychologistData.name}`);
+          // Psicólogo encontrado exitosamente
         }
       } catch (error) {
         console.error(`❌ Error creando psicólogo ${psychologistData.name}:`, error);

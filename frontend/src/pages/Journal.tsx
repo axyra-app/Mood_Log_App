@@ -49,11 +49,11 @@ const Journal: React.FC = () => {
 
   // Debug: Log templates and prompts count
   useEffect(() => {
-    console.log('📋 Templates loaded:', templates.length, templates.map(t => t.title));
+    // Templates and prompts loaded successfully
   }, [templates]);
 
   useEffect(() => {
-    console.log('💡 Prompts loaded:', prompts.length, prompts.map(p => p.title));
+    // Prompts loaded successfully  
   }, [prompts]);
 
   const filteredEntries = entries.filter((entry) => {

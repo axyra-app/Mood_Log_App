@@ -13,6 +13,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { auth } from './firebase';
 
 export interface Psychologist {
   id: string;
@@ -82,6 +83,9 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
           continue;
         }
         
+        // Verificar si el psicólogo está realmente conectado
+        const isOnline = await checkPsychologistOnlineStatus(psychologistData.userId || docSnapshot.id);
+        
         const psychologist: Psychologist = {
           id: docSnapshot.id,
           userId: psychologistData.userId || docSnapshot.id,
@@ -95,7 +99,7 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
           experience: psychologistData.experience || 1,
           bio: psychologistData.bio || 'Psicólogo profesional disponible para consultas.',
           profileImage: psychologistData.profileImage || '',
-          isAvailable: psychologistData.isAvailable !== false,
+          isAvailable: psychologistData.isAvailable !== false && isOnline,
           workingHours: psychologistData.workingHours || { start: '09:00', end: '17:00', timezone: 'America/Bogota' },
           languages: Array.isArray(psychologistData.languages) 
             ? psychologistData.languages 
@@ -303,5 +307,38 @@ export const registerPsychologist = async (
   } catch (error) {
     console.error('Error registering psychologist:', error);
     throw error;
+  }
+};
+
+// Verificar si un psicólogo está realmente en línea
+export const checkPsychologistOnlineStatus = async (psychologistUserId: string): Promise<boolean> => {
+  try {
+    // Verificar si hay una sesión activa de Firebase Auth para este psicólogo
+    // Esto es una aproximación - en un sistema real usarías Firebase Realtime Database
+    // o un sistema de presencia más sofisticado
+    
+    // Por ahora, verificamos si el psicólogo tiene actividad reciente
+    const userRef = doc(db, 'users', psychologistUserId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      return false;
+    }
+    
+    const userData = userSnap.data();
+    const lastSeen = userData.lastSeen;
+    
+    if (!lastSeen) {
+      return false;
+    }
+    
+    // Considerar "en línea" si la última actividad fue en los últimos 5 minutos
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const lastSeenDate = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+    
+    return lastSeenDate > fiveMinutesAgo;
+  } catch (error) {
+    console.error('Error checking psychologist online status:', error);
+    return false;
   }
 };

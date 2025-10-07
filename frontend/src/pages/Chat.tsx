@@ -370,7 +370,7 @@ const Chat: React.FC = () => {
                             >
                               {message.timestamp && typeof message.timestamp.toDate === 'function' 
                                 ? message.timestamp.toDate().toLocaleTimeString()
-                                : new Date().toLocaleTimeString()}
+                                : new Date(message.timestamp).toLocaleTimeString()}
                             </p>
                           </div>
                         </div>

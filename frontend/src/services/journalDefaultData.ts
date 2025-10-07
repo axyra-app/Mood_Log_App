@@ -159,7 +159,7 @@ export const initializeDefaultJournalData = async () => {
           createdAt: new Date(),
         });
       }
-      console.log('✅ Plantillas creadas exitosamente');
+      // Plantillas creadas exitosamente
     } else {
       console.log('📝 Las plantillas ya existen');
     }
@@ -177,7 +177,7 @@ export const initializeDefaultJournalData = async () => {
           createdAt: new Date(),
         });
       }
-      console.log('✅ Prompts creados exitosamente');
+      // Prompts creados exitosamente
     } else {
       console.log('💡 Los prompts ya existen');
     }
