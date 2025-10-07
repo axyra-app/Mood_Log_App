@@ -3,14 +3,13 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ========================================
-    // REGLAS PARA USUARIOS (SIMPLIFICADAS)
+    // REGLAS PARA USUARIOS
     // ========================================
     match /users/{userId} {
       // Solo el usuario puede leer/escribir su propio perfil
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
       // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
-      // para mostrar psicólogos disponibles (regla muy simplificada)
       allow read: if request.auth != null && 
         resource.data.role == 'psychologist';
     }
@@ -73,8 +72,8 @@ service cloud.firestore {
       
       // Validaciones para creación
       allow create: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId &&
-        isValidPatient(resource.data);
+        request.auth.uid == request.resource.data.psychologistId &&
+        isValidPatient(request.resource.data);
     }
     
     // ========================================
@@ -96,17 +95,31 @@ service cloud.firestore {
     }
     
     // ========================================
-    // REGLAS PARA MENSAJES DE CHAT
+    // REGLAS PARA CHATS
     // ========================================
-    match /messages/{messageId} {
-      // Solo los participantes pueden leer/escribir mensajes
+    match /chats/{chatId} {
+      // El usuario puede leer/escribir chats donde participa
       allow read, write: if request.auth != null && 
         request.auth.uid in resource.data.participants;
       
-      // Validaciones para creación
+      // Permitir crear nuevos chats donde el usuario participa
       allow create: if request.auth != null && 
-        request.auth.uid in resource.data.participants &&
-        isValidMessage(resource.data);
+        request.auth.uid in request.resource.data.participants;
+    }
+    
+    // ========================================
+    // REGLAS PARA MENSAJES
+    // ========================================
+    match /messages/{messageId} {
+      // El usuario puede leer/escribir mensajes donde participa
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId);
+      
+      // Permitir crear nuevos mensajes
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId &&
+        isValidMessage(request.resource.data);
     }
     
     // ========================================
@@ -219,6 +232,11 @@ service cloud.firestore {
       // El paciente puede leer sus propias alertas
       allow read: if request.auth != null && 
         request.auth.uid == resource.data.patientId;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.psychologistId &&
+        isValidCrisisAlert(request.resource.data);
     }
     
     // ========================================
@@ -231,9 +249,9 @@ service cloud.firestore {
       
       // Los psicólogos pueden crear recomendaciones para sus pacientes
       allow create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId ||
-         (exists(/databases/$(database)/documents/patients/$(resource.data.userId)) &&
-          get(/databases/$(database)/documents/patients/$(resource.data.userId)).data.psychologistId == request.auth.uid));
+        (request.auth.uid == request.resource.data.userId ||
+         (exists(/databases/$(database)/documents/patients/$(request.resource.data.userId)) &&
+          get(/databases/$(database)/documents/patients/$(request.resource.data.userId)).data.psychologistId == request.auth.uid));
     }
     
     // ========================================
@@ -257,33 +275,6 @@ service cloud.firestore {
       // Solo el usuario puede leer/escribir sus recordatorios
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA CHATS
-    // ========================================
-    match /chats/{chatId} {
-      // El usuario puede leer/escribir chats donde participa
-      allow read, write: if request.auth != null && 
-        request.auth.uid in resource.data.participants;
-      
-      // Permitir crear nuevos chats donde el usuario participa
-      allow create: if request.auth != null && 
-        request.auth.uid in request.resource.data.participants;
-    }
-    
-    // ========================================
-    // REGLAS PARA MENSAJES
-    // ========================================
-    match /messages/{messageId} {
-      // El usuario puede leer/escribir mensajes donde participa
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.senderId || 
-         request.auth.uid == resource.data.receiverId);
-      
-      // Permitir crear nuevos mensajes
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.senderId;
     }
     
     // ========================================
@@ -428,8 +419,9 @@ service cloud.firestore {
     
     // Validar mensaje
     function isValidMessage(data) {
-      return data.keys().hasAll(['participants', 'content', 'timestamp']) &&
-             data.participants is list && data.participants.size() >= 2 &&
+      return data.keys().hasAll(['senderId', 'receiverId', 'content', 'timestamp']) &&
+             data.senderId is string && data.senderId.size() > 0 &&
+             data.receiverId is string && data.receiverId.size() > 0 &&
              data.content is string && data.content.size() > 0 &&
              data.timestamp is timestamp;
     }
