@@ -170,7 +170,7 @@ export const initializeDefaultJournalData = async () => {
     const promptsSnapshot = await getDocs(promptsQuery);
 
     if (promptsSnapshot.empty) {
-      console.log('💡 Creando prompts por defecto...');
+      // Creando prompts por defecto...
       for (const prompt of defaultJournalPrompts) {
         await addDoc(promptsRef, {
           ...prompt,
@@ -179,7 +179,7 @@ export const initializeDefaultJournalData = async () => {
       }
       // Prompts creados exitosamente
     } else {
-      console.log('💡 Los prompts ya existen');
+      // Los prompts ya existen
     }
 
     console.log('🎉 Inicialización de datos del diario completada');

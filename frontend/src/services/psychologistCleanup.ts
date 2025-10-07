@@ -76,7 +76,7 @@ export const checkPsychologistsHealth = async (): Promise<{
       corruptedIds,
     };
 
-    console.log('📊 Estado de psicólogos:', result);
+    // Estado de psicólogos verificado
     return result;
   } catch (error) {
     console.error('❌ Error verificando estado de psicólogos:', error);

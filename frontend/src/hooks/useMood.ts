@@ -176,12 +176,26 @@ export const useMood = () => {
       return dateB.getTime() - dateA.getTime();
     });
 
-    for (let i = 0; i < sortedLogs.length; i++) {
-      const logDate = sortedLogs[i].createdAt && typeof sortedLogs[i].createdAt.toDate === 'function' 
-        ? sortedLogs[i].createdAt.toDate() 
-        : new Date(sortedLogs[i].createdAt);
+    // Agrupar logs por día (tomar solo el primer log de cada día)
+    const logsByDay = new Map();
+    sortedLogs.forEach(log => {
+      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
+        ? log.createdAt.toDate() 
+        : new Date(log.createdAt);
       logDate.setHours(0, 0, 0, 0);
+      
+      const dateKey = logDate.getTime();
+      if (!logsByDay.has(dateKey)) {
+        logsByDay.set(dateKey, logDate);
+      }
+    });
 
+    // Convertir a array de fechas únicas ordenadas
+    const uniqueDates = Array.from(logsByDay.values()).sort((a, b) => b.getTime() - a.getTime());
+
+    // Calcular racha desde el día más reciente
+    for (let i = 0; i < uniqueDates.length; i++) {
+      const logDate = uniqueDates[i];
       const expectedDate = new Date(today);
       expectedDate.setDate(expectedDate.getDate() - i);
 

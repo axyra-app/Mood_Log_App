@@ -9,7 +9,7 @@ export const validateEnvironment = () => {
     return false;
   }
 
-  console.log('✅ Configuración de entorno válida');
+  // Configuración de entorno válida
   return true;
 };
 
@@ -82,7 +82,7 @@ export const checkRequiredEnvVars = () => {
     return false;
   }
 
-  console.log('✅ Todas las variables de entorno están configuradas');
+  // Todas las variables de entorno están configuradas
   return true;
 };
 
