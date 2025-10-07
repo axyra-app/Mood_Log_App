@@ -265,7 +265,7 @@ const CrisisAlertsPanel: React.FC<CrisisAlertsPanelProps> = ({ psychologistId, i
                 <button
                   onClick={() => {
                     // Implementar lógica para contactar paciente
-                    console.log('Contactando paciente:', selectedAlert.patientId);
+                    // Contactando paciente
                   }}
                   className='flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2'
                 >
@@ -276,7 +276,7 @@ const CrisisAlertsPanel: React.FC<CrisisAlertsPanelProps> = ({ psychologistId, i
                 <button
                   onClick={() => {
                     // Implementar lógica para enviar mensaje
-                    console.log('Enviando mensaje a:', selectedAlert.patientId);
+                    // Enviando mensaje al paciente
                   }}
                   className='flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center space-x-2'
                 >
