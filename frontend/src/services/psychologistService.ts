@@ -84,17 +84,18 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
     for (const docSnapshot of querySnapshot.docs) {
       try {
         const psychologistData = docSnapshot.data();
+        console.log('📋 Datos del psicólogo:', docSnapshot.id, psychologistData);
         
-        // Validar que tenemos los datos necesarios
-        if (!psychologistData.name) {
-          console.warn('Psychologist data missing name:', docSnapshot.id);
+        // Validar que tenemos los datos necesarios (más flexible)
+        if (!psychologistData.name && !psychologistData.displayName && !psychologistData.email) {
+          console.warn('Psychologist data missing required fields:', docSnapshot.id);
           continue;
         }
         
         const psychologist: Psychologist = {
           id: docSnapshot.id,
           userId: psychologistData.userId || docSnapshot.id,
-          name: psychologistData.name || 'Psicólogo',
+          name: psychologistData.name || psychologistData.displayName || psychologistData.email?.split('@')[0] || 'Psicólogo',
           email: psychologistData.email || '',
           phone: psychologistData.phone || '',
           license: psychologistData.license || '',
