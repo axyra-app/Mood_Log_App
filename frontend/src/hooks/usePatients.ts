@@ -1,114 +1,83 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Patient, getPatientsByPsychologist, subscribeToPatients, updatePatientNotes, updateNextAppointment } from '../services/patientService';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { Patient } from '../types';
 
-export const usePatients = () => {
-  const { user } = useAuth();
+export const usePatients = (psychologistId: string) => {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load patients
+  // Cargar pacientes
   const loadPatients = useCallback(async () => {
-    if (!user?.uid) return;
-
+    if (!psychologistId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const patientsData = await getPatientsByPsychologist(user.uid);
+      
+      const patientsRef = collection(db, 'patients');
+      const q = query(
+        patientsRef, 
+        where('psychologistId', '==', psychologistId),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      
+      const patientsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as Patient[];
+      
       setPatients(patientsData);
     } catch (err) {
+      console.error('Error loading patients:', err);
       setError(err instanceof Error ? err.message : 'Error loading patients');
     } finally {
       setLoading(false);
     }
-  }, [user?.uid]);
+  }, [psychologistId]);
 
-  // Update patient notes
-  const updateNotes = useCallback(async (patientId: string, notes: string) => {
-    try {
-      await updatePatientNotes(patientId, notes);
-      // Reload patients to get updated data
-      await loadPatients();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error updating notes');
-      throw err;
-    }
-  }, [loadPatients]);
-
-  // Update next appointment
-  const updateAppointment = useCallback(async (patientId: string, appointmentDate: Date) => {
-    try {
-      await updateNextAppointment(patientId, appointmentDate);
-      // Reload patients to get updated data
-      await loadPatients();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error updating appointment');
-      throw err;
-    }
-  }, [loadPatients]);
-
-  // Setup real-time subscription
+  // Suscripción en tiempo real
   useEffect(() => {
-    if (!user?.uid) {
-      setPatients([]);
-      return;
-    }
-
-    const unsubscribe = subscribeToPatients(user.uid, (patientsData) => {
-      setPatients(patientsData);
-    });
-
-    return () => {
-      if (unsubscribe && typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    };
-  }, [user?.uid]);
-
-  // Get patients by risk level
-  const getPatientsByRiskLevel = useCallback((riskLevel: 'low' | 'medium' | 'high') => {
-    return patients.filter(patient => patient.riskLevel === riskLevel);
-  }, [patients]);
-
-  // Get patients needing attention (high risk or no recent mood logs)
-  const getPatientsNeedingAttention = useCallback(() => {
-    const now = new Date();
-    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    if (!psychologistId) return;
     
-    return patients.filter(patient => 
-      patient.riskLevel === 'high' || 
-      (patient.lastMoodDate && patient.lastMoodDate < threeDaysAgo)
+    const patientsRef = collection(db, 'patients');
+    const q = query(
+      patientsRef, 
+      where('psychologistId', '==', psychologistId),
+      orderBy('createdAt', 'desc')
     );
-  }, [patients]);
-
-  // Get statistics
-  const getStatistics = useCallback(() => {
-    const totalPatients = patients.length;
-    const activePatients = patients.filter(p => p.isActive).length;
-    const highRiskPatients = patients.filter(p => p.riskLevel === 'high').length;
-    const averageMood = patients.length > 0 
-      ? patients.reduce((sum, p) => sum + p.averageMood, 0) / patients.length 
-      : 0;
     
-    return {
-      totalPatients,
-      activePatients,
-      highRiskPatients,
-      averageMood: Math.round(averageMood * 10) / 10,
-    };
-  }, [patients]);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const patientsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        })) as Patient[];
+        
+        setPatients(patientsData);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in patients subscription:', err);
+        setError(err.message);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [psychologistId]);
 
   return {
     patients,
     loading,
     error,
     loadPatients,
-    updateNotes,
-    updateAppointment,
-    getPatientsByRiskLevel,
-    getPatientsNeedingAttention,
-    getStatistics,
-    refreshPatients: loadPatients,
   };
 };

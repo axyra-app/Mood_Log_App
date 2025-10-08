@@ -135,16 +135,11 @@ export interface Appointment {
   id: string;
   patientId: string;
   psychologistId: string;
-  title: string;
-  description?: string;
-  startTime: Date;
-  endTime: Date;
-  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
-  type: 'consultation' | 'follow-up' | 'emergency' | 'assessment';
-  location: 'office' | 'online' | 'phone';
-  meetingLink?: string;
+  appointmentDate: Date;
+  duration: number; // in minutes
+  type: 'consultation' | 'follow-up' | 'emergency';
   notes?: string;
-  reminderSent: boolean;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -418,13 +413,9 @@ export interface MedicalReport {
   title: string;
   content: string;
   diagnosis?: string;
-  treatmentPlan?: string;
-  recommendations: string[];
-  medications?: string[];
+  treatment?: string;
+  recommendations?: string;
   nextAppointment?: Date;
-  riskAssessment: 'low' | 'medium' | 'high';
-  attachments?: string[]; // file URLs
-  isConfidential: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

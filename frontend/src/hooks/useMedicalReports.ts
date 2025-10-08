@@ -1,226 +1,118 @@
-import { useCallback, useEffect, useState } from 'react';
-import {
-  createMedicalReport,
-  createPatientHistory,
-  deleteMedicalReport,
-  getMedicalReportById,
-  getMedicalReports,
-  getPatientHistory,
-  getReportTemplates,
-  updateMedicalReport,
-  updatePatientHistory,
-} from '../services/medicalReportService';
-import { MedicalReport, PatientHistory } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { MedicalReport } from '../types';
 
-export const useMedicalReports = (psychologistId: string) => {
-  const [reports, setReports] = useState<MedicalReport[]>([]);
-  const [templates, setTemplates] = useState(getReportTemplates());
-  const [loading, setLoading] = useState(false);
+export const useMedicalReports = () => {
+  const [medicalReports, setMedicalReports] = useState<MedicalReport[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load medical reports
-  const loadReports = useCallback(
-    async (patientId?: string) => {
-      if (!psychologistId) return;
+  // Cargar reportes médicos
+  const loadMedicalReports = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const reportsRef = collection(db, 'medicalReports');
+      const q = query(reportsRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const reportsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        nextAppointment: doc.data().nextAppointment?.toDate() || undefined,
+      })) as MedicalReport[];
+      
+      setMedicalReports(reportsData);
+    } catch (err) {
+      console.error('Error loading medical reports:', err);
+      setError(err instanceof Error ? err.message : 'Error loading medical reports');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      try {
-        setLoading(true);
-        setError(null);
-        const medicalReports = await getMedicalReports(psychologistId, patientId);
-        setReports(medicalReports);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error loading medical reports');
-      } finally {
+  // Crear reporte médico
+  const createMedicalReport = useCallback(async (reportData: Omit<MedicalReport, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const reportsRef = collection(db, 'medicalReports');
+      const docRef = await addDoc(reportsRef, {
+        ...reportData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      
+      return docRef.id;
+    } catch (err) {
+      console.error('Error creating medical report:', err);
+      throw err;
+    }
+  }, []);
+
+  // Actualizar reporte médico
+  const updateMedicalReport = useCallback(async (reportId: string, updates: Partial<MedicalReport>) => {
+    try {
+      const reportRef = doc(db, 'medicalReports', reportId);
+      await updateDoc(reportRef, {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error('Error updating medical report:', err);
+      throw err;
+    }
+  }, []);
+
+  // Eliminar reporte médico
+  const deleteMedicalReport = useCallback(async (reportId: string) => {
+    try {
+      const reportRef = doc(db, 'medicalReports', reportId);
+      await deleteDoc(reportRef);
+    } catch (err) {
+      console.error('Error deleting medical report:', err);
+      throw err;
+    }
+  }, []);
+
+  // Suscripción en tiempo real
+  useEffect(() => {
+    const reportsRef = collection(db, 'medicalReports');
+    const q = query(reportsRef, orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const reportsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+          nextAppointment: doc.data().nextAppointment?.toDate() || undefined,
+        })) as MedicalReport[];
+        
+        setMedicalReports(reportsData);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in medical reports subscription:', err);
+        setError(err.message);
         setLoading(false);
       }
-    },
-    [psychologistId]
-  );
+    );
 
-  // Create new medical report
-  const createReport = useCallback(async (reportData: Omit<MedicalReport, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const newReport = await createMedicalReport(reportData);
-      setReports((prev) => [newReport, ...prev]);
-      return newReport;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creating medical report');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    return () => unsubscribe();
   }, []);
-
-  // Update medical report
-  const updateReport = useCallback(async (reportId: string, updates: Partial<MedicalReport>) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await updateMedicalReport(reportId, updates);
-      setReports((prev) =>
-        prev.map((report) => (report.id === reportId ? { ...report, ...updates, updatedAt: new Date() } : report))
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error updating medical report');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Delete medical report
-  const deleteReport = useCallback(async (reportId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await deleteMedicalReport(reportId);
-      setReports((prev) => prev.filter((report) => report.id !== reportId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error deleting medical report');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Get medical report by ID
-  const getReport = useCallback(async (reportId: string): Promise<MedicalReport | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      return await getMedicalReportById(reportId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error getting medical report');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Get reports by patient
-  const getReportsByPatient = useCallback(
-    (patientId: string) => {
-      return reports.filter((report) => report.patientId === patientId);
-    },
-    [reports]
-  );
-
-  // Get reports by type
-  const getReportsByType = useCallback(
-    (reportType: 'initial' | 'progress' | 'discharge' | 'emergency') => {
-      return reports.filter((report) => report.reportType === reportType);
-    },
-    [reports]
-  );
-
-  // Get high risk reports
-  const getHighRiskReports = useCallback(() => {
-    return reports.filter((report) => report.riskAssessment === 'high');
-  }, [reports]);
-
-  // Load data on mount
-  useEffect(() => {
-    if (psychologistId) {
-      loadReports();
-    }
-  }, [psychologistId, loadReports]);
 
   return {
-    // State
-    reports,
-    templates,
+    medicalReports,
     loading,
     error,
-
-    // Actions
-    createReport,
-    updateReport,
-    deleteReport,
-    getReport,
-    loadReports,
-
-    // Utilities
-    getReportsByPatient,
-    getReportsByType,
-    getHighRiskReports,
-  };
-};
-
-export const usePatientHistory = (patientId: string, psychologistId: string) => {
-  const [history, setHistory] = useState<PatientHistory | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Load patient history
-  const loadHistory = useCallback(async () => {
-    if (!patientId || !psychologistId) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const patientHistory = await getPatientHistory(patientId, psychologistId);
-      setHistory(patientHistory);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading patient history');
-    } finally {
-      setLoading(false);
-    }
-  }, [patientId, psychologistId]);
-
-  // Create patient history
-  const createHistory = useCallback(async (historyData: Omit<PatientHistory, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const newHistory = await createPatientHistory(historyData);
-      setHistory(newHistory);
-      return newHistory;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creating patient history');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Update patient history
-  const updateHistory = useCallback(
-    async (updates: Partial<PatientHistory>) => {
-      if (!history) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-        await updatePatientHistory(history.id, updates);
-        setHistory((prev) => (prev ? { ...prev, ...updates, updatedAt: new Date() } : null));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error updating patient history');
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [history]
-  );
-
-  // Load data on mount
-  useEffect(() => {
-    if (patientId && psychologistId) {
-      loadHistory();
-    }
-  }, [patientId, psychologistId, loadHistory]);
-
-  return {
-    // State
-    history,
-    loading,
-    error,
-
-    // Actions
-    createHistory,
-    updateHistory,
-    loadHistory,
+    createMedicalReport,
+    updateMedicalReport,
+    deleteMedicalReport,
+    loadMedicalReports,
   };
 };

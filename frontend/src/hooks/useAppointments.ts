@@ -1,161 +1,118 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { 
-  Appointment, 
-  AppointmentNotification,
-  createAppointment,
-  acceptAppointment,
-  rejectAppointment,
-  getUserAppointments,
-  getPsychologistNotifications,
-  markNotificationAsRead,
-  subscribeToPsychologistNotifications
-} from '../services/appointmentService';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { Appointment } from '../types';
 
 export const useAppointments = () => {
-  const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load user appointments
+  // Cargar citas
   const loadAppointments = useCallback(async () => {
-    if (!user?.uid) return;
-
     try {
       setLoading(true);
       setError(null);
-      const appointmentsData = await getUserAppointments(user.uid);
+      
+      const appointmentsRef = collection(db, 'appointments');
+      const q = query(appointmentsRef, orderBy('appointmentDate', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const appointmentsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        appointmentDate: doc.data().appointmentDate?.toDate() || new Date(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as Appointment[];
+      
       setAppointments(appointmentsData);
     } catch (err) {
+      console.error('Error loading appointments:', err);
       setError(err instanceof Error ? err.message : 'Error loading appointments');
     } finally {
       setLoading(false);
     }
-  }, [user?.uid]);
+  }, []);
 
-  // Create new appointment
-  const createNewAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
-    if (!user?.uid) throw new Error('User not authenticated');
-
+  // Crear cita
+  const createAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      setLoading(true);
-      setError(null);
-      const appointmentId = await createAppointment({
+      const appointmentsRef = collection(db, 'appointments');
+      const docRef = await addDoc(appointmentsRef, {
         ...appointmentData,
-        userId: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-      await loadAppointments();
-      return appointmentId;
+      
+      return docRef.id;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error creating appointment';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
+      console.error('Error creating appointment:', err);
+      throw err;
     }
-  }, [user?.uid, loadAppointments]);
+  }, []);
 
+  // Actualizar cita
+  const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>) => {
+    try {
+      const appointmentRef = doc(db, 'appointments', appointmentId);
+      await updateDoc(appointmentRef, {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error('Error updating appointment:', err);
+      throw err;
+    }
+  }, []);
+
+  // Eliminar cita
+  const deleteAppointment = useCallback(async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, 'appointments', appointmentId);
+      await deleteDoc(appointmentRef);
+    } catch (err) {
+      console.error('Error deleting appointment:', err);
+      throw err;
+    }
+  }, []);
+
+  // Suscripción en tiempo real
   useEffect(() => {
-    loadAppointments();
-  }, [loadAppointments]);
+    const appointmentsRef = collection(db, 'appointments');
+    const q = query(appointmentsRef, orderBy('appointmentDate', 'desc'));
+    
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const appointmentsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          appointmentDate: doc.data().appointmentDate?.toDate() || new Date(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        })) as Appointment[];
+        
+        setAppointments(appointmentsData);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in appointments subscription:', err);
+        setError(err.message);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   return {
     appointments,
     loading,
     error,
-    createAppointment: createNewAppointment,
-    refreshAppointments: loadAppointments,
-  };
-};
-
-export const usePsychologistNotifications = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<AppointmentNotification[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Load psychologist notifications
-  const loadNotifications = useCallback(async () => {
-    if (!user?.uid) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const notificationsData = await getPsychologistNotifications(user.uid);
-      setNotifications(notificationsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading notifications');
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.uid]);
-
-  // Accept appointment
-  const acceptAppointmentNotification = useCallback(async (appointmentId: string) => {
-    if (!user?.uid) throw new Error('User not authenticated');
-
-    try {
-      await acceptAppointment(appointmentId, user.uid);
-      await loadNotifications();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error accepting appointment');
-      throw err;
-    }
-  }, [user?.uid, loadNotifications]);
-
-  // Reject appointment
-  const rejectAppointmentNotification = useCallback(async (appointmentId: string) => {
-    if (!user?.uid) throw new Error('User not authenticated');
-
-    try {
-      await rejectAppointment(appointmentId, user.uid);
-      await loadNotifications();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error rejecting appointment');
-      throw err;
-    }
-  }, [user?.uid, loadNotifications]);
-
-  // Mark notification as read
-  const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      await loadNotifications();
-    } catch (err) {
-      console.error('Error marking notification as read:', err);
-    }
-  }, [loadNotifications]);
-
-  // Setup real-time subscription
-  useEffect(() => {
-    if (!user?.uid) {
-      setNotifications([]);
-      return;
-    }
-
-    const unsubscribe = subscribeToPsychologistNotifications(user.uid, (notificationsData) => {
-      setNotifications(notificationsData);
-    });
-
-    return () => {
-      if (unsubscribe && typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    };
-  }, [user?.uid]);
-
-  // Get unread count
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-
-  return {
-    notifications,
-    loading,
-    error,
-    unreadCount,
-    acceptAppointment: acceptAppointmentNotification,
-    rejectAppointment: rejectAppointmentNotification,
-    markAsRead,
-    refreshNotifications: loadNotifications,
+    createAppointment,
+    updateAppointment,
+    deleteAppointment,
+    loadAppointments,
   };
 };

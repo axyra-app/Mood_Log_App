@@ -1,9 +1,11 @@
-import { AlertTriangle, LogOut, MessageCircle, Moon, Search, Sun, TrendingUp, Users } from 'lucide-react';
+import { AlertTriangle, Calendar, FileText, LogOut, MessageCircle, Moon, Search, Sun, TrendingUp, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import PsychologistNotifications from '../components/PsychologistNotifications';
+import AppointmentManagement from '../components/psychologist/AppointmentManagement';
 import CrisisAlertsPanel from '../components/psychologist/CrisisAlertsPanel';
+import MedicalHistory from '../components/psychologist/MedicalHistory';
 import MedicalReportsPanel from '../components/psychologist/MedicalReportsPanel';
 import PatientStatsPanel from '../components/psychologist/PatientStatsPanel';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +18,7 @@ const DashboardPsychologist: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeView, setActiveView] = useState<'dashboard' | 'appointments' | 'medical-history' | 'patients' | 'chat'>('dashboard');
 
   // Hook de notificaciones
   const { notifications } = useNotifications();
@@ -28,7 +31,7 @@ const DashboardPsychologist: React.FC = () => {
     getPatientsByRiskLevel,
     getPatientsNeedingAttention,
     getStatistics,
-  } = usePatients();
+  } = usePatients(user?.uid || '');
 
   // Estadísticas reales
   const realStats = getStatistics();
@@ -48,34 +51,39 @@ const DashboardPsychologist: React.FC = () => {
   };
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+    }
     setIsLoaded(true);
   }, []);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
   };
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate('/login');
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('Error during logout:', error);
     }
   };
 
-  const filteredPatients = patients.filter(
-    (patient) =>
-      patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   if (!isLoaded) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500'>
-        <div className='animate-spin rounded-full h-16 w-16 border-b-2 border-white'></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
     );
+  }
+
+  if (!user) {
+    navigate('/login');
+    return null;
   }
 
   return (
@@ -121,221 +129,394 @@ const DashboardPsychologist: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
-        {/* Welcome Section */}
-        <div className='mb-6 sm:mb-8'>
-          <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            ¡Hola, Dr. {user?.displayName || user?.email?.split('@')[0] || 'Psicólogo'}! 👋
-          </h2>
-          <p className={`text-base sm:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Panel de control para gestión de pacientes y seguimiento terapéutico.
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8'>
-          <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
-          >
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Total Pacientes
-                </p>
-                <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientsLoading ? '...' : stats.totalPatients}
-                </p>
-              </div>
-              <Users className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
-            </div>
-          </div>
-
-          <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
-          >
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Pacientes Activos
-                </p>
-                <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientsLoading ? '...' : stats.activePatients}
-                </p>
-              </div>
-              <TrendingUp className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />
-            </div>
-          </div>
-
-          <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
-          >
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Estado de Ánimo Promedio
-                </p>
-                <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientsLoading ? '...' : stats.averageMood ? stats.averageMood.toFixed(1) : '-'}
-                </p>
-              </div>
-              <div className='w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center'>
-                <Logo size='md' />
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
-          >
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Pacientes en Riesgo
-                </p>
-                <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientsLoading ? '...' : stats.riskPatients}
-                </p>
-              </div>
-              <AlertTriangle className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
-            </div>
-          </div>
-        </div>
-
-        {/* Panels Grid */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8'>
-          {/* Crisis Alerts Panel */}
-          <CrisisAlertsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
-
-          {/* Patient Stats Panel */}
-          <PatientStatsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
-
-          {/* Notifications Panel */}
-          <PsychologistNotifications />
-        </div>
-
-        {/* Medical Reports Panel */}
-        <div className='mb-6 sm:mb-8'>
-          <MedicalReportsPanel psychologistId={user?.uid || ''} isDarkMode={isDarkMode} />
-        </div>
-
-        {/* Patients Section */}
-        <div
-          className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
-          } p-4 sm:p-6`}
-        >
-          <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6'>
-            <h3
-              className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-0 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <aside className={`w-64 min-h-screen p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-r ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <nav className="space-y-2">
+            <button
+              onClick={() => setActiveView('dashboard')}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                activeView === 'dashboard'
+                  ? 'bg-purple-600 text-white'
+                  : isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
             >
-              Lista de Pacientes
-            </h3>
+              <TrendingUp className="w-5 h-5" />
+              <span>Dashboard</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveView('appointments')}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                activeView === 'appointments'
+                  ? 'bg-purple-600 text-white'
+                  : isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Calendar className="w-5 h-5" />
+              <span>Citas</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveView('medical-history')}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                activeView === 'medical-history'
+                  ? 'bg-purple-600 text-white'
+                  : isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <FileText className="w-5 h-5" />
+              <span>Historias Médicas</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveView('patients')}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                activeView === 'patients'
+                  ? 'bg-purple-600 text-white'
+                  : isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span>Pacientes</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveView('chat')}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                activeView === 'chat'
+                  ? 'bg-purple-600 text-white'
+                  : isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>Chat</span>
+            </button>
+          </nav>
+        </aside>
 
-            <div className='flex items-center space-x-2 w-full sm:w-auto'>
-              <div className='relative flex-1 sm:flex-none'>
-                <Search
-                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}
-                />
-                <input
-                  type='text'
-                  placeholder='Buscar pacientes...'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border transition-colors ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                />
+        {/* Main Content Area */}
+        <main className="flex-1 p-6">
+          {activeView === 'dashboard' && (
+            <>
+              {/* Welcome Section */}
+              <div className='mb-6 sm:mb-8'>
+                <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  ¡Hola, Dr. {user?.displayName || user?.email?.split('@')[0] || 'Psicólogo'}! 👋
+                </h2>
+                <p className={`text-base sm:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Panel de control para gestión de pacientes y seguimiento terapéutico.
+                </p>
               </div>
-            </div>
-          </div>
 
-          {patientsLoading ? (
-            <div className='flex justify-center items-center py-8'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600'></div>
-            </div>
-          ) : !hasRealData ? (
-            <div className='text-center py-8'>
-              <Users className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-              <h4 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                No tienes pacientes asignados
-              </h4>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Los pacientes aparecerán aquí cuando se registren y te asignen como su psicólogo.
-              </p>
-            </div>
-          ) : (
-            <div className='space-y-3'>
-              {filteredPatients.map((patient) => (
+              {/* Stats Cards */}
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8'>
                 <div
-                  key={patient.id}
-                  className={`p-4 rounded-lg border transition-colors ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+                    isDarkMode ? 'border-gray-700' : 'border-gray-200'
                   }`}
                 >
                   <div className='flex items-center justify-between'>
-                    <div className='flex items-center space-x-3'>
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          patient.riskLevel === 'high'
-                            ? 'bg-red-100 text-red-600'
-                            : patient.riskLevel === 'medium'
-                            ? 'bg-yellow-100 text-yellow-600'
-                            : 'bg-green-100 text-green-600'
-                        }`}
-                      >
-                        <Users className='w-5 h-5' />
-                      </div>
-                      <div>
-                        <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {patient.name || 'Paciente'}
-                        </h4>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{patient.email}</p>
-                      </div>
+                    <div>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Total Pacientes
+                      </p>
+                      <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {patientsLoading ? '...' : stats.totalPatients}
+                      </p>
                     </div>
-                    <div className='flex items-center space-x-2'>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          patient.riskLevel === 'high'
-                            ? 'bg-red-100 text-red-800'
-                            : patient.riskLevel === 'medium'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {patient.riskLevel === 'high'
-                          ? 'Alto Riesgo'
-                          : patient.riskLevel === 'medium'
-                          ? 'Riesgo Medio'
-                          : 'Bajo Riesgo'}
-                      </span>
-                      <button
-                        onClick={() => navigate(`/chat/psychologist/${user?.uid}`)}
-                        className='p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'
-                      >
-                        <MessageCircle className='w-4 h-4' />
-                      </button>
+                    <Users className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
+                  </div>
+                </div>
+
+                <div
+                  className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+                    isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  }`}
+                >
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Pacientes Activos
+                      </p>
+                      <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {patientsLoading ? '...' : stats.activePatients}
+                      </p>
+                    </div>
+                    <TrendingUp className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />
+                  </div>
+                </div>
+
+                <div
+                  className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+                    isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  }`}
+                >
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Estado de Ánimo Promedio
+                      </p>
+                      <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {patientsLoading ? '...' : stats.averageMood > 0 ? stats.averageMood.toFixed(1) : '-'}
+                      </p>
+                    </div>
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-500'}`}>
+                      🧠
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <div
+                  className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4 sm:p-6 rounded-xl shadow-lg border ${
+                    isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  }`}
+                >
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Pacientes en Riesgo
+                      </p>
+                      <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {patientsLoading ? '...' : stats.riskPatients}
+                      </p>
+                    </div>
+                    <AlertTriangle className={`w-6 h-6 sm:w-8 sm:h-8 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Panels */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Patients Panel */}
+                <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} p-6`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Pacientes Recientes
+                  </h3>
+                  {patientsLoading ? (
+                    <div className='flex justify-center items-center py-8'>
+                      <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600'></div>
+                    </div>
+                  ) : !hasRealData ? (
+                    <div className='text-center py-8'>
+                      <Users className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                      <h4 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        No tienes pacientes asignados
+                      </h4>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Los pacientes aparecerán aquí cuando se registren y te asignen como su psicólogo.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className='space-y-3'>
+                      {patients.slice(0, 3).map((patient) => (
+                        <div
+                          key={patient.id}
+                          className={`p-3 rounded-lg border transition-colors ${
+                            isDarkMode
+                              ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                              : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className='flex items-center justify-between'>
+                            <div className='flex items-center space-x-3'>
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  patient.riskLevel === 'high'
+                                    ? 'bg-red-100 text-red-600'
+                                    : patient.riskLevel === 'medium'
+                                    ? 'bg-yellow-100 text-yellow-600'
+                                    : 'bg-green-100 text-green-600'
+                                }`}
+                              >
+                                <Users className='w-4 h-4' />
+                              </div>
+                              <div>
+                                <h4 className={`font-medium text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  {patient.name || 'Paciente'}
+                                </h4>
+                                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  {patient.email}
+                                </p>
+                              </div>
+                            </div>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                patient.riskLevel === 'high'
+                                  ? 'bg-red-100 text-red-800'
+                                  : patient.riskLevel === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {patient.riskLevel === 'high'
+                                ? 'Alto Riesgo'
+                                : patient.riskLevel === 'medium'
+                                ? 'Riesgo Medio'
+                                : 'Bajo Riesgo'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Notifications Panel */}
+                <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} p-6`}>
+                  <PsychologistNotifications />
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeView === 'appointments' && user && (
+            <AppointmentManagement psychologistId={user.uid} />
+          )}
+
+          {activeView === 'medical-history' && user && (
+            <MedicalHistory psychologistId={user.uid} />
+          )}
+
+          {activeView === 'patients' && (
+            <>
+              {/* Patients Management */}
+              <div className="mb-6">
+                <h2 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Gestión de Pacientes
+                </h2>
+                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Administra y supervisa a tus pacientes asignados
+                </p>
+              </div>
+
+              <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} p-6`}>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Lista de Pacientes
+                  </h3>
+                  <div className='flex items-center space-x-2'>
+                    <div className='relative'>
+                      <Search
+                        className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}
+                      />
+                      <input
+                        type='text'
+                        placeholder='Buscar pacientes...'
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`w-64 pl-10 pr-4 py-2 rounded-lg border transition-colors ${
+                          isDarkMode
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {patientsLoading ? (
+                  <div className='flex justify-center items-center py-8'>
+                    <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600'></div>
+                  </div>
+                ) : !hasRealData ? (
+                  <div className='text-center py-8'>
+                    <Users className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                    <h4 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      No tienes pacientes asignados
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Los pacientes aparecerán aquí cuando se registren y te asignen como su psicólogo.
+                    </p>
+                  </div>
+                ) : (
+                  <div className='space-y-3'>
+                    {patients.map((patient) => (
+                      <div
+                        key={patient.id}
+                        className={`p-4 rounded-lg border transition-colors ${
+                          isDarkMode
+                            ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center space-x-3'>
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                patient.riskLevel === 'high'
+                                  ? 'bg-red-100 text-red-600'
+                                  : patient.riskLevel === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-600'
+                                  : 'bg-green-100 text-green-600'
+                              }`}
+                            >
+                              <Users className='w-5 h-5' />
+                            </div>
+                            <div>
+                              <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                {patient.name || 'Paciente'}
+                              </h4>
+                              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{patient.email}</p>
+                            </div>
+                          </div>
+                          <div className='flex items-center space-x-2'>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                patient.riskLevel === 'high'
+                                  ? 'bg-red-100 text-red-800'
+                                  : patient.riskLevel === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {patient.riskLevel === 'high'
+                                ? 'Alto Riesgo'
+                                : patient.riskLevel === 'medium'
+                                ? 'Riesgo Medio'
+                                : 'Bajo Riesgo'}
+                            </span>
+                            <button
+                              onClick={() => navigate(`/chat/psychologist/${user?.uid}`)}
+                              className='p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'
+                            >
+                              <MessageCircle className='w-4 h-4' />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {activeView === 'chat' && (
+            <div className="text-center py-8">
+              <MessageCircle className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+              <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Sistema de Chat
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                El sistema de chat se implementará próximamente
+              </p>
             </div>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
