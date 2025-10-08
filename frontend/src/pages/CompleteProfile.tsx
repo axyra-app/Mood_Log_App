@@ -1,5 +1,6 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,7 +11,7 @@ import { uploadFile } from '../services/firebase';
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
-  const { notifications, showSuccess, showError, removeNotification } = useNotifications();
+  const { notifications, showSuccess, removeNotification } = useNotifications();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -60,7 +61,7 @@ const CompleteProfile: React.FC = () => {
     if (file) {
       // Validar tamaño del archivo (5MB máximo)
       if (file.size > 5 * 1024 * 1024) {
-        showError('Error de archivo', 'El archivo es demasiado grande. Máximo 5MB.');
+        toast.error('El archivo es demasiado grande. Máximo 5MB.');
         return;
       }
       setFormData((prev) => ({ ...prev, cvFile: file }));
@@ -102,7 +103,7 @@ const CompleteProfile: React.FC = () => {
           showSuccess('Archivo subido', 'Tu hoja de vida se ha subido correctamente');
         } catch (uploadError) {
           console.error('Error uploading CV:', uploadError);
-          showError('Error de archivo', 'Error al subir el archivo CV. Inténtalo de nuevo.');
+          toast.error('Error al subir el archivo CV. Inténtalo de nuevo.');
           return;
         } finally {
           setUploadingFile(false);
@@ -129,19 +130,15 @@ const CompleteProfile: React.FC = () => {
 
       await updateUserProfile(updateData);
 
-      showSuccess(
-        '¡Perfil completado!',
-        `Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`
-      );
+      // Mostrar mensaje de éxito
+      toast.success(`¡Perfil completado! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
 
-      // Redirigir según el rol
-      setTimeout(() => {
-        if (formData.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
-      }, 1500);
+      // Redirigir inmediatamente sin delay
+      if (formData.role === 'psychologist') {
+        navigate('/dashboard-psychologist');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       console.error('Profile completion error:', error);
       // Use toast instead of showError to avoid function errors
