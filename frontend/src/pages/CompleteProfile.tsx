@@ -1,16 +1,14 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
-import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
-  const { notifications, showSuccess, showError, removeNotification } = useNotifications();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -99,10 +97,10 @@ const CompleteProfile: React.FC = () => {
         setUploadingFile(true);
         try {
           cvUrl = await uploadFile(formData.cvFile, `psychologists/${user?.email}/cv`);
-          showSuccess('Archivo subido', 'Tu hoja de vida se ha subido correctamente');
+          toast.success('Archivo subido correctamente');
         } catch (uploadError) {
           console.error('Error uploading CV:', uploadError);
-          showError('Error de archivo', 'Error al subir el archivo CV. Inténtalo de nuevo.');
+          toast.error('Error al subir el archivo');
           return;
         } finally {
           setUploadingFile(false);
@@ -161,8 +159,6 @@ const CompleteProfile: React.FC = () => {
 
   return (
     <>
-      <NotificationToast notifications={notifications} onRemove={removeNotification} />
-
       <div
         className={`min-h-screen transition-colors duration-500 ${
           isDarkMode ? 'bg-gray-900' : 'bg-white'
