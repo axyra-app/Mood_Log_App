@@ -2,16 +2,15 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
-import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
-  const { notifications, showSuccess, removeNotification } = useNotifications();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -86,6 +85,19 @@ const CompleteProfile: React.FC = () => {
     return validate(formData, rules);
   };
 
+  // Función para verificar si el email ya existe
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error checking email:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -94,13 +106,23 @@ const CompleteProfile: React.FC = () => {
     try {
       setLoading(true);
 
+      // Verificar si el email ya existe (solo si es diferente al actual)
+      if (user?.email !== formData.email) {
+        const emailExists = await checkEmailExists(formData.email);
+        if (emailExists) {
+          toast.error('Este correo electrónico ya está registrado. Por favor, usa otro correo.');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Subir CV si es psicólogo y tiene archivo
       let cvUrl = '';
       if (formData.role === 'psychologist' && formData.cvFile) {
         setUploadingFile(true);
         try {
           cvUrl = await uploadFile(formData.cvFile, `psychologists/${user?.email}/cv`);
-          showSuccess('Archivo subido', 'Tu hoja de vida se ha subido correctamente');
+          toast.success('Tu hoja de vida se ha subido correctamente');
         } catch (uploadError) {
           console.error('Error uploading CV:', uploadError);
           toast.error('Error al subir el archivo CV. Inténtalo de nuevo.');
@@ -141,8 +163,23 @@ const CompleteProfile: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Profile completion error:', error);
-      // Use toast instead of showError to avoid function errors
-      toast.error(error.message || 'Error al completar el perfil');
+      
+      // Manejar errores específicos
+      let errorMessage = 'Error al completar el perfil';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Este correo electrónico ya está registrado. Por favor, usa otro correo.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'La contraseña es muy débil. Por favor, usa una contraseña más segura.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'El correo electrónico no es válido.';
+      } else if (error.code === 'permission-denied') {
+        errorMessage = 'No tienes permisos para realizar esta acción.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -158,10 +195,7 @@ const CompleteProfile: React.FC = () => {
   }
 
   return (
-    <>
-      <NotificationToast notifications={notifications} onRemove={removeNotification} />
-
-      <div
+    <div
         className={`min-h-screen transition-colors duration-500 ${
           isDarkMode ? 'bg-gray-900' : 'bg-white'
         }`}
@@ -534,7 +568,7 @@ const CompleteProfile: React.FC = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
