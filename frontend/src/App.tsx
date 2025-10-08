@@ -4,6 +4,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
 // Components
+import AdvancedReports from './components/AdvancedReports';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
@@ -121,6 +122,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Journal />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/reports'
+                element={
+                  <ProtectedRoute>
+                    <AdvancedReports />
                   </ProtectedRoute>
                 }
               />

@@ -75,6 +75,13 @@ const DashboardSimple: React.FC = () => {
       action: () => navigate('/chat'),
     },
     {
+      title: 'Reportes Avanzados',
+      description: 'Análisis detallados',
+      icon: '📋',
+      color: 'bg-gradient-to-r from-yellow-500 to-orange-500',
+      action: () => navigate('/reports'),
+    },
+    {
       title: 'Configuración',
       description: 'Personaliza tu experiencia',
       icon: '⚙️',
