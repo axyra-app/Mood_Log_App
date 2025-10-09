@@ -334,7 +334,21 @@ export const checkPsychologistOnlineStatus = async (psychologistUserId: string):
     
     // Considerar "en línea" si la última actividad fue en los últimos 5 minutos
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const lastSeenDate = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+    
+    // Manejo más robusto de la fecha
+    let lastSeenDate: Date;
+    if (lastSeen && typeof lastSeen.toDate === 'function') {
+      lastSeenDate = lastSeen.toDate();
+    } else if (lastSeen instanceof Date) {
+      lastSeenDate = lastSeen;
+    } else if (typeof lastSeen === 'string') {
+      lastSeenDate = new Date(lastSeen);
+    } else if (lastSeen && typeof lastSeen === 'object' && lastSeen.seconds) {
+      // Firebase Timestamp
+      lastSeenDate = new Date(lastSeen.seconds * 1000);
+    } else {
+      return false;
+    }
     
     return lastSeenDate > fiveMinutesAgo;
   } catch (error) {
