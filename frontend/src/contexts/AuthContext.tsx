@@ -364,6 +364,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         { merge: true }
       );
 
+      // Actualizar el estado local del usuario
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+
       // Si es psicólogo, también actualizar en la colección de psicólogos
       if (updates.role === 'psychologist' || user.role === 'psychologist') {
         try {

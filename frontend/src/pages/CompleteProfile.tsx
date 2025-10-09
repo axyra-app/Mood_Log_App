@@ -1,6 +1,6 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useValidation } from '../hooks/useValidation';
@@ -58,7 +58,7 @@ const CompleteProfile: React.FC = () => {
     if (file) {
       // Validar tamaño del archivo (5MB máximo)
       if (file.size > 5 * 1024 * 1024) {
-        showError('Error de archivo', 'El archivo es demasiado grande. Máximo 5MB.');
+        toast.error('El archivo es demasiado grande. Máximo 5MB.');
         return;
       }
       setFormData((prev) => ({ ...prev, cvFile: file }));
@@ -127,10 +127,7 @@ const CompleteProfile: React.FC = () => {
 
       await updateUserProfile(updateData);
 
-      showSuccess(
-        '¡Perfil completado!',
-        `Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`
-      );
+      toast.success(`¡Perfil completado! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
 
       // Redirigir según el rol
       setTimeout(() => {
@@ -142,7 +139,7 @@ const CompleteProfile: React.FC = () => {
       }, 1500);
     } catch (error: any) {
       console.error('Profile completion error:', error);
-      showError('Error', error.message || 'Error al completar el perfil');
+      toast.error(error.message || 'Error al completar el perfil');
     } finally {
       setLoading(false);
     }
@@ -159,11 +156,7 @@ const CompleteProfile: React.FC = () => {
 
   return (
     <>
-      <div
-        className={`min-h-screen transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900' : 'bg-white'
-        }`}
-      >
+      <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         <div className='min-h-screen flex items-center justify-center p-4'>
           <div className='w-full max-w-2xl'>
             <div
