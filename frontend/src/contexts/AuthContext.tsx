@@ -104,9 +104,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
               // Verificar si es un usuario de Google que necesita completar perfil
               const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
-              const needsProfileCompletion = !userData.displayName || !userData.role || isGoogleUser;
               
-              if (needsProfileCompletion) {
+              // Para usuarios de Google, verificar si tienen perfil completo en la base de datos
+              // Un usuario de Google tiene perfil completo si:
+              // 1. No es usuario de Google (usuario normal)
+              // 2. O es usuario de Google pero tiene datos específicos de la app (no solo datos de Google)
+              const hasCompleteProfile = !isGoogleUser || 
+                (isGoogleUser && userData.displayName && userData.displayName !== firebaseUser.email?.split('@')[0] && userData.role);
+              
+              if (!hasCompleteProfile) {
                 // Establecer el usuario con datos básicos para redirigir a completar perfil
                 const basicUserData: User = {
                   uid: firebaseUser.uid,
