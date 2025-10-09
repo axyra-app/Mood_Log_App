@@ -405,12 +405,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
-      // Actualizar el estado local sin recargar
-      setUser((prev) => {
-        const updatedUser = prev ? { ...prev, ...updates } : null;
-        console.log('User profile updated:', updatedUser);
-        return updatedUser;
-      });
+      console.log('User profile updated:', updatedUser);
     } catch (error: any) {
       console.error('Error updating user profile:', error);
       throw new Error(getAuthErrorMessage(error));
