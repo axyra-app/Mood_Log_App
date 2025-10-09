@@ -1,4 +1,5 @@
 import { ChatMessage } from '../types';
+import { generateAIResponse as groqGenerateResponse, analyzeCrisisSignals } from './groqService';
 
 export interface AIResponse {
   message: string;
@@ -32,131 +33,157 @@ export const AI_DOCTORS: Record<string, AIDoctorProfile> = {
   }
 };
 
-// Función para generar respuestas de IA basadas en el contexto
+// Función para generar respuestas de IA usando Groq
 export const generateAIResponse = async (
   userMessage: string,
   chatHistory: ChatMessage[],
   doctorType: 'general' | 'specialist' = 'general'
 ): Promise<AIResponse> => {
   try {
-    // Simular delay de procesamiento
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-
     const doctor = AI_DOCTORS[doctorType];
     
-    // Análisis básico del mensaje del usuario
-    const message = userMessage.toLowerCase();
+    // Detectar urgencia usando Groq
+    const crisisAnalysis = await analyzeCrisisSignals(userMessage);
     
-    // Detectar urgencia primero
+    if (crisisAnalysis.isCrisis && crisisAnalysis.riskLevel === 'high') {
+      return generateUrgentResponse('high');
+    }
+    
+    if (crisisAnalysis.isCrisis && crisisAnalysis.riskLevel === 'medium') {
+      return generateUrgentResponse('medium');
+    }
+
+    // Preparar historial de chat para Groq
+    const groqMessages = [
+      {
+        role: 'user' as const,
+        content: `Soy ${doctor.name}, especialista en ${doctor.specialty}. ${doctor.personality}. Mi estilo de respuesta es ${doctor.responseStyle}. Responde como si fueras este doctor virtual.`
+      },
+      ...chatHistory.slice(-5).map(msg => ({
+        role: (msg.senderId === 'ai' ? 'assistant' : 'user') as const,
+        content: msg.content
+      })),
+      {
+        role: 'user' as const,
+        content: userMessage
+      }
+    ];
+
+    // Generar respuesta usando Groq
+    const groqResponse = await groqGenerateResponse(groqMessages, {
+      isCrisis: crisisAnalysis.isCrisis
+    });
+
+    // Generar sugerencias y preguntas de seguimiento
+    const suggestions = generateSuggestions(userMessage, crisisAnalysis);
+    const followUpQuestions = generateFollowUpQuestions(userMessage, crisisAnalysis);
+
+    return {
+      message: groqResponse.content,
+      suggestions,
+      followUpQuestions
+    };
+
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+    
+    // Fallback a respuestas básicas si Groq falla
     const urgency = detectUrgency(userMessage);
     if (urgency === 'high' || urgency === 'medium') {
       return generateUrgentResponse(urgency);
     }
     
-    // Respuestas contextuales basadas en palabras clave y contexto
-    if (message.includes('ansiedad') || message.includes('ansioso') || message.includes('nervioso')) {
-      return {
-        message: `Entiendo que estás experimentando ansiedad. Como ${doctor.name}, especialista en ${doctor.specialty}, puedo ayudarte con esto. La ansiedad es una respuesta natural del cuerpo, pero cuando es excesiva puede afectar tu bienestar. Te sugiero algunas técnicas que pueden ayudarte:`,
-        suggestions: [
-          'Técnica 4-7-8 de respiración',
-          'Ejercicios de relajación muscular',
-          'Identificar patrones de pensamiento'
-        ],
-        followUpQuestions: [
-          '¿Cuándo comenzó esta sensación de ansiedad?',
-          '¿Hay situaciones específicas que la desencadenen?',
-          '¿Cómo afecta tu día a día?'
-        ]
-      };
-    }
-
-    if (message.includes('depresión') || message.includes('triste') || message.includes('deprimido')) {
-      return {
-        message: `Comprendo que estás pasando por un momento difícil. La depresión es una condición seria que requiere atención profesional. Como ${doctor.name}, quiero ayudarte. ¿Has notado cambios en tu sueño o apetito recientemente?`,
-        suggestions: [
-          'Mantener rutinas diarias',
-          'Actividad física ligera',
-          'Contacto social regular'
-        ],
-        followUpQuestions: [
-          '¿Cuánto tiempo llevas sintiéndote así?',
-          '¿Has perdido interés en actividades que antes disfrutabas?',
-          '¿Tienes pensamientos sobre hacerse daño?'
-        ]
-      };
-    }
-
-    if (message.includes('estrés') || message.includes('estresado') || message.includes('estres') || message.includes('cansancio') || message.includes('cansado') || message.includes('trabajo') || message.includes('torneo') || message.includes('dolor')) {
-      return {
-        message: `Veo que estás experimentando estrés y cansancio, especialmente después de tu torneo de ultimate. Es normal sentirse agotado después de actividad física intensa. Como ${doctor.name}, te recomiendo un enfoque integral para recuperarte:`,
-        suggestions: [
-          'Descanso y recuperación muscular',
-          'Hidratación adecuada',
-          'Técnicas de relajación para el estrés laboral'
-        ],
-        followUpQuestions: [
-          '¿Cuánto tiempo hace del torneo?',
-          '¿Qué tipo de trabajo te causa más estrés?',
-          '¿Tienes tiempo para descansar adecuadamente?'
-        ]
-      };
-    }
-
-    if (message.includes('sueño') || message.includes('dormir') || message.includes('insomnio')) {
-      return {
-        message: `Los problemas de sueño pueden afectar significativamente tu bienestar. Como ${doctor.name}, especialista en ${doctor.specialty}, te ayudo a mejorar tu higiene del sueño. ¿Cuántas horas duermes normalmente?`,
-        suggestions: [
-          'Higiene del sueño',
-          'Rutina antes de dormir',
-          'Evitar pantallas antes de dormir'
-        ],
-        followUpQuestions: [
-          '¿Tienes dificultad para conciliar el sueño?',
-          '¿Te despiertas frecuentemente durante la noche?',
-          '¿Usas dispositivos electrónicos antes de dormir?'
-        ]
-      };
-    }
-
-    if (message.includes('hola') || message.includes('buenos días') || message.includes('buenas tardes')) {
-      return {
-        message: `¡Hola! Soy ${doctor.name}, tu asistente médico virtual especializado en ${doctor.specialty}. Estoy aquí para ayudarte con cualquier consulta sobre tu salud mental y bienestar. ¿En qué puedo asistirte hoy?`,
-        suggestions: [
-          'Consulta sobre síntomas',
-          'Técnicas de relajación',
-          'Información sobre salud mental'
-        ],
-        followUpQuestions: [
-          '¿Cómo te sientes hoy?',
-          '¿Hay algo específico que te preocupa?',
-          '¿Necesitas ayuda con algún síntoma?'
-        ]
-      };
-    }
-
-    // Respuesta por defecto
     return {
-      message: `Gracias por compartir eso conmigo. Como ${doctor.name}, especialista en ${doctor.specialty}, quiero ayudarte de la mejor manera. ¿Podrías darme más detalles sobre lo que estás experimentando?`,
-      suggestions: [
-        'Describir síntomas',
-        'Compartir sentimientos',
-        'Hablar sobre preocupaciones'
-      ],
-      followUpQuestions: [
-        '¿Cuándo comenzó esto?',
-        '¿Cómo te afecta en tu día a día?',
-        '¿Has notado algún patrón?'
-      ]
-    };
-
-  } catch (error) {
-    console.error('Error generating AI response:', error);
-    return {
-      message: 'Disculpa, estoy teniendo dificultades técnicas. Por favor, intenta de nuevo en un momento.',
-      suggestions: ['Reintentar', 'Contactar soporte'],
-      followUpQuestions: ['¿Podrías repetir tu pregunta?']
+      message: `Hola, soy ${AI_DOCTORS[doctorType].name}. Estoy aquí para ayudarte con tu salud mental y bienestar. ¿En qué puedo asistirte hoy?`,
+      suggestions: ['Consulta sobre síntomas', 'Técnicas de relajación', 'Información sobre salud mental'],
+      followUpQuestions: ['¿Cómo te sientes hoy?', '¿Hay algo específico que te preocupa?', '¿Necesitas ayuda con algún síntoma?']
     };
   }
+};
+
+// Funciones auxiliares para generar sugerencias y preguntas
+const generateSuggestions = (message: string, crisisAnalysis: any): string[] => {
+  const lowerMessage = message.toLowerCase();
+  
+  if (crisisAnalysis.isCrisis) {
+    return crisisAnalysis.recommendations || [
+      'Contactar ayuda profesional',
+      'Buscar apoyo inmediato',
+      'Ir a urgencias si es necesario'
+    ];
+  }
+  
+  if (lowerMessage.includes('ansiedad') || lowerMessage.includes('nervioso')) {
+    return [
+      'Técnica 4-7-8 de respiración',
+      'Ejercicios de relajación muscular',
+      'Identificar patrones de pensamiento'
+    ];
+  }
+  
+  if (lowerMessage.includes('depresión') || lowerMessage.includes('triste')) {
+    return [
+      'Mantener rutinas diarias',
+      'Actividad física ligera',
+      'Contacto social regular'
+    ];
+  }
+  
+  if (lowerMessage.includes('estrés') || lowerMessage.includes('cansancio')) {
+    return [
+      'Técnicas de relajación',
+      'Gestión del tiempo',
+      'Actividades de ocio'
+    ];
+  }
+  
+  return [
+    'Describir síntomas',
+    'Compartir sentimientos',
+    'Hablar sobre preocupaciones'
+  ];
+};
+
+const generateFollowUpQuestions = (message: string, crisisAnalysis: any): string[] => {
+  const lowerMessage = message.toLowerCase();
+  
+  if (crisisAnalysis.isCrisis) {
+    return [
+      '¿Tienes alguien cerca que pueda ayudarte?',
+      '¿Puedes ir a un lugar seguro?',
+      '¿Necesitas que te ayude a contactar a alguien?'
+    ];
+  }
+  
+  if (lowerMessage.includes('ansiedad') || lowerMessage.includes('nervioso')) {
+    return [
+      '¿Cuándo comenzó esta sensación de ansiedad?',
+      '¿Hay situaciones específicas que la desencadenen?',
+      '¿Cómo afecta tu día a día?'
+    ];
+  }
+  
+  if (lowerMessage.includes('depresión') || lowerMessage.includes('triste')) {
+    return [
+      '¿Cuánto tiempo llevas sintiéndote así?',
+      '¿Has perdido interés en actividades que antes disfrutabas?',
+      '¿Has notado cambios en tu sueño o apetito?'
+    ];
+  }
+  
+  if (lowerMessage.includes('estrés') || lowerMessage.includes('cansancio')) {
+    return [
+      '¿Qué tipo de situaciones te causan más estrés?',
+      '¿Tienes tiempo para descansar adecuadamente?',
+      '¿Cómo manejas normalmente el estrés?'
+    ];
+  }
+  
+  return [
+    '¿Cuándo comenzó esto?',
+    '¿Cómo te afecta en tu día a día?',
+    '¿Has notado algún patrón?'
+  ];
 };
 
 // Función para detectar urgencia en el mensaje
