@@ -1,4 +1,4 @@
-import Groq from 'groq-sdk';
+import { Groq } from 'groq-sdk';
 
 // Configuración de Groq
 const groq = new Groq({
@@ -30,6 +30,11 @@ export const generateAIResponse = async (
   }
 ): Promise<GroqChatResponse> => {
   try {
+    // Verificar si la API key está disponible
+    if (!import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROQ_API_KEY === 'demo-key') {
+      throw new Error('Groq API key not configured');
+    }
+
     // Preparar el prompt del sistema
     const systemPrompt = `Eres un asistente de salud mental especializado en apoyo emocional. Tu objetivo es:
 
