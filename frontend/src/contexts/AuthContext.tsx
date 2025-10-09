@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // 1. No es usuario de Google (usuario normal)
               // 2. O es usuario de Google pero tiene datos específicos de la app (no solo datos de Google)
               const hasCompleteProfile = !isGoogleUser || 
-                (isGoogleUser && userData.displayName && userData.displayName !== firebaseUser.email?.split('@')[0] && userData.role);
+                (isGoogleUser && userData.displayName && userData.displayName !== firebaseUser.email?.split('@')[0] && userData.role && userData.role !== 'user');
               
               if (!hasCompleteProfile) {
                 // Establecer el usuario con datos básicos para redirigir a completar perfil
