@@ -26,7 +26,7 @@ const LoginSimple: React.FC = () => {
       setShowAlreadyLoggedIn(true);
 
       // Verificar si el usuario necesita completar su perfil
-      const hasCompleteProfile = user.username && user.displayName && user.role;
+      const hasCompleteProfile = !!(user.username && user.displayName && user.role);
       
       // Solo redirigir a completar perfil si NO tiene perfil completo
       const needsProfileCompletion = !hasCompleteProfile;
