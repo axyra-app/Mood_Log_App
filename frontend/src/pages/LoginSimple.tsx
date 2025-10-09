@@ -27,7 +27,12 @@ const LoginSimple: React.FC = () => {
 
       // Verificar si el usuario necesita completar su perfil
       const isGoogleUser = user.email && user.username === user.email.split('@')[0];
-      const hasCompleteProfile = !!(user.username && user.displayName && user.role && !isGoogleUser);
+      
+      // Para usuarios de Google, SIEMPRE necesitan completar perfil inicialmente
+      // Solo tienen perfil completo si han pasado por el formulario de CompleteProfile
+      const hasCompleteProfile = isGoogleUser 
+        ? false // Usuarios de Google siempre necesitan completar perfil inicialmente
+        : !!(user.username && user.displayName && user.role);
       
       // Solo redirigir a completar perfil si NO tiene perfil completo
       const needsProfileCompletion = !hasCompleteProfile;
@@ -38,7 +43,10 @@ const LoginSimple: React.FC = () => {
         isGoogleUser,
         username: user.username,
         displayName: user.displayName,
-        role: user.role
+        role: user.role,
+        email: user.email,
+        displayNameFromEmail: user.email?.split('@')[0],
+        isDisplayNameFromEmail: user.displayName === user.email?.split('@')[0]
       });
 
       if (needsProfileCompletion) {
