@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
 import PsychologistNotifications from '../components/PsychologistNotifications';
 import AppointmentManagement from '../components/AppointmentManagement';
+import Logo from '../components/Logo';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
@@ -76,9 +77,7 @@ const DashboardPsychologist: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ML</span>
-              </div>
+              <Logo className="h-8" />
               <div>
                 <h1 className={`text-xl font-bold transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
