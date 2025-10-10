@@ -1,61 +1,42 @@
 import React, { useState } from 'react';
-import { Bell, Calendar, MessageCircle, AlertTriangle, X, Check, CheckCheck } from 'lucide-react';
-import { usePsychologistNotifications } from '../hooks/useNotifications';
+import { Bell, Calendar, X, Check } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { usePsychologistAppointments } from '../hooks/usePsychologistAppointments';
 
 interface PsychologistNotificationsProps {
   isDarkMode: boolean;
 }
 
 const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ isDarkMode }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Obtener citas pendientes como notificaciones
   const {
-    notifications,
+    getPendingAppointments,
+    updateAppointmentStatus,
     loading,
-    markAsRead,
-    markAllAsRead,
-    getUnreadCount,
-  } = usePsychologistNotifications(''); // Se pasará el ID del psicólogo desde el dashboard
+  } = usePsychologistAppointments(user?.uid || '');
 
-  const formatTime = (timestamp: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+  const pendingAppointments = getPendingAppointments();
 
-    if (minutes < 1) return 'Ahora';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    return `${days}d`;
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'appointment':
-        return <Calendar className="w-5 h-5 text-blue-500" />;
-      case 'message':
-        return <MessageCircle className="w-5 h-5 text-green-500" />;
-      case 'crisis':
-        return <AlertTriangle className="w-5 h-5 text-red-500" />;
-      default:
-        return <Bell className="w-5 h-5 text-gray-500" />;
+  const handleAcceptAppointment = async (appointmentId: string) => {
+    try {
+      await updateAppointmentStatus(appointmentId, 'accepted');
+    } catch (error) {
+      console.error('Error accepting appointment:', error);
     }
   };
 
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'appointment':
-        return 'border-l-blue-500 bg-blue-50';
-      case 'message':
-        return 'border-l-green-500 bg-green-50';
-      case 'crisis':
-        return 'border-l-red-500 bg-red-50';
-      default:
-        return 'border-l-gray-500 bg-gray-50';
+  const handleRejectAppointment = async (appointmentId: string) => {
+    try {
+      await updateAppointmentStatus(appointmentId, 'rejected');
+    } catch (error) {
+      console.error('Error rejecting appointment:', error);
     }
   };
 
-  const unreadCount = getUnreadCount();
+  const unreadCount = pendingAppointments.length;
 
   return (
     <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
@@ -81,14 +62,19 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
         <div className="flex items-center space-x-2">
           {unreadCount > 0 && (
             <button
-              onClick={markAllAsRead}
+              onClick={() => {
+                // Aceptar todas las citas pendientes
+                pendingAppointments.forEach(appointment => {
+                  handleAcceptAppointment(appointment.id);
+                });
+              }}
               className={`px-3 py-1 text-xs rounded-lg transition-colors duration-300 ${
                 isDarkMode
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Marcar todas como leídas
+              Aceptar todas
             </button>
           )}
           
@@ -105,7 +91,40 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
         </div>
       </div>
 
-      {isOpen && (
+      {/* Contenido principal */}
+      {!isOpen ? (
+        <div className="text-center py-4">
+          {loading ? (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+          ) : unreadCount === 0 ? (
+            <>
+              <p className={`text-sm transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                No hay citas pendientes
+              </p>
+              <p className={`text-xs transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+              }`}>
+                Haz clic en la campana para ver todas las notificaciones
+              </p>
+            </>
+          ) : (
+            <>
+              <p className={`text-sm transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                {unreadCount} cita{unreadCount !== 1 ? 's' : ''} pendiente{unreadCount !== 1 ? 's' : ''}
+              </p>
+              <p className={`text-xs transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+              }`}>
+                Haz clic en la campana para gestionar
+              </p>
+            </>
+          )}
+        </div>
+      ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {loading ? (
             <div className="text-center py-4">
@@ -113,10 +132,10 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
               <p className={`text-sm transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                Cargando notificaciones...
+                Cargando citas...
               </p>
             </div>
-          ) : notifications.length === 0 ? (
+          ) : pendingAppointments.length === 0 ? (
             <div className="text-center py-8">
               <Bell className={`w-12 h-12 mx-auto mb-4 transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-600' : 'text-gray-400'
@@ -124,85 +143,64 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
               <p className={`text-sm transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                No hay notificaciones nuevas
+                No hay citas pendientes
+              </p>
+              <p className={`text-xs transition-colors duration-500 ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+              }`}>
+                Las citas aparecerán aquí cuando los pacientes las soliciten
               </p>
             </div>
           ) : (
-            notifications.map((notification) => (
+            pendingAppointments.map((appointment) => (
               <div
-                key={notification.id}
+                key={appointment.id}
                 className={`p-4 rounded-lg border-l-4 transition-colors duration-500 ${
-                  isDarkMode
-                    ? 'bg-gray-700 border-gray-600'
-                    : getNotificationColor(notification.type)
-                } ${!notification.isRead ? 'opacity-100' : 'opacity-60'}`}
+                  isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-500'
+                }`}
               >
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className={`text-sm font-medium transition-colors duration-500 ${
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-3">
+                    <Calendar className="w-5 h-5 text-blue-500 mt-1" />
+                    <div className="flex-1">
+                      <h4 className={`font-medium transition-colors duration-500 ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
-                        {notification.title}
+                        Nueva cita solicitada
                       </h4>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-xs transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          {formatTime(notification.createdAt)}
-                        </span>
-                        {!notification.isRead && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="p-1 rounded-full hover:bg-gray-200 transition-colors duration-300"
-                          >
-                            <Check className="w-3 h-3 text-gray-500" />
-                          </button>
-                        )}
-                      </div>
+                      <p className={`text-sm transition-colors duration-500 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        <strong>{appointment.userName}</strong> solicitó una cita
+                      </p>
+                      <p className={`text-xs transition-colors duration-500 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        {appointment.appointmentDate?.toLocaleDateString()} - {appointment.reason}
+                      </p>
                     </div>
-                    
-                    <p className={`text-sm mt-1 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
-                      {notification.message}
-                    </p>
-                    
-                    {notification.type === 'crisis' && (
-                      <div className="mt-2">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <AlertTriangle className="w-3 h-3 mr-1" />
-                          Urgente
-                        </span>
-                      </div>
-                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleAcceptAppointment(appointment.id)}
+                      className="p-1 text-green-600 hover:bg-green-100 rounded"
+                      title="Aceptar cita"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleRejectAppointment(appointment.id)}
+                      className="p-1 text-red-600 hover:bg-red-100 rounded"
+                      title="Rechazar cita"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
             ))
           )}
-        </div>
-      )}
-
-      {!isOpen && (
-        <div className="text-center py-4">
-          <p className={`text-sm transition-colors duration-500 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            {unreadCount > 0 
-              ? `Tienes ${unreadCount} notificación${unreadCount !== 1 ? 'es' : ''} nueva${unreadCount !== 1 ? 's' : ''}`
-              : 'No hay notificaciones nuevas'
-            }
-          </p>
-          <p className={`text-xs transition-colors duration-500 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-500'
-          }`}>
-            Haz clic en la campana para ver todas las notificaciones
-          </p>
         </div>
       )}
     </div>
