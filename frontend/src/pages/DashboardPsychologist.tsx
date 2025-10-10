@@ -9,7 +9,7 @@ import PsychologistNotifications from '../components/PsychologistNotifications';
 import PsychologistRegistrationTest from '../components/PsychologistRegistrationTest';
 import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
-import { updateExistingChatSessions } from '../utils/updateChatSessions';
+import { createPatientRelationsFromAppointments } from '../utils/createPatientRelations';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
@@ -42,6 +42,9 @@ const DashboardPsychologist: React.FC = () => {
 
     // Actualizar sesiones de chat existentes (deshabilitado temporalmente)
     // updateExistingChatSessions().catch(console.error);
+    
+    // Crear relaciones paciente-psicólogo desde citas existentes
+    createPatientRelationsFromAppointments().catch(console.error);
   }, []);
 
   const toggleDarkMode = () => {

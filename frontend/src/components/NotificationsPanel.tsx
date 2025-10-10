@@ -1,5 +1,6 @@
 import { Bell, Calendar, Check, FileText, MessageCircle } from 'lucide-react';
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 
@@ -9,6 +10,7 @@ interface NotificationsPanelProps {
 
 const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useNotifications(
     user?.uid || '',
@@ -59,6 +61,48 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
 
     const diffInDays = Math.floor(diffInHours / 24);
     return `Hace ${diffInDays}d`;
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    // Marcar como leída
+    markAsRead(notification.id);
+    
+    // Cerrar el panel
+    setIsOpen(false);
+    
+    // Navegar según el tipo de notificación
+    switch (notification.type) {
+      case 'chat_message':
+        if (user?.role === 'psychologist') {
+          navigate('/psychologist-chat');
+        } else {
+          navigate('/user-chat');
+        }
+        break;
+      case 'appointment_request':
+      case 'appointment_accepted':
+      case 'appointment_rejected':
+        if (user?.role === 'psychologist') {
+          navigate('/dashboard-psychologist');
+        } else {
+          navigate('/dashboard');
+        }
+        break;
+      case 'medical_report':
+        if (user?.role === 'psychologist') {
+          navigate('/dashboard-psychologist');
+        } else {
+          navigate('/dashboard');
+        }
+        break;
+      default:
+        // Navegar al dashboard por defecto
+        if (user?.role === 'psychologist') {
+          navigate('/dashboard-psychologist');
+        } else {
+          navigate('/dashboard');
+        }
+    }
   };
 
   return (
@@ -126,7 +170,8 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer ${
                         !notification.isRead ? (isDarkMode ? 'bg-gray-700/50' : 'bg-blue-50') : ''
                       }`}
                     >

@@ -220,6 +220,12 @@ service cloud.firestore {
       allow read: if request.auth != null && 
         exists(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)) &&
         request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)).data.participants;
+      
+      // Permitir leer mensajes si el usuario es psicólogo y tiene relación con el paciente
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/psychologists/$(request.auth.uid)) &&
+        exists(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)).data.participants;
     }
     
     // ========================================
