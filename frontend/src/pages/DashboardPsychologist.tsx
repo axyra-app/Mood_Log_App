@@ -106,6 +106,18 @@ const DashboardPsychologist: React.FC = () => {
               </button>
               
               <button
+                onClick={() => navigate('/settings')}
+                className={`p-2 rounded-lg transition-colors duration-300 ${
+                  isDarkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title="Configuración"
+              >
+                ⚙️
+              </button>
+              
+              <button
                 onClick={handleLogout}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-300 ${
                   isDarkMode
