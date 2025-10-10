@@ -1,5 +1,5 @@
 import { collection, doc, getDocs, query, updateDoc } from 'firebase/firestore';
-import { db } from './services/firebase';
+import { db } from '../services/firebase';
 
 // Script para actualizar sesiones existentes
 export const updateExistingChatSessions = async () => {
