@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
+import PsychologistNotifications from '../components/PsychologistNotifications';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
@@ -213,25 +214,8 @@ const DashboardPsychologist: React.FC = () => {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Notifications */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg">💬</span>
-              </div>
-              <h3 className={`text-xl font-semibold transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                Notificaciones
-              </h3>
-            </div>
-            <p className={`transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              Las notificaciones de nuevas citas aparecerán aquí
-            </p>
-          </div>
+              {/* Notifications Panel */}
+              <PsychologistNotifications isDarkMode={isDarkMode} />
 
           {/* Chat */}
           <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${

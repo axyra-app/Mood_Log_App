@@ -1,176 +1,189 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Notification, notificationService } from '../services/notificationService';
+import { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
-interface UseNotificationsReturn {
-  notifications: Notification[];
-  unreadCount: number;
-  loading: boolean;
-  error: string | null;
-  markAsRead: (notificationId: string) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  handleNotificationAction: (notificationId: string, actionId: string) => Promise<void>;
-  createMoodCheckReminder: () => Promise<void>;
-  createAchievementNotification: (achievement: any) => Promise<void>;
-  stats: {
-    total: number;
-    unread: number;
-    byType: Record<string, number>;
-    byPriority: Record<string, number>;
-  } | null;
+export interface Notification {
+  id: string;
+  userId: string;
+  type: 'appointment' | 'message' | 'crisis' | 'system';
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: Date;
+  data?: any;
 }
 
-export const useNotifications = (userId: string): UseNotificationsReturn => {
+export const useNotifications = (userId: string) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<UseNotificationsReturn['stats']>(null);
 
-  // Cargar notificaciones
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-    const unsubscribeNotifications = notificationService.subscribeToNotifications(
-      userId,
-      (newNotifications) => {
-        setNotifications(newNotifications);
-        setLoading(false);
-        setError(null);
-      },
-      50
+    const notificationsQuery = query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      where('isRead', '==', false)
     );
 
-    const unsubscribeUnread = notificationService.subscribeToUnreadNotifications(userId, (count) => {
-      setUnreadCount(count);
-    });
-
-    // Cargar estadísticas
-    notificationService
-      .getNotificationStats(userId)
-      .then(setStats)
-      .catch((err) => {
-        console.error('Error loading notification stats:', err);
-        setError('Error al cargar estadísticas de notificaciones');
-      });
-
-    return () => {
-      unsubscribeNotifications();
-      unsubscribeUnread();
-    };
-  }, [userId]);
-
-  // Marcar como leída
-  const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      await notificationService.markAsRead(notificationId);
-    } catch (err) {
-      console.error('Error marking notification as read:', err);
-      setError('Error al marcar notificación como leída');
-    }
-  }, []);
-
-  // Marcar todas como leídas
-  const markAllAsRead = useCallback(async () => {
-    try {
-      await notificationService.markAllAsRead(userId);
-    } catch (err) {
-      console.error('Error marking all notifications as read:', err);
-      setError('Error al marcar todas las notificaciones como leídas');
-    }
-  }, [userId]);
-
-  // Manejar acciones de notificación
-  const handleNotificationAction = useCallback(
-    async (notificationId: string, actionId: string) => {
-      try {
-        const notification = notifications.find((n) => n.id === notificationId);
-        if (!notification) return;
-
-        const action = notification.actions?.find((a) => a.id === actionId);
-        if (!action) return;
-
-        // Marcar como leída primero
-        await markAsRead(notificationId);
-
-        // Manejar diferentes acciones
-        switch (action.action) {
-          case 'log_mood':
-            // Redirigir al mood logging
-            window.location.href = '/mood-flow';
-            break;
-          case 'contact_psychologist':
-            // Abrir chat con psicólogo
-            window.location.href = '/chat';
-            break;
-          case 'emergency_contact':
-            // Mostrar contactos de emergencia
-            alert('Contactos de emergencia:\n\nLínea Nacional de Prevención del Suicidio: 988\nCruz Roja: 065');
-            break;
-          case 'join_appointment':
-            // Unirse a cita
-            window.location.href = '/appointments';
-            break;
-          case 'view_achievement':
-            // Ver logro
-            console.log('Viewing achievement:', notification.data);
-            break;
-          case 'view_recommendation':
-            // Ver recomendación
-            console.log('Viewing recommendation:', notification.data);
-            break;
-          case 'dismiss':
-            // Descartar notificación
-            break;
-          case 'remind_later':
-            // Programar recordatorio para más tarde
-            const laterTime = new Date();
-            laterTime.setHours(laterTime.getHours() + 2);
-            await notificationService.createMoodCheckReminder(userId, laterTime);
-            break;
-          default:
-            console.log('Unknown action:', action.action);
+    const unsubscribe = onSnapshot(notificationsQuery,
+      (snapshot) => {
+        try {
+          const notificationsData: Notification[] = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              userId: data.userId,
+              type: data.type,
+              title: data.title,
+              message: data.message,
+              isRead: data.isRead,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+              data: data.data,
+            };
+          });
+          
+          setNotifications(notificationsData);
+          setError(null);
+        } catch (err) {
+          console.error('Error fetching notifications:', err);
+          setError('Error al cargar las notificaciones');
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('Error handling notification action:', err);
-        setError('Error al procesar acción de notificación');
+      },
+      (err) => {
+        console.error('Error in notifications listener:', err);
+        setError('Error en la conexión de notificaciones');
+        setLoading(false);
       }
-    },
-    [notifications, userId, markAsRead]
-  );
+    );
 
-  // Crear recordatorio de mood check
-  const createMoodCheckReminder = useCallback(async () => {
-    try {
-      await notificationService.createMoodCheckReminder(userId);
-    } catch (err) {
-      console.error('Error creating mood check reminder:', err);
-      setError('Error al crear recordatorio');
-    }
+    return () => unsubscribe();
   }, [userId]);
 
-  // Crear notificación de logro
-  const createAchievementNotification = useCallback(
-    async (achievement: any) => {
-      try {
-        await notificationService.createAchievementNotification(userId, achievement);
-      } catch (err) {
-        console.error('Error creating achievement notification:', err);
-        setError('Error al crear notificación de logro');
-      }
-    },
-    [userId]
-  );
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const notificationRef = doc(db, 'notifications', notificationId);
+      await updateDoc(notificationRef, {
+        isRead: true,
+        readAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const promises = notifications.map(notification => 
+        markAsRead(notification.id)
+      );
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const createNotification = async (
+    userId: string,
+    type: Notification['type'],
+    title: string,
+    message: string,
+    data?: any
+  ) => {
+    try {
+      const notificationData = {
+        userId,
+        type,
+        title,
+        message,
+        isRead: false,
+        createdAt: serverTimestamp(),
+        data: data || null,
+      };
+
+      const docRef = await addDoc(collection(db, 'notifications'), notificationData);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw error;
+    }
+  };
+
+  const getUnreadCount = () => {
+    return notifications.filter(n => !n.isRead).length;
+  };
 
   return {
     notifications,
-    unreadCount,
     loading,
     error,
     markAsRead,
     markAllAsRead,
-    handleNotificationAction,
-    createMoodCheckReminder,
-    createAchievementNotification,
-    stats,
+    createNotification,
+    getUnreadCount,
+  };
+};
+
+// Hook específico para notificaciones de psicólogos
+export const usePsychologistNotifications = (psychologistId: string) => {
+  const { notifications, loading, error, markAsRead, markAllAsRead, createNotification, getUnreadCount } = useNotifications(psychologistId);
+
+  const createAppointmentNotification = async (
+    userId: string,
+    appointmentData: any
+  ) => {
+    return createNotification(
+      psychologistId,
+      'appointment',
+      'Nueva Cita Solicitada',
+      `El usuario ${appointmentData.userName} ha solicitado una cita para ${appointmentData.date}`,
+      appointmentData
+    );
+  };
+
+  const createCrisisNotification = async (
+    userId: string,
+    crisisData: any
+  ) => {
+    return createNotification(
+      psychologistId,
+      'crisis',
+      'Alerta de Crisis',
+      `El usuario ${crisisData.userName} muestra señales de crisis`,
+      crisisData
+    );
+  };
+
+  const createMessageNotification = async (
+    userId: string,
+    messageData: any
+  ) => {
+    return createNotification(
+      psychologistId,
+      'message',
+      'Nuevo Mensaje',
+      `Mensaje de ${messageData.userName}`,
+      messageData
+    );
+  };
+
+  return {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    createNotification,
+    getUnreadCount,
+    createAppointmentNotification,
+    createCrisisNotification,
+    createMessageNotification,
   };
 };
