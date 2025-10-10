@@ -166,8 +166,9 @@ const UserChat: React.FC = () => {
                     ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
+                title={showChatOnMobile ? 'Mostrar conversaciones' : 'Mostrar chat'}
               >
-                <Menu className='w-5 h-5' />
+                {showChatOnMobile ? <Menu className='w-5 h-5' /> : <MessageCircle className='w-5 h-5' />}
               </button>
 
               <button
@@ -191,12 +192,12 @@ const UserChat: React.FC = () => {
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
           }`}
         >
-          <div className='flex h-[600px]'>
+          <div className='flex flex-col lg:flex-row h-[calc(100vh-200px)] lg:h-[600px]'>
             {/* Sessions List - Responsive */}
             <div
               className={`w-full lg:w-1/3 border-r transition-colors duration-500 ${
                 isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              } ${showChatOnMobile ? 'hidden lg:block' : 'block'}`}
+              } ${showChatOnMobile ? 'hidden lg:block' : 'block lg:block'}`}
             >
               <div
                 className={`p-4 border-b transition-colors duration-500 ${
@@ -239,7 +240,7 @@ const UserChat: React.FC = () => {
                 </div>
               </div>
 
-              <div className='overflow-y-auto h-full'>
+              <div className='overflow-y-auto h-[300px] lg:h-full'>
                 {sessionsLoading ? (
                   <div className='p-4 text-center'>
                     <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500 mx-auto mb-2'></div>

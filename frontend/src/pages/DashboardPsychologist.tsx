@@ -40,8 +40,8 @@ const DashboardPsychologist: React.FC = () => {
     }
     setIsLoaded(true);
 
-    // Actualizar sesiones de chat existentes
-    updateExistingChatSessions().catch(console.error);
+    // Actualizar sesiones de chat existentes (deshabilitado temporalmente)
+    // updateExistingChatSessions().catch(console.error);
   }, []);
 
   const toggleDarkMode = () => {

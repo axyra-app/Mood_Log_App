@@ -208,14 +208,18 @@ service cloud.firestore {
     // REGLAS PARA MENSAJES DE CHAT (COLECCIÓN PRINCIPAL)
     // ========================================
     match /chatMessages/{messageId} {
-      // Los participantes de la sesión pueden leer/escribir mensajes
+      // Permitir leer/escribir si el usuario es el remitente
       allow read, write: if request.auth != null && 
-        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)).data.participants;
+        request.auth.uid == resource.data.senderId;
       
       // Permitir crear nuevos mensajes
       allow create: if request.auth != null && 
-        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(request.resource.data.sessionId)).data.participants &&
         request.auth.uid == request.resource.data.senderId;
+      
+      // Permitir leer mensajes si el usuario es participante de la sesión
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)).data.participants;
     }
     
     // ========================================
