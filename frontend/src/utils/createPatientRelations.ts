@@ -1,5 +1,5 @@
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
-import { db } from './services/firebase';
+import { db } from '../services/firebase';
 
 // Script para crear relaciones paciente-psicólogo automáticamente
 export const createPatientRelationsFromAppointments = async () => {
