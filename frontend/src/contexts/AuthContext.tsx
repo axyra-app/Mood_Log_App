@@ -76,13 +76,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
+        console.log('🔍 Checking for Google Auth redirect result...');
         const result = await getRedirectResult(auth);
         if (result) {
-          console.log('Google Auth redirect result:', result);
+          console.log('✅ Google Auth redirect result:', result);
+          console.log('✅ User authenticated:', result.user.email);
           // El usuario se autenticó exitosamente, la lógica se maneja en onAuthStateChanged
+        } else {
+          console.log('❌ No Google Auth redirect result found');
         }
       } catch (error) {
-        console.error('Error handling redirect result:', error);
+        console.error('❌ Error handling redirect result:', error);
       }
     };
 
@@ -93,10 +97,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let isMounted = true;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      console.log('🔍 onAuthStateChanged triggered:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user');
       if (!isMounted) return;
 
       try {
         if (firebaseUser) {
+          console.log('🔍 Processing authenticated user:', firebaseUser.email);
           try {
             // Intentar cargar el perfil del usuario desde Firestore
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));

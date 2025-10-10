@@ -38,12 +38,17 @@ const RegisterSimple: React.FC = () => {
 
   // Redirigir usuarios autenticados
   useEffect(() => {
+    console.log('🔍 RegisterSimple useEffect triggered, user:', user ? `User: ${user.email}` : 'No user');
     if (user) {
       // Solo redirigir si estamos en la página de registro
       const currentPath = window.location.pathname;
+      console.log('🔍 Current path:', currentPath);
       if (currentPath !== '/register') {
+        console.log('❌ Not on /register, skipping redirect');
         return; // No redirigir si ya estamos en otra página
       }
+
+      console.log('✅ User is authenticated and on /register, checking profile...');
 
       // Verificar si el usuario necesita completar su perfil
       const isGoogleUser = user.email && user.username === user.email.split('@')[0];
