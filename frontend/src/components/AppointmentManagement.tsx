@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Clock, User, Check, X, Eye, Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { usePsychologistAppointments } from '../hooks/usePsychologistAppointments';
 
 interface AppointmentManagementProps {
   isDarkMode: boolean;
@@ -23,10 +24,19 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
     notes: '',
   });
 
-  // Datos temporales hasta que se arreglen los hooks
-  const appointments: any[] = [];
-  const pendingAppointments: any[] = [];
-  const upcomingAppointments: any[] = [];
+  // Hook para obtener citas reales del psicólogo
+  const {
+    appointments,
+    loading: appointmentsLoading,
+    updateAppointmentStatus,
+    getPendingAppointments,
+    getUpcomingAppointments,
+    getStatistics,
+  } = usePsychologistAppointments(user?.uid || '');
+
+  const stats = getStatistics();
+  const pendingAppointments = getPendingAppointments();
+  const upcomingAppointments = getUpcomingAppointments();
 
   const handleNewAppointment = () => {
     setShowNewAppointment(true);
@@ -57,8 +67,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
   const handleAcceptAppointment = async (appointmentId: string) => {
     try {
       setLoading(true);
-      // Simular actualización
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateAppointmentStatus(appointmentId, 'accepted', notes);
       toast.success('Cita aceptada');
       setShowDetails(false);
       setNotes('');
@@ -73,8 +82,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
   const handleRejectAppointment = async (appointmentId: string) => {
     try {
       setLoading(true);
-      // Simular actualización
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateAppointmentStatus(appointmentId, 'rejected', notes);
       toast.success('Cita rechazada');
       setShowDetails(false);
       setNotes('');
