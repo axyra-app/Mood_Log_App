@@ -623,6 +623,37 @@ ${avgMood < 5 ? '• Considera agendar una cita con un psicólogo\n' : ''}• Co
               </div>
             </div>
 
+            {/* Nueva sección de Análisis de Diario */}
+            <div className='bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-sm border border-purple-200 p-6'>
+              <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
+                  <Brain className='w-5 h-5 text-purple-600' />
+                  Análisis de Diario con IA
+                </h3>
+                <button
+                  onClick={generateAIAnalysis}
+                  className='px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors flex items-center gap-2'
+                >
+                  <Brain className='w-4 h-4' />
+                  Generar Análisis IA
+                </button>
+              </div>
+              
+              {journalAnalysis.aiAnalysis ? (
+                <div className='bg-white rounded-lg p-4 border border-purple-200'>
+                  <pre className='whitespace-pre-wrap text-sm text-gray-700 font-mono'>
+                    {journalAnalysis.aiAnalysis}
+                  </pre>
+                </div>
+              ) : (
+                <div className='text-center py-8 text-gray-500'>
+                  <div className='text-4xl mb-2'>🤖</div>
+                  <p className='font-medium'>Análisis Inteligente de tu Bienestar</p>
+                  <p className='text-sm'>Haz clic en "Generar Análisis IA" para obtener insights personalizados</p>
+                </div>
+              )}
+            </div>
+
             <div className='bg-white rounded-2xl shadow-sm border border-gray-200 p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Emociones Frecuentes</h3>
               <div className='space-y-3'>

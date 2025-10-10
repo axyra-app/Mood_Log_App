@@ -207,7 +207,15 @@ const AdvancedReports: React.FC = () => {
         <div className='mb-8'>
           <div className='flex items-center gap-4 mb-4'>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                navigate('/dashboard');
+                // Fallback si navigate no funciona
+                setTimeout(() => {
+                  if (window.location.pathname !== '/dashboard') {
+                    window.location.href = '/dashboard';
+                  }
+                }, 100);
+              }}
               className='flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors'
             >
               <ArrowLeft className='w-5 h-5' />
