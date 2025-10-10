@@ -37,64 +37,86 @@ const Statistics: React.FC = () => {
   const { user } = useAuth();
   const { statistics, loading, getMoodTrend, getAverageMood, getMoodStreak } = useMood();
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
-  const [incomeData, setIncomeData] = useState({
-    daily: 0,
-    weekly: 0,
-    monthly: 0,
-    categories: [
-      { name: 'Salario', amount: 0, percentage: 0 },
-      { name: 'Freelance', amount: 0, percentage: 0 },
-      { name: 'Inversiones', amount: 0, percentage: 0 },
-      { name: 'Otros', amount: 0, percentage: 0 },
+  const [journalAnalysis, setJournalAnalysis] = useState({
+    totalEntries: 0,
+    averageMood: 0,
+    moodTrends: {
+      improving: 0,
+      declining: 0,
+      stable: 0,
+    },
+    commonThemes: [
+      { theme: 'Trabajo', frequency: 0, sentiment: 'neutral' },
+      { theme: 'Relaciones', frequency: 0, sentiment: 'positive' },
+      { theme: 'Salud', frequency: 0, sentiment: 'neutral' },
+      { theme: 'Familia', frequency: 0, sentiment: 'positive' },
     ],
-    trends: {
-      daily: 'stable',
-      weekly: 'stable',
-      monthly: 'stable',
+    emotionalPatterns: {
+      mostPositiveDay: '',
+      mostChallengingDay: '',
+      weeklyPattern: 'stable',
     },
     aiAnalysis: '',
   });
 
-  // Función para actualizar datos de ingresos
-  const updateIncomeData = (type: 'daily' | 'weekly' | 'monthly', amount: number) => {
-    setIncomeData(prev => ({
-      ...prev,
-      [type]: amount,
-    }));
-  };
+  // Función para analizar entradas del diario
+  const analyzeJournalEntries = async (entries: any[]) => {
+    const themes = {
+      'Trabajo': 0,
+      'Relaciones': 0,
+      'Salud': 0,
+      'Familia': 0,
+    };
 
-  // Función para actualizar categorías de ingresos
-  const updateIncomeCategory = (categoryName: string, amount: number) => {
-    setIncomeData(prev => {
-      const total = prev.categories.reduce((sum, cat) => sum + cat.amount, 0) - 
-                   prev.categories.find(cat => cat.name === categoryName)?.amount + amount;
+    let totalMood = 0;
+    let positiveEntries = 0;
+    let negativeEntries = 0;
+
+    entries.forEach(entry => {
+      const content = entry.content?.toLowerCase() || '';
+      const mood = entry.mood || 5;
       
-      const updatedCategories = prev.categories.map(cat => 
-        cat.name === categoryName 
-          ? { ...cat, amount, percentage: total > 0 ? (amount / total) * 100 : 0 }
-          : { ...cat, percentage: total > 0 ? (cat.amount / total) * 100 : 0 }
-      );
+      totalMood += mood;
+      if (mood >= 7) positiveEntries++;
+      if (mood <= 4) negativeEntries++;
       
-      return {
-        ...prev,
-        categories: updatedCategories,
-      };
+      if (content.includes('trabajo') || content.includes('oficina') || content.includes('jefe')) {
+        themes['Trabajo']++;
+      }
+      if (content.includes('amigo') || content.includes('pareja') || content.includes('relación')) {
+        themes['Relaciones']++;
+      }
+      if (content.includes('salud') || content.includes('ejercicio') || content.includes('doctor')) {
+        themes['Salud']++;
+      }
+      if (content.includes('familia') || content.includes('mamá') || content.includes('papá')) {
+        themes['Familia']++;
+      }
     });
+
+    return {
+      totalEntries: entries.length,
+      averageMood: entries.length > 0 ? totalMood / entries.length : 0,
+      positiveEntries,
+      negativeEntries,
+      themes,
+    };
   };
 
-  // Función para generar análisis con IA
+  // Función para generar análisis con IA del diario y estado de ánimo
   const generateAIAnalysis = async () => {
     try {
       const analysisData = {
-        incomeData: incomeData,
         moodData: statistics,
+        averageMood: getAverageMood(30),
+        streak: getMoodStreak(),
+        trend: getMoodTrend(),
         timeRange: timeRange,
       };
 
-      // Simular llamada a IA (aquí integrarías con OpenAI o similar)
       const aiResponse = await simulateAIAnalysis(analysisData);
       
-      setIncomeData(prev => ({
+      setJournalAnalysis(prev => ({
         ...prev,
         aiAnalysis: aiResponse,
       }));
@@ -105,32 +127,42 @@ const Statistics: React.FC = () => {
 
   // Función simulada para análisis con IA
   const simulateAIAnalysis = async (data: any) => {
-    // Simular delay de IA
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const totalIncome = data.incomeData.daily + data.incomeData.weekly + data.incomeData.monthly;
-    const avgMood = data.moodData?.averageMood || 7;
+    const avgMood = data.averageMood || 7;
+    const streak = data.streak || 0;
+    const trend = data.trend || 'stable';
     
-    return `Análisis de Ingresos y Bienestar:
+    return `🧠 Análisis Emocional Personalizado con IA
 
-📊 RESUMEN FINANCIERO:
-• Ingresos totales registrados: $${totalIncome.toLocaleString()}
-• Distribución por categorías: ${data.incomeData.categories.map(cat => `${cat.name}: ${cat.percentage.toFixed(1)}%`).join(', ')}
+📊 ESTADO EMOCIONAL ACTUAL:
+• Promedio de estado de ánimo: ${avgMood.toFixed(1)}/10
+• Racha actual: ${streak} días consecutivos registrados
+• Tendencia: ${trend === 'improving' ? '📈 Mejorando' : trend === 'declining' ? '📉 Necesita atención' : '➡️ Estable'}
 
-🧠 CORRELACIÓN CON BIENESTAR:
-• Estado de ánimo promedio: ${avgMood}/10
-• Patrón observado: ${avgMood > 7 ? 'Ingresos estables correlacionan con mejor estado de ánimo' : 'Recomendamos revisar estrategias de ingresos'}
+💡 PATRONES IDENTIFICADOS:
+${avgMood >= 7 ? 
+  '• Mantienes un estado de ánimo positivo y estable\n• Tus estrategias de autocuidado están funcionando bien\n• Continúa con tus rutinas actuales' : 
+  avgMood >= 5 ? 
+  '• Tu estado de ánimo es moderado con algunos altibajos\n• Podrías beneficiarte de actividades más estructuradas\n• Considera establecer rutinas de bienestar' :
+  '• Se detectan patrones que requieren atención\n• Recomendamos buscar apoyo profesional\n• Prioriza actividades que te generen bienestar'}
 
-💡 RECOMENDACIONES:
-• Diversificar fuentes de ingresos para mayor estabilidad
-• Establecer metas financieras específicas
-• Monitorear impacto de ingresos en bienestar emocional
-• Considerar inversiones a largo plazo
+🎯 RECOMENDACIONES PERSONALIZADAS:
+1. ${avgMood >= 7 ? 'Mantén tus hábitos positivos actuales' : 'Establece pequeñas metas diarias alcanzables'}
+2. ${streak > 7 ? '¡Excelente constancia! Sigue así' : 'Intenta registrar tu estado de ánimo diariamente'}
+3. Dedica 15 minutos al día para reflexión en tu diario
+4. ${trend === 'improving' ? 'Identifica qué está funcionando y repítelo' : 'Explora nuevas actividades de bienestar'}
 
-🎯 PRÓXIMOS PASOS:
-1. Registrar ingresos diariamente para mejor análisis
-2. Establecer presupuesto mensual
-3. Revisar correlación entre ingresos y estado de ánimo semanalmente`;
+📝 ANÁLISIS DEL DIARIO:
+• Escribe sobre tus experiencias diarias para mejor autoconocimiento
+• Identifica patrones entre actividades y estado de ánimo
+• Usa el diario como herramienta de procesamiento emocional
+
+🌟 PRÓXIMOS PASOS:
+${avgMood < 5 ? '• Considera agendar una cita con un psicólogo\n' : ''}• Continúa registrando tu estado de ánimo
+• Reflexiona sobre momentos positivos del día
+• Establece una rutina de autocuidado
+• Celebra tus pequeños logros diarios`;
   };
 
   const getTrendIcon = (trend: string) => {
