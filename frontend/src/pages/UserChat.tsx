@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { useChatSessions, useChatMessages } from '../hooks/useChat';
+import { useUserChatSessions, useUserChatMessages } from '../hooks/useUserChat';
 
 const UserChat: React.FC = () => {
   const { user } = useAuth();
@@ -14,8 +14,8 @@ const UserChat: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [availablePsychologists, setAvailablePsychologists] = useState<any[]>([]);
 
-  const { sessions, loading: sessionsLoading, markAsRead, createSession } = useChatSessions(user?.uid || '');
-  const { messages, loading: messagesLoading, sendMessage } = useChatMessages(selectedSession);
+  const { sessions, loading: sessionsLoading, markAsRead, createSession } = useUserChatSessions(user?.uid || '');
+  const { messages, loading: messagesLoading, sendMessage } = useUserChatMessages(selectedSession);
 
   // Filtrar sesiones donde el usuario actual es el usuario
   const mySessions = sessions.filter(session => session.userId === user?.uid);

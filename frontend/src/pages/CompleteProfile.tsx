@@ -1,6 +1,8 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useValidation } from '../hooks/useValidation';
@@ -133,6 +135,34 @@ const CompleteProfile: React.FC = () => {
       }
 
       await updateUserProfile(updateData);
+
+      // Si es psicólogo, crear documento en la colección psychologists
+      if (formData.role === 'psychologist' && user) {
+        try {
+          const psychologistData = {
+            userId: user.uid,
+            displayName: formData.displayName,
+            email: user.email,
+            professionalTitle: formData.professionalTitle,
+            specialization: formData.specialization,
+            yearsOfExperience: parseInt(formData.yearsOfExperience),
+            bio: formData.bio,
+            licenseNumber: formData.licenseNumber,
+            phone: formData.phone,
+            cvUrl: cvUrl,
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+
+          await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
+          console.log('Psychologist document created successfully');
+        } catch (error) {
+          console.error('Error creating psychologist document:', error);
+          toast.error('Error al crear el perfil de psicólogo');
+          return;
+        }
+      }
 
       toast.success(`¡Perfil completado! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
 
