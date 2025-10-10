@@ -133,10 +133,18 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         request.auth.uid == request.resource.data.senderId &&
         isValidMessage(request.resource.data);
+      
+      // Permitir respuestas de IA
+      allow create: if request.auth != null && 
+        request.resource.data.senderId == 'ai-assistant';
+      
+      // Los participantes de la sesión pueden leer/escribir mensajes
+      allow read, write: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)).data.participants;
     }
     
     // ========================================
-    // REGLAS PARA NOTIFICACIONES
+    // REGLAS PARA NOTIFICACIONES (ACTUALIZADA)
     // ========================================
     match /notifications/{notificationId} {
       // El usuario destinatario puede leer/escribir sus notificaciones
@@ -151,10 +159,16 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         (request.auth.uid == request.resource.data.userId ||
          request.auth.uid == request.resource.data.psychologistId);
+      
+      // Permitir actualizar solo el estado de lectura
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || 
+         request.auth.uid == resource.data.psychologistId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
     }
     
     // ========================================
-    // REGLAS PARA SESIONES DE CHAT
+    // REGLAS PARA SESIONES DE CHAT (ACTUALIZADA)
     // ========================================
     match /chatSessions/{sessionId} {
       // El usuario puede leer/escribir sus propias sesiones de chat
@@ -165,10 +179,43 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.psychologistId;
       
+      // Permitir acceso si el usuario está en el array de participantes
+      allow read, write: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
+      
       // Permitir crear nuevas sesiones
       allow create: if request.auth != null && 
         (request.auth.uid == request.resource.data.userId ||
-         request.auth.uid == request.resource.data.psychologistId);
+         request.auth.uid == request.resource.data.psychologistId ||
+         request.auth.uid in request.resource.data.participants);
+    }
+    
+    // ========================================
+    // REGLAS PARA MENSAJES DE CHAT (SUBCONJUNTO)
+    // ========================================
+    match /chatSessions/{sessionId}/messages/{messageId} {
+      // Los participantes de la sesión pueden leer/escribir mensajes
+      allow read, write: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.participants;
+      
+      // Permitir crear nuevos mensajes
+      allow create: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.participants &&
+        request.auth.uid == request.resource.data.senderId;
+    }
+    
+    // ========================================
+    // REGLAS PARA MENSAJES DE CHAT (COLECCIÓN PRINCIPAL)
+    // ========================================
+    match /chatMessages/{messageId} {
+      // Los participantes de la sesión pueden leer/escribir mensajes
+      allow read, write: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(resource.data.sessionId)).data.participants;
+      
+      // Permitir crear nuevos mensajes
+      allow create: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(request.resource.data.sessionId)).data.participants &&
+        request.auth.uid == request.resource.data.senderId;
     }
     
     // ========================================
@@ -303,7 +350,7 @@ service cloud.firestore {
     }
     
     // ========================================
-    // REGLAS PARA INFORMES MÉDICOS
+    // REGLAS PARA INFORMES MÉDICOS (ACTUALIZADA)
     // ========================================
     match /medicalReports/{reportId} {
       // Solo el psicólogo puede leer/escribir informes médicos
@@ -312,7 +359,7 @@ service cloud.firestore {
       
       // El paciente puede leer sus propios informes médicos
       allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
+        request.auth.uid == resource.data.userId;
       
       // Los psicólogos pueden crear informes médicos
       allow create: if request.auth != null && 
@@ -396,6 +443,50 @@ service cloud.firestore {
     }
     
     // ========================================
+    // REGLAS PARA REPORTES AVANZADOS
+    // ========================================
+    match /advancedReports/{reportId} {
+      // El usuario puede leer/escribir sus propios reportes
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Permitir crear nuevos reportes
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidReport(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA INDICADORES DE TECLEO
+    // ========================================
+    match /typing/{typingId} {
+      // Cualquier usuario autenticado puede leer/escribir indicadores de tecleo
+      allow read, write: if request.auth != null;
+      
+      // Permitir crear indicadores de tecleo
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidTypingIndicator(request.resource.data);
+    }
+    
+    // ========================================
+    // REGLAS PARA CALIFICACIONES DE PSICÓLOGOS
+    // ========================================
+    match /psychologistRatings/{ratingId} {
+      // Cualquier usuario autenticado puede leer calificaciones
+      allow read: if request.auth != null;
+      
+      // Solo el usuario puede crear su propia calificación
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidRating(request.resource.data);
+      
+      // Solo el usuario puede actualizar su propia calificación
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // ========================================
     // FUNCIONES DE VALIDACIÓN
     // ========================================
     
@@ -425,28 +516,27 @@ service cloud.firestore {
     
     // Validar cita
     function isValidAppointment(data) {
-      return data.keys().hasAll(['userId', 'appointmentDate']) &&
+      return data.keys().hasAll(['userId', 'psychologistId', 'appointmentDate']) &&
              data.userId is string && data.userId.size() > 0 &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
              data.appointmentDate is timestamp;
     }
     
     // Validar mensaje
     function isValidMessage(data) {
-      return data.keys().hasAll(['senderId', 'receiverId', 'content', 'timestamp']) &&
+      return data.keys().hasAll(['senderId', 'content', 'timestamp']) &&
              data.senderId is string && data.senderId.size() > 0 &&
-             data.receiverId is string && data.receiverId.size() > 0 &&
              data.content is string && data.content.size() > 0 &&
              data.timestamp is timestamp;
     }
     
     // Validar informe médico
     function isValidMedicalReport(data) {
-      return data.keys().hasAll(['patientId', 'psychologistId', 'reportType', 'title', 'content']) &&
-             data.patientId is string && data.patientId.size() > 0 &&
+      return data.keys().hasAll(['userId', 'psychologistId', 'sessionDate', 'sessionType']) &&
+             data.userId is string && data.userId.size() > 0 &&
              data.psychologistId is string && data.psychologistId.size() > 0 &&
-             data.reportType in ['initial', 'progress', 'discharge', 'emergency'] &&
-             data.title is string && data.title.size() > 0 &&
-             data.content is string && data.content.size() > 0;
+             data.sessionType in ['individual', 'group', 'emergency', 'follow-up'] &&
+             data.sessionDate is string && data.sessionDate.size() > 0;
     }
     
     // Validar historial del paciente
@@ -463,6 +553,32 @@ service cloud.firestore {
              data.psychologistId is string && data.psychologistId.size() > 0 &&
              data.urgency in ['low', 'medium', 'high', 'critical'] &&
              data.signals is list && data.signals.size() > 0;
+    }
+    
+    // Validar reporte avanzado
+    function isValidReport(data) {
+      return data.keys().hasAll(['userId', 'reportType', 'title', 'content', 'riskLevel']) &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.reportType in ['mood_analysis', 'chat_analysis', 'crisis_assessment', 'weekly_summary', 'monthly_summary'] &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0 &&
+             data.riskLevel in ['low', 'medium', 'high'];
+    }
+    
+    // Validar indicador de tecleo
+    function isValidTypingIndicator(data) {
+      return data.keys().hasAll(['chatId', 'userId', 'timestamp']) &&
+             data.chatId is string && data.chatId.size() > 0 &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.timestamp is timestamp;
+    }
+    
+    // Validar calificación
+    function isValidRating(data) {
+      return data.keys().hasAll(['psychologistId', 'userId', 'rating']) &&
+             data.psychologistId is string && data.psychologistId.size() > 0 &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5;
     }
   }
 }

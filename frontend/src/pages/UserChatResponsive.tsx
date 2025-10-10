@@ -339,7 +339,7 @@ const UserChat: React.FC = () => {
                               {session.lastMessageAt ? formatTime(session.lastMessageAt) : ''}
                             </p>
                             {session.unreadCount > 0 && (
-                              <span className='inline-flex items-center justify-center mt-1 bg-red-500 text-white text-xs rounded-full h-5 w-5'>
+                              <span className='inline-block mt-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
                                 {session.unreadCount}
                               </span>
                             )}

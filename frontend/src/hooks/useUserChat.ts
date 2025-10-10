@@ -1,6 +1,20 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, onSnapshot, doc, setDoc, updateDoc, serverTimestamp, limit } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
+import { createChatNotification } from './useNotifications';
 
 export interface UserChatSession {
   id: string;
@@ -45,22 +59,24 @@ export const useUserChatSessions = (userId: string) => {
       orderBy('updatedAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(sessionsQuery, 
+    const unsubscribe = onSnapshot(
+      sessionsQuery,
       async (snapshot) => {
         try {
           const sessionsData = await Promise.all(
             snapshot.docs.map(async (doc) => {
               const data = doc.data();
-              
+
               // Obtener información del psicólogo
               const psychologistQuery = query(
                 collection(db, 'psychologists'),
-                where('__name__', '==', data.psychologistId),
+                where('userId', '==', data.psychologistId),
                 limit(1)
               );
               const psychologistSnapshot = await getDocs(psychologistQuery);
-              const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
-              
+              const psychologistData = psychologistSnapshot.empty ? null : psychologistSnapshot.docs[0].data();
+              const psychologistName = psychologistData?.displayName || psychologistData?.name || 'Psicólogo';
+
               return {
                 id: doc.id,
                 userId: data.userId,
@@ -77,7 +93,7 @@ export const useUserChatSessions = (userId: string) => {
               };
             })
           );
-          
+
           setSessions(sessionsData);
           setError(null);
         } catch (err) {
@@ -101,7 +117,7 @@ export const useUserChatSessions = (userId: string) => {
     try {
       await updateDoc(doc(db, 'chatSessions', sessionId), {
         unreadCount: 0,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error('Error marking session as read:', error);
@@ -117,28 +133,23 @@ export const useUserChatSessions = (userId: string) => {
         where('psychologistId', '==', psychologistId)
       );
       const existingSnapshot = await getDocs(existingQuery);
-      
+
       if (!existingSnapshot.empty) {
         return existingSnapshot.docs[0].id;
       }
 
       // Obtener información del psicólogo
-      const psychologistQuery = query(
-        collection(db, 'psychologists'),
-        where('__name__', '==', psychologistId),
-        limit(1)
-      );
-      const psychologistSnapshot = await getDocs(psychologistQuery);
-      const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
+      const psychologistDoc = doc(db, 'psychologists', psychologistId);
+      const psychologistSnapshot = await getDoc(psychologistDoc);
+      const psychologistData = psychologistSnapshot.exists() ? psychologistSnapshot.data() : null;
+      const psychologistName = psychologistData?.displayName || psychologistData?.name || 'Psicólogo';
 
       // Obtener información del usuario
-      const userQuery = query(
-        collection(db, 'users'),
-        where('__name__', '==', userId),
-        limit(1)
-      );
-      const userSnapshot = await getDocs(userQuery);
-      const userData = userSnapshot.empty ? { displayName: 'Usuario', email: 'usuario@ejemplo.com' } : userSnapshot.docs[0].data();
+      const userDoc = doc(db, 'users', userId);
+      const userSnapshot = await getDoc(userDoc);
+      const userData = userSnapshot.exists()
+        ? userSnapshot.data()
+        : { displayName: 'Usuario', email: 'usuario@ejemplo.com' };
 
       // Crear nueva sesión
       const sessionData = {
@@ -147,15 +158,17 @@ export const useUserChatSessions = (userId: string) => {
         userEmail: userData.email || 'usuario@ejemplo.com',
         psychologistId,
         psychologistName: psychologistName,
+        participants: [userId, psychologistId], // Campo requerido por las reglas
         lastMessage: '',
         lastMessageAt: null,
         unreadCount: 0,
         isActive: true,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       };
 
-      const sessionRef = await setDoc(doc(collection(db, 'chatSessions')), sessionData);
+      const sessionRef = doc(collection(db, 'chatSessions'));
+      await setDoc(sessionRef, sessionData);
       return sessionRef.id;
     } catch (error) {
       console.error('Error creating session:', error);
@@ -168,7 +181,7 @@ export const useUserChatSessions = (userId: string) => {
     loading,
     error,
     markAsRead,
-    createSession
+    createSession,
   };
 };
 
@@ -185,15 +198,16 @@ export const useUserChatMessages = (sessionId: string | null) => {
 
     setLoading(true);
     const messagesQuery = query(
-      collection(db, 'messages'),
+      collection(db, 'chatMessages'),
       where('sessionId', '==', sessionId),
       orderBy('timestamp', 'asc')
     );
 
-    const unsubscribe = onSnapshot(messagesQuery,
+    const unsubscribe = onSnapshot(
+      messagesQuery,
       (snapshot) => {
         try {
-          const messagesData = snapshot.docs.map(doc => {
+          const messagesData = snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
               id: doc.id,
@@ -203,10 +217,10 @@ export const useUserChatMessages = (sessionId: string | null) => {
               content: data.content,
               timestamp: data.timestamp?.toDate(),
               isRead: data.isRead,
-              messageType: data.messageType || 'text'
+              messageType: data.messageType || 'text',
             };
           });
-          
+
           setMessages(messagesData);
           setError(null);
         } catch (err) {
@@ -235,17 +249,29 @@ export const useUserChatMessages = (sessionId: string | null) => {
         content,
         timestamp: serverTimestamp(),
         isRead: false,
-        messageType: 'text'
+        messageType: 'text',
       };
 
-      await setDoc(doc(collection(db, 'messages')), messageData);
+      await setDoc(doc(collection(db, 'chatMessages')), messageData);
 
       // Actualizar la sesión con el último mensaje
       await updateDoc(doc(db, 'chatSessions', sessionId), {
         lastMessage: content,
         lastMessageAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
+
+      // Crear notificación para el psicólogo
+      try {
+        const sessionDoc = await getDoc(doc(db, 'chatSessions', sessionId));
+        if (sessionDoc.exists()) {
+          const sessionData = sessionDoc.data();
+          await createChatNotification(sessionData.psychologistId, senderId, senderName, content);
+        }
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        // No lanzar error aquí para no interrumpir el envío del mensaje
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
@@ -256,6 +282,6 @@ export const useUserChatMessages = (sessionId: string | null) => {
     messages,
     loading,
     error,
-    sendMessage
+    sendMessage,
   };
 };

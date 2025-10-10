@@ -1,6 +1,19 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, onSnapshot, doc, setDoc, updateDoc, serverTimestamp, limit } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
+import { createPsychologistChatNotification } from './useNotifications';
 
 export interface ChatSession {
   id: string;
@@ -45,25 +58,22 @@ export const useChatSessions = (psychologistId: string) => {
       orderBy('updatedAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(sessionsQuery, 
+    const unsubscribe = onSnapshot(
+      sessionsQuery,
       async (snapshot) => {
         try {
           const sessionsData: ChatSession[] = [];
-          
+
           for (const docSnapshot of snapshot.docs) {
             const data = docSnapshot.data();
-            
+
             // Obtener información del usuario
-            const userQuery = query(
-              collection(db, 'users'),
-              where('__name__', '==', data.userId),
-              limit(1)
-            );
-            const userSnapshot = await getDocs(userQuery);
-            
-            if (!userSnapshot.empty) {
-              const userData = userSnapshot.docs[0].data();
-              
+            const userDoc = doc(db, 'users', data.userId);
+            const userSnapshot = await getDoc(userDoc);
+
+            if (userSnapshot.exists()) {
+              const userData = userSnapshot.data();
+
               sessionsData.push({
                 id: docSnapshot.id,
                 userId: data.userId,
@@ -80,7 +90,7 @@ export const useChatSessions = (psychologistId: string) => {
               });
             }
           }
-          
+
           setSessions(sessionsData);
           setError(null);
         } catch (err) {
@@ -109,25 +119,23 @@ export const useChatSessions = (psychologistId: string) => {
         where('psychologistId', '==', psychologistId)
       );
       const existingSnapshot = await getDocs(existingQuery);
-      
+
       if (!existingSnapshot.empty) {
         return existingSnapshot.docs[0].id;
       }
 
       // Obtener información del psicólogo
-      const psychologistQuery = query(
-        collection(db, 'psychologists'),
-        where('__name__', '==', psychologistId),
-        limit(1)
-      );
-      const psychologistSnapshot = await getDocs(psychologistQuery);
-      const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
+      const psychologistDoc = doc(db, 'psychologists', psychologistId);
+      const psychologistSnapshot = await getDoc(psychologistDoc);
+      const psychologistData = psychologistSnapshot.exists() ? psychologistSnapshot.data() : null;
+      const psychologistName = psychologistData?.displayName || psychologistData?.name || 'Psicólogo';
 
       // Crear nueva sesión
       const sessionData = {
         userId,
         psychologistId,
         psychologistName,
+        participants: [userId, psychologistId], // Campo requerido por las reglas
         lastMessage: '',
         lastMessageAt: serverTimestamp(),
         unreadCount: 0,
@@ -138,7 +146,7 @@ export const useChatSessions = (psychologistId: string) => {
 
       const sessionRef = doc(collection(db, 'chatSessions'));
       await setDoc(sessionRef, sessionData);
-      
+
       return sessionRef.id;
     } catch (error) {
       console.error('Error creating chat session:', error);
@@ -185,10 +193,11 @@ export const useChatMessages = (sessionId: string | null) => {
       orderBy('timestamp', 'asc')
     );
 
-    const unsubscribe = onSnapshot(messagesQuery,
+    const unsubscribe = onSnapshot(
+      messagesQuery,
       (snapshot) => {
         try {
-          const messagesData: ChatMessage[] = snapshot.docs.map(doc => {
+          const messagesData: ChatMessage[] = snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
               id: doc.id,
@@ -201,7 +210,7 @@ export const useChatMessages = (sessionId: string | null) => {
               messageType: data.messageType || 'text',
             };
           });
-          
+
           setMessages(messagesData);
           setError(null);
         } catch (err) {
@@ -243,6 +252,18 @@ export const useChatMessages = (sessionId: string | null) => {
         lastMessageAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      // Crear notificación para el usuario
+      try {
+        const sessionDoc = await getDoc(sessionRef);
+        if (sessionDoc.exists()) {
+          const sessionData = sessionDoc.data();
+          await createPsychologistChatNotification(sessionData.userId, senderId, senderName, content);
+        }
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        // No lanzar error aquí para no interrumpir el envío del mensaje
+      }
 
       return messageRef.id;
     } catch (error) {

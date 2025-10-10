@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AppointmentManagement from '../components/AppointmentManagement';
+import Logo from '../components/Logo';
+import MedicalHistory from '../components/MedicalHistory';
+import NotificationsPanel from '../components/NotificationsPanel';
+import PsychologistCV from '../components/PsychologistCV';
+import PsychologistNotifications from '../components/PsychologistNotifications';
+import PsychologistRegistrationTest from '../components/PsychologistRegistrationTest';
 import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
-import PsychologistNotifications from '../components/PsychologistNotifications';
-import AppointmentManagement from '../components/AppointmentManagement';
-import MedicalHistory from '../components/MedicalHistory';
-import Logo from '../components/Logo';
+import { updateExistingChatSessions } from '../utils/updateChatSessions';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
@@ -35,6 +39,9 @@ const DashboardPsychologist: React.FC = () => {
       setIsDarkMode(true);
     }
     setIsLoaded(true);
+
+    // Actualizar sesiones de chat existentes
+    updateExistingChatSessions().catch(console.error);
   }, []);
 
   const toggleDarkMode = () => {
@@ -54,10 +61,12 @@ const DashboardPsychologist: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-900' : 'bg-white'
-      }`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div
+        className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
+          isDarkMode ? 'bg-gray-900' : 'bg-white'
+        }`}
+      >
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500'></div>
       </div>
     );
   }
@@ -68,32 +77,37 @@ const DashboardPsychologist: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${
-      isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
-    }`}>
+    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <header className={`border-b transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Logo className="h-8" />
+      <header
+        className={`border-b transition-colors duration-500 ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}
+      >
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex justify-between items-center h-16'>
+            <div className='flex items-center space-x-4'>
+              <Logo className='h-8' />
               <div>
-                <h1 className={`text-xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <h1
+                  className={`text-xl font-bold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   Dashboard Psicólogo
                 </h1>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
+                <p
+                  className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                >
                   Bienvenido, {user.displayName}
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-4">
+
+            <div className='flex items-center space-x-4'>
+              {/* Notificaciones */}
+              <NotificationsPanel isDarkMode={isDarkMode} />
+
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors duration-300 ${
@@ -104,7 +118,7 @@ const DashboardPsychologist: React.FC = () => {
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
-              
+
               <button
                 onClick={() => navigate('/settings')}
                 className={`p-2 rounded-lg transition-colors duration-300 ${
@@ -112,11 +126,11 @@ const DashboardPsychologist: React.FC = () => {
                     ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
-                title="Configuración"
+                title='Configuración'
               >
                 ⚙️
               </button>
-              
+
               <button
                 onClick={handleLogout}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-300 ${
@@ -132,91 +146,115 @@ const DashboardPsychologist: React.FC = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <span className="text-blue-600 text-xl">👥</span>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+          <div
+            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border`}
+          >
+            <div className='flex items-center'>
+              <div className='p-3 bg-blue-100 rounded-lg'>
+                <span className='text-blue-600 text-xl'>👥</span>
               </div>
-              <div className="ml-4">
-                <p className={`text-sm font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
+              <div className='ml-4'>
+                <p
+                  className={`text-sm font-medium transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
                   Total Pacientes
                 </p>
-                <p className={`text-2xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <p
+                  className={`text-2xl font-bold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   {patientsLoading ? '...' : stats.totalPatients}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <span className="text-green-600 text-xl">📈</span>
+          <div
+            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border`}
+          >
+            <div className='flex items-center'>
+              <div className='p-3 bg-green-100 rounded-lg'>
+                <span className='text-green-600 text-xl'>📈</span>
               </div>
-              <div className="ml-4">
-                <p className={`text-sm font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
+              <div className='ml-4'>
+                <p
+                  className={`text-sm font-medium transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
                   Pacientes Activos
                 </p>
-                <p className={`text-2xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <p
+                  className={`text-2xl font-bold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   {patientsLoading ? '...' : stats.activePatients}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <span className="text-yellow-600 text-xl">⚠️</span>
+          <div
+            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border`}
+          >
+            <div className='flex items-center'>
+              <div className='p-3 bg-yellow-100 rounded-lg'>
+                <span className='text-yellow-600 text-xl'>⚠️</span>
               </div>
-              <div className="ml-4">
-                <p className={`text-sm font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
+              <div className='ml-4'>
+                <p
+                  className={`text-sm font-medium transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
                   En Riesgo
                 </p>
-                <p className={`text-2xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <p
+                  className={`text-2xl font-bold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   {patientsLoading ? '...' : stats.riskPatients}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <span className="text-purple-600 text-xl">😊</span>
+          <div
+            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border`}
+          >
+            <div className='flex items-center'>
+              <div className='p-3 bg-purple-100 rounded-lg'>
+                <span className='text-purple-600 text-xl'>😊</span>
               </div>
-              <div className="ml-4">
-                <p className={`text-sm font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
+              <div className='ml-4'>
+                <p
+                  className={`text-sm font-medium transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
                   Estado Promedio
                 </p>
-                <p className={`text-2xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <p
+                  className={`text-2xl font-bold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
                   {patientsLoading ? '...' : stats.averageMood.toFixed(1)}
                 </p>
               </div>
@@ -225,36 +263,38 @@ const DashboardPsychologist: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
           {/* Notifications */}
-              {/* Notifications Panel */}
-              <PsychologistNotifications isDarkMode={isDarkMode} />
+          {/* Notifications Panel */}
+          <PsychologistNotifications isDarkMode={isDarkMode} />
 
           {/* Chat */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-lg">💬</span>
+          <div
+            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border`}
+          >
+            <div className='flex items-center justify-between mb-4'>
+              <div className='flex items-center space-x-3'>
+                <div className='w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
+                  <span className='text-white text-lg'>💬</span>
                 </div>
-                <h3 className={`text-xl font-semibold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
-                }`}>
+                <h3
+                  className={`text-xl font-semibold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}
+                >
                   Chat con Pacientes
                 </h3>
               </div>
               <button
                 onClick={() => navigate('/psychologist-chat')}
-                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                className='px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300'
               >
                 Abrir Chat
               </button>
             </div>
-            <p className={`transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <p className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Sistema de chat en tiempo real con tus pacientes
             </p>
           </div>
@@ -267,85 +307,222 @@ const DashboardPsychologist: React.FC = () => {
           <MedicalHistory isDarkMode={isDarkMode} />
         </div>
 
-        {/* Patients Section */}
-        <div className={`mt-8 p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        } border`}>
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg">👥</span>
-            </div>
-            <h2 className={`text-xl font-semibold transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              Mis Pacientes
-            </h2>
-          </div>
+        {/* Test Component - Temporal */}
+        <div className='mt-8'>
+          <PsychologistRegistrationTest />
+        </div>
 
-          <div className="text-center py-8">
-            <span className="text-6xl mb-4 block">👥</span>
-            {patientsLoading ? (
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-4"></div>
-                <p className={`text-lg transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Cargando pacientes...
+        {/* CV Component */}
+        <div className='mt-8'>
+          <PsychologistCV isDarkMode={isDarkMode} />
+        </div>
+        <div
+          className={`mt-8 p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          } border`}
+        >
+          <div className='flex items-center justify-between mb-6'>
+            <div className='flex items-center space-x-3'>
+              <div className='w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center'>
+                <span className='text-white text-lg'>👥</span>
+              </div>
+              <div>
+                <h2
+                  className={`text-xl font-semibold transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
+                  Mis Pacientes
+                </h2>
+                <p
+                  className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                >
+                  Gestiona el historial y comunicación con tus pacientes
                 </p>
               </div>
-            ) : patients.length === 0 ? (
-              <>
-                <p className={`text-lg transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  No tienes pacientes registrados
-                </p>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                }`}>
-                  Los pacientes aparecerán aquí cuando se registren
-                </p>
-              </>
-            ) : (
-              <div className="space-y-4">
-                {patients.map((patient) => (
-                  <div
-                    key={patient.uid}
-                    className={`p-4 rounded-lg border transition-colors duration-500 ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
+            </div>
+            <div className='flex items-center space-x-2'>
+              <span
+                className={`text-sm px-3 py-1 rounded-full ${
+                  isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {patients.length} pacientes
+              </span>
+            </div>
+          </div>
+
+          {patientsLoading ? (
+            <div className='text-center py-12'>
+              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4'></div>
+              <p className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Cargando pacientes...
+              </p>
+            </div>
+          ) : patients.length === 0 ? (
+            <div className='text-center py-12'>
+              <div
+                className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
+                  isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-400'
+                }`}
+              >
+                <span className='text-4xl'>👥</span>
+              </div>
+              <h3
+                className={`text-lg font-medium mb-2 transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
+                No tienes pacientes aún
+              </h3>
+              <p className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Los pacientes aparecerán aquí cuando agenden citas contigo
+              </p>
+            </div>
+          ) : (
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+              {patients.map((patient) => (
+                <div
+                  key={patient.uid}
+                  className={`p-4 rounded-lg border transition-colors duration-500 hover:shadow-md ${
+                    isDarkMode
+                      ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                      : 'bg-gray-50 border-gray-200 hover:bg-white'
+                  }`}
+                >
+                  <div className='flex items-start justify-between mb-3'>
+                    <div className='flex items-center space-x-3'>
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          patient.riskLevel === 'high'
+                            ? 'bg-red-100 text-red-600'
+                            : patient.riskLevel === 'medium'
+                            ? 'bg-yellow-100 text-yellow-600'
+                            : 'bg-green-100 text-green-600'
+                        }`}
+                      >
+                        <span className='text-sm font-medium'>
+                          {(patient.displayName || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
                       <div>
-                        <h3 className={`font-medium transition-colors duration-500 ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}>
+                        <h3
+                          className={`font-medium transition-colors duration-500 ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}
+                        >
                           {patient.displayName || 'Usuario'}
                         </h3>
-                        <p className={`text-sm transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
+                        <p
+                          className={`text-xs transition-colors duration-500 ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}
+                        >
                           {patient.email}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-sm transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          Última actividad
-                        </p>
-                        <p className={`text-xs transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                        }`}>
-                          {patient.lastSeen ? new Date(patient.lastSeen).toLocaleDateString() : 'Nunca'}
-                        </p>
-                      </div>
+                    </div>
+                    <div
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        patient.riskLevel === 'high'
+                          ? 'bg-red-100 text-red-600'
+                          : patient.riskLevel === 'medium'
+                          ? 'bg-yellow-100 text-yellow-600'
+                          : 'bg-green-100 text-green-600'
+                      }`}
+                    >
+                      {patient.riskLevel === 'high'
+                        ? 'Alto Riesgo'
+                        : patient.riskLevel === 'medium'
+                        ? 'Riesgo Medio'
+                        : 'Bajo Riesgo'}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+
+                  <div className='space-y-2 mb-4'>
+                    <div className='flex justify-between text-xs'>
+                      <span
+                        className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                      >
+                        Última actividad:
+                      </span>
+                      <span
+                        className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                      >
+                        {patient.lastSeen ? new Date(patient.lastSeen).toLocaleDateString() : 'Nunca'}
+                      </span>
+                    </div>
+                    <div className='flex justify-between text-xs'>
+                      <span
+                        className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                      >
+                        Estado de ánimo promedio:
+                      </span>
+                      <span
+                        className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                      >
+                        {patient.averageMood ? `${patient.averageMood.toFixed(1)}/10` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className='flex justify-between text-xs'>
+                      <span
+                        className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                      >
+                        Registros de ánimo:
+                      </span>
+                      <span
+                        className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                      >
+                        {patient.moodLogCount || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className='flex space-x-2'>
+                    <button
+                      onClick={() => {
+                        // TODO: Implementar chat directo
+                        console.log('Iniciar chat con:', patient.displayName);
+                      }}
+                      className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
+                        isDarkMode
+                          ? 'bg-purple-600 text-white hover:bg-purple-700'
+                          : 'bg-purple-500 text-white hover:bg-purple-600'
+                      }`}
+                    >
+                      💬 Chat
+                    </button>
+                    <button
+                      onClick={() => {
+                        // TODO: Implementar historial médico
+                        console.log('Ver historial de:', patient.displayName);
+                      }}
+                      className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
+                        isDarkMode
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                      }`}
+                    >
+                      📋 Historial
+                    </button>
+                    <button
+                      onClick={() => {
+                        // TODO: Implementar reporte médico
+                        console.log('Generar reporte para:', patient.displayName);
+                      }}
+                      className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
+                        isDarkMode
+                          ? 'bg-green-600 text-white hover:bg-green-700'
+                          : 'bg-green-500 text-white hover:bg-green-600'
+                      }`}
+                    >
+                      📄 Reporte
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

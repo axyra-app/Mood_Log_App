@@ -1,11 +1,23 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
 
 export interface Notification {
   id: string;
   userId: string;
-  type: 'appointment' | 'message' | 'crisis' | 'system';
+  psychologistId?: string;
+  type: 'chat_message' | 'appointment_request' | 'appointment_accepted' | 'appointment_rejected' | 'medical_report';
   title: string;
   message: string;
   isRead: boolean;
@@ -13,7 +25,7 @@ export interface Notification {
   data?: any;
 }
 
-export const useNotifications = (userId: string) => {
+export const useNotifications = (userId: string, userRole: 'user' | 'psychologist') => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,34 +36,37 @@ export const useNotifications = (userId: string) => {
       return;
     }
 
+    // Query diferente según el rol del usuario
     const notificationsQuery = query(
       collection(db, 'notifications'),
-      where('userId', '==', userId),
+      where(userRole === 'user' ? 'userId' : 'psychologistId', '==', userId),
       orderBy('createdAt', 'desc'),
-      where('isRead', '==', false)
+      limit(50)
     );
 
-    const unsubscribe = onSnapshot(notificationsQuery,
+    const unsubscribe = onSnapshot(
+      notificationsQuery,
       (snapshot) => {
         try {
-          const notificationsData: Notification[] = snapshot.docs.map(doc => {
+          const notificationsData = snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
               id: doc.id,
               userId: data.userId,
+              psychologistId: data.psychologistId,
               type: data.type,
               title: data.title,
               message: data.message,
-              isRead: data.isRead,
-              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+              isRead: data.isRead || false,
+              createdAt: data.createdAt?.toDate() || new Date(),
               data: data.data,
             };
           });
-          
+
           setNotifications(notificationsData);
           setError(null);
         } catch (err) {
-          console.error('Error fetching notifications:', err);
+          console.error('Error processing notifications:', err);
           setError('Error al cargar las notificaciones');
         } finally {
           setLoading(false);
@@ -65,12 +80,11 @@ export const useNotifications = (userId: string) => {
     );
 
     return () => unsubscribe();
-  }, [userId]);
+  }, [userId, userRole]);
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const notificationRef = doc(db, 'notifications', notificationId);
-      await updateDoc(notificationRef, {
+      await updateDoc(doc(db, 'notifications', notificationId), {
         isRead: true,
         readAt: serverTimestamp(),
       });
@@ -81,34 +95,26 @@ export const useNotifications = (userId: string) => {
 
   const markAllAsRead = async () => {
     try {
-      const promises = notifications.map(notification => 
-        markAsRead(notification.id)
+      const unreadNotifications = notifications.filter((n) => !n.isRead);
+      const updatePromises = unreadNotifications.map((notification) =>
+        updateDoc(doc(db, 'notifications', notification.id), {
+          isRead: true,
+          readAt: serverTimestamp(),
+        })
       );
-      await Promise.all(promises);
+      await Promise.all(updatePromises);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
   };
 
-  const createNotification = async (
-    userId: string,
-    type: Notification['type'],
-    title: string,
-    message: string,
-    data?: any
-  ) => {
+  const createNotification = async (notificationData: Omit<Notification, 'id' | 'createdAt'>) => {
     try {
-      const notificationData = {
-        userId,
-        type,
-        title,
-        message,
-        isRead: false,
+      const docRef = await addDoc(collection(db, 'notifications'), {
+        ...notificationData,
         createdAt: serverTimestamp(),
-        data: data || null,
-      };
-
-      const docRef = await addDoc(collection(db, 'notifications'), notificationData);
+        isRead: false,
+      });
       return docRef.id;
     } catch (error) {
       console.error('Error creating notification:', error);
@@ -116,74 +122,71 @@ export const useNotifications = (userId: string) => {
     }
   };
 
-  const getUnreadCount = () => {
-    return notifications.filter(n => !n.isRead).length;
-  };
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return {
     notifications,
     loading,
     error,
+    unreadCount,
     markAsRead,
     markAllAsRead,
     createNotification,
-    getUnreadCount,
   };
 };
 
-// Hook específico para notificaciones de psicólogos
-export const usePsychologistNotifications = (psychologistId: string) => {
-  const { notifications, loading, error, markAsRead, markAllAsRead, createNotification, getUnreadCount } = useNotifications(psychologistId);
+// Función para crear notificación cuando un paciente escribe
+export const createChatNotification = async (
+  psychologistId: string,
+  userId: string,
+  userName: string,
+  message: string
+) => {
+  try {
+    await addDoc(collection(db, 'notifications'), {
+      userId: psychologistId, // El psicólogo recibe la notificación
+      psychologistId: psychologistId,
+      type: 'chat_message',
+      title: 'Nuevo mensaje de paciente',
+      message: `${userName}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`,
+      isRead: false,
+      createdAt: serverTimestamp(),
+      data: {
+        userId,
+        userName,
+        message,
+        chatType: 'patient_message',
+      },
+    });
+  } catch (error) {
+    console.error('Error creating chat notification:', error);
+  }
+};
 
-  const createAppointmentNotification = async (
-    userId: string,
-    appointmentData: any
-  ) => {
-    return createNotification(
-      psychologistId,
-      'appointment',
-      'Nueva Cita Solicitada',
-      `El usuario ${appointmentData.userName} ha solicitado una cita para ${appointmentData.date}`,
-      appointmentData
-    );
-  };
-
-  const createCrisisNotification = async (
-    userId: string,
-    crisisData: any
-  ) => {
-    return createNotification(
-      psychologistId,
-      'crisis',
-      'Alerta de Crisis',
-      `El usuario ${crisisData.userName} muestra señales de crisis`,
-      crisisData
-    );
-  };
-
-  const createMessageNotification = async (
-    userId: string,
-    messageData: any
-  ) => {
-    return createNotification(
-      psychologistId,
-      'message',
-      'Nuevo Mensaje',
-      `Mensaje de ${messageData.userName}`,
-      messageData
-    );
-  };
-
-  return {
-    notifications,
-    loading,
-    error,
-    markAsRead,
-    markAllAsRead,
-    createNotification,
-    getUnreadCount,
-    createAppointmentNotification,
-    createCrisisNotification,
-    createMessageNotification,
-  };
+// Función para crear notificación cuando un psicólogo escribe
+export const createPsychologistChatNotification = async (
+  userId: string,
+  psychologistId: string,
+  psychologistName: string,
+  message: string
+) => {
+  try {
+    await addDoc(collection(db, 'notifications'), {
+      userId: userId, // El usuario recibe la notificación
+      psychologistId: psychologistId,
+      type: 'chat_message',
+      title: 'Nuevo mensaje del psicólogo',
+      message: `${psychologistName}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`,
+      isRead: false,
+      createdAt: serverTimestamp(),
+      data: {
+        psychologistId,
+        psychologistName,
+        message,
+        chatType: 'psychologist_message',
+      },
+    });
+  } catch (error) {
+    console.error('Error creating psychologist chat notification:', error);
+  }
 };
