@@ -390,15 +390,24 @@ const DashboardPsychologist: React.FC = () => {
             <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             } border`}>
-              <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Chat con Pacientes
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-semibold transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Chat con Pacientes
+                </h2>
+                <button
+                  onClick={() => navigate('/psychologist-chat')}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center space-x-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Abrir Chat</span>
+                </button>
+              </div>
               <p className={`transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                El sistema de chat estará disponible próximamente.
+                Sistema de chat en tiempo real con tus pacientes. Haz clic en "Abrir Chat" para acceder a todas las conversaciones activas.
               </p>
             </div>
           )}

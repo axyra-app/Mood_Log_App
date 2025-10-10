@@ -22,6 +22,7 @@ import Journal from './pages/Journal';
 import LoginSimple from './pages/LoginSimple';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
+import PsychologistChat from './pages/PsychologistChat';
 import PsychologistSelection from './pages/PsychologistSelection';
 import RegisterSimple from './pages/RegisterSimple';
 import Settings from './pages/Settings';
@@ -58,6 +59,14 @@ function App() {
                 element={
                   <ProtectedRoutePsychologist>
                     <DashboardPsychologist />
+                  </ProtectedRoutePsychologist>
+                }
+              />
+              <Route
+                path='/psychologist-chat'
+                element={
+                  <ProtectedRoutePsychologist>
+                    <PsychologistChat />
                   </ProtectedRoutePsychologist>
                 }
               />
