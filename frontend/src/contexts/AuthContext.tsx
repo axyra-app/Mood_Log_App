@@ -72,26 +72,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Manejar el resultado del redirect de Google Auth
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        console.log('🔍 Checking for Google Auth redirect result...');
-        const result = await getRedirectResult(auth);
-        if (result) {
-          console.log('✅ Google Auth redirect result:', result);
-          console.log('✅ User authenticated:', result.user.email);
-          // El usuario se autenticó exitosamente, la lógica se maneja en onAuthStateChanged
-        } else {
-          console.log('❌ No Google Auth redirect result found');
-        }
-      } catch (error) {
-        console.error('❌ Error handling redirect result:', error);
-      }
-    };
-
-    handleRedirectResult();
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -329,11 +309,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      // Usar redirect en lugar de popup para evitar problemas de Cross-Origin-Opener-Policy
-      await signInWithRedirect(auth, provider);
-      // La página se recargará automáticamente después del redirect
+      // Configurar el provider para evitar problemas de popup
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      console.log('🔍 Attempting Google Sign-In with popup...');
+      const result = await signInWithPopup(auth, provider);
+      console.log('✅ Google Sign-In successful:', result.user.email);
+      
+      // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
-      console.error('Google Sign-In Error:', error);
+      console.error('❌ Google Sign-In Error:', error);
       setLoading(false);
       throw new Error(getGoogleSignInErrorMessage(error));
     }
@@ -343,11 +330,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      // Usar redirect en lugar de popup para evitar problemas de Cross-Origin-Opener-Policy
-      await signInWithRedirect(auth, provider);
-      // La página se recargará automáticamente después del redirect
+      // Configurar el provider para evitar problemas de popup
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      console.log('🔍 Attempting Google Sign-Up with popup...');
+      const result = await signInWithPopup(auth, provider);
+      console.log('✅ Google Sign-Up successful:', result.user.email);
+      
+      // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
-      console.error('Google Sign-Up Error:', error);
+      console.error('❌ Google Sign-Up Error:', error);
       setLoading(false);
       throw new Error(getGoogleSignInErrorMessage(error));
     }
