@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { usePatients } from '../hooks/usePatients';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Hook para obtener datos reales de pacientes
+  const {
+    patients,
+    loading: patientsLoading,
+    getStatistics,
+    getPatientsByRiskLevel,
+    getPatientsNeedingAttention,
+  } = usePatients(user?.uid || '');
+
+  // Estadísticas reales
+  const stats = getStatistics();
+  const highRiskPatients = getPatientsByRiskLevel('high');
+  const mediumRiskPatients = getPatientsByRiskLevel('medium');
+  const lowRiskPatients = getPatientsByRiskLevel('low');
+  const patientsNeedingAttention = getPatientsNeedingAttention();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -120,7 +137,7 @@ const DashboardPsychologist: React.FC = () => {
                 <p className={`text-2xl font-bold transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  0
+                  {patientsLoading ? '...' : stats.totalPatients}
                 </p>
               </div>
             </div>
@@ -142,7 +159,7 @@ const DashboardPsychologist: React.FC = () => {
                 <p className={`text-2xl font-bold transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  0
+                  {patientsLoading ? '...' : stats.activePatients}
                 </p>
               </div>
             </div>
@@ -164,7 +181,7 @@ const DashboardPsychologist: React.FC = () => {
                 <p className={`text-2xl font-bold transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  0
+                  {patientsLoading ? '...' : stats.riskPatients}
                 </p>
               </div>
             </div>
@@ -186,7 +203,7 @@ const DashboardPsychologist: React.FC = () => {
                 <p className={`text-2xl font-bold transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  0.0
+                  {patientsLoading ? '...' : stats.averageMood.toFixed(1)}
                 </p>
               </div>
             </div>
@@ -305,16 +322,67 @@ const DashboardPsychologist: React.FC = () => {
 
           <div className="text-center py-8">
             <span className="text-6xl mb-4 block">👥</span>
-            <p className={`text-lg transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              No tienes pacientes registrados
-            </p>
-            <p className={`text-sm transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-500' : 'text-gray-500'
-            }`}>
-              Los pacientes aparecerán aquí cuando se registren
-            </p>
+            {patientsLoading ? (
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-4"></div>
+                <p className={`text-lg transition-colors duration-500 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Cargando pacientes...
+                </p>
+              </div>
+            ) : patients.length === 0 ? (
+              <>
+                <p className={`text-lg transition-colors duration-500 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  No tienes pacientes registrados
+                </p>
+                <p className={`text-sm transition-colors duration-500 ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                }`}>
+                  Los pacientes aparecerán aquí cuando se registren
+                </p>
+              </>
+            ) : (
+              <div className="space-y-4">
+                {patients.map((patient) => (
+                  <div
+                    key={patient.uid}
+                    className={`p-4 rounded-lg border transition-colors duration-500 ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className={`font-medium transition-colors duration-500 ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {patient.displayName || 'Usuario'}
+                        </h3>
+                        <p className={`text-sm transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          {patient.email}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          Última actividad
+                        </p>
+                        <p className={`text-xs transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                        }`}>
+                          {patient.lastSeen ? new Date(patient.lastSeen).toLocaleDateString() : 'Nunca'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
