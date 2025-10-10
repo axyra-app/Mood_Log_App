@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import Logo from '../components/Logo';
 
 const Settings: React.FC = () => {
@@ -9,6 +11,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [userRole, setUserRole] = useState<'user' | 'psychologist'>('user');
   const [settings, setSettings] = useState({
     notifications: true,
     emailUpdates: true,
@@ -18,13 +21,37 @@ const Settings: React.FC = () => {
   });
 
   useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          // Intentar obtener datos del usuario
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setUserRole('user');
+          } else {
+            // Si no existe en users, verificar si es psicólogo
+            const psychologistDoc = await getDoc(doc(db, 'psychologists', user.uid));
+            if (psychologistDoc.exists()) {
+              setUserRole('psychologist');
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+          // Por defecto asumir que es usuario
+          setUserRole('user');
+        }
+      }
+    };
+
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
       setSettings(prev => ({ ...prev, darkMode: true }));
     }
+    
+    loadUserData();
     setIsLoaded(true);
-  }, []);
+  }, [user]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -90,7 +117,16 @@ const Settings: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/dashboard-psychologist')}
+                onClick={() => {
+                  const dashboardRoute = userRole === 'psychologist' ? '/dashboard-psychologist' : '/dashboard';
+                  navigate(dashboardRoute);
+                  // Fallback si navigate no funciona
+                  setTimeout(() => {
+                    if (window.location.pathname !== dashboardRoute) {
+                      window.location.href = dashboardRoute;
+                    }
+                  }, 100);
+                }}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
                   isDarkMode
                     ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -261,7 +297,7 @@ const Settings: React.FC = () => {
                   <p className={`text-sm transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
                   }`}>
-                    Salir de tu cuenta de psicólogo
+                    Salir de tu cuenta {userRole === 'psychologist' ? 'de psicólogo' : 'de usuario'}
                   </p>
                 </div>
                 <button
@@ -324,7 +360,7 @@ const Settings: React.FC = () => {
                 <p className={`text-sm transition-colors duration-500 ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}>
-                  Psicólogo
+                  {userRole === 'psychologist' ? 'Psicólogo' : 'Usuario'}
                 </p>
               </div>
               

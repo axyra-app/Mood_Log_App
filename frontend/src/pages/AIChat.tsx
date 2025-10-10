@@ -19,10 +19,10 @@ const AIChat: React.FC = () => {
   const doctor = AI_DOCTORS[doctorType || 'general'];
 
   useEffect(() => {
-    // Mensaje de bienvenida inicial
+    // Mensaje de bienvenida inicial profesional
     const welcomeMessage: ChatMessage = {
       id: 'welcome',
-      content: `¡Hola! Soy ${doctor.name}, tu asistente médico virtual especializado en ${doctor.specialty}. Estoy aquí para ayudarte con cualquier consulta sobre tu salud mental y bienestar. ¿En qué puedo asistirte hoy?`,
+      content: `Buenos días. Soy ${doctor.name}, especialista en ${doctor.specialty}. Estoy aquí para brindarle apoyo profesional en temas de salud mental y bienestar. ¿En qué puedo asistirle hoy?`,
       senderId: doctor.id,
       timestamp: new Date(),
       isRead: true,

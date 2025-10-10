@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import AdvancedReports from './components/AdvancedReports';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRouteBoth from './components/ProtectedRouteBoth';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 
 // Pages
@@ -130,9 +131,9 @@ function App() {
               <Route
                 path='/settings'
                 element={
-                  <ProtectedRoutePsychologist>
+                  <ProtectedRouteBoth>
                     <Settings />
-                  </ProtectedRoutePsychologist>
+                  </ProtectedRouteBoth>
                 }
               />
               <Route
