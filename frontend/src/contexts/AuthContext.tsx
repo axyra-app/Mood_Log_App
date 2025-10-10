@@ -5,6 +5,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
@@ -68,6 +70,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 8000); // 8 segundos
 
     return () => clearTimeout(timer);
+  }, []);
+
+  // Manejar el resultado del redirect de Google Auth
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          console.log('Google Auth redirect result:', result);
+          // El usuario se autenticó exitosamente, la lógica se maneja en onAuthStateChanged
+        }
+      } catch (error) {
+        console.error('Error handling redirect result:', error);
+      }
+    };
+
+    handleRedirectResult();
   }, []);
 
   useEffect(() => {
@@ -295,8 +314,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // La lógica de verificación de perfil se maneja en onAuthStateChanged
+      // Usar redirect en lugar de popup para evitar problemas de Cross-Origin-Opener-Policy
+      await signInWithRedirect(auth, provider);
+      // La página se recargará automáticamente después del redirect
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
       setLoading(false);
@@ -308,39 +328,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-
-      // Para registro con Google, siempre crear perfil básico y redirigir a completar perfil
-      const basicUserData = {
-        email: result.user.email,
-        displayName: result.user.displayName || result.user.email?.split('@')[0],
-        username: result.user.email?.split('@')[0],
-        role: 'user', // Por defecto, se completará en el formulario
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      try {
-        await setDoc(doc(db, 'users', result.user.uid), basicUserData);
-      } catch (error) {
-        console.error('Error creando perfil básico:', error);
-      }
-
-      // Crear usuario básico para el estado
-      const userDataWithAuth: User = {
-        uid: result.user.uid,
-        email: result.user.email,
-        displayName: result.user.displayName,
-        username: result.user.email?.split('@')[0],
-        role: 'user',
-      };
-      setUser(userDataWithAuth);
-      analyticsEvents.userSignUp('google');
+      // Usar redirect en lugar de popup para evitar problemas de Cross-Origin-Opener-Policy
+      await signInWithRedirect(auth, provider);
+      // La página se recargará automáticamente después del redirect
     } catch (error: any) {
       console.error('Google Sign-Up Error:', error);
-      throw new Error(getGoogleSignInErrorMessage(error));
-    } finally {
       setLoading(false);
+      throw new Error(getGoogleSignInErrorMessage(error));
     }
   };
 
