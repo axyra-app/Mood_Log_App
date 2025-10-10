@@ -78,7 +78,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       console.log('🔍 onAuthStateChanged triggered:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user');
-      if (!isMounted) return;
+      console.log('🔍 Firebase User UID:', firebaseUser?.uid || 'No UID');
+      console.log('🔍 Firebase User Email:', firebaseUser?.email || 'No email');
+      console.log('🔍 Firebase User DisplayName:', firebaseUser?.displayName || 'No displayName');
+      
+      if (!isMounted) {
+        console.log('❌ Component not mounted, skipping...');
+        return;
+      }
 
       try {
         if (firebaseUser) {
@@ -309,19 +316,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      // Configurar el provider para evitar problemas de popup
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
       
       console.log('🔍 Attempting Google Sign-In with popup...');
+      
+      // Verificar si el popup está bloqueado
+      const popup = window.open('', '_blank', 'width=500,height=600');
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        throw new Error('Popup bloqueado. Por favor, permite popups para este sitio.');
+      }
+      popup.close();
+      
       const result = await signInWithPopup(auth, provider);
       console.log('✅ Google Sign-In successful:', result.user.email);
+      console.log('✅ User UID:', result.user.uid);
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
       console.error('❌ Google Sign-In Error:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
       setLoading(false);
+      
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('El popup fue bloqueado. Por favor, permite popups para este sitio y vuelve a intentar.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('El popup fue cerrado. Por favor, completa el proceso de autenticación.');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        throw new Error('Solicitud cancelada. Por favor, intenta de nuevo.');
+      }
+      
       throw new Error(getGoogleSignInErrorMessage(error));
     }
   };
@@ -330,19 +353,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      // Configurar el provider para evitar problemas de popup
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
       
       console.log('🔍 Attempting Google Sign-Up with popup...');
+      
+      // Verificar si el popup está bloqueado
+      const popup = window.open('', '_blank', 'width=500,height=600');
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        throw new Error('Popup bloqueado. Por favor, permite popups para este sitio.');
+      }
+      popup.close();
+      
       const result = await signInWithPopup(auth, provider);
       console.log('✅ Google Sign-Up successful:', result.user.email);
+      console.log('✅ User UID:', result.user.uid);
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
       console.error('❌ Google Sign-Up Error:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
       setLoading(false);
+      
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('El popup fue bloqueado. Por favor, permite popups para este sitio y vuelve a intentar.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('El popup fue cerrado. Por favor, completa el proceso de autenticación.');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        throw new Error('Solicitud cancelada. Por favor, intenta de nuevo.');
+      }
+      
       throw new Error(getGoogleSignInErrorMessage(error));
     }
   };
