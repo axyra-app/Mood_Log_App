@@ -130,9 +130,9 @@ function App() {
               <Route
                 path='/settings'
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoutePsychologist>
                     <Settings />
-                  </ProtectedRoute>
+                  </ProtectedRoutePsychologist>
                 }
               />
               <Route

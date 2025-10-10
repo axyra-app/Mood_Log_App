@@ -25,6 +25,12 @@ const LoginSimple: React.FC = () => {
     if (user) {
       setShowAlreadyLoggedIn(true);
 
+      // Solo redirigir si estamos en la página de login
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login') {
+        return; // No redirigir si ya estamos en otra página
+      }
+
       // Verificar si el usuario necesita completar su perfil
       const isGoogleUser = user.email && user.username === user.email.split('@')[0];
       
