@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
 import PsychologistNotifications from '../components/PsychologistNotifications';
 import AppointmentManagement from '../components/AppointmentManagement';
+import MedicalHistory from '../components/MedicalHistory';
 import Logo from '../components/Logo';
 
 const DashboardPsychologist: React.FC = () => {
@@ -247,46 +248,11 @@ const DashboardPsychologist: React.FC = () => {
           </div>
 
           {/* Appointments */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg">📅</span>
-              </div>
-              <h3 className={`text-xl font-semibold transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                Gestión de Citas
-              </h3>
-            </div>
-            <p className={`transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              El sistema de gestión de citas estará disponible próximamente
-            </p>
-          </div>
+          {/* Appointment Management */}
+          <AppointmentManagement isDarkMode={isDarkMode} />
 
           {/* Medical History */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg">📋</span>
-              </div>
-              <h3 className={`text-xl font-semibold transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                Historial Médico
-              </h3>
-            </div>
-            <p className={`transition-colors duration-500 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              El sistema de historial médico estará disponible próximamente
-            </p>
-          </div>
+          <MedicalHistory isDarkMode={isDarkMode} />
         </div>
 
         {/* Patients Section */}
