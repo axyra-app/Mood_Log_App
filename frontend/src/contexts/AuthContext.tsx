@@ -117,8 +117,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // Verificar si es un usuario de Google que necesita completar perfil
               const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
               
-              // Lógica simplificada: Si es usuario de Google y tiene role 'user', necesita completar perfil
-              const needsProfileCompletion = isGoogleUser && userData.role === 'user';
+              // Lógica mejorada: Solo necesita completar perfil si:
+              // 1. Es usuario de Google (username = email sin dominio)
+              // 2. Y tiene role 'user' (rol por defecto)
+              // 3. Y NO tiene displayName personalizado (solo el del email)
+              const needsProfileCompletion = isGoogleUser && 
+                                           userData.role === 'user' && 
+                                           userData.displayName === firebaseUser.email?.split('@')[0];
               
               console.log('AuthContext - User profile check:', {
                 isGoogleUser,
@@ -127,7 +132,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 userDataDisplayName: userData.displayName,
                 firebaseDisplayName: firebaseUser.displayName,
                 email: firebaseUser.email,
-                username: userData.username
+                username: userData.username,
+                displayNameFromEmail: firebaseUser.email?.split('@')[0],
+                isDisplayNameFromEmail: userData.displayName === firebaseUser.email?.split('@')[0]
               });
               
               if (needsProfileCompletion) {

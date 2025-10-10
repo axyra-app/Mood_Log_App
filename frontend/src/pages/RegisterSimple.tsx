@@ -53,8 +53,13 @@ const RegisterSimple: React.FC = () => {
       // Verificar si el usuario necesita completar su perfil
       const isGoogleUser = user.email && user.username === user.email.split('@')[0];
       
-      // Lógica simplificada: Si es usuario de Google y tiene role 'user', necesita completar perfil
-      const needsProfileCompletion = isGoogleUser && user.role === 'user';
+      // Lógica mejorada: Solo necesita completar perfil si:
+      // 1. Es usuario de Google (username = email sin dominio)
+      // 2. Y tiene role 'user' (rol por defecto)
+      // 3. Y NO tiene displayName personalizado (solo el del email)
+      const needsProfileCompletion = isGoogleUser && 
+                                   user.role === 'user' && 
+                                   user.displayName === user.email?.split('@')[0];
 
       console.log('RegisterSimple - User profile check:', {
         needsProfileCompletion,
