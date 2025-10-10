@@ -101,14 +101,18 @@ export const useAppointments = (psychologistId: string) => {
     notes?: string
   ) => {
     try {
-      // Obtener información del psicólogo
-      const psychologistQuery = query(
-        collection(db, 'users'),
-        where('__name__', '==', psychologistId),
-        limit(1)
-      );
-      const psychologistSnapshot = await getDocs(psychologistQuery);
-      const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
+      console.log('📅 Creating appointment:', { userId, psychologistId, date, time });
+      
+      // Obtener información del psicólogo usando doc() en lugar de query
+      let psychologistName = 'Psicólogo';
+      try {
+        const psychologistDoc = await getDoc(doc(db, 'users', psychologistId));
+        if (psychologistDoc.exists()) {
+          psychologistName = psychologistDoc.data().displayName || 'Psicólogo';
+        }
+      } catch (psychologistError) {
+        console.warn('Could not fetch psychologist name:', psychologistError);
+      }
 
       const appointmentData = {
         userId,
@@ -123,10 +127,13 @@ export const useAppointments = (psychologistId: string) => {
         updatedAt: serverTimestamp(),
       };
 
+      console.log('📅 Appointment data:', appointmentData);
+
       const docRef = await addDoc(collection(db, 'appointments'), appointmentData);
+      console.log('✅ Appointment created successfully:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('Error creating appointment:', error);
+      console.error('❌ Error creating appointment:', error);
       throw error;
     }
   };

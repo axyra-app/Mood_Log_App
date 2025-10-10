@@ -119,23 +119,29 @@ export const useMedicalReports = (psychologistId: string) => {
     sessionData: Omit<MedicalReport, 'id' | 'userName' | 'psychologistName' | 'createdAt' | 'updatedAt'>
   ) => {
     try {
-      // Obtener información del psicólogo
-      const psychologistQuery = query(
-        collection(db, 'users'),
-        where('__name__', '==', psychologistId),
-        limit(1)
-      );
-      const psychologistSnapshot = await getDocs(psychologistQuery);
-      const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
+      console.log('📋 Creating medical report:', { userId, psychologistId });
+      
+      // Obtener información del psicólogo usando doc() en lugar de query
+      let psychologistName = 'Psicólogo';
+      try {
+        const psychologistDoc = await getDoc(doc(db, 'users', psychologistId));
+        if (psychologistDoc.exists()) {
+          psychologistName = psychologistDoc.data().displayName || 'Psicólogo';
+        }
+      } catch (psychologistError) {
+        console.warn('Could not fetch psychologist name:', psychologistError);
+      }
 
-      // Obtener información del usuario
-      const userQuery = query(
-        collection(db, 'users'),
-        where('__name__', '==', userId),
-        limit(1)
-      );
-      const userSnapshot = await getDocs(userQuery);
-      const userName = userSnapshot.empty ? 'Usuario' : userSnapshot.docs[0].data().displayName;
+      // Obtener información del usuario usando doc() en lugar de query
+      let userName = 'Usuario';
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+          userName = userDoc.data().displayName || 'Usuario';
+        }
+      } catch (userError) {
+        console.warn('Could not fetch user name:', userError);
+      }
 
       const reportData = {
         ...sessionData,
@@ -145,10 +151,13 @@ export const useMedicalReports = (psychologistId: string) => {
         updatedAt: serverTimestamp(),
       };
 
+      console.log('📋 Medical report data:', reportData);
+
       const docRef = await addDoc(collection(db, 'medicalReports'), reportData);
+      console.log('✅ Medical report created successfully:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('Error creating medical report:', error);
+      console.error('❌ Error creating medical report:', error);
       throw error;
     }
   };
