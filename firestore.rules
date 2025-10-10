@@ -12,6 +12,10 @@ service cloud.firestore {
       // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
       allow read: if request.auth != null && 
         resource.data.role == 'psychologist';
+      
+      // Los psicólogos pueden leer datos de usuarios para citas y reportes
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/psychologists/$(request.auth.uid));
     }
     
     // ========================================
@@ -88,7 +92,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.psychologistId;
       
-      // Validaciones para creación
+      // Los psicólogos pueden crear citas para cualquier usuario
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/psychologists/$(request.auth.uid)) &&
+        isValidAppointment(request.resource.data);
+      
+      // Los usuarios pueden crear citas para sí mismos
       allow create: if request.auth != null && 
         request.auth.uid == request.resource.data.userId &&
         isValidAppointment(request.resource.data);
@@ -305,9 +314,9 @@ service cloud.firestore {
       allow read: if request.auth != null && 
         request.auth.uid == resource.data.patientId;
       
-      // Validaciones para creación
+      // Los psicólogos pueden crear informes médicos
       allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.psychologistId &&
+        exists(/databases/$(database)/documents/psychologists/$(request.auth.uid)) &&
         isValidMedicalReport(request.resource.data);
     }
     
