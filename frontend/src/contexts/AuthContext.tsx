@@ -124,15 +124,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // Verificar si es un usuario de Google que necesita completar perfil
               const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
               
-              // Para usuarios de Google, verificar si ya tienen perfil completo en la base de datos
-              // Un usuario de Google tiene perfil completo si:
-              // 1. No es usuario de Google (usuario normal con datos completos)
-              // 2. O es usuario de Google pero ya tiene datos específicos de la app (no solo datos básicos de Google)
-              const hasCompleteProfile = !isGoogleUser 
-                ? !!(userData.displayName && userData.role)
-                : !!(userData.displayName && userData.displayName !== firebaseUser.email?.split('@')[0] && userData.role && userData.role !== 'user');
+              // Lógica simplificada: Si es usuario de Google y tiene role 'user', necesita completar perfil
+              const needsProfileCompletion = isGoogleUser && userData.role === 'user';
               
-              if (!hasCompleteProfile) {
+              console.log('AuthContext - User profile check:', {
+                isGoogleUser,
+                needsProfileCompletion,
+                userDataRole: userData.role,
+                userDataDisplayName: userData.displayName,
+                firebaseDisplayName: firebaseUser.displayName,
+                email: firebaseUser.email,
+                username: userData.username
+              });
+              
+              if (needsProfileCompletion) {
                 // Establecer el usuario con datos básicos para redirigir a completar perfil
                 const basicUserData: User = {
                   uid: firebaseUser.uid,
@@ -141,8 +146,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   username: firebaseUser.email?.split('@')[0],
                   role: 'user', // Rol por defecto
                 };
+                console.log('AuthContext - Setting basic user data for profile completion');
                 if (isMounted) setUser(basicUserData);
               } else {
+                console.log('AuthContext - Setting complete user data');
                 if (isMounted) setUser(userDataWithAuth);
               }
             } else {
