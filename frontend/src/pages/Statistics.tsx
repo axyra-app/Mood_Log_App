@@ -209,7 +209,7 @@ const Statistics: React.FC = () => {
           url: window.location.origin,
         });
       } catch (error) {
-        console.log('Error sharing:', error);
+        // Error sharing
       }
     } else {
       // Fallback: copiar al portapapeles

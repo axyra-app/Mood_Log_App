@@ -440,7 +440,7 @@ export const initializeReminderSystem = async (userId: string): Promise<void> =>
     // Crear configuración por defecto
     await getReminderSettings(userId);
 
-    console.log('Reminder system initialized for user:', userId);
+    // Reminder system initialized
   } catch (error) {
     console.error('Error initializing reminder system:', error);
   }

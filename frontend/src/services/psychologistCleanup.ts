@@ -4,8 +4,6 @@ import { db } from './firebase';
 // Función para limpiar datos corruptos de psicólogos
 export const cleanupCorruptedPsychologists = async (): Promise<void> => {
   try {
-    console.log('🧹 Iniciando limpieza de datos corruptos de psicólogos...');
-
     const psychologistsRef = collection(db, 'psychologists');
     const q = query(psychologistsRef);
     const querySnapshot = await getDocs(q);
@@ -20,19 +18,16 @@ export const cleanupCorruptedPsychologists = async (): Promise<void> => {
           !psychologistData.name || 
           psychologistData.userId === '') {
         
-        console.log(`🗑️ Eliminando psicólogo corrupto: ${docSnapshot.id}`);
-        
         try {
           await deleteDoc(doc(db, 'psychologists', docSnapshot.id));
           cleanedCount++;
-          // Psicólogo corrupto eliminado exitosamente
         } catch (error) {
           console.error(`❌ Error eliminando psicólogo ${docSnapshot.id}:`, error);
         }
       }
     }
 
-    console.log(`🎉 Limpieza completada. ${cleanedCount} registros corruptos eliminados.`);
+    // Limpieza completada
   } catch (error) {
     console.error('❌ Error durante la limpieza:', error);
     throw error;
@@ -63,7 +58,7 @@ export const checkPsychologistsHealth = async (): Promise<{
       if (!data.userId || !data.name || data.userId === '') {
         corruptedCount++;
         corruptedIds.push(doc.id);
-        console.log(`⚠️ Psicólogo corrupto encontrado: ${doc.id} - userId: ${data.userId}`);
+        // Psicólogo corrupto encontrado
       } else {
         validCount++;
       }

@@ -63,8 +63,6 @@ export const defaultPsychologists = [
 // Función para inicializar psicólogos por defecto
 export const initializeDefaultPsychologists = async (): Promise<Psychologist[]> => {
   try {
-    console.log('🔄 Inicializando psicólogos por defecto...');
-
     const psychologistsRef = collection(db, 'psychologists');
     const psychologists: Psychologist[] = [];
 
@@ -124,7 +122,7 @@ export const initializeDefaultPsychologists = async (): Promise<Psychologist[]> 
       }
     }
 
-    console.log(`🎉 Inicialización completada. ${psychologists.length} psicólogos disponibles.`);
+    // Inicialización completada
     return psychologists;
   } catch (error) {
     console.error('❌ Error inicializando psicólogos por defecto:', error);

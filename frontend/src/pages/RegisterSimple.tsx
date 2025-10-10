@@ -38,17 +38,12 @@ const RegisterSimple: React.FC = () => {
 
   // Redirigir usuarios autenticados
   useEffect(() => {
-    console.log('🔍 RegisterSimple useEffect triggered, user:', user ? `User: ${user.email}` : 'No user');
     if (user) {
       // Solo redirigir si estamos en la página de registro
       const currentPath = window.location.pathname;
-      console.log('🔍 Current path:', currentPath);
       if (currentPath !== '/register') {
-        console.log('❌ Not on /register, skipping redirect');
         return; // No redirigir si ya estamos en otra página
       }
-
-      console.log('✅ User is authenticated and on /register, checking profile...');
 
       // Verificar si el usuario necesita completar su perfil
       const isGoogleUser = user.email && user.username === user.email.split('@')[0];
@@ -61,24 +56,11 @@ const RegisterSimple: React.FC = () => {
                                    user.role === 'user' && 
                                    user.displayName === user.email?.split('@')[0];
 
-      console.log('RegisterSimple - User profile check:', {
-        needsProfileCompletion,
-        isGoogleUser,
-        username: user.username,
-        displayName: user.displayName,
-        role: user.role,
-        email: user.email,
-        displayNameFromEmail: user.email?.split('@')[0],
-        isDisplayNameFromEmail: user.displayName === user.email?.split('@')[0]
-      });
-
       if (needsProfileCompletion) {
         // Redirigir a completar perfil
-        console.log('RegisterSimple - Redirecting to complete profile');
         navigate('/complete-profile');
       } else {
         // Redirigir según el rol del usuario
-        console.log('RegisterSimple - Redirecting based on role:', user.role);
         if (user.role === 'psychologist') {
           navigate('/dashboard-psychologist');
         } else {

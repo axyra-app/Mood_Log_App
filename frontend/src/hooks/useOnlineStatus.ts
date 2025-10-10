@@ -9,7 +9,7 @@ export const useOnlineStatus = () => {
       setIsOnline(true);
       if (wasOffline) {
         // Show reconnection notification
-        console.log('Connection restored');
+        // Connection restored
         setWasOffline(false);
       }
     };
@@ -17,7 +17,7 @@ export const useOnlineStatus = () => {
     const handleOffline = () => {
       setIsOnline(false);
       setWasOffline(true);
-      console.log('Connection lost');
+      // Connection lost
     };
 
     window.addEventListener('online', handleOnline);

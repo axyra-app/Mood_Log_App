@@ -202,7 +202,6 @@ export const getJournalTemplates = async (): Promise<JournalTemplate[]> => {
 
     // Si no hay plantillas, inicializar datos por defecto
     if (templates.length === 0) {
-      console.log('🔄 No hay plantillas, inicializando datos por defecto...');
       await initializeDefaultJournalData();
       // Recargar después de inicializar
       const newQuerySnapshot = await getDocs(q);
@@ -257,7 +256,6 @@ export const getJournalPrompts = async (category?: string): Promise<JournalPromp
 
     // Si no hay prompts, inicializar datos por defecto
     if (prompts.length === 0) {
-      console.log('🔄 No hay prompts, inicializando datos por defecto...');
       await initializeDefaultJournalData();
       // Recargar después de inicializar
       const newQuerySnapshot = await getDocs(q);
