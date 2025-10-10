@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot, doc, addDoc, serverTimestamp, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, addDoc, serverTimestamp, getDocs, limit, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 export interface MedicalReport {
@@ -119,9 +119,12 @@ export const useMedicalReports = (psychologistId: string) => {
     sessionData: Omit<MedicalReport, 'id' | 'userName' | 'psychologistName' | 'createdAt' | 'updatedAt'>
   ) => {
     try {
-      console.log('📋 Creating medical report:', { userId, psychologistId });
+      // Validar parámetros requeridos
+      if (!userId || !psychologistId) {
+        throw new Error('Faltan parámetros requeridos para crear el reporte médico');
+      }
       
-      // Obtener información del psicólogo usando doc() en lugar de query
+      // Obtener información del psicólogo
       let psychologistName = 'Psicólogo';
       try {
         const psychologistDoc = await getDoc(doc(db, 'users', psychologistId));
@@ -129,10 +132,10 @@ export const useMedicalReports = (psychologistId: string) => {
           psychologistName = psychologistDoc.data().displayName || 'Psicólogo';
         }
       } catch (psychologistError) {
-        console.warn('Could not fetch psychologist name:', psychologistError);
+        // Silenciar error, usar nombre por defecto
       }
 
-      // Obtener información del usuario usando doc() en lugar de query
+      // Obtener información del usuario
       let userName = 'Usuario';
       try {
         const userDoc = await getDoc(doc(db, 'users', userId));
@@ -140,7 +143,7 @@ export const useMedicalReports = (psychologistId: string) => {
           userName = userDoc.data().displayName || 'Usuario';
         }
       } catch (userError) {
-        console.warn('Could not fetch user name:', userError);
+        // Silenciar error, usar nombre por defecto
       }
 
       const reportData = {
@@ -151,13 +154,10 @@ export const useMedicalReports = (psychologistId: string) => {
         updatedAt: serverTimestamp(),
       };
 
-      console.log('📋 Medical report data:', reportData);
-
       const docRef = await addDoc(collection(db, 'medicalReports'), reportData);
-      console.log('✅ Medical report created successfully:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('❌ Error creating medical report:', error);
+      console.error('Error creating medical report:', error);
       throw error;
     }
   };

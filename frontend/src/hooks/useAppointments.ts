@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, limit, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 export interface Appointment {
@@ -101,9 +101,12 @@ export const useAppointments = (psychologistId: string) => {
     notes?: string
   ) => {
     try {
-      console.log('📅 Creating appointment:', { userId, psychologistId, date, time });
+      // Validar parámetros requeridos
+      if (!userId || !psychologistId || !date || !time) {
+        throw new Error('Faltan parámetros requeridos para crear la cita');
+      }
       
-      // Obtener información del psicólogo usando doc() en lugar de query
+      // Obtener información del psicólogo
       let psychologistName = 'Psicólogo';
       try {
         const psychologistDoc = await getDoc(doc(db, 'users', psychologistId));
@@ -111,7 +114,7 @@ export const useAppointments = (psychologistId: string) => {
           psychologistName = psychologistDoc.data().displayName || 'Psicólogo';
         }
       } catch (psychologistError) {
-        console.warn('Could not fetch psychologist name:', psychologistError);
+        // Silenciar error, usar nombre por defecto
       }
 
       const appointmentData = {
@@ -127,13 +130,10 @@ export const useAppointments = (psychologistId: string) => {
         updatedAt: serverTimestamp(),
       };
 
-      console.log('📅 Appointment data:', appointmentData);
-
       const docRef = await addDoc(collection(db, 'appointments'), appointmentData);
-      console.log('✅ Appointment created successfully:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('❌ Error creating appointment:', error);
+      console.error('Error creating appointment:', error);
       throw error;
     }
   };

@@ -292,7 +292,6 @@ export const analyzeJournalEntry = async (
   recommendations: string[];
 }> => {
   try {
-    console.log('🤖 Starting AI analysis for journal entry...');
     
     // Simulate AI processing time
     await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
@@ -394,7 +393,6 @@ export const analyzeJournalEntry = async (
       recommendations: recommendations.length > 0 ? recommendations : ['Mantén el hábito de escribir en tu diario'],
     };
 
-    console.log('✅ AI analysis completed:', result);
     return result;
   } catch (error) {
     console.error('❌ Error analyzing journal entry:', error);

@@ -26,7 +26,6 @@ export const useJournal = (userId: string) => {
     (limitCount: number = 50) => {
       if (!userId) return () => {};
 
-      console.log('🔍 Setting up real-time journal entries listener for user:', userId);
       
       const journalRef = collection(db, 'journalEntries');
       const q = query(
@@ -38,7 +37,6 @@ export const useJournal = (userId: string) => {
 
       const unsubscribe = onSnapshot(q, 
         (querySnapshot) => {
-          console.log('📝 Journal entries updated:', querySnapshot.docs.length, 'entries');
           const journalEntries: JournalEntry[] = [];
 
           querySnapshot.forEach((doc) => {
@@ -127,14 +125,11 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
 
-      console.log('📝 Creating new journal entry...');
 
       // Analyze content with AI if provided
       let aiAnalysis;
       if (entryData.content && entryData.content.trim().length > 10) {
-        console.log('🤖 Analyzing journal entry with AI...');
         aiAnalysis = await analyzeJournalEntry(entryData.content);
-        console.log('✅ AI analysis completed:', aiAnalysis);
       }
 
       const newEntry = await createJournalEntry({
@@ -142,7 +137,6 @@ export const useJournal = (userId: string) => {
         aiAnalysis,
       });
 
-      console.log('✅ Journal entry created successfully:', newEntry.id);
       
       // No need to manually update state - the listener will handle it
       return newEntry;
@@ -161,14 +155,11 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
 
-      console.log('📝 Updating journal entry:', entryId);
 
       // Re-analyze content if it was updated
       let aiAnalysis = updates.aiAnalysis;
       if (updates.content && updates.content.trim().length > 10) {
-        console.log('🤖 Re-analyzing journal entry with AI...');
         aiAnalysis = await analyzeJournalEntry(updates.content);
-        console.log('✅ AI re-analysis completed:', aiAnalysis);
       }
 
       await updateJournalEntry(entryId, {
@@ -176,7 +167,6 @@ export const useJournal = (userId: string) => {
         aiAnalysis,
       });
 
-      console.log('✅ Journal entry updated successfully');
       
       // No need to manually update state - the listener will handle it
     } catch (err) {
@@ -194,11 +184,9 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
 
-      console.log('🗑️ Deleting journal entry:', entryId);
       
       await deleteJournalEntry(entryId);
       
-      console.log('✅ Journal entry deleted successfully');
       
       // No need to manually update state - the listener will handle it
     } catch (err) {
@@ -325,7 +313,6 @@ export const useJournal = (userId: string) => {
   // Load data on mount with real-time listeners
   useEffect(() => {
     if (userId) {
-      console.log('🚀 Initializing journal with real-time listeners for user:', userId);
       setLoading(true);
       
       // Set up real-time listener for journal entries
@@ -337,7 +324,6 @@ export const useJournal = (userId: string) => {
 
       // Cleanup function
       return () => {
-        console.log('🧹 Cleaning up journal listeners');
         if (unsubscribeEntries) {
           unsubscribeEntries();
         }
