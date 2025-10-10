@@ -92,24 +92,25 @@ export const useAppointments = (psychologistId: string) => {
     return () => unsubscribe();
   }, [psychologistId]);
 
-  const createAppointment = async (
-    userId: string,
-    psychologistId: string,
-    date: string,
-    time: string,
-    duration: number = 60,
-    notes?: string
-  ) => {
+  const createAppointment = async (appointmentData: {
+    patientId: string;
+    psychologistId: string;
+    appointmentDate: Date;
+    duration: number;
+    type: string;
+    notes: string;
+    status: string;
+  }) => {
     try {
       // Validar parámetros requeridos
-      if (!userId || !psychologistId || !date || !time) {
+      if (!appointmentData.patientId || !appointmentData.psychologistId || !appointmentData.appointmentDate) {
         throw new Error('Faltan parámetros requeridos para crear la cita');
       }
       
       // Obtener información del psicólogo
       let psychologistName = 'Psicólogo';
       try {
-        const psychologistDoc = await getDoc(doc(db, 'users', psychologistId));
+        const psychologistDoc = await getDoc(doc(db, 'users', appointmentData.psychologistId));
         if (psychologistDoc.exists()) {
           psychologistName = psychologistDoc.data().displayName || 'Psicólogo';
         }
@@ -117,20 +118,33 @@ export const useAppointments = (psychologistId: string) => {
         // Silenciar error, usar nombre por defecto
       }
 
-      const appointmentData = {
-        userId,
-        psychologistId,
+      // Obtener información del usuario
+      let userName = 'Usuario';
+      try {
+        const userDoc = await getDoc(doc(db, 'users', appointmentData.patientId));
+        if (userDoc.exists()) {
+          userName = userDoc.data().displayName || 'Usuario';
+        }
+      } catch (userError) {
+        // Silenciar error, usar nombre por defecto
+      }
+
+      const firebaseAppointmentData = {
+        userId: appointmentData.patientId,
+        userName,
+        psychologistId: appointmentData.psychologistId,
         psychologistName,
-        date,
-        time,
-        duration,
-        status: 'pending',
-        notes: notes || '',
+        date: appointmentData.appointmentDate.toISOString().split('T')[0], // YYYY-MM-DD
+        time: appointmentData.appointmentDate.toTimeString().split(' ')[0].substring(0, 5), // HH:MM
+        duration: appointmentData.duration,
+        type: appointmentData.type,
+        status: appointmentData.status,
+        notes: appointmentData.notes || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      const docRef = await addDoc(collection(db, 'appointments'), appointmentData);
+      const docRef = await addDoc(collection(db, 'appointments'), firebaseAppointmentData);
       return docRef.id;
     } catch (error) {
       console.error('Error creating appointment:', error);
