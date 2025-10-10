@@ -1,7 +1,7 @@
 import { Calendar, Plus, Shield, Star, User, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useAppointments } from '../hooks/useAppointments';
+import { useUserAppointments } from '../hooks/useUserAppointments';
 import { usePsychologists } from '../hooks/usePsychologists';
 import { Psychologist } from '../types';
 
@@ -12,7 +12,7 @@ interface AppointmentModalProps {
 
 const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
-  const { createAppointment, loading, appointments } = useAppointments();
+  const { createAppointment, loading, appointments } = useUserAppointments(user?.uid || '');
   const { psychologists, loading: psychologistsLoading } = usePsychologists();
   const [formData, setFormData] = useState({
     appointmentDate: '',
@@ -78,14 +78,13 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose }) 
       const appointmentDateTime = new Date(`${formData.appointmentDate}T${formData.appointmentTime}`);
 
       await createAppointment({
+        psychologistId: formData.psychologistId,
         appointmentDate: appointmentDateTime,
         duration: formData.duration,
         type: formData.type,
         reason: formData.reason,
         notes: formData.notes,
         status: 'pending',
-        psychologistId: formData.psychologistId,
-        psychologistName: selectedPsychologist?.name || 'Psicólogo',
       });
 
       // Reset form
@@ -391,8 +390,9 @@ const AppointmentCard: React.FC<{ appointment: any }> = ({ appointment }) => {
 };
 
 const AppointmentSection: React.FC = () => {
+  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const { appointments, loading } = useAppointments();
+  const { appointments, loading } = useUserAppointments(user?.uid || '');
 
   return (
     <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-6'>

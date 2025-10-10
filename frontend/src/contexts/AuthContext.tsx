@@ -428,7 +428,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
-      console.log('User profile updated:', updatedUser);
+      // User profile updated
     } catch (error: any) {
       console.error('Error updating user profile:', error);
       throw new Error(getAuthErrorMessage(error));
