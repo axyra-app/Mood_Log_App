@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
 import PsychologistNotifications from '../components/PsychologistNotifications';
+import AppointmentManagement from '../components/AppointmentManagement';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();

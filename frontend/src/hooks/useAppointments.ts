@@ -1,118 +1,179 @@
-import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { Appointment } from '../types';
 
-export const useAppointments = () => {
+export interface Appointment {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  psychologistId: string;
+  psychologistName: string;
+  date: string;
+  time: string;
+  duration: number; // en minutos
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const useAppointments = (psychologistId: string) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar citas
-  const loadAppointments = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const appointmentsRef = collection(db, 'appointments');
-      const q = query(appointmentsRef, orderBy('appointmentDate', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const appointmentsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        appointmentDate: doc.data().appointmentDate?.toDate() || new Date(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as Appointment[];
-      
-      setAppointments(appointmentsData);
-    } catch (err) {
-      console.error('Error loading appointments:', err);
-      setError(err instanceof Error ? err.message : 'Error loading appointments');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Crear cita
-  const createAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      const appointmentsRef = collection(db, 'appointments');
-      const docRef = await addDoc(appointmentsRef, {
-        ...appointmentData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      
-      return docRef.id;
-    } catch (err) {
-      console.error('Error creating appointment:', err);
-      throw err;
-    }
-  }, []);
-
-  // Actualizar cita
-  const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>) => {
-    try {
-      const appointmentRef = doc(db, 'appointments', appointmentId);
-      await updateDoc(appointmentRef, {
-        ...updates,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (err) {
-      console.error('Error updating appointment:', err);
-      throw err;
-    }
-  }, []);
-
-  // Eliminar cita
-  const deleteAppointment = useCallback(async (appointmentId: string) => {
-    try {
-      const appointmentRef = doc(db, 'appointments', appointmentId);
-      await deleteDoc(appointmentRef);
-    } catch (err) {
-      console.error('Error deleting appointment:', err);
-      throw err;
-    }
-  }, []);
-
-  // Suscripción en tiempo real
   useEffect(() => {
-    const appointmentsRef = collection(db, 'appointments');
-    const q = query(appointmentsRef, orderBy('appointmentDate', 'desc'));
-    
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const appointmentsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          appointmentDate: doc.data().appointmentDate?.toDate() || new Date(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        })) as Appointment[];
-        
-        setAppointments(appointmentsData);
-        setLoading(false);
+    if (!psychologistId) {
+      setLoading(false);
+      return;
+    }
+
+    const appointmentsQuery = query(
+      collection(db, 'appointments'),
+      where('psychologistId', '==', psychologistId),
+      orderBy('date', 'asc'),
+      orderBy('time', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(appointmentsQuery,
+      async (snapshot) => {
+        try {
+          const appointmentsData: Appointment[] = [];
+          
+          for (const docSnapshot of snapshot.docs) {
+            const data = docSnapshot.data();
+            
+            // Obtener información del usuario
+            const userQuery = query(
+              collection(db, 'users'),
+              where('__name__', '==', data.userId),
+              limit(1)
+            );
+            const userSnapshot = await getDocs(userQuery);
+            
+            if (!userSnapshot.empty) {
+              const userData = userSnapshot.docs[0].data();
+              
+              appointmentsData.push({
+                id: docSnapshot.id,
+                userId: data.userId,
+                userName: userData.displayName || userData.username || 'Usuario',
+                userEmail: userData.email || '',
+                psychologistId: data.psychologistId,
+                psychologistName: data.psychologistName || '',
+                date: data.date,
+                time: data.time,
+                duration: data.duration || 60,
+                status: data.status || 'pending',
+                notes: data.notes || '',
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+              });
+            }
+          }
+          
+          setAppointments(appointmentsData);
+          setError(null);
+        } catch (err) {
+          console.error('Error fetching appointments:', err);
+          setError('Error al cargar las citas');
+        } finally {
+          setLoading(false);
+        }
       },
       (err) => {
-        console.error('Error in appointments subscription:', err);
-        setError(err.message);
+        console.error('Error in appointments listener:', err);
+        setError('Error en la conexión de citas');
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [psychologistId]);
+
+  const createAppointment = async (
+    userId: string,
+    psychologistId: string,
+    date: string,
+    time: string,
+    duration: number = 60,
+    notes?: string
+  ) => {
+    try {
+      // Obtener información del psicólogo
+      const psychologistQuery = query(
+        collection(db, 'users'),
+        where('__name__', '==', psychologistId),
+        limit(1)
+      );
+      const psychologistSnapshot = await getDocs(psychologistQuery);
+      const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
+
+      const appointmentData = {
+        userId,
+        psychologistId,
+        psychologistName,
+        date,
+        time,
+        duration,
+        status: 'pending',
+        notes: notes || '',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(db, 'appointments'), appointmentData);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  };
+
+  const updateAppointmentStatus = async (appointmentId: string, status: Appointment['status'], notes?: string) => {
+    try {
+      const appointmentRef = doc(db, 'appointments', appointmentId);
+      await updateDoc(appointmentRef, {
+        status,
+        notes: notes || '',
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      throw error;
+    }
+  };
+
+  const getAppointmentsByStatus = (status: Appointment['status']) => {
+    return appointments.filter(appointment => appointment.status === status);
+  };
+
+  const getAppointmentsByDate = (date: string) => {
+    return appointments.filter(appointment => appointment.date === date);
+  };
+
+  const getUpcomingAppointments = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return appointments.filter(appointment => 
+      appointment.date >= today && 
+      (appointment.status === 'accepted' || appointment.status === 'pending')
+    );
+  };
+
+  const getPendingAppointments = () => {
+    return appointments.filter(appointment => appointment.status === 'pending');
+  };
 
   return {
     appointments,
     loading,
     error,
     createAppointment,
-    updateAppointment,
-    deleteAppointment,
-    loadAppointments,
+    updateAppointmentStatus,
+    getAppointmentsByStatus,
+    getAppointmentsByDate,
+    getUpcomingAppointments,
+    getPendingAppointments,
   };
 };
