@@ -43,8 +43,8 @@ const DashboardPsychologist: React.FC = () => {
     // Actualizar sesiones de chat existentes (deshabilitado temporalmente)
     // updateExistingChatSessions().catch(console.error);
     
-    // Crear relaciones paciente-psicólogo desde citas existentes
-    createPatientRelationsFromAppointments().catch(console.error);
+    // Crear relaciones paciente-psicólogo desde citas existentes (deshabilitado temporalmente)
+    // createPatientRelationsFromAppointments().catch(console.error);
   }, []);
 
   const toggleDarkMode = () => {

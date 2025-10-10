@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentSection from '../components/AppointmentSection';
 import Logo from '../components/Logo';
+import NotificationsPanel from '../components/NotificationsPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
@@ -120,6 +121,9 @@ const DashboardSimple: React.FC = () => {
             </div>
 
             <div className='flex items-center space-x-2 sm:space-x-4'>
+              {/* Notificaciones */}
+              <NotificationsPanel isDarkMode={isDarkMode} />
+              
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors ${

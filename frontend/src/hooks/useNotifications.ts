@@ -138,25 +138,23 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
 // Función para crear notificación cuando un paciente escribe
 export const createChatNotification = async (
   psychologistId: string,
-  userId: string,
-  userName: string,
-  message: string
+  senderId: string,
+  senderName: string,
+  message: string,
+  sessionId?: string
 ) => {
   try {
     await addDoc(collection(db, 'notifications'), {
       userId: psychologistId, // El psicólogo recibe la notificación
       psychologistId: psychologistId,
+      senderId: senderId,
+      senderName: senderName,
       type: 'chat_message',
-      title: 'Nuevo mensaje de paciente',
-      message: `${userName}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`,
+      title: `Nuevo mensaje de ${senderName}`,
+      message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
       isRead: false,
       createdAt: serverTimestamp(),
-      data: {
-        userId,
-        userName,
-        message,
-        chatType: 'patient_message',
-      },
+      relatedItemId: sessionId,
     });
   } catch (error) {
     console.error('Error creating chat notification:', error);
@@ -166,25 +164,23 @@ export const createChatNotification = async (
 // Función para crear notificación cuando un psicólogo escribe
 export const createPsychologistChatNotification = async (
   userId: string,
-  psychologistId: string,
-  psychologistName: string,
-  message: string
+  senderId: string,
+  senderName: string,
+  message: string,
+  sessionId?: string
 ) => {
   try {
     await addDoc(collection(db, 'notifications'), {
       userId: userId, // El usuario recibe la notificación
-      psychologistId: psychologistId,
+      psychologistId: senderId,
+      senderId: senderId,
+      senderName: senderName,
       type: 'chat_message',
-      title: 'Nuevo mensaje del psicólogo',
-      message: `${psychologistName}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`,
+      title: `Nuevo mensaje de ${senderName}`,
+      message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
       isRead: false,
       createdAt: serverTimestamp(),
-      data: {
-        psychologistId,
-        psychologistName,
-        message,
-        chatType: 'psychologist_message',
-      },
+      relatedItemId: sessionId,
     });
   } catch (error) {
     console.error('Error creating psychologist chat notification:', error);
