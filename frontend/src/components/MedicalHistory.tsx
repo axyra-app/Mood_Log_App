@@ -99,6 +99,16 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
     }
   };
 
+  const handleNewReport = async () => {
+    try {
+      // Mostrar mensaje temporal
+      toast.success('Funcionalidad de nuevo reporte próximamente disponible');
+    } catch (error) {
+      console.error('Error creating new report:', error);
+      toast.error('Error al crear el reporte');
+    }
+  };
+
   const exportReport = (report: any) => {
     const reportText = `
 REPORTE MÉDICO
@@ -162,7 +172,7 @@ Próxima Cita: ${report.nextAppointment || 'No programada'}
         </div>
         
         <button
-          onClick={() => setShowReportForm(true)}
+          onClick={handleNewReport}
           className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />

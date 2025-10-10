@@ -50,6 +50,16 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
     }
   };
 
+  const handleCreateAppointment = async () => {
+    try {
+      // Crear nueva cita
+      toast.success('Funcionalidad de nueva cita próximamente disponible');
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast.error('Error al crear la cita');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -128,7 +138,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
         </div>
         
         <button
-          onClick={() => setActiveTab('pending')}
+          onClick={handleCreateAppointment}
           className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
