@@ -102,8 +102,16 @@ export const useAppointments = (psychologistId: string) => {
     status: string;
   }) => {
     try {
+      // Log temporal para debugging
+      console.log('createAppointment called with:', appointmentData);
+      
       // Validar parámetros requeridos
       if (!appointmentData.patientId || !appointmentData.psychologistId || !appointmentData.appointmentDate) {
+        console.log('Validation failed:', {
+          patientId: appointmentData.patientId,
+          psychologistId: appointmentData.psychologistId,
+          appointmentDate: appointmentData.appointmentDate
+        });
         throw new Error('Faltan parámetros requeridos para crear la cita');
       }
       

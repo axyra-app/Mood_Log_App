@@ -77,19 +77,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let isMounted = true;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      console.log('🔍 onAuthStateChanged triggered:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user');
-      console.log('🔍 Firebase User UID:', firebaseUser?.uid || 'No UID');
-      console.log('🔍 Firebase User Email:', firebaseUser?.email || 'No email');
-      console.log('🔍 Firebase User DisplayName:', firebaseUser?.displayName || 'No displayName');
       
       if (!isMounted) {
-        console.log('❌ Component not mounted, skipping...');
         return;
       }
 
       try {
         if (firebaseUser) {
-          console.log('🔍 Processing authenticated user:', firebaseUser.email);
           try {
             // Intentar cargar el perfil del usuario desde Firestore
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
@@ -125,17 +119,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                                            userData.role === 'user' && 
                                            userData.displayName === firebaseUser.email?.split('@')[0];
               
-              console.log('AuthContext - User profile check:', {
-                isGoogleUser,
-                needsProfileCompletion,
-                userDataRole: userData.role,
-                userDataDisplayName: userData.displayName,
-                firebaseDisplayName: firebaseUser.displayName,
-                email: firebaseUser.email,
-                username: userData.username,
-                displayNameFromEmail: firebaseUser.email?.split('@')[0],
-                isDisplayNameFromEmail: userData.displayName === firebaseUser.email?.split('@')[0]
-              });
               
               if (needsProfileCompletion) {
                 // Establecer el usuario con datos básicos para redirigir a completar perfil
@@ -146,10 +129,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   username: firebaseUser.email?.split('@')[0],
                   role: 'user', // Rol por defecto
                 };
-                console.log('AuthContext - Setting basic user data for profile completion');
                 if (isMounted) setUser(basicUserData);
               } else {
-                console.log('AuthContext - Setting complete user data');
                 if (isMounted) setUser(userDataWithAuth);
               }
             } else {
@@ -324,7 +305,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       
-      console.log('🔍 Attempting Google Sign-In with popup...');
       
       // Verificar si el popup está bloqueado
       const popup = window.open('', '_blank', 'width=500,height=600');
@@ -334,8 +314,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       popup.close();
       
       const result = await signInWithPopup(auth, provider);
-      console.log('✅ Google Sign-In successful:', result.user.email);
-      console.log('✅ User UID:', result.user.uid);
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
@@ -361,7 +339,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       
-      console.log('🔍 Attempting Google Sign-Up with popup...');
       
       // Verificar si el popup está bloqueado
       const popup = window.open('', '_blank', 'width=500,height=600');
@@ -371,8 +348,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       popup.close();
       
       const result = await signInWithPopup(auth, provider);
-      console.log('✅ Google Sign-Up successful:', result.user.email);
-      console.log('✅ User UID:', result.user.uid);
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {

@@ -42,24 +42,12 @@ const LoginSimple: React.FC = () => {
                                    user.role === 'user' && 
                                    user.displayName === user.email?.split('@')[0];
 
-      console.log('LoginSimple - User profile check:', {
-        needsProfileCompletion,
-        isGoogleUser,
-        username: user.username,
-        displayName: user.displayName,
-        role: user.role,
-        email: user.email,
-        displayNameFromEmail: user.email?.split('@')[0],
-        isDisplayNameFromEmail: user.displayName === user.email?.split('@')[0]
-      });
 
       if (needsProfileCompletion) {
         // Redirigir a completar perfil
-        console.log('Redirecting to complete profile');
         navigate('/complete-profile');
       } else {
         // Redirigir según el rol del usuario
-        console.log('Redirecting based on role:', user.role);
         if (user.role === 'psychologist') {
           navigate('/dashboard-psychologist');
         } else {
