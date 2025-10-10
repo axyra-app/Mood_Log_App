@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, limit, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { usePatientRelations } from './usePatientRelations';
 
 export interface UserAppointment {
   id: string;
@@ -23,6 +24,9 @@ export const useUserAppointments = (userId: string) => {
   const [appointments, setAppointments] = useState<UserAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Hook para manejar relaciones paciente-psicólogo
+  const { createPatientRelation } = usePatientRelations('');
 
   useEffect(() => {
     if (!userId) {
@@ -159,6 +163,15 @@ export const useUserAppointments = (userId: string) => {
       };
 
       const docRef = await addDoc(collection(db, 'appointments'), firebaseAppointmentData);
+      
+      // Crear relación paciente-psicólogo para permitir acceso a moodLogs
+      try {
+        await createPatientRelation(userId, appointmentData.psychologistId);
+        console.log('✅ Relación paciente-psicólogo creada');
+      } catch (relationError) {
+        console.error('⚠️ Error creando relación paciente-psicólogo:', relationError);
+        // No lanzar error aquí para no interrumpir la creación de la cita
+      }
       
       return docRef.id;
     } catch (error) {

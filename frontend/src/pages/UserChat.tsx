@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import NotificationsPanel from '../components/NotificationsPanel';
 import { useAuth } from '../contexts/AuthContext';
+import { useAvailablePsychologists } from '../hooks/useAvailablePsychologists';
 import { useUserChatMessages, useUserChatSessions } from '../hooks/useUserChat';
 
 const UserChat: React.FC = () => {
@@ -19,6 +20,7 @@ const UserChat: React.FC = () => {
 
   const { sessions, loading: sessionsLoading, markAsRead, createSession } = useUserChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useUserChatMessages(selectedSession);
+  const { psychologists: availablePsychs, loading: psychologistsLoading } = useAvailablePsychologists();
 
   // Filtrar sesiones donde el usuario actual es el usuario
   const mySessions = sessions.filter((session) => session.userId === user?.uid);
@@ -28,30 +30,6 @@ const UserChat: React.FC = () => {
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
     }
-  }, []);
-
-  useEffect(() => {
-    // Cargar psicólogos disponibles
-    const loadPsychologists = async () => {
-      try {
-        const { collection, query, where, getDocs } = await import('firebase/firestore');
-        const { db } = await import('../services/firebase');
-
-        const psychologistsQuery = query(collection(db, 'psychologists'));
-
-        const snapshot = await getDocs(psychologistsQuery);
-        const psychologists = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setAvailablePsychologists(psychologists);
-      } catch (error) {
-        console.error('Error loading psychologists:', error);
-      }
-    };
-
-    loadPsychologists();
   }, []);
 
   const toggleDarkMode = () => {
@@ -225,17 +203,22 @@ const UserChat: React.FC = () => {
                   {/* Botón para iniciar nueva conversación */}
                   <button
                     onClick={() => {
-                      if (availablePsychologists.length > 0) {
-                        startChatWithPsychologist(availablePsychologists[0].id);
+                      if (availablePsychs.length > 0) {
+                        startChatWithPsychologist(availablePsychs[0].userId);
+                      } else {
+                        toast.error('No hay psicólogos disponibles en este momento');
                       }
                     }}
+                    disabled={psychologistsLoading || availablePsychs.length === 0}
                     className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors duration-300 ${
-                      isDarkMode
+                      psychologistsLoading || availablePsychs.length === 0
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : isDarkMode
                         ? 'bg-purple-600 text-white hover:bg-purple-700'
                         : 'bg-purple-500 text-white hover:bg-purple-600'
                     }`}
                   >
-                    Nuevo Chat
+                    {psychologistsLoading ? 'Cargando...' : `Nuevo Chat (${availablePsychs.length})`}
                   </button>
                 </div>
               </div>
@@ -253,24 +236,85 @@ const UserChat: React.FC = () => {
                     </p>
                   </div>
                 ) : mySessions.length === 0 ? (
-                  <div className='p-4 text-center'>
-                    <MessageCircle
-                      className={`w-12 h-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}
-                    />
-                    <p
-                      className={`text-sm transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}
-                    >
-                      No tienes conversaciones aún
-                    </p>
-                    <p
-                      className={`text-xs mt-1 transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                      }`}
-                    >
-                      Inicia una conversación con un psicólogo
-                    </p>
+                  <div className='p-4'>
+                    <div className='text-center mb-4'>
+                      <MessageCircle
+                        className={`w-12 h-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}
+                      />
+                      <p
+                        className={`text-sm transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}
+                      >
+                        No tienes conversaciones aún
+                      </p>
+                      <p
+                        className={`text-xs mt-1 transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                        }`}
+                      >
+                        Inicia una conversación con un psicólogo
+                      </p>
+                    </div>
+                    
+                    {/* Lista de psicólogos disponibles */}
+                    {availablePsychs.length > 0 && (
+                      <div className='mt-4'>
+                        <h3
+                          className={`text-sm font-medium mb-2 ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}
+                        >
+                          Psicólogos Disponibles:
+                        </h3>
+                        <div className='space-y-2'>
+                          {availablePsychs.slice(0, 3).map((psychologist) => (
+                            <div
+                              key={psychologist.id}
+                              onClick={() => startChatWithPsychologist(psychologist.userId)}
+                              className={`p-3 rounded-lg cursor-pointer transition-colors duration-300 ${
+                                isDarkMode
+                                  ? 'bg-gray-700 hover:bg-gray-600'
+                                  : 'bg-gray-100 hover:bg-gray-200'
+                              }`}
+                            >
+                              <div className='flex items-center justify-between'>
+                                <div>
+                                  <p
+                                    className={`text-sm font-medium ${
+                                      isDarkMode ? 'text-white' : 'text-gray-900'
+                                    }`}
+                                  >
+                                    {psychologist.displayName}
+                                  </p>
+                                  <p
+                                    className={`text-xs ${
+                                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                    }`}
+                                  >
+                                    {psychologist.specialization}
+                                  </p>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <div
+                                    className={`w-2 h-2 rounded-full ${
+                                      psychologist.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                                    }`}
+                                  />
+                                  <span
+                                    className={`text-xs ${
+                                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                    }`}
+                                  >
+                                    {psychologist.isOnline ? 'En línea' : 'Desconectado'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className='divide-y divide-gray-200 dark:divide-gray-700'>
