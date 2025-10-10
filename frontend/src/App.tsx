@@ -28,6 +28,7 @@ import RegisterSimple from './pages/RegisterSimple';
 import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
 import TermsSimple from './pages/TermsSimple';
+import UserChat from './pages/UserChat';
 
 function App() {
   return (
@@ -68,6 +69,14 @@ function App() {
                   <ProtectedRoutePsychologist>
                     <PsychologistChat />
                   </ProtectedRoutePsychologist>
+                }
+              />
+              <Route
+                path='/user-chat'
+                element={
+                  <ProtectedRoute>
+                    <UserChat />
+                  </ProtectedRoute>
                 }
               />
               <Route

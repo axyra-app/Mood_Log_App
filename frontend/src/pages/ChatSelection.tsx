@@ -17,7 +17,11 @@ const ChatSelection: React.FC = () => {
   };
 
   const handlePsychologistChat = () => {
-    navigate('/chat/psychologist');
+    if (user?.role === 'psychologist') {
+      navigate('/psychologist-chat');
+    } else {
+      navigate('/user-chat');
+    }
   };
 
   return (

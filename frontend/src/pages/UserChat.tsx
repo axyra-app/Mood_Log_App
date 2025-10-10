@@ -5,25 +5,53 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useChatSessions, useChatMessages } from '../hooks/useChat';
 
-const PsychologistChat: React.FC = () => {
+const UserChat: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [availablePsychologists, setAvailablePsychologists] = useState<any[]>([]);
 
-  const { sessions, loading: sessionsLoading, markAsRead } = useChatSessions(user?.uid || '');
+  const { sessions, loading: sessionsLoading, markAsRead, createSession } = useChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useChatMessages(selectedSession);
 
-  // Las sesiones ya vienen filtradas por psicólogo desde el hook
-  const mySessions = sessions;
+  // Filtrar sesiones donde el usuario actual es el usuario
+  const mySessions = sessions.filter(session => session.userId === user?.uid);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
     }
+  }, []);
+
+  useEffect(() => {
+    // Cargar psicólogos disponibles
+    const loadPsychologists = async () => {
+      try {
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const { db } = await import('../services/firebase');
+        
+        const psychologistsQuery = query(
+          collection(db, 'users'),
+          where('role', '==', 'psychologist')
+        );
+        
+        const snapshot = await getDocs(psychologistsQuery);
+        const psychologists = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        setAvailablePsychologists(psychologists);
+      } catch (error) {
+        console.error('Error loading psychologists:', error);
+      }
+    };
+
+    loadPsychologists();
   }, []);
 
   const toggleDarkMode = () => {
@@ -37,7 +65,7 @@ const PsychologistChat: React.FC = () => {
 
     try {
       setIsSending(true);
-      await sendMessage(selectedSession, user.uid, user.displayName || 'Psicólogo', newMessage);
+      await sendMessage(selectedSession, user.uid, user.displayName || 'Usuario', newMessage);
       setNewMessage('');
       
       // Marcar sesión como leída
@@ -54,6 +82,19 @@ const PsychologistChat: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const startChatWithPsychologist = async (psychologistId: string) => {
+    if (!user) return;
+
+    try {
+      const sessionId = await createSession(user.uid, psychologistId);
+      setSelectedSession(sessionId);
+      toast.success('Conversación iniciada');
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast.error('Error al iniciar la conversación');
     }
   };
 
@@ -91,7 +132,7 @@ const PsychologistChat: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/dashboard-psychologist')}
+                onClick={() => navigate('/dashboard')}
                 className={`p-2 rounded-lg transition-colors duration-300 ${
                   isDarkMode
                     ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -106,7 +147,7 @@ const PsychologistChat: React.FC = () => {
               <h1 className={`text-xl font-bold transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                Chat con Pacientes
+                Chat con Psicólogos
               </h1>
             </div>
             
@@ -141,7 +182,7 @@ const PsychologistChat: React.FC = () => {
                 <h2 className={`text-lg font-semibold transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  Conversaciones Activas
+                  Mis Conversaciones
                 </h2>
                 <p className={`text-sm transition-colors duration-500 ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-600'
@@ -173,7 +214,7 @@ const PsychologistChat: React.FC = () => {
                     <p className={`text-xs transition-colors duration-500 ${
                       isDarkMode ? 'text-gray-500' : 'text-gray-500'
                     }`}>
-                      Los pacientes aparecerán aquí cuando inicien una conversación
+                      Selecciona un psicólogo para comenzar
                     </p>
                   </div>
                 ) : (
@@ -204,7 +245,7 @@ const PsychologistChat: React.FC = () => {
                                 ? 'text-white'
                                 : 'text-gray-900'
                             }`}>
-                              {session.userName || 'Usuario'}
+                              {session.psychologistName || 'Psicólogo'}
                             </p>
                             <p className={`text-xs truncate transition-colors duration-500 ${
                               selectedSession === session.id
@@ -256,7 +297,7 @@ const PsychologistChat: React.FC = () => {
                         <h3 className={`font-medium transition-colors duration-500 ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>
-                          {mySessions.find(s => s.id === selectedSession)?.userName || 'Usuario'}
+                          {mySessions.find(s => s.id === selectedSession)?.psychologistName || 'Psicólogo'}
                         </h3>
                         <p className={`text-sm transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-600'
@@ -379,9 +420,56 @@ const PsychologistChat: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Available Psychologists */}
+        {mySessions.length === 0 && (
+          <div className={`mt-6 p-6 rounded-xl shadow-sm border transition-colors duration-500 ${
+            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              Psicólogos Disponibles
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availablePsychologists.map((psychologist) => (
+                <div
+                  key={psychologist.id}
+                  className={`p-4 rounded-lg border transition-colors duration-500 ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className={`font-medium transition-colors duration-500 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {psychologist.displayName || 'Psicólogo'}
+                      </h4>
+                      <p className={`text-sm transition-colors duration-500 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        {psychologist.specialization || 'Especialista'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => startChatWithPsychologist(psychologist.id)}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                  >
+                    Iniciar Chat
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default PsychologistChat;
+export default UserChat;
