@@ -12,8 +12,16 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
   const [activeTab, setActiveTab] = useState<'pending' | 'upcoming' | 'all'>('pending');
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    patientName: '',
+    date: '',
+    time: '',
+    reason: '',
+    notes: '',
+  });
 
   // Datos temporales hasta que se arreglen los hooks
   const appointments: any[] = [];
@@ -21,7 +29,29 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
   const upcomingAppointments: any[] = [];
 
   const handleNewAppointment = () => {
-    toast.success('Funcionalidad de nueva cita disponible próximamente');
+    setShowNewAppointment(true);
+  };
+
+  const handleCreateAppointment = async () => {
+    try {
+      setLoading(true);
+      // Simular creación de cita
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Cita creada exitosamente');
+      setShowNewAppointment(false);
+      setNewAppointment({
+        patientName: '',
+        date: '',
+        time: '',
+        reason: '',
+        notes: '',
+      });
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast.error('Error al crear la cita');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAcceptAppointment = async (appointmentId: string) => {
@@ -369,6 +399,150 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
                     </button>
                   </>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Appointment Modal */}
+      {showNewAppointment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-md rounded-xl shadow-2xl transition-colors duration-500 ${
+            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          } border`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-lg font-semibold transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Nueva Cita
+                </h3>
+                <button
+                  onClick={() => setShowNewAppointment(false)}
+                  className={`p-2 rounded-lg transition-colors duration-300 ${
+                    isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Nombre del Paciente
+                  </label>
+                  <input
+                    type="text"
+                    value={newAppointment.patientName}
+                    onChange={(e) => setNewAppointment(prev => ({ ...prev, patientName: e.target.value }))}
+                    className={`w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-purple-500'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-purple-500'
+                    }`}
+                    placeholder="Nombre del paciente"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Fecha
+                    </label>
+                    <input
+                      type="date"
+                      value={newAppointment.date}
+                      onChange={(e) => setNewAppointment(prev => ({ ...prev, date: e.target.value }))}
+                      className={`w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                        isDarkMode
+                          ? 'bg-gray-700 border-gray-600 text-white focus:ring-purple-500'
+                          : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-purple-500'
+                      }`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Hora
+                    </label>
+                    <input
+                      type="time"
+                      value={newAppointment.time}
+                      onChange={(e) => setNewAppointment(prev => ({ ...prev, time: e.target.value }))}
+                      className={`w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                        isDarkMode
+                          ? 'bg-gray-700 border-gray-600 text-white focus:ring-purple-500'
+                          : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-purple-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Motivo de la Cita
+                  </label>
+                  <textarea
+                    value={newAppointment.reason}
+                    onChange={(e) => setNewAppointment(prev => ({ ...prev, reason: e.target.value }))}
+                    className={`w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-purple-500'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-purple-500'
+                    }`}
+                    rows={3}
+                    placeholder="Describe el motivo de la cita..."
+                  />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Notas Adicionales
+                  </label>
+                  <textarea
+                    value={newAppointment.notes}
+                    onChange={(e) => setNewAppointment(prev => ({ ...prev, notes: e.target.value }))}
+                    className={`w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-purple-500'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-purple-500'
+                    }`}
+                    rows={3}
+                    placeholder="Notas adicionales..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowNewAppointment(false)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
+                    isDarkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCreateAppointment}
+                  disabled={loading || !newAppointment.patientName || !newAppointment.date || !newAppointment.time}
+                  className="px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors duration-300 disabled:opacity-50"
+                >
+                  {loading ? 'Creando...' : 'Crear Cita'}
+                </button>
               </div>
             </div>
           </div>

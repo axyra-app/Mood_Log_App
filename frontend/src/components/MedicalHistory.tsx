@@ -26,10 +26,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
   const medicalReports: any[] = [];
 
   const handleNewReport = () => {
-    if (!selectedPatient) {
-      toast.error('Selecciona un paciente primero');
-      return;
-    }
+    // Permitir crear reporte sin seleccionar paciente primero
     setShowNewReport(true);
   };
 
