@@ -8,7 +8,7 @@ import { uploadFile } from '../services/firebase';
 import Logo from '../components/Logo';
 
 const RegisterSimple: React.FC = () => {
-  const { signUp, signUpWithGoogle } = useAuth();
+  const { signUp, signUpWithGoogle, user } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -35,6 +35,48 @@ const RegisterSimple: React.FC = () => {
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  // Redirigir usuarios autenticados
+  useEffect(() => {
+    if (user) {
+      // Solo redirigir si estamos en la página de registro
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/register') {
+        return; // No redirigir si ya estamos en otra página
+      }
+
+      // Verificar si el usuario necesita completar su perfil
+      const isGoogleUser = user.email && user.username === user.email.split('@')[0];
+      
+      // Lógica simplificada: Si es usuario de Google y tiene role 'user', necesita completar perfil
+      const needsProfileCompletion = isGoogleUser && user.role === 'user';
+
+      console.log('RegisterSimple - User profile check:', {
+        needsProfileCompletion,
+        isGoogleUser,
+        username: user.username,
+        displayName: user.displayName,
+        role: user.role,
+        email: user.email,
+        displayNameFromEmail: user.email?.split('@')[0],
+        isDisplayNameFromEmail: user.displayName === user.email?.split('@')[0]
+      });
+
+      if (needsProfileCompletion) {
+        // Redirigir a completar perfil
+        console.log('RegisterSimple - Redirecting to complete profile');
+        navigate('/complete-profile');
+      } else {
+        // Redirigir según el rol del usuario
+        console.log('RegisterSimple - Redirecting based on role:', user.role);
+        if (user.role === 'psychologist') {
+          navigate('/dashboard-psychologist');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    }
+  }, [user, navigate]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
