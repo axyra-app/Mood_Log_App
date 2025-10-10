@@ -1,17 +1,15 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
-import NotificationToast from '../components/NotificationToast';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
-import { commonValidationRules, useValidation } from '../hooks/useValidation';
+import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
 import Logo from '../components/Logo';
 
 const RegisterSimple: React.FC = () => {
   const { signUp, signUpWithGoogle } = useAuth();
   const { validate, hasError, getError, clearErrors } = useValidation();
-  const { notifications, showSuccess, showError, removeNotification } = useNotifications();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -19,7 +17,6 @@ const RegisterSimple: React.FC = () => {
     password: '',
     confirmPassword: '',
     role: 'user' as 'user' | 'psychologist',
-    // Campos profesionales para psicólogos
     professionalTitle: '',
     specialization: '',
     yearsOfExperience: '',
@@ -49,83 +46,72 @@ const RegisterSimple: React.FC = () => {
       ...prev,
       [name]: value,
     }));
+    clearErrors(name);
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tipo de archivo
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        showError('Error de archivo', 'Solo se permiten archivos PDF o Word');
-        return;
-      }
-
-      // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        showError('Error de archivo', 'El archivo debe ser menor a 5MB');
+        toast.error('El archivo es demasiado grande. Máximo 5MB.');
         return;
       }
-
-      setFormData((prev) => ({
-        ...prev,
-        cvFile: file,
-      }));
-
-      showSuccess('Archivo seleccionado', 'El archivo se subirá al crear la cuenta');
+      setFormData((prev) => ({ ...prev, cvFile: file }));
     }
   };
 
   const validateForm = () => {
-    clearErrors();
+    let isValid = true;
 
-    // Crear reglas de validación dinámicas
-    const validationRules = {
-      ...commonValidationRules,
-      confirmPassword: {
-        required: true,
-        custom: (value: string) => {
-          if (value !== formData.password) {
-            return 'Las contraseñas no coinciden';
-          }
-          return null;
-        },
-      },
-      agreedToTerms: {
-        required: true,
-        custom: (value: boolean) => {
-          if (!value) {
-            return 'Debes aceptar los términos de servicio y política de privacidad';
-          }
-          return null;
-        },
-      },
-    };
-
-    // Agregar validaciones específicas para psicólogos
-    if (formData.role === 'psychologist') {
-      Object.assign(validationRules, {
-        professionalTitle: commonValidationRules.professionalTitle,
-        specialization: commonValidationRules.specialization,
-        yearsOfExperience: commonValidationRules.yearsOfExperience,
-        licenseNumber: commonValidationRules.licenseNumber,
-        bio: commonValidationRules.bio,
-      });
+    if (!formData.firstName.trim()) {
+      validate('firstName', 'El nombre es requerido');
+      isValid = false;
     }
 
-    const dataToValidate = {
-      ...formData,
-      agreedToTerms,
-    };
+    if (!formData.lastName.trim()) {
+      validate('lastName', 'El apellido es requerido');
+      isValid = false;
+    }
 
-    const isValid = validate(dataToValidate, validationRules);
+    if (!formData.email.trim()) {
+      validate('email', 'El correo electrónico es requerido');
+      isValid = false;
+    } else if (!commonValidationRules.email.test(formData.email)) {
+      validate('email', 'El correo electrónico no es válido');
+      isValid = false;
+    }
 
-    if (!isValid) {
-      showError('Error de validación', 'Por favor corrige los errores en el formulario');
+    if (!formData.password) {
+      validate('password', 'La contraseña es requerida');
+      isValid = false;
+    } else if (formData.password.length < 6) {
+      validate('password', 'La contraseña debe tener al menos 6 caracteres');
+      isValid = false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      validate('confirmPassword', 'Las contraseñas no coinciden');
+      isValid = false;
+    }
+
+    if (formData.role === 'psychologist') {
+      if (!formData.professionalTitle.trim()) {
+        validate('professionalTitle', 'El título profesional es requerido');
+        isValid = false;
+      }
+      if (!formData.specialization.trim()) {
+        validate('specialization', 'La especialización es requerida');
+        isValid = false;
+      }
+      if (!formData.yearsOfExperience) {
+        validate('yearsOfExperience', 'Los años de experiencia son requeridos');
+        isValid = false;
+      }
+    }
+
+    if (!agreedToTerms) {
+      toast.error('Debes aceptar los términos y condiciones');
+      isValid = false;
     }
 
     return isValid;
@@ -139,23 +125,21 @@ const RegisterSimple: React.FC = () => {
     try {
       setLoading(true);
 
-      // Subir CV si es psicólogo y tiene archivo
       let cvUrl = '';
       if (formData.role === 'psychologist' && formData.cvFile) {
         setUploadingFile(true);
         try {
           cvUrl = await uploadFile(formData.cvFile, `psychologists/${formData.email}/cv`);
-          showSuccess('Archivo subido', 'Tu hoja de vida se ha subido correctamente');
+          toast.success('Archivo subido correctamente');
         } catch (uploadError) {
           console.error('Error uploading CV:', uploadError);
-          showError('Error de archivo', 'Error al subir el archivo CV. Inténtalo de nuevo.');
+          toast.error('Error al subir el archivo CV. Inténtalo de nuevo.');
           return;
         } finally {
           setUploadingFile(false);
         }
       }
 
-      // Preparar datos profesionales si es psicólogo
       const professionalData =
         formData.role === 'psychologist'
           ? {
@@ -171,9 +155,8 @@ const RegisterSimple: React.FC = () => {
 
       await signUp(formData.email, formData.password, formData.role, professionalData);
 
-      showSuccess('¡Cuenta creada!', `Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
+      toast.success(`¡Cuenta creada! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
 
-      // Redirigir según el rol
       setTimeout(() => {
         if (formData.role === 'psychologist') {
           navigate('/dashboard-psychologist');
@@ -183,16 +166,7 @@ const RegisterSimple: React.FC = () => {
       }, 1500);
     } catch (error: any) {
       console.error('Registration error:', error);
-
-      // Manejar específicamente el error de email ya existente
-      if (error.message && error.message.includes('Ya existe una cuenta con este email')) {
-        showError(
-          'Email ya registrado',
-          'Ya existe una cuenta con este email. ¿Quieres iniciar sesión? Ve a la página de login.'
-        );
-      } else {
-        showError('Error de registro', error.message || 'Error inesperado al crear la cuenta');
-      }
+      toast.error(error.message || 'Error al crear la cuenta');
     } finally {
       setLoading(false);
     }
@@ -201,96 +175,60 @@ const RegisterSimple: React.FC = () => {
   const handleGoogleSignUp = async () => {
     try {
       setLoading(true);
-
       await signUpWithGoogle();
-      
-      // Redirigir inmediatamente a completar perfil
-      navigate('/complete-profile');
+      toast.success('¡Cuenta creada con Google!');
     } catch (error: any) {
-      showError('Error en el registro con Google', error.message);
+      console.error('Google registration error:', error);
+      toast.error(error.message || 'Error al registrarse con Google');
     } finally {
       setLoading(false);
     }
   };
 
   if (!isLoaded) {
-    return (
-      <div
-        className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900' : 'bg-white'
-        }`}
-      >
-        <LoadingSpinner size='xl' text='Cargando...' isDarkMode={isDarkMode} />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
-    <>
-      {/* Notificaciones */}
-      {notifications.map((notification) => (
-        <NotificationToast
-          key={notification.id}
-          {...notification}
-          onClose={removeNotification}
-          isDarkMode={isDarkMode}
-        />
-      ))}
-
-      <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-        {/* Header */}
-        <header
-          className={`py-6 px-6 transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
-          } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
-        >
-          <div className='max-w-7xl mx-auto flex items-center justify-between'>
-            <Link to='/' className='flex items-center space-x-3 group'>
-              <Logo size="lg" />
-              <span
-                className={`text-2xl font-black transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}
-              >
-                MOOD LOG
-              </span>
-            </Link>
-
-            <button
-              onClick={toggleDarkMode}
-              className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
-                isDarkMode
-                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {isDarkMode ? '☀️' : '🌙'}
-            </button>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <div className='flex min-h-[calc(100vh-80px)]'>
-          {/* Centered Form */}
-          <div className='flex-1 flex items-center justify-center p-8'>
-            <div className='w-full max-w-md'>
+    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+      <div className='min-h-screen flex items-center justify-center p-4'>
+        <div className='w-full max-w-2xl'>
+          <div
+            className={`backdrop-blur-lg rounded-2xl shadow-2xl border transition-all duration-500 ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+            }`}
+          >
+            <div className='p-8'>
               <div className='text-center mb-8'>
+                <button
+                  onClick={toggleDarkMode}
+                  className={`mb-4 p-2 rounded-full transition-colors duration-300 ${
+                    isDarkMode
+                      ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
+                      : 'bg-white/20 text-yellow-300 hover:bg-white/30'
+                  }`}
+                >
+                  {isDarkMode ? '☀️' : '🌙'}
+                </button>
+
+                <Logo className='mx-auto mb-6' />
                 <h1
-                  className={`text-4xl font-black mb-4 transition-colors duration-500 ${
+                  className={`text-3xl font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
-                  CREAR CUENTA
+                  Crear Cuenta
                 </h1>
                 <p
-                  className={`text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                  className={`text-lg transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}
                 >
-                  Únete a la revolución emocional
+                  Únete a nuestra comunidad de bienestar
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className='space-y-6'>
-                {/* Role Selection */}
                 <div>
                   <label
                     className={`block text-sm font-bold mb-3 transition-colors duration-500 ${
@@ -335,7 +273,6 @@ const RegisterSimple: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Name Fields */}
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label
@@ -343,71 +280,82 @@ const RegisterSimple: React.FC = () => {
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
                     >
-                      NOMBRE
+                      NOMBRE *
                     </label>
                     <input
                       type='text'
                       name='firstName'
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                         hasError('firstName')
-                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                           : isDarkMode
-                          ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                          : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                          ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                       }`}
-                      placeholder='Juan'
+                      placeholder='Tu nombre'
                     />
-                    {hasError('firstName') && <p className='text-red-500 text-xs mt-1'>{getError('firstName')}</p>}
+                    {hasError('firstName') && (
+                      <p className='text-red-500 text-sm mt-1'>{getError('firstName')}</p>
+                    )}
                   </div>
+
                   <div>
                     <label
                       className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
                     >
-                      APELLIDO
+                      APELLIDO *
                     </label>
                     <input
                       type='text'
                       name='lastName'
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                        isDarkMode
-                          ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                          : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                        hasError('lastName')
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : isDarkMode
+                          ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                       }`}
-                      placeholder='Pérez'
+                      placeholder='Tu apellido'
                     />
+                    {hasError('lastName') && (
+                      <p className='text-red-500 text-sm mt-1'>{getError('lastName')}</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Email */}
                 <div>
                   <label
                     className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}
                   >
-                    EMAIL
+                    CORREO ELECTRÓNICO *
                   </label>
                   <input
                     type='email'
                     name='email'
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                      isDarkMode
-                        ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                        : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                    className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                      hasError('email')
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : isDarkMode
+                        ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                        : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                     }`}
                     placeholder='tu@email.com'
                   />
+                  {hasError('email') && (
+                    <p className='text-red-500 text-sm mt-1'>{getError('email')}</p>
+                  )}
                 </div>
 
-                {/* Password Fields */}
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label
@@ -415,65 +363,67 @@ const RegisterSimple: React.FC = () => {
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
                     >
-                      CONTRASEÑA
+                      CONTRASEÑA *
                     </label>
                     <input
                       type='password'
                       name='password'
                       value={formData.password}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                        isDarkMode
-                          ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                          : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                        hasError('password')
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : isDarkMode
+                          ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                       }`}
-                      placeholder='••••••••'
+                      placeholder='Mínimo 6 caracteres'
                     />
+                    {hasError('password') && (
+                      <p className='text-red-500 text-sm mt-1'>{getError('password')}</p>
+                    )}
                   </div>
+
                   <div>
                     <label
                       className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
                     >
-                      CONFIRMAR
+                      CONFIRMAR CONTRASEÑA *
                     </label>
                     <input
                       type='password'
                       name='confirmPassword'
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                        isDarkMode
-                          ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                          : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                        hasError('confirmPassword')
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : isDarkMode
+                          ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                       }`}
-                      placeholder='••••••••'
+                      placeholder='Repite tu contraseña'
                     />
+                    {hasError('confirmPassword') && (
+                      <p className='text-red-500 text-sm mt-1'>{getError('confirmPassword')}</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Campos profesionales para psicólogos */}
                 {formData.role === 'psychologist' && (
-                  <div className='space-y-6 p-6 rounded-2xl border-2 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'>
-                    <div className='text-center'>
+                  <>
+                    <div className='border-t pt-6'>
                       <h3
-                        className={`text-xl font-black mb-2 transition-colors duration-500 ${
+                        className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}
                       >
-                        🧠 INFORMACIÓN PROFESIONAL
+                        Información Profesional
                       </h3>
-                      <p
-                        className={`text-sm transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                        }`}
-                      >
-                        Completa tu perfil profesional para conectar con pacientes
-                      </p>
                     </div>
 
-                    {/* Título profesional y especialización */}
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                       <div>
                         <label
@@ -488,14 +438,20 @@ const RegisterSimple: React.FC = () => {
                           name='professionalTitle'
                           value={formData.professionalTitle}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                            isDarkMode
-                              ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                              : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                            hasError('professionalTitle')
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                           }`}
                           placeholder='Lic. en Psicología'
                         />
+                        {hasError('professionalTitle') && (
+                          <p className='text-red-500 text-sm mt-1'>{getError('professionalTitle')}</p>
+                        )}
                       </div>
+
                       <div>
                         <label
                           className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
@@ -504,33 +460,26 @@ const RegisterSimple: React.FC = () => {
                         >
                           ESPECIALIZACIÓN *
                         </label>
-                        <select
+                        <input
+                          type='text'
                           name='specialization'
                           value={formData.specialization}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                            isDarkMode
-                              ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                              : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                            hasError('specialization')
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                           }`}
-                        >
-                          <option value=''>Seleccionar especialización</option>
-                          <option value='ansiedad-estres'>Ansiedad y Estrés</option>
-                          <option value='depresion'>Depresión</option>
-                          <option value='terapia-pareja'>Terapia de Pareja</option>
-                          <option value='terapia-familiar'>Terapia Familiar</option>
-                          <option value='trauma'>Trauma y EMDR</option>
-                          <option value='adolescentes'>Psicología Adolescente</option>
-                          <option value='infantil'>Psicología Infantil</option>
-                          <option value='neuropsicologia'>Neuropsicología</option>
-                          <option value='forense'>Psicología Forense</option>
-                          <option value='organizacional'>Psicología Organizacional</option>
-                          <option value='otra'>Otra especialización</option>
-                        </select>
+                          placeholder='Terapia cognitiva'
+                        />
+                        {hasError('specialization') && (
+                          <p className='text-red-500 text-sm mt-1'>{getError('specialization')}</p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Años de experiencia y número de licencia */}
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                       <div>
                         <label
@@ -547,214 +496,227 @@ const RegisterSimple: React.FC = () => {
                           onChange={handleInputChange}
                           min='0'
                           max='50'
-                          className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
-                            isDarkMode
-                              ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                              : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                            hasError('yearsOfExperience')
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                           }`}
                           placeholder='5'
                         />
+                        {hasError('yearsOfExperience') && (
+                          <p className='text-red-500 text-sm mt-1'>{getError('yearsOfExperience')}</p>
+                        )}
                       </div>
+
                       <div>
                         <label
                           className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                             isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}
                         >
-                          NÚMERO DE LICENCIA *
+                          NÚMERO DE LICENCIA
                         </label>
                         <input
                           type='text'
                           name='licenseNumber'
                           value={formData.licenseNumber}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
+                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                             isDarkMode
-                              ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                              : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                           }`}
-                          placeholder='PSI-12345'
+                          placeholder='PSI-123456'
                         />
                       </div>
                     </div>
 
-                    {/* Teléfono */}
                     <div>
                       <label
                         className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
-                        TELÉFONO DE CONTACTO
+                        TELÉFONO
                       </label>
                       <input
                         type='tel'
                         name='phone'
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 ${
+                        className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                           isDarkMode
-                            ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                            : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                            ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                            : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                         }`}
-                        placeholder='+52 55 1234 5678'
+                        placeholder='+57 300 123 4567'
                       />
                     </div>
 
-                    {/* Descripción profesional */}
                     <div>
                       <label
                         className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
-                        DESCRIPCIÓN PROFESIONAL * (mínimo 50 caracteres)
+                        BIOGRAFÍA PROFESIONAL
                       </label>
                       <textarea
                         name='bio'
                         value={formData.bio}
                         onChange={handleInputChange}
                         rows={4}
-                        className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 resize-none ${
+                        className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 resize-none ${
                           isDarkMode
-                            ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
-                            : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
+                            ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                            : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
                         }`}
-                        placeholder='Describe tu experiencia, enfoque terapéutico y cómo puedes ayudar a tus pacientes...'
+                        placeholder='Cuéntanos sobre tu experiencia y enfoque terapéutico...'
                       />
-                      <p
-                        className={`text-xs mt-1 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}
-                      >
-                        {formData.bio.length}/50 caracteres mínimos
-                      </p>
                     </div>
 
-                    {/* Subida de CV */}
                     <div>
                       <label
                         className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
-                        HOJA DE VIDA (PDF o Word) - OPCIONAL
+                        HOJA DE VIDA (PDF) - OPCIONAL
                       </label>
-                      <div className='relative'>
-                        <input
-                          type='file'
-                          onChange={handleFileChange}
-                          accept='.pdf,.doc,.docx'
-                          className='hidden'
-                          id='cv-upload'
-                        />
-                        <label
-                          htmlFor='cv-upload'
-                          className={`w-full px-4 py-4 rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer hover:bg-gray-50 ${
-                            isDarkMode
-                              ? 'border-gray-600 text-gray-300 hover:bg-gray-800'
-                              : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className='text-center'>
-                            <div className='text-2xl mb-2'>📄</div>
-                            <div className='font-semibold'>
-                              {formData.cvFile ? formData.cvFile.name : 'Haz clic para subir tu CV'}
-                            </div>
-                            <div className='text-sm opacity-75'>PDF, DOC o DOCX (máximo 5MB)</div>
-                          </div>
-                        </label>
-                      </div>
+                      <input
+                        type='file'
+                        name='cvFile'
+                        onChange={handleFileChange}
+                        accept='.pdf'
+                        className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                          isDarkMode
+                            ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                            : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
+                        }`}
+                      />
+                      <p
+                        className={`text-sm mt-1 transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}
+                      >
+                        Máximo 5MB. Formatos permitidos: PDF
+                      </p>
                     </div>
-                  </div>
+                  </>
                 )}
 
-                {/* Terms Agreement */}
-                <div className='flex items-start space-x-3'>
+                <div className='flex items-center space-x-3'>
                   <input
                     type='checkbox'
                     id='terms'
                     checked={agreedToTerms}
                     onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className={`mt-1 w-5 h-5 rounded border-2 transition-colors duration-300 ${
-                      isDarkMode
-                        ? 'bg-gray-800 border-gray-600 text-purple-600 focus:ring-purple-500/20'
-                        : 'bg-white border-gray-300 text-purple-600 focus:ring-purple-500/20'
-                    }`}
+                    className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
                   />
                   <label
                     htmlFor='terms'
                     className={`text-sm transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}
                   >
                     Acepto los{' '}
-                    <Link to='/terms' className='text-purple-600 hover:underline font-semibold'>
-                      términos de servicio
+                    <Link to='/terms' className='text-purple-600 hover:text-purple-700 underline'>
+                      términos y condiciones
                     </Link>{' '}
                     y la{' '}
-                    <Link to='/privacy' className='text-purple-600 hover:underline font-semibold'>
+                    <Link to='/privacy' className='text-purple-600 hover:text-purple-700 underline'>
                       política de privacidad
                     </Link>
                   </label>
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type='submit'
-                  disabled={loading || uploadingFile}
-                  className={`w-full py-4 px-6 rounded-xl font-black text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isDarkMode
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-2xl hover:shadow-purple-500/50'
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-2xl hover:shadow-purple-500/50'
-                  }`}
-                >
-                  {loading ? (
-                    <div className='flex items-center justify-center space-x-2'>
-                      <div className='animate-spin text-xl'>⚡</div>
-                      <span>{uploadingFile ? 'SUBIENDO ARCHIVO...' : 'CREANDO CUENTA...'}</span>
+                <div className='space-y-4'>
+                  <button
+                    type='submit'
+                    disabled={loading || uploadingFile || !agreedToTerms}
+                    className='w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg'
+                  >
+                    {loading ? (
+                      <div className='flex items-center justify-center'>
+                        <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2'></div>
+                        Creando cuenta...
+                      </div>
+                    ) : uploadingFile ? (
+                      <div className='flex items-center justify-center'>
+                        <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2'></div>
+                        Subiendo archivo...
+                      </div>
+                    ) : (
+                      'CREAR CUENTA'
+                    )}
+                  </button>
+
+                  <div className='relative'>
+                    <div className='absolute inset-0 flex items-center'>
+                      <div className='w-full border-t border-gray-300'></div>
                     </div>
-                  ) : (
-                    'CREAR CUENTA'
-                  )}
-                </button>
+                    <div className='relative flex justify-center text-sm'>
+                      <span
+                        className={`px-2 transition-colors duration-500 ${
+                          isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'
+                        }`}
+                      >
+                        O continúa con
+                      </span>
+                    </div>
+                  </div>
 
-                {/* Google Sign Up */}
-                <button
-                  type='button'
-                  onClick={handleGoogleSignUp}
-                  disabled={loading}
-                  className={`w-full py-4 px-6 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
-                    isDarkMode
-                      ? 'border-gray-600 text-white hover:bg-gray-800'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  🔗 REGISTRARSE CON GOOGLE
-                </button>
-              </form>
+                  <button
+                    type='button'
+                    onClick={handleGoogleSignUp}
+                    disabled={loading}
+                    className='w-full px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2'
+                  >
+                    <svg className='w-5 h-5' viewBox='0 0 24 24'>
+                      <path
+                        fill='#4285F4'
+                        d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z'
+                      />
+                      <path
+                        fill='#34A853'
+                        d='M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z'
+                      />
+                      <path
+                        fill='#FBBC05'
+                        d='M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z'
+                      />
+                      <path
+                        fill='#EA4335'
+                        d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'
+                      />
+                    </svg>
+                    <span>Continuar con Google</span>
+                  </button>
+                </div>
 
-              {/* Login Link */}
-              <div className='mt-8 text-center'>
-                <p
-                  className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
-                >
-                  ¿Ya tienes cuenta?{' '}
-                  <Link
-                    to='/login'
-                    className={`font-bold transition-colors duration-300 hover:underline ${
-                      isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'
+                <div className='text-center'>
+                  <p
+                    className={`text-sm transition-colors duration-500 ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
                     }`}
                   >
-                    INICIAR SESIÓN
-                  </Link>
-                </p>
-              </div>
+                    ¿Ya tienes una cuenta?{' '}
+                    <Link
+                      to='/login'
+                      className='text-purple-600 hover:text-purple-700 font-bold transition-colors duration-300'
+                    >
+                      Inicia sesión
+                    </Link>
+                  </p>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
