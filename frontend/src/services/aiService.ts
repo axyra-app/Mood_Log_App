@@ -14,7 +14,7 @@ export interface AIDoctorProfile {
   responseStyle: string;
 }
 
-// Perfiles de doctores IA simulados
+// Perfiles de doctores IA simulados - Versión Profesional
 export const AI_DOCTORS: Record<string, AIDoctorProfile> = {
   general: {
     id: 'ai-general',
