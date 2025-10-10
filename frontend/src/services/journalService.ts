@@ -292,79 +292,112 @@ export const analyzeJournalEntry = async (
   recommendations: string[];
 }> => {
   try {
-    // Simulate AI analysis (replace with actual AI service)
-    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
+    console.log('🤖 Starting AI analysis for journal entry...');
+    
+    // Simulate AI processing time
+    await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
 
-    const words = content.toLowerCase().split(' ');
+    const words = content.toLowerCase().split(/\s+/);
     const positiveWords = [
-      'feliz',
-      'alegre',
-      'contento',
-      'bueno',
-      'excelente',
-      'genial',
-      'maravilloso',
-      'increíble',
-      'perfecto',
-      'fantástico',
+      'feliz', 'alegre', 'contento', 'bueno', 'excelente', 'genial', 'maravilloso', 'increíble', 'perfecto', 'fantástico',
+      'amor', 'querer', 'querido', 'hermoso', 'bello', 'divertido', 'risa', 'sonreír', 'sonrisa', 'risa',
+      'éxito', 'logro', 'conseguir', 'ganar', 'victoria', 'triunfo', 'superar', 'mejorar', 'progreso',
+      'gratitud', 'agradecido', 'bendecido', 'afortunado', 'suerte', 'oportunidad', 'momento', 'experiencia',
+      'paz', 'tranquilo', 'calma', 'relajado', 'satisfecho', 'pleno', 'completo', 'realizado'
     ];
+    
     const negativeWords = [
-      'triste',
-      'malo',
-      'terrible',
-      'horrible',
-      'deprimido',
-      'ansioso',
-      'estresado',
-      'preocupado',
-      'molesto',
-      'enojado',
+      'triste', 'malo', 'terrible', 'horrible', 'deprimido', 'ansioso', 'estresado', 'preocupado', 'molesto', 'enojado',
+      'miedo', 'temer', 'asustado', 'nervioso', 'angustiado', 'desesperado', 'perdido', 'confundido', 'solo', 'solitario',
+      'fracaso', 'fallar', 'perder', 'derrota', 'problema', 'dificultad', 'obstáculo', 'barrera', 'lucha', 'pelea',
+      'dolor', 'sufrimiento', 'pena', 'luto', 'duelo', 'separación', 'ruptura', 'abandono', 'rechazo', 'crítica'
     ];
 
-    const positiveCount = words.filter((word) => positiveWords.includes(word)).length;
-    const negativeCount = words.filter((word) => negativeWords.includes(word)).length;
+    const positiveCount = words.filter((word) => positiveWords.some(pw => word.includes(pw))).length;
+    const negativeCount = words.filter((word) => negativeWords.some(nw => word.includes(nw))).length;
 
     let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
-    if (positiveCount > negativeCount) {
+    if (positiveCount > negativeCount && positiveCount > 0) {
       sentiment = 'positive';
-    } else if (negativeCount > positiveCount) {
+    } else if (negativeCount > positiveCount && negativeCount > 0) {
       sentiment = 'negative';
     }
 
-    // Extract themes
+    // Extract themes based on content analysis
     const themes = [];
-    if (words.includes('trabajo') || words.includes('trabajar')) themes.push('Trabajo');
-    if (words.includes('familia') || words.includes('familiares')) themes.push('Familia');
-    if (words.includes('amigos') || words.includes('amistad')) themes.push('Amistades');
-    if (words.includes('salud') || words.includes('ejercicio')) themes.push('Salud');
-    if (words.includes('estudio') || words.includes('aprender')) themes.push('Educación');
+    const contentLower = content.toLowerCase();
+    
+    if (contentLower.includes('trabajo') || contentLower.includes('trabajar') || contentLower.includes('oficina') || contentLower.includes('empleo')) {
+      themes.push('Trabajo');
+    }
+    if (contentLower.includes('familia') || contentLower.includes('familiares') || contentLower.includes('padres') || contentLower.includes('hermanos')) {
+      themes.push('Familia');
+    }
+    if (contentLower.includes('amigos') || contentLower.includes('amistad') || contentLower.includes('compañeros') || contentLower.includes('social')) {
+      themes.push('Amistades');
+    }
+    if (contentLower.includes('salud') || contentLower.includes('ejercicio') || contentLower.includes('deporte') || contentLower.includes('médico')) {
+      themes.push('Salud');
+    }
+    if (contentLower.includes('estudio') || contentLower.includes('aprender') || contentLower.includes('universidad') || contentLower.includes('escuela')) {
+      themes.push('Educación');
+    }
+    if (contentLower.includes('amor') || contentLower.includes('pareja') || contentLower.includes('novio') || contentLower.includes('novia')) {
+      themes.push('Relaciones');
+    }
+    if (contentLower.includes('viaje') || contentLower.includes('vacaciones') || contentLower.includes('aventura') || contentLower.includes('explorar')) {
+      themes.push('Viajes');
+    }
+    if (contentLower.includes('hobby') || contentLower.includes('pasatiempo') || contentLower.includes('música') || contentLower.includes('arte')) {
+      themes.push('Pasatiempos');
+    }
 
-    // Generate insights and recommendations based on content
+    // Generate contextual insights and recommendations
     const insights = [];
     const recommendations = [];
 
     if (sentiment === 'positive') {
       insights.push('Tu estado de ánimo es positivo hoy');
+      insights.push('Pareces estar experimentando emociones agradables');
       recommendations.push('Mantén las actividades que te hacen sentir bien');
+      recommendations.push('Comparte tu positividad con otros');
     } else if (sentiment === 'negative') {
       insights.push('Parece que estás pasando por un momento difícil');
+      insights.push('Es normal tener días complicados');
       recommendations.push('Considera hablar con alguien de confianza');
-      recommendations.push('Practica técnicas de relajación');
+      recommendations.push('Practica técnicas de relajación o mindfulness');
+      recommendations.push('Recuerda que los sentimientos negativos son temporales');
+    } else {
+      insights.push('Tu estado emocional parece equilibrado');
+      insights.push('Estás reflexionando sobre diferentes aspectos de tu vida');
+      recommendations.push('Continúa explorando tus pensamientos y emociones');
     }
 
+    // Add theme-specific insights
     if (themes.includes('Trabajo')) {
       insights.push('El trabajo es un tema importante en tu vida');
       recommendations.push('Busca equilibrio entre trabajo y vida personal');
     }
+    if (themes.includes('Relaciones')) {
+      insights.push('Las relaciones interpersonales son significativas para ti');
+      recommendations.push('Invierte tiempo en cultivar relaciones saludables');
+    }
+    if (themes.includes('Salud')) {
+      insights.push('Tu bienestar físico es una prioridad');
+      recommendations.push('Mantén hábitos saludables y consulta profesionales cuando sea necesario');
+    }
 
-    return {
+    const result = {
       sentiment,
       themes: themes.length > 0 ? themes : ['General'],
       insights: insights.length > 0 ? insights : ['Continúa reflexionando sobre tus experiencias'],
       recommendations: recommendations.length > 0 ? recommendations : ['Mantén el hábito de escribir en tu diario'],
     };
+
+    console.log('✅ AI analysis completed:', result);
+    return result;
   } catch (error) {
-    console.error('Error analyzing journal entry:', error);
+    console.error('❌ Error analyzing journal entry:', error);
     return {
       sentiment: 'neutral',
       themes: ['General'],
