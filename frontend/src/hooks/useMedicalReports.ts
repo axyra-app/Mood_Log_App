@@ -1,118 +1,220 @@
-import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, onSnapshot, doc, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { MedicalReport } from '../types';
 
-export const useMedicalReports = () => {
-  const [medicalReports, setMedicalReports] = useState<MedicalReport[]>([]);
+export interface MedicalReport {
+  id: string;
+  userId: string;
+  userName: string;
+  psychologistId: string;
+  psychologistName: string;
+  sessionDate: string;
+  sessionType: 'individual' | 'group' | 'emergency' | 'follow-up';
+  diagnosis?: string;
+  symptoms: string[];
+  treatment: string;
+  progress: 'improved' | 'stable' | 'worsened' | 'new';
+  notes: string;
+  recommendations: string[];
+  nextAppointment?: string;
+  moodScore?: number;
+  anxietyLevel?: number;
+  depressionLevel?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PatientHistory {
+  userId: string;
+  userName: string;
+  totalSessions: number;
+  firstSession: Date;
+  lastSession: Date;
+  averageMoodScore: number;
+  progressTrend: 'improving' | 'stable' | 'declining';
+  reports: MedicalReport[];
+}
+
+export const useMedicalReports = (psychologistId: string) => {
+  const [reports, setReports] = useState<MedicalReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar reportes médicos
-  const loadMedicalReports = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const reportsRef = collection(db, 'medicalReports');
-      const q = query(reportsRef, orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const reportsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        nextAppointment: doc.data().nextAppointment?.toDate() || undefined,
-      })) as MedicalReport[];
-      
-      setMedicalReports(reportsData);
-    } catch (err) {
-      console.error('Error loading medical reports:', err);
-      setError(err instanceof Error ? err.message : 'Error loading medical reports');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Crear reporte médico
-  const createMedicalReport = useCallback(async (reportData: Omit<MedicalReport, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      const reportsRef = collection(db, 'medicalReports');
-      const docRef = await addDoc(reportsRef, {
-        ...reportData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      
-      return docRef.id;
-    } catch (err) {
-      console.error('Error creating medical report:', err);
-      throw err;
-    }
-  }, []);
-
-  // Actualizar reporte médico
-  const updateMedicalReport = useCallback(async (reportId: string, updates: Partial<MedicalReport>) => {
-    try {
-      const reportRef = doc(db, 'medicalReports', reportId);
-      await updateDoc(reportRef, {
-        ...updates,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (err) {
-      console.error('Error updating medical report:', err);
-      throw err;
-    }
-  }, []);
-
-  // Eliminar reporte médico
-  const deleteMedicalReport = useCallback(async (reportId: string) => {
-    try {
-      const reportRef = doc(db, 'medicalReports', reportId);
-      await deleteDoc(reportRef);
-    } catch (err) {
-      console.error('Error deleting medical report:', err);
-      throw err;
-    }
-  }, []);
-
-  // Suscripción en tiempo real
   useEffect(() => {
-    const reportsRef = collection(db, 'medicalReports');
-    const q = query(reportsRef, orderBy('createdAt', 'desc'));
-    
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const reportsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-          nextAppointment: doc.data().nextAppointment?.toDate() || undefined,
-        })) as MedicalReport[];
-        
-        setMedicalReports(reportsData);
-        setLoading(false);
+    if (!psychologistId) {
+      setLoading(false);
+      return;
+    }
+
+    const reportsQuery = query(
+      collection(db, 'medicalReports'),
+      where('psychologistId', '==', psychologistId),
+      orderBy('sessionDate', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(reportsQuery,
+      async (snapshot) => {
+        try {
+          const reportsData: MedicalReport[] = [];
+          
+          for (const docSnapshot of snapshot.docs) {
+            const data = docSnapshot.data();
+            
+            // Obtener información del usuario
+            const userQuery = query(
+              collection(db, 'users'),
+              where('__name__', '==', data.userId),
+              limit(1)
+            );
+            const userSnapshot = await getDocs(userQuery);
+            
+            if (!userSnapshot.empty) {
+              const userData = userSnapshot.docs[0].data();
+              
+              reportsData.push({
+                id: docSnapshot.id,
+                userId: data.userId,
+                userName: userData.displayName || userData.username || 'Usuario',
+                psychologistId: data.psychologistId,
+                psychologistName: data.psychologistName || '',
+                sessionDate: data.sessionDate,
+                sessionType: data.sessionType || 'individual',
+                diagnosis: data.diagnosis || '',
+                symptoms: data.symptoms || [],
+                treatment: data.treatment || '',
+                progress: data.progress || 'stable',
+                notes: data.notes || '',
+                recommendations: data.recommendations || [],
+                nextAppointment: data.nextAppointment || '',
+                moodScore: data.moodScore || 0,
+                anxietyLevel: data.anxietyLevel || 0,
+                depressionLevel: data.depressionLevel || 0,
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+              });
+            }
+          }
+          
+          setReports(reportsData);
+          setError(null);
+        } catch (err) {
+          console.error('Error fetching medical reports:', err);
+          setError('Error al cargar los reportes médicos');
+        } finally {
+          setLoading(false);
+        }
       },
       (err) => {
-        console.error('Error in medical reports subscription:', err);
-        setError(err.message);
+        console.error('Error in medical reports listener:', err);
+        setError('Error en la conexión de reportes médicos');
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [psychologistId]);
+
+  const createMedicalReport = async (
+    userId: string,
+    sessionData: Omit<MedicalReport, 'id' | 'userName' | 'psychologistName' | 'createdAt' | 'updatedAt'>
+  ) => {
+    try {
+      // Obtener información del psicólogo
+      const psychologistQuery = query(
+        collection(db, 'users'),
+        where('__name__', '==', psychologistId),
+        limit(1)
+      );
+      const psychologistSnapshot = await getDocs(psychologistQuery);
+      const psychologistName = psychologistSnapshot.empty ? 'Psicólogo' : psychologistSnapshot.docs[0].data().displayName;
+
+      // Obtener información del usuario
+      const userQuery = query(
+        collection(db, 'users'),
+        where('__name__', '==', userId),
+        limit(1)
+      );
+      const userSnapshot = await getDocs(userQuery);
+      const userName = userSnapshot.empty ? 'Usuario' : userSnapshot.docs[0].data().displayName;
+
+      const reportData = {
+        ...sessionData,
+        userName,
+        psychologistName,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(db, 'medicalReports'), reportData);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating medical report:', error);
+      throw error;
+    }
+  };
+
+  const getPatientHistory = (userId: string): PatientHistory | null => {
+    const patientReports = reports.filter(report => report.userId === userId);
+    
+    if (patientReports.length === 0) return null;
+
+    const sortedReports = patientReports.sort((a, b) => 
+      new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
+    );
+
+    const totalSessions = patientReports.length;
+    const firstSession = sortedReports[0].createdAt;
+    const lastSession = sortedReports[sortedReports.length - 1].createdAt;
+    
+    const averageMoodScore = patientReports.reduce((sum, report) => 
+      sum + (report.moodScore || 0), 0
+    ) / totalSessions;
+
+    // Calcular tendencia de progreso
+    const recentReports = sortedReports.slice(-3); // Últimos 3 reportes
+    const recentMoodScores = recentReports.map(r => r.moodScore || 0);
+    const progressTrend = recentMoodScores.length >= 2 
+      ? recentMoodScores[recentMoodScores.length - 1] > recentMoodScores[0] 
+        ? 'improving' 
+        : recentMoodScores[recentMoodScores.length - 1] < recentMoodScores[0] 
+          ? 'declining' 
+          : 'stable'
+      : 'stable';
+
+    return {
+      userId,
+      userName: patientReports[0].userName,
+      totalSessions,
+      firstSession,
+      lastSession,
+      averageMoodScore,
+      progressTrend,
+      reports: sortedReports,
+    };
+  };
+
+  const getReportsByPatient = (userId: string) => {
+    return reports.filter(report => report.userId === userId);
+  };
+
+  const getReportsByDateRange = (startDate: string, endDate: string) => {
+    return reports.filter(report => 
+      report.sessionDate >= startDate && report.sessionDate <= endDate
+    );
+  };
+
+  const getReportsByProgress = (progress: MedicalReport['progress']) => {
+    return reports.filter(report => report.progress === progress);
+  };
 
   return {
-    medicalReports,
+    reports,
     loading,
     error,
     createMedicalReport,
-    updateMedicalReport,
-    deleteMedicalReport,
-    loadMedicalReports,
+    getPatientHistory,
+    getReportsByPatient,
+    getReportsByDateRange,
+    getReportsByProgress,
   };
 };
