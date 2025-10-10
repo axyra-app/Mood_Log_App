@@ -10,6 +10,9 @@ import {
   Target,
   TrendingDown,
   TrendingUp,
+  DollarSign,
+  PieChart,
+  BarChart3,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -34,6 +37,101 @@ const Statistics: React.FC = () => {
   const { user } = useAuth();
   const { statistics, loading, getMoodTrend, getAverageMood, getMoodStreak } = useMood();
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
+  const [incomeData, setIncomeData] = useState({
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+    categories: [
+      { name: 'Salario', amount: 0, percentage: 0 },
+      { name: 'Freelance', amount: 0, percentage: 0 },
+      { name: 'Inversiones', amount: 0, percentage: 0 },
+      { name: 'Otros', amount: 0, percentage: 0 },
+    ],
+    trends: {
+      daily: 'stable',
+      weekly: 'stable',
+      monthly: 'stable',
+    },
+    aiAnalysis: '',
+  });
+
+  // Función para actualizar datos de ingresos
+  const updateIncomeData = (type: 'daily' | 'weekly' | 'monthly', amount: number) => {
+    setIncomeData(prev => ({
+      ...prev,
+      [type]: amount,
+    }));
+  };
+
+  // Función para actualizar categorías de ingresos
+  const updateIncomeCategory = (categoryName: string, amount: number) => {
+    setIncomeData(prev => {
+      const total = prev.categories.reduce((sum, cat) => sum + cat.amount, 0) - 
+                   prev.categories.find(cat => cat.name === categoryName)?.amount + amount;
+      
+      const updatedCategories = prev.categories.map(cat => 
+        cat.name === categoryName 
+          ? { ...cat, amount, percentage: total > 0 ? (amount / total) * 100 : 0 }
+          : { ...cat, percentage: total > 0 ? (cat.amount / total) * 100 : 0 }
+      );
+      
+      return {
+        ...prev,
+        categories: updatedCategories,
+      };
+    });
+  };
+
+  // Función para generar análisis con IA
+  const generateAIAnalysis = async () => {
+    try {
+      const analysisData = {
+        incomeData: incomeData,
+        moodData: statistics,
+        timeRange: timeRange,
+      };
+
+      // Simular llamada a IA (aquí integrarías con OpenAI o similar)
+      const aiResponse = await simulateAIAnalysis(analysisData);
+      
+      setIncomeData(prev => ({
+        ...prev,
+        aiAnalysis: aiResponse,
+      }));
+    } catch (error) {
+      console.error('Error generating AI analysis:', error);
+    }
+  };
+
+  // Función simulada para análisis con IA
+  const simulateAIAnalysis = async (data: any) => {
+    // Simular delay de IA
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const totalIncome = data.incomeData.daily + data.incomeData.weekly + data.incomeData.monthly;
+    const avgMood = data.moodData?.averageMood || 7;
+    
+    return `Análisis de Ingresos y Bienestar:
+
+📊 RESUMEN FINANCIERO:
+• Ingresos totales registrados: $${totalIncome.toLocaleString()}
+• Distribución por categorías: ${data.incomeData.categories.map(cat => `${cat.name}: ${cat.percentage.toFixed(1)}%`).join(', ')}
+
+🧠 CORRELACIÓN CON BIENESTAR:
+• Estado de ánimo promedio: ${avgMood}/10
+• Patrón observado: ${avgMood > 7 ? 'Ingresos estables correlacionan con mejor estado de ánimo' : 'Recomendamos revisar estrategias de ingresos'}
+
+💡 RECOMENDACIONES:
+• Diversificar fuentes de ingresos para mayor estabilidad
+• Establecer metas financieras específicas
+• Monitorear impacto de ingresos en bienestar emocional
+• Considerar inversiones a largo plazo
+
+🎯 PRÓXIMOS PASOS:
+1. Registrar ingresos diariamente para mejor análisis
+2. Establecer presupuesto mensual
+3. Revisar correlación entre ingresos y estado de ánimo semanalmente`;
+  };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {

@@ -102,8 +102,22 @@ export const useUserAppointments = (userId: string) => {
     status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
   }) => {
     try {
+      // Log temporal para debugging
+      console.log('🔍 useUserAppointments - createAppointment called with:', {
+        userId,
+        appointmentData,
+        hasUserId: !!userId,
+        hasPsychologistId: !!appointmentData.psychologistId,
+        hasAppointmentDate: !!appointmentData.appointmentDate
+      });
+      
       // Validar parámetros requeridos
       if (!userId || !appointmentData.psychologistId || !appointmentData.appointmentDate) {
+        console.log('❌ Validation failed:', {
+          userId: userId || 'MISSING',
+          psychologistId: appointmentData.psychologistId || 'MISSING',
+          appointmentDate: appointmentData.appointmentDate || 'MISSING'
+        });
         throw new Error('Faltan parámetros requeridos para crear la cita');
       }
       

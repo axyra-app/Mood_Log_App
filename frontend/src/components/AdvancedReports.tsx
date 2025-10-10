@@ -1,6 +1,7 @@
-import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp, ArrowLeft } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 // Interfaces locales para evitar problemas de importación
 interface AdvancedReport {
@@ -23,6 +24,7 @@ interface AdvancedReport {
 const AdvancedReports: React.FC = () => {
   // Simular usuario por ahora para evitar problemas de importación
   const user = { uid: 'demo-user' };
+  const navigate = useNavigate();
   const moodLogs: any[] = []; // Simular datos vacíos
   const [reports, setReports] = useState<AdvancedReport[]>([]);
   const [loading, setLoading] = useState(false);
@@ -203,6 +205,15 @@ const AdvancedReports: React.FC = () => {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Header */}
         <div className='mb-8'>
+          <div className='flex items-center gap-4 mb-4'>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className='flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors'
+            >
+              <ArrowLeft className='w-5 h-5' />
+              <span>Volver al Dashboard</span>
+            </button>
+          </div>
           <h1 className='text-3xl font-bold mb-2'>Reportes Avanzados</h1>
           <p className='text-gray-600'>Análisis detallados de tu bienestar emocional</p>
         </div>

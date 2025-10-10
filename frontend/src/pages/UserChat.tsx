@@ -35,8 +35,7 @@ const UserChat: React.FC = () => {
         const { db } = await import('../services/firebase');
         
         const psychologistsQuery = query(
-          collection(db, 'users'),
-          where('role', '==', 'psychologist')
+          collection(db, 'psychologists')
         );
         
         const snapshot = await getDocs(psychologistsQuery);
