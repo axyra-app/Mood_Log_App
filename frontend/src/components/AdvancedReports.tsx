@@ -1,11 +1,11 @@
-import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { moodAnalysisAgent, chatAnalysisAgent } from '../services/aiAgents';
-import { getRealMoodData, getRealChatData, getUserStats } from '../services/realDataService';
-import { generateAndDownloadReport } from '../services/pdfReportService';
 import { useAuth } from '../contexts/AuthContext';
+import { generateAndDownloadReport } from '../services/pdfReportService';
+import { getRealMoodData } from '../services/realDataService';
+import { moodAnalyzerAgent } from '../services/specializedAgents';
 
 // Interfaces locales para evitar problemas de importación
 interface AdvancedReport {
@@ -98,14 +98,14 @@ const AdvancedReports: React.FC = () => {
 
       // Obtener datos reales de Firebase
       const realMoodData = await getRealMoodData(user.uid, start, end);
-      
+
       if (realMoodData.moodLogs.length === 0) {
         toast.error('No hay datos de estado de ánimo para el período seleccionado');
         return;
       }
 
       // Usar el agente de IA para analizar los datos reales
-      const aiAnalysis = await moodAnalysisAgent.analyzeMood(realMoodData);
+      const aiAnalysis = await moodAnalyzerAgent.analyzeMood(realMoodData);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -124,11 +124,11 @@ const AdvancedReports: React.FC = () => {
             totalLogs: realMoodData.moodLogs.length,
             averageMood: realMoodData.moodLogs.reduce((sum, log) => sum + log.mood, 0) / realMoodData.moodLogs.length,
             moodRange: {
-              min: Math.min(...realMoodData.moodLogs.map(log => log.mood)),
-              max: Math.max(...realMoodData.moodLogs.map(log => log.mood))
-            }
-          }
-        }
+              min: Math.min(...realMoodData.moodLogs.map((log) => log.mood)),
+              max: Math.max(...realMoodData.moodLogs.map((log) => log.mood)),
+            },
+          },
+        },
       };
 
       // Simular guardado
@@ -160,16 +160,16 @@ const AdvancedReports: React.FC = () => {
             date: new Date(),
             content: 'Hoy me siento bien, tuve un buen día en el trabajo.',
             mood: 8,
-            tags: ['trabajo', 'positivo']
+            tags: ['trabajo', 'positivo'],
           },
           {
             date: new Date(Date.now() - 86400000),
             content: 'Ayer fue un día difícil, tuve muchas responsabilidades.',
             mood: 5,
-            tags: ['estrés', 'trabajo']
-          }
+            tags: ['estrés', 'trabajo'],
+          },
         ],
-        period: { start, end }
+        period: { start, end },
       };
 
       if (diaryData.entries.length === 0) {
@@ -179,15 +179,15 @@ const AdvancedReports: React.FC = () => {
 
       // Usar el agente de IA para analizar el diario
       const moodData = {
-        moodLogs: diaryData.entries.map(entry => ({
+        moodLogs: diaryData.entries.map((entry) => ({
           mood: entry.mood,
           date: entry.date,
-          notes: entry.content
+          notes: entry.content,
         })),
-        period: { start, end }
+        period: { start, end },
       };
 
-      const aiAnalysis = await moodAnalysisAgent.analyzeMood(moodData);
+      const aiAnalysis = await moodAnalyzerAgent.analyzeMood(moodData);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -205,9 +205,9 @@ const AdvancedReports: React.FC = () => {
           realData: {
             totalEntries: diaryData.entries.length,
             averageMood: diaryData.entries.reduce((sum, entry) => sum + entry.mood, 0) / diaryData.entries.length,
-            uniqueTags: [...new Set(diaryData.entries.flatMap(entry => entry.tags))].length
-          }
-        }
+            uniqueTags: [...new Set(diaryData.entries.flatMap((entry) => entry.tags))].length,
+          },
+        },
       };
 
       // Simular guardado
@@ -234,11 +234,11 @@ const AdvancedReports: React.FC = () => {
         title: report.title,
         period: report.period,
         userId: user.uid,
-        type: report.reportType === 'mood_analysis' ? 'mood' : 'diary'
+        type: report.reportType === 'mood_analysis' ? 'mood' : 'diary',
       };
 
       await generateAndDownloadReport(reportData.type, reportData);
-      
+
       toast.success('Reporte PDF generado exitosamente', { id: 'pdf-generation' });
     } catch (error) {
       console.error('Error downloading report:', error);
