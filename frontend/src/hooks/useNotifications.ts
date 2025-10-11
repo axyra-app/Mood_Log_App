@@ -144,7 +144,7 @@ export const createChatNotification = async (
   sessionId?: string
 ) => {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    const notificationData: any = {
       userId: psychologistId, // El psicólogo recibe la notificación
       psychologistId: psychologistId,
       senderId: senderId,
@@ -154,8 +154,14 @@ export const createChatNotification = async (
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
       isRead: false,
       createdAt: serverTimestamp(),
-      relatedItemId: sessionId,
-    });
+    };
+    
+    // Solo agregar relatedItemId si existe
+    if (sessionId) {
+      notificationData.relatedItemId = sessionId;
+    }
+    
+    await addDoc(collection(db, 'notifications'), notificationData);
   } catch (error) {
     console.error('Error creating chat notification:', error);
   }
@@ -170,7 +176,7 @@ export const createPsychologistChatNotification = async (
   sessionId?: string
 ) => {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    const notificationData: any = {
       userId: userId, // El usuario recibe la notificación
       psychologistId: senderId,
       senderId: senderId,
@@ -180,8 +186,14 @@ export const createPsychologistChatNotification = async (
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
       isRead: false,
       createdAt: serverTimestamp(),
-      relatedItemId: sessionId,
-    });
+    };
+    
+    // Solo agregar relatedItemId si existe
+    if (sessionId) {
+      notificationData.relatedItemId = sessionId;
+    }
+    
+    await addDoc(collection(db, 'notifications'), notificationData);
   } catch (error) {
     console.error('Error creating psychologist chat notification:', error);
   }

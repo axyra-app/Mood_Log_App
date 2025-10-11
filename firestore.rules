@@ -45,14 +45,11 @@ service cloud.firestore {
     }
     
     // ========================================
-    // REGLAS PARA MOOD LOGS - SIMPLIFICADAS
+    // REGLAS PARA MOOD LOGS - ULTRA PERMISIVAS
     // ========================================
     match /moodLogs/{moodLogId} {
-      // Permitir leer/escribir si el usuario está autenticado
-      allow read, write: if request.auth != null;
-      
-      // Permitir crear mood logs si el usuario está autenticado
-      allow create: if request.auth != null;
+      // Permitir todo si el usuario está autenticado
+      allow read, write, create, update, delete: if request.auth != null;
     }
     
     // ========================================
@@ -198,14 +195,11 @@ service cloud.firestore {
     }
     
     // ========================================
-    // REGLAS PARA MENSAJES DE CHAT (COLECCIÓN PRINCIPAL) - SIMPLIFICADAS
+    // REGLAS PARA MENSAJES DE CHAT (COLECCIÓN PRINCIPAL) - ULTRA PERMISIVAS
     // ========================================
     match /chatMessages/{messageId} {
-      // Permitir leer/escribir si el usuario está autenticado
-      allow read, write: if request.auth != null;
-      
-      // Permitir crear nuevos mensajes si el usuario está autenticado
-      allow create: if request.auth != null;
+      // Permitir todo si el usuario está autenticado
+      allow read, write, create, update, delete: if request.auth != null;
     }
     
     // ========================================

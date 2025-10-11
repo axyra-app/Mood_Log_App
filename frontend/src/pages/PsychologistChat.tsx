@@ -1,4 +1,4 @@
-import { ArrowLeft, MessageCircle, Send, User, Clock, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Send, User, Clock, Check, CheckCheck, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -12,6 +12,7 @@ const PsychologistChat: React.FC = () => {
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
   const { sessions, loading: sessionsLoading, markAsRead } = useChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useChatMessages(selectedSession);
@@ -111,6 +112,19 @@ const PsychologistChat: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Botón móvil para mostrar/ocultar chat */}
+              <button
+                onClick={() => setShowChatOnMobile(!showChatOnMobile)}
+                className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${
+                  isDarkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title={showChatOnMobile ? 'Mostrar conversaciones' : 'Mostrar chat'}
+              >
+                {showChatOnMobile ? <Menu className='w-5 h-5' /> : <MessageCircle className='w-5 h-5' />}
+              </button>
+
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors duration-300 ${
@@ -130,11 +144,11 @@ const PsychologistChat: React.FC = () => {
         <div className={`rounded-xl shadow-sm border transition-colors duration-500 ${
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex h-[600px]">
+          <div className="flex flex-col lg:flex-row h-[calc(100vh-200px)] lg:h-[600px]">
             {/* Sessions List */}
-            <div className={`w-1/3 border-r transition-colors duration-500 ${
+            <div className={`w-full lg:w-1/3 border-r transition-colors duration-500 ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}>
+            } ${showChatOnMobile ? 'hidden lg:block' : 'block lg:block'}`}>
               <div className={`p-4 border-b transition-colors duration-500 ${
                 isDarkMode ? 'border-gray-700' : 'border-gray-200'
               }`}>
@@ -150,7 +164,7 @@ const PsychologistChat: React.FC = () => {
                 </p>
               </div>
 
-              <div className="overflow-y-auto h-full">
+              <div className="overflow-y-auto h-[300px] lg:h-full">
                 {sessionsLoading ? (
                   <div className="p-4 text-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500 mx-auto mb-2"></div>
@@ -241,7 +255,7 @@ const PsychologistChat: React.FC = () => {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col">
+            <div className={`flex-1 flex flex-col ${showChatOnMobile ? 'block lg:flex' : 'hidden lg:flex'}`}>
               {selectedSession ? (
                 <>
                   {/* Chat Header */}
@@ -268,7 +282,7 @@ const PsychologistChat: React.FC = () => {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 h-[300px] lg:h-full">
                     {messagesLoading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500 mx-auto mb-2"></div>
