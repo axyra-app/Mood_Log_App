@@ -49,9 +49,9 @@ const Logo: React.FC<LogoProps> = ({
   const sizes = getSizeClasses();
 
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
+    <div className={`flex items-center space-x-3 ${className}`}>
       {/* Logo Icon */}
-      <div className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm`}>
+      <div className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}>
         <svg 
           className={`${sizes.icon} text-white`}
           viewBox="0 0 24 24" 
@@ -69,10 +69,10 @@ const Logo: React.FC<LogoProps> = ({
       {/* Logo Text */}
       {showText && (
         <div className="flex flex-col">
-          <span className={`${sizes.text} font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent`}>
+          <span className={`${sizes.text} font-bold text-purple-600 leading-tight`}>
             Mood Log
           </span>
-          <span className={`${sizes.text === 'text-sm' ? 'text-xs' : sizes.text === 'text-base' ? 'text-sm' : sizes.text === 'text-xl' ? 'text-sm' : 'text-base'} text-gray-500 font-medium`}>
+          <span className={`${sizes.text === 'text-sm' ? 'text-xs' : sizes.text === 'text-base' ? 'text-sm' : sizes.text === 'text-xl' ? 'text-sm' : 'text-base'} text-gray-600 font-medium leading-tight`}>
             App
           </span>
         </div>
