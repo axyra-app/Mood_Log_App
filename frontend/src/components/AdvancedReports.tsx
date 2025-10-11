@@ -2,6 +2,7 @@ import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, Trendi
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { moodAnalysisAgent, chatAnalysisAgent } from '../services/aiAgents';
 
 // Interfaces locales para evitar problemas de importación
 interface AdvancedReport {
@@ -89,26 +90,38 @@ const AdvancedReports: React.FC = () => {
     try {
       const { start, end } = getPeriodDates();
 
-      // Crear reporte simulado
+      // Simular datos de estado de ánimo para el análisis
+      const moodData = {
+        moodLogs: [
+          { mood: 7, date: new Date('2024-01-01'), notes: 'Me siento bien hoy' },
+          { mood: 6, date: new Date('2024-01-02'), notes: 'Día normal' },
+          { mood: 8, date: new Date('2024-01-03'), notes: 'Excelente día' },
+          { mood: 5, date: new Date('2024-01-04'), notes: 'Un poco cansado' },
+          { mood: 7, date: new Date('2024-01-05'), notes: 'Mejorando' }
+        ],
+        period: { start, end }
+      };
+
+      // Usar el agente de IA para analizar el estado de ánimo
+      const aiAnalysis = await moodAnalysisAgent.analyzeMood(moodData);
+
+      // Crear reporte con análisis de IA
       const report: AdvancedReport = {
         userId: user.uid,
         reportType: 'mood_analysis',
         title: `Análisis de Estado de Ánimo - ${start.toLocaleDateString()} a ${end.toLocaleDateString()}`,
-        content: `Análisis detallado de tu estado de ánimo durante el período seleccionado. Se registraron datos de bienestar emocional.`,
-        insights: [
-          'Tu estado de ánimo general es positivo',
-          'Tienes buenos niveles de energía',
-          'Manejas bien el estrés',
-        ],
-        recommendations: ['Continúa con tu rutina de bienestar', 'Mantén la comunicación regular'],
-        riskLevel: 'low',
+        content: aiAnalysis.summary || 'Análisis detallado de tu estado de ánimo durante el período seleccionado.',
+        insights: aiAnalysis.insights || ['Tu estado de ánimo general es positivo'],
+        recommendations: aiAnalysis.recommendations || ['Continúa con tu rutina de bienestar'],
+        riskLevel: aiAnalysis.riskLevel || 'low',
         period: { start, end },
         createdAt: new Date(),
+        data: aiAnalysis
       };
 
       // Simular guardado
       setReports((prev) => [report, ...prev]);
-      toast.success('Reporte de estado de ánimo generado exitosamente');
+      toast.success('Reporte de estado de ánimo generado exitosamente con IA');
     } catch (error) {
       console.error('Error generating mood report:', error);
       toast.error('Error al generar el reporte');
@@ -123,26 +136,39 @@ const AdvancedReports: React.FC = () => {
     try {
       const { start, end } = getPeriodDates();
 
-      // Crear reporte simulado
+      // Simular datos de conversaciones para el análisis
+      const chatData = {
+        messages: [
+          { content: 'Hola, ¿cómo te sientes hoy?', timestamp: new Date('2024-01-01'), sender: 'psychologist' as const },
+          { content: 'Me siento un poco ansioso', timestamp: new Date('2024-01-01'), sender: 'user' as const },
+          { content: '¿Qué te está causando ansiedad?', timestamp: new Date('2024-01-01'), sender: 'psychologist' as const },
+          { content: 'El trabajo está muy estresante', timestamp: new Date('2024-01-01'), sender: 'user' as const },
+          { content: 'Hemos trabajado técnicas de relajación', timestamp: new Date('2024-01-02'), sender: 'psychologist' as const },
+          { content: 'Sí, me han ayudado mucho', timestamp: new Date('2024-01-02'), sender: 'user' as const }
+        ],
+        period: { start, end }
+      };
+
+      // Usar el agente de IA para analizar las conversaciones
+      const aiAnalysis = await chatAnalysisAgent.analyzeChat(chatData);
+
+      // Crear reporte con análisis de IA
       const report: AdvancedReport = {
         userId: user.uid,
         reportType: 'chat_analysis',
         title: `Análisis de Conversaciones - ${start.toLocaleDateString()} a ${end.toLocaleDateString()}`,
-        content: `Análisis de tus conversaciones durante el período seleccionado. Se analizaron los patrones de comunicación y temas recurrentes.`,
-        insights: [
-          'Tuviste conversaciones regulares durante este período',
-          'Los temas principales fueron bienestar y estado de ánimo',
-          'Mantuviste una comunicación positiva',
-        ],
-        recommendations: ['Continúa con tu rutina de bienestar', 'Mantén la comunicación regular'],
+        content: aiAnalysis.summary || 'Análisis de tus conversaciones durante el período seleccionado.',
+        insights: aiAnalysis.insights || ['Tuviste conversaciones regulares durante este período'],
+        recommendations: aiAnalysis.recommendations || ['Mantén la comunicación regular'],
         riskLevel: 'low',
         period: { start, end },
         createdAt: new Date(),
+        data: aiAnalysis
       };
 
       // Simular guardado
       setReports((prev) => [report, ...prev]);
-      toast.success('Reporte de conversaciones generado exitosamente');
+      toast.success('Reporte de conversaciones generado exitosamente con IA');
     } catch (error) {
       console.error('Error generating chat report:', error);
       toast.error('Error al generar el reporte');
