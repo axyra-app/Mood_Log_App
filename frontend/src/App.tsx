@@ -21,6 +21,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
 import LoginSimple from './pages/LoginSimple';
+import MedicalHistory from './pages/MedicalHistory';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
 import PsychologistChat from './pages/PsychologistChat';
@@ -69,6 +70,14 @@ function App() {
                 element={
                   <ProtectedRoutePsychologist>
                     <PsychologistChat />
+                  </ProtectedRoutePsychologist>
+                }
+              />
+              <Route
+                path='/medical-history'
+                element={
+                  <ProtectedRoutePsychologist>
+                    <MedicalHistory />
                   </ProtectedRoutePsychologist>
                 }
               />
