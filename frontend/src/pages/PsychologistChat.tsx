@@ -28,40 +28,45 @@ const PsychologistChat: React.FC = () => {
       setIsDarkMode(true);
     }
 
-    // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
-    if (location.state?.patientId && sessions.length >= 0) {
-      console.log('🔍 Datos recibidos:', location.state);
-      console.log('🔍 Sesiones disponibles:', sessions.map(s => ({ id: s.id, userId: s.userId, userName: s.userName })));
-      
-      const targetSession = sessions.find(session => 
-        session.userId === location.state.patientId || 
-        session.userName === location.state.patientName
-      );
-      
-      if (targetSession) {
-        // Sesión existe, seleccionarla
-        setSelectedSession(targetSession.id);
-        setShowChatOnMobile(true);
-        toast.success(`Chat iniciado con ${targetSession.userName}`);
-      } else if (location.state.patientId && user) {
-        // Sesión no existe, crear una nueva
-        console.log('🆕 Creando nueva sesión para:', location.state.patientName);
-        try {
-          const newSessionId = await createSession(
-            location.state.patientId,
-            user.uid,
-            location.state.patientName || 'Usuario',
-            location.state.patientEmail || ''
-          );
-          setSelectedSession(newSessionId);
+    // Función async para manejar la selección/creación de sesión
+    const handlePatientSession = async () => {
+      // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
+      if (location.state?.patientId && sessions.length >= 0) {
+        console.log('🔍 Datos recibidos:', location.state);
+        console.log('🔍 Sesiones disponibles:', sessions.map(s => ({ id: s.id, userId: s.userId, userName: s.userName })));
+        
+        const targetSession = sessions.find(session => 
+          session.userId === location.state.patientId || 
+          session.userName === location.state.patientName
+        );
+        
+        if (targetSession) {
+          // Sesión existe, seleccionarla
+          setSelectedSession(targetSession.id);
           setShowChatOnMobile(true);
-          toast.success(`Nueva conversación iniciada con ${location.state.patientName}`);
-        } catch (error) {
-          console.error('Error creando sesión:', error);
-          toast.error('Error al crear la conversación');
+          toast.success(`Chat iniciado con ${targetSession.userName}`);
+        } else if (location.state.patientId && user) {
+          // Sesión no existe, crear una nueva
+          console.log('🆕 Creando nueva sesión para:', location.state.patientName);
+          try {
+            const newSessionId = await createSession(
+              location.state.patientId,
+              user.uid,
+              location.state.patientName || 'Usuario',
+              location.state.patientEmail || ''
+            );
+            setSelectedSession(newSessionId);
+            setShowChatOnMobile(true);
+            toast.success(`Nueva conversación iniciada con ${location.state.patientName}`);
+          } catch (error) {
+            console.error('Error creando sesión:', error);
+            toast.error('Error al crear la conversación');
+          }
         }
       }
-    }
+    };
+
+    handlePatientSession();
   }, [location.state, sessions]);
 
   const toggleDarkMode = () => {
