@@ -104,7 +104,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                 No hay citas pendientes
               </p>
               <p className={`text-xs transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
               }`}>
                 Haz clic en la campana para ver todas las notificaciones
               </p>
@@ -117,7 +117,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                 {unreadCount} cita{unreadCount !== 1 ? 's' : ''} pendiente{unreadCount !== 1 ? 's' : ''}
               </p>
               <p className={`text-xs transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
               }`}>
                 Haz clic en la campana para gestionar
               </p>
@@ -146,7 +146,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                 No hay citas pendientes
               </p>
               <p className={`text-xs transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
               }`}>
                 Las citas aparecerán aquí cuando los pacientes las soliciten
               </p>

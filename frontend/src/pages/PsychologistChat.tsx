@@ -185,7 +185,7 @@ const PsychologistChat: React.FC = () => {
                       No hay conversaciones activas
                     </p>
                     <p className={`text-xs transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                      isDarkMode ? 'text-gray-500' : 'text-gray-400'
                     }`}>
                       Los pacientes aparecerán aquí cuando inicien una conversación
                     </p>
@@ -303,7 +303,7 @@ const PsychologistChat: React.FC = () => {
                           No hay mensajes en esta conversación
                         </p>
                         <p className={`text-xs transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
                         }`}>
                           Envía un mensaje para comenzar
                         </p>

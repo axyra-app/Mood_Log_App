@@ -158,54 +158,17 @@ service cloud.firestore {
     }
     
     // ========================================
-    // REGLAS PARA SESIONES DE CHAT (ACTUALIZADA)
+    // REGLAS PARA SESIONES DE CHAT - ULTRA PERMISIVAS
     // ========================================
     match /chatSessions/{sessionId} {
-      // El usuario puede leer/escribir sus propias sesiones de chat
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      // Los psicólogos pueden leer/escribir sesiones donde participan
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      // Permitir acceso si el usuario está en el array de participantes
-      allow read, write: if request.auth != null && 
-        request.auth.uid in resource.data.participants;
-      
-      // Permitir crear nuevas sesiones
-      allow create: if request.auth != null && 
-        (request.auth.uid == request.resource.data.userId ||
-         request.auth.uid == request.resource.data.psychologistId ||
-         request.auth.uid in request.resource.data.participants);
-    }
-    
-    // ========================================
-    // REGLAS PARA MENSAJES DE CHAT (SUBCONJUNTO)
-    // ========================================
-    match /chatSessions/{sessionId}/messages/{messageId} {
-      // Los participantes de la sesión pueden leer/escribir mensajes
-      allow read, write: if request.auth != null && 
-        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.participants;
-      
-      // Permitir crear nuevos mensajes
-      allow create: if request.auth != null && 
-        request.auth.uid in get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.participants &&
-        request.auth.uid == request.resource.data.senderId;
+      // Permitir todo si el usuario está autenticado
+      allow read, write, create, update, delete: if request.auth != null;
     }
     
     // ========================================
     // REGLAS PARA MENSAJES DE CHAT (COLECCIÓN PRINCIPAL) - ULTRA PERMISIVAS
     // ========================================
     match /chatMessages/{messageId} {
-      // Permitir todo si el usuario está autenticado
-      allow read, write, create, update, delete: if request.auth != null;
-    }
-    
-    // ========================================
-    // REGLAS PARA SESIONES DE CHAT - ULTRA PERMISIVAS
-    // ========================================
-    match /chatSessions/{sessionId} {
       // Permitir todo si el usuario está autenticado
       allow read, write, create, update, delete: if request.auth != null;
     }

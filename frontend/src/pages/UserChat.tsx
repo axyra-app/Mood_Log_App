@@ -250,7 +250,7 @@ const UserChat: React.FC = () => {
                       </p>
                       <p
                         className={`text-xs mt-1 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
                         }`}
                       >
                         Inicia una conversación con un psicólogo

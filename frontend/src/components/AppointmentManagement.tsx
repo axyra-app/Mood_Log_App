@@ -247,7 +247,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
           <div className='text-center py-12'>
             <div
               className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-400'
+                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
               }`}
             >
               <Calendar className='w-8 h-8' />

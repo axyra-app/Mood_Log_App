@@ -269,7 +269,7 @@ const DashboardSimple: React.FC = () => {
                   <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     Aún no tienes entradas en tu diario
                   </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     Comienza escribiendo sobre tu día
                   </p>
                   <button
@@ -372,7 +372,7 @@ const DashboardSimple: React.FC = () => {
                   <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     Aún no tienes registros de estado de ánimo
                   </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     Comienza registrando cómo te sientes hoy
                   </p>
                   <button

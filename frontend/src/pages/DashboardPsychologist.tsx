@@ -360,7 +360,7 @@ const DashboardPsychologist: React.FC = () => {
             <div className='text-center py-12'>
               <div
                 className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
-                  isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-400'
+                  isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
                 }`}
               >
                 <span className='text-4xl'>👥</span>

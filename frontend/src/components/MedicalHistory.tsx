@@ -196,7 +196,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
             </p>
             <p
               className={`text-xs mt-1 transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
               }`}
             >
               Los pacientes aparecerán aquí cuando aceptes sus citas
@@ -283,7 +283,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
           <div className='text-center py-12'>
             <div
               className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-400'
+                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
               }`}
             >
               <User className='w-8 h-8' />
@@ -303,7 +303,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
           <div className='text-center py-12'>
             <div
               className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-400'
+                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
               }`}
             >
               <FileText className='w-8 h-8' />
