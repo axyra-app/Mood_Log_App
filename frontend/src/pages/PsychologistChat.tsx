@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useChatSessions, useChatMessages } from '../hooks/useChat';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 const PsychologistChat: React.FC = () => {
   const { user } = useAuth();
@@ -14,6 +16,7 @@ const PsychologistChat: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
+  const [userOnlineStatus, setUserOnlineStatus] = useState<{[key: string]: boolean}>({});
 
   const { sessions, loading: sessionsLoading, markAsRead, createSession } = useChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useChatMessages(selectedSession);
@@ -67,6 +70,38 @@ const PsychologistChat: React.FC = () => {
 
     handlePatientSession();
   }, [location.state, sessions]);
+
+  // Monitorear estado de conexión de usuarios
+  useEffect(() => {
+    const unsubscribeFunctions: (() => void)[] = [];
+
+    sessions.forEach(session => {
+      const userRef = doc(db, 'users', session.userId);
+      const unsubscribe = onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          const userData = doc.data();
+          const isOnline = userData.isOnline || false;
+          const lastSeen = userData.lastSeen;
+          
+          // Considerar online si está marcado como online O si su última actividad fue hace menos de 5 minutos
+          const now = new Date();
+          const lastSeenDate = lastSeen ? (lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen)) : null;
+          const isRecentlyActive = lastSeenDate && (now.getTime() - lastSeenDate.getTime()) < 5 * 60 * 1000;
+          
+          setUserOnlineStatus(prev => ({
+            ...prev,
+            [session.userId]: isOnline || isRecentlyActive
+          }));
+        }
+      });
+      
+      unsubscribeFunctions.push(unsubscribe);
+    });
+
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+    };
+  }, [sessions]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -311,12 +346,23 @@ const PsychologistChat: React.FC = () => {
                         <h3 className={`font-medium transition-colors duration-500 ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>
-                          {mySessions.find(s => s.id === selectedSession)?.userName || 'Usuario'}
+                          {(() => {
+                            const currentSession = mySessions.find(s => s.id === selectedSession);
+                            console.log('🔍 Sesión actual:', currentSession);
+                            console.log('🔍 Nombre del usuario:', currentSession?.userName);
+                            return currentSession?.userName || 'Usuario';
+                          })()}
                         </h3>
                         <p className={`text-sm transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
-                          En línea
+                          {(() => {
+                            const currentSession = mySessions.find(s => s.id === selectedSession);
+                            if (!currentSession) return 'Desconectado';
+                            
+                            const isOnline = userOnlineStatus[currentSession.userId];
+                            return isOnline ? 'En línea' : 'Desconectado';
+                          })()}
                         </p>
                       </div>
                     </div>
