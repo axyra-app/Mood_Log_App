@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Logo from '../components/Logo';
+import PsychologistCV from '../components/PsychologistCV';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
@@ -313,6 +314,20 @@ const Settings: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Hoja de Vida - Solo para psicólogos */}
+          {userRole === 'psychologist' && (
+            <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border mb-6`}>
+              <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                📄 Hoja de Vida (CV)
+              </h2>
+              <PsychologistCV isDarkMode={isDarkMode} />
+            </div>
+          )}
 
           {/* System Info */}
           <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${

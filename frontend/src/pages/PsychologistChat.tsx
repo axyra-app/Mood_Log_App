@@ -1,6 +1,6 @@
 import { ArrowLeft, MessageCircle, Send, User, Clock, Check, CheckCheck, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useChatSessions, useChatMessages } from '../hooks/useChat';
@@ -8,6 +8,7 @@ import { useChatSessions, useChatMessages } from '../hooks/useChat';
 const PsychologistChat: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -25,7 +26,17 @@ const PsychologistChat: React.FC = () => {
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
     }
-  }, []);
+
+    // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
+    if (location.state?.patientId && sessions.length > 0) {
+      const targetSession = sessions.find(session => session.userId === location.state.patientId);
+      if (targetSession) {
+        setSelectedSession(targetSession.id);
+        setShowChatOnMobile(true);
+        toast.success(`Chat iniciado con ${targetSession.userName}`);
+      }
+    }
+  }, [location.state, sessions]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;

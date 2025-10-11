@@ -262,13 +262,18 @@ export const useChatMessages = (sessionId: string | null) => {
       });
       console.log('📤 Sesión actualizada');
 
-      // Crear notificación para el usuario
+      // Crear notificación para el usuario SOLO si el mensaje viene del psicólogo
       try {
         const sessionDoc = await getDoc(sessionRef);
         if (sessionDoc.exists()) {
           const sessionData = sessionDoc.data();
-          await createPsychologistChatNotification(sessionData.userId, senderId, senderName, content);
-          console.log('📤 Notificación creada');
+          // Solo crear notificación si el mensaje viene del psicólogo (no del usuario)
+          if (senderId !== sessionData.userId) {
+            await createPsychologistChatNotification(sessionData.userId, senderId, senderName, content);
+            console.log('📤 Notificación creada para usuario');
+          } else {
+            console.log('📤 No se crea notificación - mensaje del propio usuario');
+          }
         }
       } catch (notificationError) {
         console.error('Error creating notification:', notificationError);

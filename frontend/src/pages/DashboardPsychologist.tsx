@@ -4,7 +4,6 @@ import AppointmentManagement from '../components/AppointmentManagement';
 import Logo from '../components/Logo';
 import MedicalHistory from '../components/MedicalHistory';
 import NotificationsPanel from '../components/NotificationsPanel';
-import PsychologistCV from '../components/PsychologistCV';
 import PsychologistNotifications from '../components/PsychologistNotifications';
 import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
@@ -46,10 +45,35 @@ const DashboardPsychologist: React.FC = () => {
     // createPatientRelationsFromAppointments().catch(console.error);
   }, []);
 
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+  const handlePatientChat = (patient: any) => {
+    // Navegar al chat del psicólogo con el paciente específico
+    navigate('/psychologist-chat', { 
+      state: { 
+        selectedPatient: patient,
+        patientId: patient.userId 
+      } 
+    });
+  };
+
+  const handlePatientHistory = (patient: any) => {
+    // Navegar al historial médico con el paciente específico
+    navigate('/medical-history', { 
+      state: { 
+        selectedPatient: patient,
+        patientId: patient.userId 
+      } 
+    });
+  };
+
+  const handlePatientReport = (patient: any) => {
+    // Navegar a crear reporte médico con el paciente específico
+    navigate('/medical-history', { 
+      state: { 
+        selectedPatient: patient,
+        patientId: patient.userId,
+        action: 'create-report'
+      } 
+    });
   };
 
   const handleLogout = async () => {
@@ -309,10 +333,6 @@ const DashboardPsychologist: React.FC = () => {
           <MedicalHistory isDarkMode={isDarkMode} />
         </div>
 
-        {/* CV Component */}
-        <div className='mt-8'>
-          <PsychologistCV isDarkMode={isDarkMode} />
-        </div>
         <div
           className={`mt-8 p-6 rounded-xl shadow-sm transition-colors duration-500 ${
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
@@ -477,10 +497,7 @@ const DashboardPsychologist: React.FC = () => {
 
                   <div className='flex space-x-2'>
                     <button
-                      onClick={() => {
-                        // TODO: Implementar chat directo
-                        console.log('Iniciar chat con:', patient.displayName);
-                      }}
+                      onClick={() => handlePatientChat(patient)}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
                         isDarkMode
                           ? 'bg-purple-600 text-white hover:bg-purple-700'
@@ -490,10 +507,7 @@ const DashboardPsychologist: React.FC = () => {
                       💬 Chat
                     </button>
                     <button
-                      onClick={() => {
-                        // TODO: Implementar historial médico
-                        console.log('Ver historial de:', patient.displayName);
-                      }}
+                      onClick={() => handlePatientHistory(patient)}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
                         isDarkMode
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -503,10 +517,7 @@ const DashboardPsychologist: React.FC = () => {
                       📋 Historial
                     </button>
                     <button
-                      onClick={() => {
-                        // TODO: Implementar reporte médico
-                        console.log('Generar reporte para:', patient.displayName);
-                      }}
+                      onClick={() => handlePatientReport(patient)}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
                         isDarkMode
                           ? 'bg-green-600 text-white hover:bg-green-700'
