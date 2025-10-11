@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, LogOut, Moon, Sun } from 'lucide-react';
+import { BarChart3, Calendar, LogOut, Moon, Sun, Bot } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentSection from '../components/AppointmentSection';
@@ -7,6 +7,7 @@ import NotificationsPanel from '../components/NotificationsPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
+import { testGroqConnection, checkGroqConfig } from '../utils/groqTest';
 
 const DashboardSimple: React.FC = () => {
   // Dashboard con logo personalizado
@@ -16,6 +17,8 @@ const DashboardSimple: React.FC = () => {
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [groqStatus, setGroqStatus] = useState<string>('');
+  const [testingGroq, setTestingGroq] = useState(false);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -35,6 +38,32 @@ const DashboardSimple: React.FC = () => {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const testGroq = async () => {
+    setTestingGroq(true);
+    setGroqStatus('🔄 Probando conexión con Groq...');
+    
+    try {
+      // Primero verificar configuración
+      const configCheck = checkGroqConfig();
+      if (configCheck.status !== 'success') {
+        setGroqStatus(configCheck.message);
+        return;
+      }
+
+      // Probar conexión real
+      const result = await testGroqConnection();
+      if (result.success) {
+        setGroqStatus(`✅ ${result.message}`);
+      } else {
+        setGroqStatus(`❌ Error: ${result.error}`);
+      }
+    } catch (error) {
+      setGroqStatus(`❌ Error inesperado: ${error}`);
+    } finally {
+      setTestingGroq(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -81,6 +110,13 @@ const DashboardSimple: React.FC = () => {
       icon: '📋',
       color: 'bg-gradient-to-r from-yellow-500 to-orange-500',
       action: () => navigate('/reports'),
+    },
+    {
+      title: 'Probar IA (Groq)',
+      description: 'Verificar conexión',
+      icon: '🤖',
+      color: 'bg-gradient-to-r from-violet-500 to-purple-500',
+      action: testGroq,
     },
     {
       title: 'Configuración',
@@ -172,6 +208,22 @@ const DashboardSimple: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* Estado de Groq */}
+        {groqStatus && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            groqStatus.includes('✅') ? 'bg-green-100 text-green-800' : 
+            groqStatus.includes('❌') ? 'bg-red-100 text-red-800' :
+            groqStatus.includes('⚠️') ? 'bg-yellow-100 text-yellow-800' :
+            'bg-blue-100 text-blue-800'
+          }`}>
+            <div className="flex items-center">
+              <Bot className="w-5 h-5 mr-2" />
+              <span className="font-medium">Estado de IA:</span>
+            </div>
+            <p className="mt-1 text-sm">{groqStatus}</p>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8'>
