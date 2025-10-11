@@ -50,7 +50,9 @@ const DashboardPsychologist: React.FC = () => {
     navigate('/psychologist-chat', { 
       state: { 
         selectedPatient: patient,
-        patientId: patient.userId 
+        patientId: patient.uid || patient.userId,
+        patientName: patient.displayName || patient.userName,
+        patientEmail: patient.email || patient.userEmail
       } 
     });
   };
@@ -340,25 +342,25 @@ const DashboardPsychologist: React.FC = () => {
         </div>
 
         <div
-          className={`mt-8 p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+          className={`mt-8 p-4 lg:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
           } border`}
         >
-          <div className='flex items-center justify-between mb-6'>
+          <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0'>
             <div className='flex items-center space-x-3'>
               <div className='w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center'>
                 <span className='text-white text-lg'>👥</span>
               </div>
               <div>
                 <h2
-                  className={`text-xl font-semibold transition-colors duration-500 ${
+                  className={`text-lg lg:text-xl font-semibold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
                   Mis Pacientes
                 </h2>
                 <p
-                  className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                  className={`text-xs lg:text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
                 >
                   Gestiona el historial y comunicación con tus pacientes
                 </p>
@@ -403,7 +405,7 @@ const DashboardPsychologist: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'>
               {patients.map((patient) => (
                 <div
                   key={patient.uid}
@@ -501,7 +503,7 @@ const DashboardPsychologist: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className='flex space-x-2'>
+                  <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
                     <button
                       onClick={() => handlePatientChat(patient)}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
@@ -513,24 +515,14 @@ const DashboardPsychologist: React.FC = () => {
                       💬 Chat
                     </button>
                     <button
-                      onClick={() => handlePatientHistory(patient)}
+                      onClick={() => handlePatientReport(patient)}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
                         isDarkMode
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'bg-blue-500 text-white hover:bg-blue-600'
                       }`}
                     >
-                      📋 Historial
-                    </button>
-                    <button
-                      onClick={() => handlePatientReport(patient)}
-                      className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
-                        isDarkMode
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'bg-green-500 text-white hover:bg-green-600'
-                      }`}
-                    >
-                      📄 Reporte
+                      📄 Reporte Médico
                     </button>
                   </div>
                 </div>

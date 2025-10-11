@@ -10,6 +10,14 @@ const MedicalHistory: React.FC = () => {
   const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportData, setReportData] = useState({
+    sessionType: '',
+    diagnosis: '',
+    treatment: '',
+    notes: '',
+    recommendations: ''
+  });
 
   const { appointments, loading } = usePsychologistAppointments(user?.uid || '');
 
@@ -62,9 +70,45 @@ const MedicalHistory: React.FC = () => {
 
   const handleCreateReport = () => {
     if (selectedPatient) {
-      // Aquí puedes implementar la lógica para crear un reporte
-      console.log('Crear reporte para:', selectedPatient.userName);
+      setShowReportModal(true);
     }
+  };
+
+  const handleSaveReport = async () => {
+    if (!selectedPatient || !reportData.sessionType || !reportData.diagnosis) {
+      alert('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    try {
+      // Aquí implementarías la lógica para guardar el reporte en Firebase
+      console.log('Guardando reporte para:', selectedPatient.userName, reportData);
+      
+      // Simular guardado exitoso
+      alert('Reporte médico creado exitosamente');
+      setShowReportModal(false);
+      setReportData({
+        sessionType: '',
+        diagnosis: '',
+        treatment: '',
+        notes: '',
+        recommendations: ''
+      });
+    } catch (error) {
+      console.error('Error al crear reporte:', error);
+      alert('Error al crear el reporte');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowReportModal(false);
+    setReportData({
+      sessionType: '',
+      diagnosis: '',
+      treatment: '',
+      notes: '',
+      recommendations: ''
+    });
   };
 
   return (
@@ -306,6 +350,177 @@ const MedicalHistory: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal para crear reporte médico */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-xl transition-colors duration-500 ${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={`text-xl font-semibold transition-colors duration-500 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Nuevo Reporte Médico
+                </h3>
+                <button
+                  onClick={handleCloseModal}
+                  className={`p-2 rounded-lg transition-colors duration-300 ${
+                    isDarkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {selectedPatient && (
+                <div className={`p-4 rounded-lg mb-6 transition-colors duration-500 ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+                }`}>
+                  <h4 className={`font-medium mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Paciente: {selectedPatient.userName}
+                  </h4>
+                  <p className={`text-sm transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    {selectedPatient.userEmail}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-700'
+                  }`}>
+                    Tipo de Sesión *
+                  </label>
+                  <select
+                    value={reportData.sessionType}
+                    onChange={(e) => setReportData({...reportData, sessionType: e.target.value})}
+                    className={`w-full p-3 rounded-lg border transition-colors duration-500 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500'
+                    }`}
+                  >
+                    <option value="">Selecciona el tipo de sesión</option>
+                    <option value="evaluation">Evaluación inicial</option>
+                    <option value="follow-up">Seguimiento</option>
+                    <option value="crisis">Intervención en crisis</option>
+                    <option value="therapy">Terapia individual</option>
+                    <option value="group">Terapia grupal</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-700'
+                  }`}>
+                    Diagnóstico *
+                  </label>
+                  <textarea
+                    value={reportData.diagnosis}
+                    onChange={(e) => setReportData({...reportData, diagnosis: e.target.value})}
+                    rows={3}
+                    placeholder="Describe el diagnóstico..."
+                    className={`w-full p-3 rounded-lg border transition-colors duration-500 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-700'
+                  }`}>
+                    Tratamiento
+                  </label>
+                  <textarea
+                    value={reportData.treatment}
+                    onChange={(e) => setReportData({...reportData, treatment: e.target.value})}
+                    rows={3}
+                    placeholder="Describe el tratamiento aplicado..."
+                    className={`w-full p-3 rounded-lg border transition-colors duration-500 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-700'
+                  }`}>
+                    Notas de la Sesión
+                  </label>
+                  <textarea
+                    value={reportData.notes}
+                    onChange={(e) => setReportData({...reportData, notes: e.target.value})}
+                    rows={4}
+                    placeholder="Notas adicionales sobre la sesión..."
+                    className={`w-full p-3 rounded-lg border transition-colors duration-500 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
+                    isDarkMode ? 'text-white' : 'text-gray-700'
+                  }`}>
+                    Recomendaciones
+                  </label>
+                  <textarea
+                    value={reportData.recommendations}
+                    onChange={(e) => setReportData({...reportData, recommendations: e.target.value})}
+                    rows={3}
+                    placeholder="Recomendaciones para el paciente..."
+                    className={`w-full p-3 rounded-lg border transition-colors duration-500 ${
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={handleCloseModal}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
+                    isDarkMode
+                      ? 'bg-gray-600 text-white hover:bg-gray-500'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveReport}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
+                    isDarkMode
+                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      : 'bg-purple-500 text-white hover:bg-purple-600'
+                  }`}
+                >
+                  Guardar Reporte
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
