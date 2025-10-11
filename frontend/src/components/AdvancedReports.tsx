@@ -84,6 +84,7 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateMoodReport = async () => {
+    console.log('🔍 Generando reporte de estado de ánimo...');
     setLoading(true);
     try {
       const { start, end } = getPeriodDates();
@@ -117,6 +118,7 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateChatReport = async () => {
+    console.log('🔍 Generando reporte de conversaciones...');
     setLoading(true);
     try {
       const { start, end } = getPeriodDates();
@@ -208,13 +210,8 @@ const AdvancedReports: React.FC = () => {
           <div className='flex items-center gap-4 mb-4'>
             <button
               onClick={() => {
+                console.log('🔍 Navegando al dashboard...');
                 navigate('/dashboard');
-                // Fallback si navigate no funciona
-                setTimeout(() => {
-                  if (window.location.pathname !== '/dashboard') {
-                    window.location.href = '/dashboard';
-                  }
-                }, 100);
               }}
               className='flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors'
             >

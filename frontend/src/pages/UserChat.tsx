@@ -6,6 +6,8 @@ import NotificationsPanel from '../components/NotificationsPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useAvailablePsychologists } from '../hooks/useAvailablePsychologists';
 import { useUserChatMessages, useUserChatSessions } from '../hooks/useUserChat';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 const UserChat: React.FC = () => {
   const { user } = useAuth();
@@ -17,6 +19,7 @@ const UserChat: React.FC = () => {
   const [availablePsychologists, setAvailablePsychologists] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
+  const [psychologistOnlineStatus, setPsychologistOnlineStatus] = useState<{[key: string]: boolean}>({});
 
   const { sessions, loading: sessionsLoading, markAsRead, createSession } = useUserChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useUserChatMessages(selectedSession);
@@ -31,6 +34,38 @@ const UserChat: React.FC = () => {
       setIsDarkMode(true);
     }
   }, []);
+
+  // Monitorear estado de conexión de psicólogos
+  useEffect(() => {
+    const unsubscribeFunctions: (() => void)[] = [];
+
+    sessions.forEach(session => {
+      const psychologistRef = doc(db, 'psychologists', session.psychologistId);
+      const unsubscribe = onSnapshot(psychologistRef, (doc) => {
+        if (doc.exists()) {
+          const psychologistData = doc.data();
+          const isOnline = psychologistData.isOnline || false;
+          const lastActive = psychologistData.lastActive;
+          
+          // Considerar online si está marcado como online O si su última actividad fue hace menos de 5 minutos
+          const now = new Date();
+          const lastActiveDate = lastActive ? (lastActive.toDate ? lastActive.toDate() : new Date(lastActive)) : null;
+          const isRecentlyActive = lastActiveDate && (now.getTime() - lastActiveDate.getTime()) < 5 * 60 * 1000;
+          
+          setPsychologistOnlineStatus(prev => ({
+            ...prev,
+            [session.psychologistId]: isOnline || isRecentlyActive
+          }));
+        }
+      });
+      
+      unsubscribeFunctions.push(unsubscribe);
+    });
+
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+    };
+  }, [sessions]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -429,7 +464,13 @@ const UserChat: React.FC = () => {
                               isDarkMode ? 'text-gray-400' : 'text-gray-600'
                             }`}
                           >
-                            En línea
+                            {(() => {
+                              const currentSession = mySessions.find(s => s.id === selectedSession);
+                              if (!currentSession) return 'Desconectado';
+                              
+                              const isOnline = psychologistOnlineStatus[currentSession.psychologistId];
+                              return isOnline ? 'En línea' : 'Desconectado';
+                            })()}
                           </p>
                         </div>
                       </div>
