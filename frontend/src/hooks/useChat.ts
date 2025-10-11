@@ -197,10 +197,8 @@ export const useChatMessages = (sessionId: string | null) => {
       messagesQuery,
       (snapshot) => {
         try {
-          console.log('📨 Mensajes recibidos:', snapshot.docs.length);
           const messagesData: ChatMessage[] = snapshot.docs.map((doc) => {
             const data = doc.data();
-            console.log('📨 Procesando mensaje:', { id: doc.id, content: data.content, timestamp: data.timestamp });
             return {
               id: doc.id,
               sessionId: data.sessionId,
@@ -215,7 +213,6 @@ export const useChatMessages = (sessionId: string | null) => {
 
           // Ordenar mensajes por timestamp
           messagesData.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-          console.log('📨 Mensajes ordenados:', messagesData.length);
 
           setMessages(messagesData);
           setError(null);

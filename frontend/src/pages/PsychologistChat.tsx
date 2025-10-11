@@ -29,11 +29,21 @@ const PsychologistChat: React.FC = () => {
 
     // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
     if (location.state?.patientId && sessions.length > 0) {
-      const targetSession = sessions.find(session => session.userId === location.state.patientId);
+      console.log('🔍 Datos recibidos:', location.state);
+      console.log('🔍 Sesiones disponibles:', sessions.map(s => ({ id: s.id, userId: s.userId, userName: s.userName })));
+      
+      const targetSession = sessions.find(session => 
+        session.userId === location.state.patientId || 
+        session.userName === location.state.patientName
+      );
       if (targetSession) {
         setSelectedSession(targetSession.id);
         setShowChatOnMobile(true);
         toast.success(`Chat iniciado con ${targetSession.userName}`);
+      } else {
+        // Si no encuentra la sesión, mostrar mensaje de ayuda
+        console.log('❌ No se encontró sesión para el paciente:', location.state);
+        toast.error('No se encontró conversación con este paciente');
       }
     }
   }, [location.state, sessions]);
