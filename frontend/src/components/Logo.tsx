@@ -58,16 +58,10 @@ const Logo: React.FC<LogoProps> = ({
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Custom Mood Log App Icon */}
+          {/* Checkmark icon */}
           <path 
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" 
+            d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" 
             fill="currentColor"
-          />
-          {/* Heart shape for mood */}
-          <path 
-            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
-            fill="currentColor"
-            opacity="0.3"
           />
         </svg>
       </div>
