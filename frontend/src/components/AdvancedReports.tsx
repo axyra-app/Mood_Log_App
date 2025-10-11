@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { moodAnalysisAgent, chatAnalysisAgent } from '../services/aiAgents';
+import { getRealMoodData, getRealChatData, getUserStats } from '../services/realDataService';
+import { useAuth } from '../contexts/AuthContext';
 
 // Interfaces locales para evitar problemas de importación
 interface AdvancedReport {
@@ -23,10 +25,8 @@ interface AdvancedReport {
 }
 
 const AdvancedReports: React.FC = () => {
-  // Simular usuario por ahora para evitar problemas de importación
-  const user = { uid: 'demo-user' };
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const moodLogs: any[] = []; // Simular datos vacíos
   const [reports, setReports] = useState<AdvancedReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'custom'>('week');
@@ -85,25 +85,26 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateMoodReport = async () => {
-    console.log('🔍 Generando reporte de estado de ánimo...');
+    console.log('🔍 Generando reporte de estado de ánimo con datos reales...');
     setLoading(true);
     try {
+      if (!user?.uid) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
+
       const { start, end } = getPeriodDates();
 
-      // Simular datos de estado de ánimo para el análisis
-      const moodData = {
-        moodLogs: [
-          { mood: 7, date: new Date('2024-01-01'), notes: 'Me siento bien hoy' },
-          { mood: 6, date: new Date('2024-01-02'), notes: 'Día normal' },
-          { mood: 8, date: new Date('2024-01-03'), notes: 'Excelente día' },
-          { mood: 5, date: new Date('2024-01-04'), notes: 'Un poco cansado' },
-          { mood: 7, date: new Date('2024-01-05'), notes: 'Mejorando' }
-        ],
-        period: { start, end }
-      };
+      // Obtener datos reales de Firebase
+      const realMoodData = await getRealMoodData(user.uid, start, end);
+      
+      if (realMoodData.moodLogs.length === 0) {
+        toast.error('No hay datos de estado de ánimo para el período seleccionado');
+        return;
+      }
 
-      // Usar el agente de IA para analizar el estado de ánimo
-      const aiAnalysis = await moodAnalysisAgent.analyzeMood(moodData);
+      // Usar el agente de IA para analizar los datos reales
+      const aiAnalysis = await moodAnalysisAgent.analyzeMood(realMoodData);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -116,12 +117,22 @@ const AdvancedReports: React.FC = () => {
         riskLevel: aiAnalysis.riskLevel || 'low',
         period: { start, end },
         createdAt: new Date(),
-        data: aiAnalysis
+        data: {
+          ...aiAnalysis,
+          realData: {
+            totalLogs: realMoodData.moodLogs.length,
+            averageMood: realMoodData.moodLogs.reduce((sum, log) => sum + log.mood, 0) / realMoodData.moodLogs.length,
+            moodRange: {
+              min: Math.min(...realMoodData.moodLogs.map(log => log.mood)),
+              max: Math.max(...realMoodData.moodLogs.map(log => log.mood))
+            }
+          }
+        }
       };
 
       // Simular guardado
       setReports((prev) => [report, ...prev]);
-      toast.success('Reporte de estado de ánimo generado exitosamente con IA');
+      toast.success(`Reporte generado exitosamente con ${realMoodData.moodLogs.length} registros reales`);
     } catch (error) {
       console.error('Error generating mood report:', error);
       toast.error('Error al generar el reporte');
@@ -131,26 +142,26 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateChatReport = async () => {
-    console.log('🔍 Generando reporte de conversaciones...');
+    console.log('🔍 Generando reporte de conversaciones con datos reales...');
     setLoading(true);
     try {
+      if (!user?.uid) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
+
       const { start, end } = getPeriodDates();
 
-      // Simular datos de conversaciones para el análisis
-      const chatData = {
-        messages: [
-          { content: 'Hola, ¿cómo te sientes hoy?', timestamp: new Date('2024-01-01'), sender: 'psychologist' as const },
-          { content: 'Me siento un poco ansioso', timestamp: new Date('2024-01-01'), sender: 'user' as const },
-          { content: '¿Qué te está causando ansiedad?', timestamp: new Date('2024-01-01'), sender: 'psychologist' as const },
-          { content: 'El trabajo está muy estresante', timestamp: new Date('2024-01-01'), sender: 'user' as const },
-          { content: 'Hemos trabajado técnicas de relajación', timestamp: new Date('2024-01-02'), sender: 'psychologist' as const },
-          { content: 'Sí, me han ayudado mucho', timestamp: new Date('2024-01-02'), sender: 'user' as const }
-        ],
-        period: { start, end }
-      };
+      // Obtener datos reales de conversaciones
+      const realChatData = await getRealChatData(user.uid, start, end);
+      
+      if (realChatData.messages.length === 0) {
+        toast.error('No hay conversaciones para el período seleccionado');
+        return;
+      }
 
-      // Usar el agente de IA para analizar las conversaciones
-      const aiAnalysis = await chatAnalysisAgent.analyzeChat(chatData);
+      // Usar el agente de IA para analizar las conversaciones reales
+      const aiAnalysis = await chatAnalysisAgent.analyzeChat(realChatData);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -163,12 +174,20 @@ const AdvancedReports: React.FC = () => {
         riskLevel: 'low',
         period: { start, end },
         createdAt: new Date(),
-        data: aiAnalysis
+        data: {
+          ...aiAnalysis,
+          realData: {
+            totalMessages: realChatData.messages.length,
+            userMessages: realChatData.messages.filter(msg => msg.sender === 'user').length,
+            psychologistMessages: realChatData.messages.filter(msg => msg.sender === 'psychologist').length,
+            uniqueSessions: [...new Set(realChatData.messages.map(msg => msg.sessionId))].length
+          }
+        }
       };
 
       // Simular guardado
       setReports((prev) => [report, ...prev]);
-      toast.success('Reporte de conversaciones generado exitosamente con IA');
+      toast.success(`Reporte generado exitosamente con ${realChatData.messages.length} mensajes reales`);
     } catch (error) {
       console.error('Error generating chat report:', error);
       toast.error('Error al generar el reporte');
