@@ -34,9 +34,6 @@ const PsychologistChat: React.FC = () => {
     const handlePatientSession = async () => {
       // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
       if (location.state?.patientId && sessions.length >= 0) {
-        console.log('🔍 Datos recibidos:', location.state);
-        console.log('🔍 Sesiones disponibles:', sessions.map(s => ({ id: s.id, userId: s.userId, userName: s.userName })));
-        
         const targetSession = sessions.find(session => 
           session.userId === location.state.patientId || 
           session.userName === location.state.patientName
@@ -49,7 +46,6 @@ const PsychologistChat: React.FC = () => {
           toast.success(`Chat iniciado con ${targetSession.userName}`);
         } else if (location.state.patientId && user) {
           // Sesión no existe, crear una nueva
-          console.log('🆕 Creando nueva sesión para:', location.state.patientName);
           try {
             const newSessionId = await createSession(
               location.state.patientId,
@@ -346,12 +342,7 @@ const PsychologistChat: React.FC = () => {
                         <h3 className={`font-medium transition-colors duration-500 ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>
-                          {(() => {
-                            const currentSession = mySessions.find(s => s.id === selectedSession);
-                            console.log('🔍 Sesión actual:', currentSession);
-                            console.log('🔍 Nombre del usuario:', currentSession?.userName);
-                            return currentSession?.userName || 'Usuario';
-                          })()}
+                          {mySessions.find(s => s.id === selectedSession)?.userName || 'Usuario'}
                         </h3>
                         <p className={`text-sm transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-600'
