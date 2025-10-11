@@ -105,14 +105,30 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path='/chat'
-                element={
-                  <ProtectedRoute>
-                    <ChatSelection />
-                  </ProtectedRoute>
-                }
-              />
+            <Route
+              path='/chat'
+              element={
+                <ProtectedRoute>
+                  <ChatSelection />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/chat/dr-sofia'
+              element={
+                <ProtectedRoute>
+                  <AIChat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/chat/dr-carlos'
+              element={
+                <ProtectedRoute>
+                  <AIChat />
+                </ProtectedRoute>
+              }
+            />
               <Route
                 path='/chat/ai/:doctorType'
                 element={

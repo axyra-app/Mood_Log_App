@@ -12,8 +12,8 @@ const ChatSelection: React.FC = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleAIChat = (doctorType: 'general' | 'specialist') => {
-    navigate(`/chat/ai/${doctorType}`);
+  const handleAIChat = (doctorType: 'dr-sofia' | 'dr-carlos') => {
+    navigate(`/chat/${doctorType}`);
   };
 
   const handlePsychologistChat = () => {
@@ -120,7 +120,7 @@ const ChatSelection: React.FC = () => {
 
             <div className="space-y-3">
               <button
-                onClick={() => handleAIChat('general')}
+                onClick={() => handleAIChat('dr-sofia')}
                 className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <User className="w-5 h-5" />
@@ -129,7 +129,7 @@ const ChatSelection: React.FC = () => {
               </button>
               
               <button
-                onClick={() => handleAIChat('specialist')}
+                onClick={() => handleAIChat('dr-carlos')}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <User className="w-5 h-5" />
