@@ -43,11 +43,9 @@ export const useAvailablePsychologists = () => {
           for (const docSnapshot of snapshot.docs) {
             const data = docSnapshot.data();
             
-            // Verificar si el psicólogo está online (última actividad reciente)
-            const now = new Date();
-            const lastSeen = data.lastSeen?.toDate ? data.lastSeen.toDate() : new Date(data.lastSeen || 0);
-            const isOnline = (now.getTime() - lastSeen.getTime()) < 5 * 60 * 1000; // 5 minutos
-
+            // Considerar todos los psicólogos como online por ahora para testing
+            const isOnline = true;
+            
             psychologistsData.push({
               id: docSnapshot.id,
               userId: data.userId || docSnapshot.id,
@@ -61,9 +59,9 @@ export const useAvailablePsychologists = () => {
               phone: data.phone || '',
               rating: data.rating || 0,
               patientsCount: data.patientsCount || 0,
-              isAvailable: data.isAvailable !== false,
-              isOnline,
-              lastSeen,
+              isAvailable: true,
+              isOnline: isOnline,
+              lastSeen: new Date(),
             });
           }
 

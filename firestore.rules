@@ -203,6 +203,14 @@ service cloud.firestore {
     }
     
     // ========================================
+    // REGLAS PARA SESIONES DE CHAT - ULTRA PERMISIVAS
+    // ========================================
+    match /chatSessions/{sessionId} {
+      // Permitir todo si el usuario está autenticado
+      allow read, write, create, update, delete: if request.auth != null;
+    }
+    
+    // ========================================
     // REGLAS PARA ANÁLISIS DE IA
     // ========================================
     match /aiAnalysis/{analysisId} {
