@@ -76,6 +76,12 @@ const DashboardPsychologist: React.FC = () => {
     });
   };
 
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
