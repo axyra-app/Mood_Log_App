@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   limit,
   onSnapshot,
@@ -122,6 +123,15 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     }
   };
 
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      await deleteDoc(doc(db, 'notifications', notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      throw error;
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return {
@@ -131,6 +141,7 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     unreadCount,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
     createNotification,
   };
 };

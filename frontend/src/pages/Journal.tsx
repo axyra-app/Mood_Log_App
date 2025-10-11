@@ -1,76 +1,47 @@
-import {
-  ArrowLeft,
-  BookOpen,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Edit3,
-  Filter,
-  Grid,
-  Heart,
-  Lightbulb,
-  List,
-  Plus,
-  Search,
-  Sparkles,
-  Trash2,
-} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import JournalEditor from '../components/JournalEditor';
-import Logo from '../components/Logo';
+import Header from '../components/Header';
+import { Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } =
-    useJournal(user?.uid || '');
-
+  const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } = useJournal(user?.uid || '');
+  
   const [showEditor, setShowEditor] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>();
-  const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>();
-  const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>();
+  const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
+  const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
+  const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [showPrompts, setShowPrompts] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
-    if (entries.length > 0) {
-      setStats(getJournalStats());
+    if (error) {
+      toast.error('Error al cargar el diario');
     }
-  }, [entries, getJournalStats]);
+  }, [error]);
 
-  // Debug: Log templates and prompts count
-  useEffect(() => {
-    // Templates and prompts loaded successfully
-  }, [templates]);
-
-  useEffect(() => {
-    // Prompts loaded successfully  
-  }, [prompts]);
-
-  const filteredEntries = entries.filter((entry) => {
-    const matchesSearch =
-      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => entry.tags.includes(tag));
-    return matchesSearch && matchesTags;
+  const filteredEntries = entries.filter(entry => {
+    const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         entry.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDate = !selectedDate || entry.date.toDateString() === new Date(selectedDate).toDateString();
+    return matchesSearch && matchesDate;
   });
 
-  const allTags = Array.from(new Set(entries.flatMap((entry) => entry.tags)));
-
-  const handleNewEntry = () => {
+  const handleCreateEntry = () => {
     setEditingEntry(undefined);
     setSelectedTemplate(undefined);
     setSelectedPrompt(undefined);
     setShowEditor(true);
+    setShowPrompts(false);
+    setShowTemplates(false);
   };
 
   const handleEditEntry = (entry: JournalEntry) => {
@@ -78,14 +49,18 @@ const Journal: React.FC = () => {
     setSelectedTemplate(undefined);
     setSelectedPrompt(undefined);
     setShowEditor(true);
+    setShowPrompts(false);
+    setShowTemplates(false);
   };
 
   const handleDeleteEntry = async (entryId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
       try {
         await deleteEntry(entryId);
+        toast.success('Entrada eliminada exitosamente');
       } catch (error) {
         console.error('Error deleting entry:', error);
+        toast.error('Error al eliminar la entrada');
       }
     }
   };
@@ -95,6 +70,7 @@ const Journal: React.FC = () => {
     setSelectedPrompt(undefined);
     setEditingEntry(undefined);
     setShowEditor(true);
+    setShowPrompts(false);
     setShowTemplates(false);
   };
 
@@ -138,166 +114,47 @@ const Journal: React.FC = () => {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      {/* Header */}
-      <div className='bg-white border-b border-gray-200'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between py-4 sm:py-6'>
-            <div className='flex items-center space-x-2 sm:space-x-4'>
-              {/* Botón de regreso */}
-              <button
-                onClick={() => navigate('/dashboard')}
-                className='flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors'
-              >
-                <ArrowLeft className='w-4 h-4 sm:w-5 sm:h-5' />
-                <span className='hidden sm:inline text-sm sm:text-base'>Volver al Dashboard</span>
-                <span className='sm:hidden text-sm'>Volver</span>
-              </button>
-              
-              {/* Logo y título */}
-              <div className='flex items-center space-x-2 sm:space-x-3'>
-                <div className='w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
-                  <Logo size='sm' />
-                </div>
-                <div>
-                  <h1 className='text-lg sm:text-2xl font-bold text-gray-900'>Mi Diario</h1>
-                  <p className='hidden sm:block text-gray-600 text-sm'>Reflexiona sobre tus días y emociones</p>
-                </div>
-              </div>
-            </div>
+      <Header 
+        title="Mi Diario"
+        subtitle="Reflexiona sobre tus pensamientos y emociones"
+        backTo="/dashboard"
+        backLabel="Volver al Dashboard"
+      />
 
-            <div className='flex items-center space-x-3'>
+      {/* Contenido Principal */}
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
+        {/* Barra de herramientas */}
+        <div className='mb-6 sm:mb-8'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0'>
+            {/* Botones de acción */}
+            <div className='flex flex-wrap gap-2 sm:gap-3'>
               <button
-                onClick={() => setShowTemplates(!showTemplates)}
-                className='flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200'
-              >
-                <Lightbulb className='w-4 h-4' />
-                <span>Plantillas</span>
-                {showTemplates ? <ChevronDown className='w-4 h-4' /> : <ChevronRight className='w-4 h-4' />}
-              </button>
-
-              <button
-                onClick={() => setShowPrompts(!showPrompts)}
-                className='flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200'
-              >
-                <Sparkles className='w-4 h-4' />
-                <span>Prompts</span>
-                {showPrompts ? <ChevronDown className='w-4 h-4' /> : <ChevronRight className='w-4 h-4' />}
-              </button>
-
-              <button
-                onClick={handleNewEntry}
-                className='flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700'
+                onClick={handleCreateEntry}
+                className='flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200'
               >
                 <Plus className='w-4 h-4' />
                 <span>Nueva Entrada</span>
               </button>
+              
+              <button
+                onClick={() => setShowTemplates(!showTemplates)}
+                className='flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+              >
+                <Sparkles className='w-4 h-4' />
+                <span>Plantillas</span>
+              </button>
+              
+              <button
+                onClick={() => setShowPrompts(!showPrompts)}
+                className='flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+              >
+                <Sparkles className='w-4 h-4' />
+                <span>Prompts</span>
+              </button>
             </div>
-          </div>
 
-          {/* Stats */}
-          {stats && (
-            <div className='grid grid-cols-2 md:grid-cols-5 gap-4 pb-6'>
-              <div className='text-center'>
-                <div className='text-2xl font-bold text-purple-600'>{stats.totalEntries}</div>
-                <div className='text-sm text-gray-600'>Total Entradas</div>
-              </div>
-              <div className='text-center'>
-                <div className='text-2xl font-bold text-blue-600'>{stats.thisWeek}</div>
-                <div className='text-sm text-gray-600'>Esta Semana</div>
-              </div>
-              <div className='text-center'>
-                <div className='text-2xl font-bold text-green-600'>{stats.streak}</div>
-                <div className='text-sm text-gray-600'>Racha</div>
-              </div>
-              <div className='text-center'>
-                <div className='text-2xl font-bold text-orange-600'>{stats.averageMood.toFixed(1)}</div>
-                <div className='text-sm text-gray-600'>Humor Promedio</div>
-              </div>
-              <div className='text-center'>
-                <div className='text-2xl font-bold text-pink-600'>{stats.topTags.length}</div>
-                <div className='text-sm text-gray-600'>Etiquetas Únicas</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Templates & Prompts */}
-      {(showTemplates || showPrompts) && (
-        <div className='bg-white border-b border-gray-200'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-            {showTemplates && (
-              <div className='mb-6'>
-                <h3 className='text-lg font-semibold text-gray-900 mb-3'>
-                  Plantillas ({templates.length})
-                </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                  {templates.map((template, index) => (
-                    <div
-                      key={`${template.id}-${index}`}
-                      onClick={() => handleTemplateSelect(template)}
-                      className='p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-colors'
-                    >
-                      <h4 className='font-semibold text-gray-900 mb-2'>{template.title}</h4>
-                      <p className='text-sm text-gray-600 mb-2'>{template.description}</p>
-                      <div className='flex flex-wrap gap-1'>
-                        {template.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <span key={`${template.id}-tag-${tagIndex}`} className='px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs'>
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {showPrompts && (
-              <div>
-                <h3 className='text-lg font-semibold text-gray-900 mb-3'>
-                  Prompts de Escritura ({prompts.length})
-                </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                  {prompts.map((prompt) => (
-                    <div
-                      key={prompt.id}
-                      onClick={() => handlePromptSelect(prompt)}
-                      className='p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 cursor-pointer transition-colors'
-                    >
-                      <h4 className='font-semibold text-gray-900 mb-2'>{prompt.title}</h4>
-                      <p className='text-sm text-gray-600 mb-2'>{prompt.content}</p>
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center space-x-2 text-xs text-gray-500'>
-                          <Clock className='w-3 h-3' />
-                          <span>{prompt.estimatedTime} min</span>
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            prompt.difficulty === 'easy'
-                              ? 'bg-green-100 text-green-700'
-                              : prompt.difficulty === 'medium'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {prompt.difficulty}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className='bg-white border-b border-gray-200'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-          <div className='flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0'>
-            <div className='flex items-center space-x-4'>
+            {/* Filtros */}
+            <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
                 <input
@@ -305,100 +162,112 @@ const Journal: React.FC = () => {
                   placeholder='Buscar entradas...'
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className='pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                  className='pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64'
                 />
               </div>
+              
+              <input
+                type='date'
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+              />
+            </div>
+          </div>
 
-              <div className='flex items-center space-x-2'>
-                <Filter className='w-4 h-4 text-gray-400' />
-                <select
-                  value={selectedTags.length > 0 ? selectedTags[0] : ''}
-                  onChange={(e) => setSelectedTags(e.target.value ? [e.target.value] : [])}
-                  className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                >
-                  <option value=''>Todas las etiquetas</option>
-                  {allTags.map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tag}
-                    </option>
-                  ))}
-                </select>
+          {/* Plantillas */}
+          {showTemplates && (
+            <div className='mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-3'>Plantillas</h3>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
+                {templates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleTemplateSelect(template)}
+                    className='p-3 text-left border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors'
+                  >
+                    <h4 className='font-medium text-gray-900'>{template.name}</h4>
+                    <p className='text-sm text-gray-600 mt-1'>{template.description}</p>
+                  </button>
+                ))}
               </div>
             </div>
+          )}
 
-            <div className='flex items-center space-x-2'>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-purple-100 text-purple-600' : 'text-gray-400'}`}
-              >
-                <List className='w-4 h-4' />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-purple-100 text-purple-600' : 'text-gray-400'}`}
-              >
-                <Grid className='w-4 h-4' />
-              </button>
+          {/* Prompts */}
+          {showPrompts && (
+            <div className='mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-3'>Prompts de Escritura</h3>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
+                {prompts.map((prompt) => (
+                  <button
+                    key={prompt.id}
+                    onClick={() => handlePromptSelect(prompt)}
+                    className='p-3 text-left border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors'
+                  >
+                    <h4 className='font-medium text-gray-900'>{prompt.title}</h4>
+                    <p className='text-sm text-gray-600 mt-1'>{prompt.prompt}</p>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* Entries */}
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+        {/* Lista de entradas */}
         {filteredEntries.length === 0 ? (
           <div className='text-center py-12'>
-            <BookOpen className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-            <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-              {entries.length === 0 ? 'Comienza tu diario' : 'No se encontraron entradas'}
+            <div className='text-6xl mb-4'>📝</div>
+            <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+              {searchTerm || selectedDate ? 'No se encontraron entradas' : 'Tu diario está vacío'}
             </h3>
             <p className='text-gray-600 mb-6'>
-              {entries.length === 0
-                ? 'Escribe tu primera entrada y comienza a reflexionar sobre tus días'
-                : 'Intenta ajustar los filtros de búsqueda'}
+              {searchTerm || selectedDate 
+                ? 'Intenta con otros términos de búsqueda o filtros' 
+                : 'Comienza escribiendo tu primera entrada para reflexionar sobre tu día'
+              }
             </p>
-            <button
-              onClick={handleNewEntry}
-              className='px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700'
-            >
-              Nueva Entrada
-            </button>
+            {!searchTerm && !selectedDate && (
+              <button
+                onClick={handleCreateEntry}
+                className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200'
+              >
+                Crear Primera Entrada
+              </button>
+            )}
           </div>
         ) : (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+          <div className='grid gap-4 sm:gap-6'>
             {filteredEntries.map((entry) => (
               <div
                 key={entry.id}
-                className={`bg-white rounded-lg border border-gray-200 hover:border-purple-300 transition-colors ${
-                  viewMode === 'grid' ? 'p-6' : 'p-6'
-                }`}
+                className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow'
               >
                 <div className='flex items-start justify-between mb-4'>
                   <div className='flex-1'>
-                    <h3 className='text-lg font-semibold text-gray-900 mb-2'>{entry.title}</h3>
-                    <div className='flex items-center space-x-4 text-sm text-gray-500'>
-                      <div className='flex items-center space-x-1'>
-                        <Calendar className='w-4 h-4' />
-                        <span>{formatDate(entry.date)}</span>
-                      </div>
+                    <div className='flex items-center space-x-2 mb-2'>
+                      <h3 className='text-lg font-semibold text-gray-900'>{entry.title}</h3>
                       {entry.mood && (
-                        <div className='flex items-center space-x-1'>
-                          <Heart className='w-4 h-4' />
-                          <span>
-                            {getMoodEmoji(entry.mood)} {entry.mood}/10
-                          </span>
-                        </div>
+                        <span className='text-lg' title={`Estado de ánimo: ${entry.mood}/10`}>
+                          {getMoodEmoji(entry.mood)}
+                        </span>
                       )}
                     </div>
+                    <p className='text-sm text-gray-500 mb-2'>{formatDate(entry.date)}</p>
                   </div>
-
+                  
                   <div className='flex items-center space-x-2'>
-                    <button onClick={() => handleEditEntry(entry)} className='p-2 text-gray-400 hover:text-purple-600'>
-                      <Edit3 className='w-4 h-4' />
+                    <button
+                      onClick={() => handleEditEntry(entry)}
+                      className='p-2 text-gray-400 hover:text-gray-600 transition-colors'
+                      title='Editar entrada'
+                    >
+                      <Edit className='w-4 h-4' />
                     </button>
                     <button
                       onClick={() => handleDeleteEntry(entry.id)}
-                      className='p-2 text-gray-400 hover:text-red-600'
+                      className='p-2 text-gray-400 hover:text-red-600 transition-colors'
+                      title='Eliminar entrada'
                     >
                       <Trash2 className='w-4 h-4' />
                     </button>
@@ -507,7 +376,7 @@ const Journal: React.FC = () => {
         )}
       </div>
 
-      {/* Editor Modal */}
+      {/* Editor de Diario */}
       {showEditor && (
         <JournalEditor
           onClose={() => {

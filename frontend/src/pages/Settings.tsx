@@ -2,10 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { 
+  ArrowLeft, 
+  Bell, 
+  Mail, 
+  User, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  Save, 
+  Check,
+  AlertCircle,
+  Info,
+  Shield,
+  Globe,
+  Clock
+} from 'lucide-react';
 import { db } from '../services/firebase';
-import Logo from '../components/Logo';
-import PsychologistCV from '../components/PsychologistCV';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
@@ -13,12 +28,45 @@ const Settings: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [userRole, setUserRole] = useState<'user' | 'psychologist'>('user');
+  const [loading, setLoading] = useState(false);
+  
+  // Estados para configuración
   const [settings, setSettings] = useState({
     notifications: true,
     emailUpdates: true,
+    weeklyReports: true,
     darkMode: false,
     language: 'es',
     timezone: 'America/Bogota',
+  });
+
+  // Estados para editar perfil
+  const [profileData, setProfileData] = useState({
+    displayName: '',
+    email: '',
+    phone: '',
+    bio: '',
+    location: '',
+  });
+
+  // Estados para cambiar contraseña
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  // Estados para notificaciones por Gmail
+  const [emailSettings, setEmailSettings] = useState({
+    weeklyReports: true,
+    appointmentReminders: true,
+    moodInsights: true,
+    emergencyAlerts: true,
   });
 
   useEffect(() => {
@@ -29,16 +77,31 @@ const Settings: React.FC = () => {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             setUserRole('user');
+            const userData = userDoc.data();
+            setProfileData({
+              displayName: userData.displayName || user.displayName || '',
+              email: userData.email || user.email || '',
+              phone: userData.phone || '',
+              bio: userData.bio || '',
+              location: userData.location || '',
+            });
           } else {
             // Si no existe en users, verificar si es psicólogo
             const psychologistDoc = await getDoc(doc(db, 'psychologists', user.uid));
             if (psychologistDoc.exists()) {
               setUserRole('psychologist');
+              const psychologistData = psychologistDoc.data();
+              setProfileData({
+                displayName: psychologistData.name || user.displayName || '',
+                email: psychologistData.email || user.email || '',
+                phone: psychologistData.phone || '',
+                bio: psychologistData.bio || '',
+                location: psychologistData.location || '',
+              });
             }
           }
         } catch (error) {
           console.error('Error loading user data:', error);
-          // Por defecto asumir que es usuario
           setUserRole('user');
         }
       }
@@ -49,352 +112,638 @@ const Settings: React.FC = () => {
       setIsDarkMode(true);
       setSettings(prev => ({ ...prev, darkMode: true }));
     }
-    
+
     loadUserData();
     setIsLoaded(true);
   }, [user]);
 
   const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-    setSettings(prev => ({ ...prev, darkMode: newMode }));
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    setSettings(prev => ({ ...prev, darkMode: newDarkMode }));
+    
+    if (newDarkMode) {
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.add('dark');
+    } else {
+      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove('dark');
+    }
   };
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingsChange = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
-    toast.success('Configuración guardada');
+  };
+
+  const handleEmailSettingsChange = (key: string, value: boolean) => {
+    setEmailSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const saveSettings = async () => {
+    setLoading(true);
+    try {
+      const collectionName = userRole === 'user' ? 'users' : 'psychologists';
+      await updateDoc(doc(db, collectionName, user?.uid || ''), {
+        settings: {
+          ...settings,
+          emailSettings,
+        },
+        updatedAt: serverTimestamp(),
+      });
+      toast.success('Configuración guardada exitosamente');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Error al guardar la configuración');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    setLoading(true);
+    try {
+      const collectionName = userRole === 'user' ? 'users' : 'psychologists';
+      await updateDoc(doc(db, collectionName, user?.uid || ''), {
+        ...profileData,
+        updatedAt: serverTimestamp(),
+      });
+      
+      // Actualizar email en Firebase Auth si cambió
+      if (profileData.email !== user?.email) {
+        await updateEmail(user!, profileData.email);
+      }
+      
+      toast.success('Perfil actualizado exitosamente');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('Error al actualizar el perfil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const changePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('Las contraseñas nuevas no coinciden');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Reautenticar usuario
+      const credential = EmailAuthProvider.credential(
+        user?.email || '',
+        passwordData.currentPassword
+      );
+      await reauthenticateWithCredential(user!, credential);
+      
+      // Cambiar contraseña
+      await updatePassword(user!, passwordData.newPassword);
+      
+      toast.success('Contraseña cambiada exitosamente');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      if (error.code === 'auth/wrong-password') {
+        toast.error('La contraseña actual es incorrecta');
+      } else if (error.code === 'auth/weak-password') {
+        toast.error('La nueva contraseña es muy débil');
+      } else {
+        toast.error('Error al cambiar la contraseña');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('Error logging out:', error);
     }
   };
 
   if (!isLoaded) {
     return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-900' : 'bg-white'
-      }`}>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
   }
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
-
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${
-      isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
-    }`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <header className={`border-b transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
+      <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <Logo className="h-8" />
-              <div>
-                <h1 className={`text-xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Configuración
-                </h1>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Ajusta tus preferencias
-                </p>
-              </div>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className={`flex items-center ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                <span>Volver al Dashboard</span>
+              </button>
             </div>
             
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => {
-                  const dashboardRoute = userRole === 'psychologist' ? '/dashboard-psychologist' : '/dashboard';
-                  navigate(dashboardRoute);
-                  // Fallback si navigate no funciona
-                  setTimeout(() => {
-                    if (window.location.pathname !== dashboardRoute) {
-                      window.location.href = dashboardRoute;
-                    }
-                  }, 100);
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
-                  isDarkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
-                ← Volver
+                {isDarkMode ? (
+                  <span className="text-yellow-500">☀️</span>
+                ) : (
+                  <span className="text-gray-600">🌙</span>
+                )}
               </button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          
-          {/* Appearance Settings */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border mb-6`}>
-            <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              🎨 Apariencia
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className={`font-medium transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    Modo Oscuro
-                  </h3>
-                  <p className={`text-sm transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Cambia entre tema claro y oscuro
-                  </p>
-                </div>
-                <button
-                  onClick={toggleDarkMode}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                    isDarkMode ? 'bg-purple-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
-                      isDarkMode ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Configuración
+          </h1>
+          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Personaliza tu experiencia en Mood Log App
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Notificaciones */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Bell className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Notificaciones
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Configura cómo recibir notificaciones
+                </p>
               </div>
             </div>
-          </div>
 
-          {/* Notification Settings */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border mb-6`}>
-            <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              🔔 Notificaciones
-            </h2>
-            
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={`font-medium transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     Notificaciones Push
-                  </h3>
-                  <p className={`text-sm transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     Recibe notificaciones de nuevas citas y mensajes
                   </p>
                 </div>
-                <button
-                  onClick={() => handleSettingChange('notifications', !settings.notifications)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                    settings.notifications ? 'bg-purple-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
-                      settings.notifications ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.notifications}
+                    onChange={(e) => handleSettingsChange('notifications', e.target.checked)}
+                    className="sr-only peer"
                   />
-                </button>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={`font-medium transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     Actualizaciones por Email
-                  </h3>
-                  <p className={`text-sm transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     Recibe resúmenes semanales por correo
                   </p>
                 </div>
-                <button
-                  onClick={() => handleSettingChange('emailUpdates', !settings.emailUpdates)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                    settings.emailUpdates ? 'bg-purple-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
-                      settings.emailUpdates ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.emailUpdates}
+                    onChange={(e) => handleSettingsChange('emailUpdates', e.target.checked)}
+                    className="sr-only peer"
                   />
-                </button>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
               </div>
             </div>
           </div>
 
-          {/* Account Settings */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border mb-6`}>
-            <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              👤 Cuenta
-            </h2>
-            
+          {/* Configuración de Email */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Mail className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Notificaciones por Gmail
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Configura qué emails recibir semanalmente
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={`font-medium transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    Información del Perfil
-                  </h3>
-                  <p className={`text-sm transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    {user.displayName} • {user.email}
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Reportes Semanales
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Resumen de tu bienestar emocional semanal
                   </p>
                 </div>
-                <button
-                  onClick={() => navigate('/complete-profile')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
-                    isDarkMode
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-purple-500 text-white hover:bg-purple-600'
-                  }`}
-                >
-                  Editar
-                </button>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailSettings.weeklyReports}
+                    onChange={(e) => handleEmailSettingsChange('weeklyReports', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={`font-medium transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    Cerrar Sesión
-                  </h3>
-                  <p className={`text-sm transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Salir de tu cuenta {userRole === 'psychologist' ? 'de psicólogo' : 'de usuario'}
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Recordatorios de Citas
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Notificaciones sobre citas próximas
                   </p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 ${
-                    isDarkMode
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-red-500 text-white hover:bg-red-600'
-                  }`}
-                >
-                  Cerrar Sesión
-                </button>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailSettings.appointmentReminders}
+                    onChange={(e) => handleEmailSettingsChange('appointmentReminders', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Insights de Estado de Ánimo
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Análisis y recomendaciones personalizadas
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailSettings.moodInsights}
+                    onChange={(e) => handleEmailSettingsChange('moodInsights', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Alertas de Emergencia
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Notificaciones importantes sobre tu bienestar
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailSettings.emergencyAlerts}
+                    onChange={(e) => handleEmailSettingsChange('emergencyAlerts', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
               </div>
             </div>
           </div>
 
-          {/* Hoja de Vida - Solo para psicólogos */}
-          {userRole === 'psychologist' && (
-            <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-            } border mb-6`}>
-              <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                📄 Hoja de Vida (CV)
-              </h2>
-              <PsychologistCV isDarkMode={isDarkMode} />
+          {/* Información Personal */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <User className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Información Personal
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Actualiza tu información de perfil
+                </p>
+              </div>
             </div>
-          )}
 
-          {/* System Info */}
-          <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}>
-            <h2 className={`text-xl font-semibold mb-4 transition-colors duration-500 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              ℹ️ Información del Sistema
-            </h2>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h3 className={`font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Idioma
-                </h3>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Español (Colombia)
-                </p>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Nombre Completo
+                </label>
+                <input
+                  type="text"
+                  value={profileData.displayName}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, displayName: e.target.value }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  }`}
+                />
               </div>
-              
+
               <div>
-                <h3 className={`font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Zona Horaria
-                </h3>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  América/Bogotá
-                </p>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={profileData.email}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  }`}
+                />
               </div>
-              
+
               <div>
-                <h3 className={`font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Rol
-                </h3>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {userRole === 'psychologist' ? 'Psicólogo' : 'Usuario'}
-                </p>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  }`}
+                />
               </div>
-              
+
               <div>
-                <h3 className={`font-medium transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Versión
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Ubicación
+                </label>
+                <input
+                  type="text"
+                  value={profileData.location}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  }`}
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Biografía
+              </label>
+              <textarea
+                value={profileData.bio}
+                onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                rows={3}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                }`}
+                placeholder="Cuéntanos un poco sobre ti..."
+              />
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={saveProfile}
+                disabled={loading}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>Guardar Perfil</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Cambiar Contraseña */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <Lock className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Cambiar Contraseña
                 </h3>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Mood Log v1.0
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Actualiza tu contraseña de acceso
                 </p>
               </div>
             </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Contraseña Actual
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.current ? 'text' : 'password'}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPasswords.current ? (
+                      <EyeOff className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Nueva Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.new ? 'text' : 'password'}
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPasswords.new ? (
+                      <EyeOff className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Confirmar Nueva Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.confirm ? 'text' : 'password'}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPasswords.confirm ? (
+                      <EyeOff className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={changePassword}
+                disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Cambiar Contraseña</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Información del Sistema */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Info className="w-5 h-5 text-gray-600" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Información del Sistema
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Detalles de tu cuenta y configuración
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-3">
+                <Globe className="w-5 h-5 text-gray-400" />
+                <div>
+                  <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Idioma
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Español (Colombia)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Shield className="w-5 h-5 text-gray-400" />
+                <div>
+                  <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Rol
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {userRole === 'user' ? 'Usuario' : 'Psicólogo'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Clock className="w-5 h-5 text-gray-400" />
+                <div>
+                  <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Zona Horaria
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    América/Bogotá
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Info className="w-5 h-5 text-gray-400" />
+                <div>
+                  <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Versión
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Mood Log v1.0
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Botones de Acción */}
+          <div className="flex justify-between items-center">
+            <button
+              onClick={saveSettings}
+              disabled={loading}
+              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+            >
+              <Save className="w-5 h-5" />
+              <span>Guardar Configuración</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+            >
+              <span>Cerrar Sesión</span>
+            </button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

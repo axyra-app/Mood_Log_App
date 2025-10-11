@@ -1,8 +1,9 @@
-import { Bell, Calendar, Check, FileText, MessageCircle } from 'lucide-react';
+import { Bell, Calendar, Check, FileText, MessageCircle, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { toast } from 'react-hot-toast';
 
 interface NotificationsPanelProps {
   isDarkMode: boolean;
@@ -12,7 +13,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useNotifications(
+  const { notifications, loading, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications(
     user?.uid || '',
     user?.role || 'user'
   );
@@ -61,6 +62,17 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
 
     const diffInDays = Math.floor(diffInHours / 24);
     return `Hace ${diffInDays}d`;
+  };
+
+  const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevenir que se active el click en la notificación
+    try {
+      await deleteNotification(notificationId);
+      toast.success('Notificación eliminada');
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast.error('Error al eliminar la notificación');
+    }
   };
 
   const handleNotificationClick = (notification: any) => {
@@ -200,7 +212,10 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
 
                         {!notification.isRead && (
                           <button
-                            onClick={() => markAsRead(notification.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notification.id);
+                            }}
                             className={`p-1 rounded transition-colors duration-300 ${
                               isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
                             }`}
@@ -209,6 +224,16 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
                             <Check className='w-3 h-3 text-gray-400' />
                           </button>
                         )}
+                        
+                        <button
+                          onClick={(e) => handleDeleteNotification(notification.id, e)}
+                          className={`p-1 rounded transition-colors duration-300 ${
+                            isDarkMode ? 'hover:bg-red-600/20' : 'hover:bg-red-100'
+                          }`}
+                          title='Eliminar notificación'
+                        >
+                          <X className='w-3 h-3 text-red-500' />
+                        </button>
                       </div>
                     </div>
                   ))}
