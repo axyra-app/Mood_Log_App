@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import Logo from './Logo';
 import { 
   Bell, 
   LogOut, 
@@ -86,6 +87,9 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16">
           {/* Lado Izquierdo */}
           <div className="flex items-center space-x-4">
+            {/* Logo */}
+            <Logo size="sm" showText={false} />
+            
             {shouldShowBackButton && (
               <button
                 onClick={handleBackClick}

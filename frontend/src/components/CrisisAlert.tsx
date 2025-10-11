@@ -1,5 +1,6 @@
-import { Activity, AlertTriangle, Brain, Heart, Shield, Users } from 'lucide-react';
+import { Activity, AlertTriangle, Heart, Shield, Users } from 'lucide-react';
 import React, { useState } from 'react';
+import Logo from './Logo';
 import { CrisisAssessment } from '../services/crisisDetection';
 
 interface CrisisAlertProps {
@@ -43,7 +44,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({
       case 'medium':
         return <Heart className='w-6 h-6' />;
       case 'low':
-        return <Brain className='w-6 h-6' />;
+        return <Logo className='w-6 h-6' />;
       default:
         return <Activity className='w-6 h-6' />;
     }
@@ -54,7 +55,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({
       case 'mood':
         return <Heart className='w-4 h-4' />;
       case 'behavioral':
-        return <Brain className='w-4 h-4' />;
+        return <Logo className='w-4 h-4' />;
       case 'social':
         return <Users className='w-4 h-4' />;
       case 'physical':

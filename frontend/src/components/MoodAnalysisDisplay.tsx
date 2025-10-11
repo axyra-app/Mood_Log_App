@@ -1,5 +1,6 @@
-import { Brain, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
 import React from 'react';
+import Logo from './Logo';
 
 interface MoodAnalysis {
   summary: string;
@@ -22,7 +23,7 @@ const MoodAnalysisDisplay: React.FC<MoodAnalysisDisplayProps> = ({ analysis, ana
     return (
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <div className="flex items-center space-x-3 mb-4">
-          <Brain className="w-6 h-6 text-blue-500 animate-pulse" />
+          <Logo size="sm" showText={false} />
           <h3 className="text-lg font-semibold text-gray-900">Analizando tu estado de ánimo...</h3>
         </div>
         <div className="flex items-center space-x-2">

@@ -2,7 +2,6 @@ import {
   Activity,
   ArrowLeft,
   Award,
-  Brain,
   Calendar,
   Download,
   Minus,
@@ -24,6 +23,7 @@ import { useMood } from '../hooks/useMood';
 import { useJournal } from '../hooks/useJournal';
 import { moodAnalysisAgent } from '../services/specializedAgents';
 import { toast } from 'react-hot-toast';
+import Logo from '../components/Logo';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
@@ -296,9 +296,7 @@ const Statistics: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
+              <Logo size="sm" showText={false} />
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Análisis Profesional con IA</h3>
                 <p className="text-sm text-gray-600">Insights psicológicos basados en tus datos</p>
@@ -310,7 +308,7 @@ const Statistics: React.FC = () => {
               disabled={analyzing}
               className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
             >
-              <Brain className="w-4 h-4" />
+              <Logo className="w-4 h-4" />
               <span>{analyzing ? 'Analizando...' : 'Generar Análisis'}</span>
             </button>
           </div>
@@ -409,7 +407,7 @@ const Statistics: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <Brain className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <Logo size="lg" showText={false} className="mx-auto mb-4 text-gray-300" />
               <p className="font-medium">Análisis Inteligente de tu Bienestar</p>
               <p className="text-sm">Haz clic en "Generar Análisis" para obtener insights personalizados</p>
             </div>

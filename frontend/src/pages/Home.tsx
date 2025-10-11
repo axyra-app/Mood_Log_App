@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Brain, Users, Shield, BarChart3, MessageCircle, Calendar, Star, ArrowRight } from 'lucide-react';
+import { Users, Shield, BarChart3, MessageCircle, Calendar, Star, ArrowRight } from 'lucide-react';
 import Logo from '../components/Logo';
 
 const Home: React.FC = () => {
@@ -79,7 +79,7 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
           <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+              <Logo className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Análisis con IA</h3>
             <p className="text-sm sm:text-base text-gray-600">
