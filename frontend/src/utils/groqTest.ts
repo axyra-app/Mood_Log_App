@@ -17,7 +17,7 @@ export const testGroqConnection = async () => {
         { role: 'system', content: 'Eres un asistente de prueba.' },
         { role: 'user', content: 'Responde solo con "¡Conexión exitosa!"' }
       ],
-      model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.1-8b-instant',
       temperature: 0.1,
       max_tokens: 50
     });

@@ -82,7 +82,7 @@ RESPONDE EN FORMATO JSON:
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: prompt }
         ],
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         temperature: 0.7,
         max_tokens: 1000
       });
@@ -138,7 +138,7 @@ RESPONDE EN FORMATO JSON:
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: prompt }
         ],
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         temperature: 0.7,
         max_tokens: 1000
       });
@@ -201,7 +201,7 @@ RESPONDE EN FORMATO JSON:
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: prompt }
         ],
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         temperature: 0.3, // Menor temperatura para evaluaciones más consistentes
         max_tokens: 800
       });
@@ -251,7 +251,7 @@ RESPONDE EN FORMATO JSON:
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: prompt }
         ],
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         temperature: 0.8,
         max_tokens: 800
       });
