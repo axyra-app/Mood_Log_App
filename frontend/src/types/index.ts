@@ -376,6 +376,7 @@ export interface JournalEntry {
     themes: string[];
     insights: string[];
     recommendations: string[];
+    summary: string;
   };
   isPrivate: boolean;
   createdAt: Date;

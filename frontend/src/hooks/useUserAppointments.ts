@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, limit, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, limit, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { usePatientRelations } from './usePatientRelations';
 
@@ -202,6 +202,16 @@ export const useUserAppointments = (userId: string) => {
     }
   };
 
+  const deleteAppointment = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, 'appointments', appointmentId);
+      await deleteDoc(appointmentRef);
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      throw error;
+    }
+  };
+
   return {
     appointments,
     loading,
@@ -209,5 +219,6 @@ export const useUserAppointments = (userId: string) => {
     createAppointment,
     updateAppointment,
     cancelAppointment,
+    deleteAppointment,
   };
 };

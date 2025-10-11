@@ -422,15 +422,25 @@ const Journal: React.FC = () => {
                 )}
 
                 {entry.aiAnalysis && (
-                  <div className='p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200'>
-                    <div className='flex items-center space-x-2 mb-2'>
-                      <Sparkles className='w-4 h-4 text-purple-600' />
+                  <div className='p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200'>
+                    <div className='flex items-center space-x-2 mb-3'>
+                      <Sparkles className='w-5 h-5 text-purple-600' />
                       <span className='text-sm font-semibold text-purple-800'>Análisis de IA</span>
                     </div>
-                    <div className='text-sm text-purple-700'>
-                      <span className='font-medium'>Sentimiento: </span>
+                    
+                    {/* Resumen Principal */}
+                    {entry.aiAnalysis.summary && (
+                      <div className='mb-3 p-3 bg-white rounded-lg border border-purple-100'>
+                        <div className='text-sm font-medium text-purple-800 mb-1'>Resumen:</div>
+                        <div className='text-sm text-gray-700'>{entry.aiAnalysis.summary}</div>
+                      </div>
+                    )}
+                    
+                    {/* Sentimiento */}
+                    <div className='mb-2'>
+                      <span className='text-sm font-medium text-purple-700'>Sentimiento: </span>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
                           entry.aiAnalysis.sentiment === 'positive'
                             ? 'bg-green-100 text-green-800'
                             : entry.aiAnalysis.sentiment === 'negative'
@@ -445,6 +455,50 @@ const Journal: React.FC = () => {
                           : 'Neutral'}
                       </span>
                     </div>
+                    
+                    {/* Temas */}
+                    {entry.aiAnalysis.themes && entry.aiAnalysis.themes.length > 0 && (
+                      <div className='mb-2'>
+                        <span className='text-sm font-medium text-purple-700'>Temas: </span>
+                        <div className='flex flex-wrap gap-1 mt-1'>
+                          {entry.aiAnalysis.themes.map((theme, index) => (
+                            <span key={index} className='px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs'>
+                              {theme}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Insights */}
+                    {entry.aiAnalysis.insights && entry.aiAnalysis.insights.length > 0 && (
+                      <div className='mb-2'>
+                        <span className='text-sm font-medium text-purple-700'>Insights: </span>
+                        <ul className='text-xs text-gray-600 mt-1 space-y-1'>
+                          {entry.aiAnalysis.insights.map((insight, index) => (
+                            <li key={index} className='flex items-start'>
+                              <span className='text-purple-500 mr-1'>•</span>
+                              <span>{insight}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {/* Recomendaciones */}
+                    {entry.aiAnalysis.recommendations && entry.aiAnalysis.recommendations.length > 0 && (
+                      <div>
+                        <span className='text-sm font-medium text-purple-700'>Recomendaciones: </span>
+                        <ul className='text-xs text-gray-600 mt-1 space-y-1'>
+                          {entry.aiAnalysis.recommendations.map((rec, index) => (
+                            <li key={index} className='flex items-start'>
+                              <span className='text-green-500 mr-1'>→</span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

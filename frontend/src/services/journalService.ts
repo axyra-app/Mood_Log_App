@@ -281,6 +281,13 @@ export const getJournalPrompts = async (category?: string): Promise<JournalPromp
 };
 
 // AI Analysis Service for Journal Entries
+import Groq from 'groq-sdk';
+
+const groq = new Groq({
+  apiKey: import.meta.env.VITE_GROQ_API_KEY,
+});
+
+// AI Analysis Service for Journal Entries
 export const analyzeJournalEntry = async (
   content: string
 ): Promise<{
@@ -288,12 +295,63 @@ export const analyzeJournalEntry = async (
   themes: string[];
   insights: string[];
   recommendations: string[];
+  summary: string;
 }> => {
   try {
-    
     // Simulate AI processing time
-    await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
+    // Use Groq for professional analysis
+    const response = await groq.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: `Eres un psicólogo clínico especializado en análisis de diarios personales. Tu objetivo es proporcionar un análisis profesional, empático y constructivo de las entradas de diario de los usuarios.
+
+INSTRUCCIONES ESPECÍFICAS:
+- Analiza el contenido del diario con enfoque profesional y empático
+- Identifica el sentimiento general (positivo, negativo, neutral)
+- Extrae temas principales mencionados
+- Proporciona insights psicológicos relevantes
+- Ofrece recomendaciones prácticas y constructivas
+- Genera un resumen breve y profesional
+- Usa lenguaje comprensivo y no juzgues
+- Responde en español
+
+RESPONDE EN FORMATO JSON:
+{
+  "sentiment": "positive|negative|neutral",
+  "themes": ["tema1", "tema2", "tema3"],
+  "insights": ["insight psicológico específico", "observación relevante"],
+  "recommendations": ["recomendación práctica", "sugerencia constructiva"],
+  "summary": "Resumen breve y profesional del contenido"
+}`
+        },
+        {
+          role: 'user',
+          content: `Analiza esta entrada de diario personal:\n\n"${content}"`
+        }
+      ],
+      model: 'llama-3.1-8b-instant',
+      temperature: 0.7,
+      max_tokens: 800,
+      response_format: { type: 'json_object' },
+    });
+
+    const analysis = JSON.parse(response.choices[0]?.message?.content || '{}');
+    
+    return {
+      sentiment: analysis.sentiment || 'neutral',
+      themes: analysis.themes || ['General'],
+      insights: analysis.insights || ['Continúa reflexionando sobre tus experiencias'],
+      recommendations: analysis.recommendations || ['Mantén el hábito de escribir en tu diario'],
+      summary: analysis.summary || 'Análisis de tu reflexión personal',
+    };
+
+  } catch (error) {
+    console.error('❌ Error analyzing journal entry with Groq:', error);
+    
+    // Fallback to simple analysis
     const words = content.toLowerCase().split(/\s+/);
     const positiveWords = [
       'feliz', 'alegre', 'contento', 'bueno', 'excelente', 'genial', 'maravilloso', 'increíble', 'perfecto', 'fantástico',
@@ -349,56 +407,35 @@ export const analyzeJournalEntry = async (
       themes.push('Pasatiempos');
     }
 
+    if (themes.length === 0) {
+      themes.push('General');
+    }
+
     // Generate contextual insights and recommendations
     const insights = [];
     const recommendations = [];
 
     if (sentiment === 'positive') {
-      insights.push('Tu estado de ánimo es positivo hoy');
-      insights.push('Pareces estar experimentando emociones agradables');
-      recommendations.push('Mantén las actividades que te hacen sentir bien');
-      recommendations.push('Comparte tu positividad con otros');
+      insights.push('Tu entrada refleja una perspectiva positiva y constructiva');
+      recommendations.push('Continúa cultivando esta mentalidad positiva');
     } else if (sentiment === 'negative') {
-      insights.push('Parece que estás pasando por un momento difícil');
-      insights.push('Es normal tener días complicados');
-      recommendations.push('Considera hablar con alguien de confianza');
-      recommendations.push('Practica técnicas de relajación o mindfulness');
-      recommendations.push('Recuerda que los sentimientos negativos son temporales');
+      insights.push('Tu entrada muestra algunos desafíos emocionales');
+      recommendations.push('Considera técnicas de manejo del estrés y mindfulness');
     } else {
-      insights.push('Tu estado emocional parece equilibrado');
-      insights.push('Estás reflexionando sobre diferentes aspectos de tu vida');
-      recommendations.push('Continúa explorando tus pensamientos y emociones');
+      insights.push('Tu reflexión muestra un equilibrio emocional');
+      recommendations.push('Mantén la práctica regular de autorreflexión');
     }
 
-    // Add theme-specific insights
-    if (themes.includes('Trabajo')) {
-      insights.push('El trabajo es un tema importante en tu vida');
-      recommendations.push('Busca equilibrio entre trabajo y vida personal');
-    }
-    if (themes.includes('Relaciones')) {
-      insights.push('Las relaciones interpersonales son significativas para ti');
-      recommendations.push('Invierte tiempo en cultivar relaciones saludables');
-    }
-    if (themes.includes('Salud')) {
-      insights.push('Tu bienestar físico es una prioridad');
-      recommendations.push('Mantén hábitos saludables y consulta profesionales cuando sea necesario');
-    }
-
-    const result = {
-      sentiment,
-      themes: themes.length > 0 ? themes : ['General'],
-      insights: insights.length > 0 ? insights : ['Continúa reflexionando sobre tus experiencias'],
-      recommendations: recommendations.length > 0 ? recommendations : ['Mantén el hábito de escribir en tu diario'],
-    };
-
-    return result;
-  } catch (error) {
-    console.error('❌ Error analyzing journal entry:', error);
     return {
-      sentiment: 'neutral',
-      themes: ['General'],
-      insights: ['Análisis no disponible en este momento'],
-      recommendations: ['Continúa escribiendo en tu diario'],
+      sentiment,
+      themes,
+      insights,
+      recommendations,
+      summary: sentiment === 'positive' 
+        ? 'Reflexión positiva sobre tus experiencias' 
+        : sentiment === 'negative'
+        ? 'Reflexión sobre desafíos y emociones'
+        : 'Reflexión equilibrada sobre tu día',
     };
   }
 };
