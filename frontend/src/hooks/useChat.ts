@@ -176,6 +176,9 @@ export const useChatSessions = (psychologistId: string) => {
   };
 };
 
+// Exportar createSession por separado para uso externo
+export { createSession };
+
 export const useChatMessages = (sessionId: string | null) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
