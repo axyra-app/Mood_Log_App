@@ -6,7 +6,6 @@ import MedicalHistory from '../components/MedicalHistory';
 import NotificationsPanel from '../components/NotificationsPanel';
 import PsychologistCV from '../components/PsychologistCV';
 import PsychologistNotifications from '../components/PsychologistNotifications';
-import PsychologistRegistrationTest from '../components/PsychologistRegistrationTest';
 import { useAuth } from '../contexts/AuthContext';
 import { usePatients } from '../hooks/usePatients';
 import { createPatientRelationsFromAppointments } from '../utils/createPatientRelations';
@@ -308,11 +307,6 @@ const DashboardPsychologist: React.FC = () => {
 
           {/* Medical History */}
           <MedicalHistory isDarkMode={isDarkMode} />
-        </div>
-
-        {/* Test Component - Temporal */}
-        <div className='mt-8'>
-          <PsychologistRegistrationTest />
         </div>
 
         {/* CV Component */}

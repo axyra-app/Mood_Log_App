@@ -299,7 +299,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
               Selecciona un paciente para ver su historial médico
             </p>
           </div>
-        ) : medicalReports.length === 0 ? (
+        ) : (
           <div className='text-center py-12'>
             <div
               className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
@@ -319,68 +319,6 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
               Los reportes médicos aparecerán aquí cuando los crees
             </p>
           </div>
-        ) : (
-          medicalReports.map((report) => (
-            <div
-              key={report.id}
-              className={`p-4 rounded-lg border transition-colors duration-500 ${
-                isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center space-x-4'>
-                  <div
-                    className={`p-2 rounded-full ${
-                      isDarkMode ? 'bg-blue-600/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-                    }`}
-                  >
-                    <FileText className='w-4 h-4' />
-                  </div>
-                  <div>
-                    <h3
-                      className={`font-medium transition-colors duration-500 ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
-                      Reporte del {formatDate(report.sessionDate)}
-                    </h3>
-                    <p
-                      className={`text-sm transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}
-                    >
-                      {report.diagnosis || 'Sin diagnóstico específico'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className='flex items-center space-x-2'>
-                  <button
-                    onClick={() => handleViewReport(report)}
-                    className={`p-2 rounded-lg transition-colors duration-300 ${
-                      isDarkMode
-                        ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                    }`}
-                    title='Ver reporte'
-                  >
-                    <Eye className='w-4 h-4' />
-                  </button>
-                  <button
-                    onClick={() => handleDownloadReport(report)}
-                    className={`p-2 rounded-lg transition-colors duration-300 ${
-                      isDarkMode
-                        ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                    }`}
-                    title='Descargar reporte'
-                  >
-                    <Download className='w-4 h-4' />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
         )}
       </div>
 

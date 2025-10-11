@@ -68,13 +68,9 @@ export const useUserChatSessions = (userId: string) => {
               const data = doc.data();
 
               // Obtener información del psicólogo
-              const psychologistQuery = query(
-                collection(db, 'psychologists'),
-                where('userId', '==', data.psychologistId),
-                limit(1)
-              );
-              const psychologistSnapshot = await getDocs(psychologistQuery);
-              const psychologistData = psychologistSnapshot.empty ? null : psychologistSnapshot.docs[0].data();
+              const psychologistDoc = doc(db, 'psychologists', data.psychologistId);
+              const psychologistSnapshot = await getDoc(psychologistDoc);
+              const psychologistData = psychologistSnapshot.exists() ? psychologistSnapshot.data() : null;
               const psychologistName = psychologistData?.displayName || psychologistData?.name || 'Psicólogo';
 
               return {

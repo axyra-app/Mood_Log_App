@@ -31,9 +31,7 @@ export const useAvailablePsychologists = () => {
 
     // Escuchar cambios en psicólogos disponibles
     const psychologistsQuery = query(
-      collection(db, 'psychologists'),
-      where('isAvailable', '==', true),
-      where('isActive', '==', true)
+      collection(db, 'psychologists')
     );
 
     const unsubscribe = onSnapshot(
