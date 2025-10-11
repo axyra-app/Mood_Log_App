@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useChatSessions, useChatMessages } from '../hooks/useChat';
-import { createSession } from '../hooks/useChat';
 
 const PsychologistChat: React.FC = () => {
   const { user } = useAuth();
@@ -16,7 +15,7 @@ const PsychologistChat: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
-  const { sessions, loading: sessionsLoading, markAsRead } = useChatSessions(user?.uid || '');
+  const { sessions, loading: sessionsLoading, markAsRead, createSession } = useChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useChatMessages(selectedSession);
 
   // Las sesiones ya vienen filtradas por psicólogo desde el hook
