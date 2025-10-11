@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useChatSessions, useChatMessages } from '../hooks/useChat';
+import { createSession } from '../hooks/useChat';
 
 const PsychologistChat: React.FC = () => {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ const PsychologistChat: React.FC = () => {
     }
 
     // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
-    if (location.state?.patientId && sessions.length > 0) {
+    if (location.state?.patientId && sessions.length >= 0) {
       console.log('🔍 Datos recibidos:', location.state);
       console.log('🔍 Sesiones disponibles:', sessions.map(s => ({ id: s.id, userId: s.userId, userName: s.userName })));
       
@@ -36,14 +37,29 @@ const PsychologistChat: React.FC = () => {
         session.userId === location.state.patientId || 
         session.userName === location.state.patientName
       );
+      
       if (targetSession) {
+        // Sesión existe, seleccionarla
         setSelectedSession(targetSession.id);
         setShowChatOnMobile(true);
         toast.success(`Chat iniciado con ${targetSession.userName}`);
-      } else {
-        // Si no encuentra la sesión, mostrar mensaje de ayuda
-        console.log('❌ No se encontró sesión para el paciente:', location.state);
-        toast.error('No se encontró conversación con este paciente');
+      } else if (location.state.patientId && user) {
+        // Sesión no existe, crear una nueva
+        console.log('🆕 Creando nueva sesión para:', location.state.patientName);
+        try {
+          const newSessionId = await createSession(
+            location.state.patientId,
+            user.uid,
+            location.state.patientName || 'Usuario',
+            location.state.patientEmail || ''
+          );
+          setSelectedSession(newSessionId);
+          setShowChatOnMobile(true);
+          toast.success(`Nueva conversación iniciada con ${location.state.patientName}`);
+        } catch (error) {
+          console.error('Error creando sesión:', error);
+          toast.error('Error al crear la conversación');
+        }
       }
     }
   }, [location.state, sessions]);
