@@ -11,6 +11,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  addDoc,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
@@ -195,8 +196,7 @@ export const useUserChatMessages = (sessionId: string | null) => {
     setLoading(true);
     const messagesQuery = query(
       collection(db, 'chatMessages'),
-      where('sessionId', '==', sessionId),
-      orderBy('timestamp', 'asc')
+      where('sessionId', '==', sessionId)
     );
 
     const unsubscribe = onSnapshot(
@@ -216,6 +216,9 @@ export const useUserChatMessages = (sessionId: string | null) => {
               messageType: data.messageType || 'text',
             };
           });
+
+          // Ordenar mensajes por timestamp
+          messagesData.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
           setMessages(messagesData);
           setError(null);
@@ -248,7 +251,7 @@ export const useUserChatMessages = (sessionId: string | null) => {
         messageType: 'text',
       };
 
-      await setDoc(doc(collection(db, 'chatMessages')), messageData);
+      await addDoc(collection(db, 'chatMessages'), messageData);
 
       // Actualizar la sesión con el último mensaje
       await updateDoc(doc(db, 'chatSessions', sessionId), {
