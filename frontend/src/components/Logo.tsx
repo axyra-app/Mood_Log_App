@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -7,8 +7,6 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
-  const [imageError, setImageError] = useState(false);
-
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
@@ -48,22 +46,12 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Logo Image */}
-      {!imageError ? (
-        <img
-          src="/Logo_Mood_log_app.png"
-          alt="Mood Log App Logo"
-          className={`${sizes.image} rounded-lg flex-shrink-0`}
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        /* Fallback Logo */
-        <div
-          className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}
-        >
-          <div className={`${sizes.image} text-white font-bold text-center leading-none`}>😊</div>
-        </div>
-      )}
+      {/* Logo Image - Always use your original logo */}
+      <img
+        src="/Logo_Mood_log_app.png"
+        alt="Mood Log App Logo"
+        className={`${sizes.image} rounded-lg flex-shrink-0`}
+      />
 
       {/* Logo Text */}
       {showText && (
