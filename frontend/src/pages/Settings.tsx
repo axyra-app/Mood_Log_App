@@ -78,6 +78,7 @@ const Settings: React.FC = () => {
           if (userDoc.exists()) {
             setUserRole('user');
             const userData = userDoc.data();
+            console.log('🔍 User data from Firestore:', userData);
             setProfileData({
               displayName: userData.displayName || user.displayName || '',
               email: userData.email || user.email || '',
@@ -91,6 +92,7 @@ const Settings: React.FC = () => {
             if (psychologistDoc.exists()) {
               setUserRole('psychologist');
               const psychologistData = psychologistDoc.data();
+              console.log('🔍 Psychologist data from Firestore:', psychologistData);
               setProfileData({
                 displayName: psychologistData.name || user.displayName || '',
                 email: psychologistData.email || user.email || '',
