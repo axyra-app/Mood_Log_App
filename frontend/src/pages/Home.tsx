@@ -7,24 +7,24 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3 sm:py-4">
-            <div className="flex items-center space-x-2">
+          <div className="flex justify-between items-center py-4 sm:py-6">
+            <div className="flex items-center space-x-3">
               <Logo size="lg" />
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">MOOD LOG</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">MOOD LOG</h1>
             </div>
-            <div className="flex space-x-2 sm:space-x-4">
+            <div className="flex space-x-3 sm:space-x-4">
               <Link
                 to="/login"
-                className="text-gray-600 hover:text-gray-900 px-2 py-1 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base font-medium"
               >
                 <span className="hidden sm:inline">Iniciar Sesión</span>
                 <span className="sm:hidden">Entrar</span>
               </Link>
               <Link
                 to="/register"
-                className="bg-purple-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-purple-700 transition-colors font-semibold text-sm sm:text-base"
+                className="bg-purple-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold text-sm sm:text-base shadow-sm"
               >
                 <span className="hidden sm:inline">Registrarse</span>
                 <span className="sm:hidden">Registro</span>
@@ -79,7 +79,7 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
           <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <Logo className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Análisis con IA</h3>
             <p className="text-sm sm:text-base text-gray-600">
