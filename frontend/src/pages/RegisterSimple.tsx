@@ -94,7 +94,7 @@ const RegisterSimple: React.FC = () => {
     if (!formData.email.trim()) {
       validate('email', 'El correo electrónico es requerido');
       isValid = false;
-    } else if (!commonValidationRules.email.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       validate('email', 'El correo electrónico no es válido');
       isValid = false;
     }

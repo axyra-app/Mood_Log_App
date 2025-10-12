@@ -135,6 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             } else {
               // Si no existe el documento, crear uno básico para usuarios de Google
+              console.log('✅ Usuario nuevo detectado, creando perfil básico');
               const basicUserData = {
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
@@ -146,8 +147,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
               try {
                 await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData);
+                console.log('✅ Perfil básico creado exitosamente');
               } catch (error) {
-                console.error('Error creando perfil básico:', error);
+                console.error('❌ Error creando perfil básico:', error);
               }
 
               // Crear usuario básico para el estado - siempre necesita completar perfil
