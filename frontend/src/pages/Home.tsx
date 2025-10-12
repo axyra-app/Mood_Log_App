@@ -1,6 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Shield, BarChart3, MessageCircle, Calendar, Star, ArrowRight } from 'lucide-react';
+import { 
+  Users, Shield, BarChart3, MessageCircle, Calendar, Star, ArrowRight, 
+  Brain, Heart, Clock, TrendingUp, UserCheck, FileText, Bell, 
+  Smartphone, Globe, Zap, Target, Award, CheckCircle
+} from 'lucide-react';
 import Logo from '../components/Logo';
 
 const Home: React.FC = () => {
@@ -50,11 +54,11 @@ const Home: React.FC = () => {
             Emocional
           </h1>
           
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
-            IA de última generación que analiza tus emociones con precisión milimétrica.
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto px-4">
+            La plataforma más completa para el bienestar mental. 
             <br className="hidden sm:block" />
             <span className="sm:hidden"> </span>
-            Conecta con los mejores psicólogos del mundo. Tu evolución será BRUTAL.
+            IA avanzada, psicólogos profesionales, seguimiento personalizado y detección de crisis en tiempo real.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
@@ -74,66 +78,237 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+        {/* Features Grid - Para Usuarios */}
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-8">
+            Para <span className="text-purple-600">Usuarios</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">IA Avanzada</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Análisis inteligente de emociones con múltiples personalidades de IA especializadas.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Análisis con IA</h3>
-            <p className="text-sm sm:text-base text-gray-600">
-              Recibe análisis inteligente de tus estados de ánimo con múltiples personalidades de IA especializadas.
-            </p>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Psicólogos Profesionales</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Conecta con psicólogos verificados para recibir apoyo personalizado y profesional.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Psicólogos Reales</h3>
-            <p className="text-sm sm:text-base text-gray-600">
-              Conecta con psicólogos profesionales verificados para recibir apoyo personalizado.
-            </p>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Detección de Crisis</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Sistema avanzado que detecta crisis y te conecta inmediatamente con ayuda profesional.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Detección de Crisis</h3>
-            <p className="text-sm sm:text-base text-gray-600">
-              Sistema avanzado de detección de crisis que te conecta inmediatamente con ayuda profesional.
-            </p>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Estadísticas Detalladas</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Visualiza tu progreso con gráficos avanzados y análisis de patrones emocionales.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Estadísticas Detalladas</h3>
-            <p className="text-sm sm:text-base text-gray-600">
-              Visualiza tu progreso con gráficos y estadísticas que te ayudan a entender tus patrones.
-            </p>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Chat Integrado</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Comunícate fácilmente con psicólogos o IA a través de nuestro sistema de chat en tiempo real.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Chat Integrado</h3>
-            <p className="text-sm sm:text-base text-gray-600">
-              Comunícate fácilmente con psicólogos o IA a través de nuestro sistema de chat integrado.
-            </p>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Gestión de Citas</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Programa y gestiona tus citas con psicólogos de manera fácil y organizada.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Gestión de Citas</h3>
-            <p className="text-sm sm:text-base text-gray-600">
-              Programa y gestiona tus citas con psicólogos de manera fácil y organizada.
-            </p>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Diario Personal</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Registra tus pensamientos y emociones en un diario privado con análisis automático.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Recordatorios Inteligentes</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Recibe recordatorios personalizados para mantener tu bienestar mental.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Seguimiento de Estado de Ánimo</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Registra y analiza tu estado de ánimo diario con herramientas avanzadas de seguimiento.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Grid - Para Psicólogos */}
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-8">
+            Para <span className="text-blue-600">Psicólogos</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Gestión de Pacientes</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Administra tus pacientes con herramientas profesionales de seguimiento y análisis.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Estadísticas de Pacientes</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Visualiza el progreso de tus pacientes con gráficos detallados y reportes automáticos.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Chat con Pacientes</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Comunícate con tus pacientes a través de nuestro sistema de chat seguro y profesional.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Gestión de Citas</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Programa y gestiona tus citas con pacientes de manera eficiente y organizada.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Alertas de Crisis</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Recibe alertas inmediatas cuando tus pacientes necesiten atención urgente.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Notas de Sesión</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Registra notas de sesión y planes de tratamiento de manera organizada y segura.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Grid - Tecnología */}
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-8">
+            <span className="text-green-600">Tecnología</span> Avanzada
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">IA de Última Generación</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Tecnología de inteligencia artificial avanzada para análisis emocional preciso.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Multiplataforma</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Accede desde cualquier dispositivo: web, móvil, tablet. Siempre sincronizado.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Acceso Global</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Disponible en múltiples idiomas y zonas horarias para usuarios de todo el mundo.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Precisión Milimétrica</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Análisis emocional con precisión científica para resultados confiables y efectivos.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Award className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Certificaciones</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Plataforma certificada y validada por profesionales de la salud mental.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Privacidad Garantizada</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Cumplimiento total con regulaciones de privacidad y seguridad de datos médicos.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -143,15 +318,28 @@ const Home: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             ¿Listo para Transformar tu Bienestar Mental?
           </h2>
-          <p className="text-purple-100 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-base">
-            Únete a miles de usuarios que ya están mejorando su bienestar mental con nuestra plataforma.
+          <p className="text-purple-100 mb-6 sm:mb-8 max-w-3xl mx-auto text-sm sm:text-base">
+            Únete a miles de usuarios y psicólogos que ya están mejorando el bienestar mental con nuestra plataforma integral.
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
+            IA avanzada, profesionales verificados y tecnología de última generación.
           </p>
-          <Link
-            to="/register"
-            className="bg-white text-purple-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-semibold text-base sm:text-lg inline-block"
-          >
-            Crear Cuenta Gratis
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Link
+              to="/register"
+              className="bg-white text-purple-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-semibold text-base sm:text-lg inline-flex items-center justify-center"
+            >
+              Crear Cuenta Gratis
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </Link>
+            <Link
+              to="/register"
+              className="border-2 border-white text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:bg-white hover:text-purple-600 transition-all duration-200 font-semibold text-base sm:text-lg inline-flex items-center justify-center"
+            >
+              Soy Psicólogo
+              <UserCheck className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </Link>
+          </div>
         </div>
       </main>
 
