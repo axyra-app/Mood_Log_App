@@ -108,29 +108,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 cvUrl: userData.cvUrl,
               };
 
-              // Verificar si es un usuario de Google que necesita completar perfil
-              const isGoogleUser = firebaseUser.email && userData.username === firebaseUser.email.split('@')[0];
-              
-              // Lógica mejorada: Solo necesita completar perfil si:
-              // 1. Es usuario de Google (username = email sin dominio)
-              // 2. Y tiene role 'user' (rol por defecto)
-              // 3. Y NO tiene displayName personalizado (solo el del email)
-              const needsProfileCompletion = isGoogleUser && 
-                                           userData.role === 'user' && 
+              // Verificar si necesita completar perfil
+              // Un usuario necesita completar perfil si:
+              // 1. No tiene firstName o lastName (campos requeridos)
+              // 2. O si es un usuario básico creado automáticamente
+              const needsProfileCompletion = !userData.firstName || 
+                                           !userData.lastName || 
                                            userData.displayName === firebaseUser.email?.split('@')[0];
               
-              
               if (needsProfileCompletion) {
+                console.log('⚠️ Usuario necesita completar perfil');
                 // Establecer el usuario con datos básicos para redirigir a completar perfil
                 const basicUserData: User = {
                   uid: firebaseUser.uid,
                   email: firebaseUser.email,
                   displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
                   username: firebaseUser.email?.split('@')[0],
-                  role: 'user', // Rol por defecto
+                  role: userData.role || 'user',
                 };
                 if (isMounted) setUser(basicUserData);
               } else {
+                console.log('✅ Usuario con perfil completo');
                 if (isMounted) setUser(userDataWithAuth);
               }
             } else {

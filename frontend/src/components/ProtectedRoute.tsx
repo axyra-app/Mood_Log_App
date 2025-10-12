@@ -25,6 +25,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       return <Navigate to='/login' replace />;
     }
 
+    // Verificar si necesita completar perfil
+    const needsProfileCompletion = !user.firstName || !user.lastName || 
+                                 user.displayName === user.email?.split('@')[0];
+    
+    if (needsProfileCompletion) {
+      return <Navigate to='/complete-profile' replace />;
+    }
+
     // Si es psicólogo, redirigir al dashboard de psicólogos
     if (user.role === 'psychologist') {
       return <Navigate to='/dashboard-psychologist' replace />;
@@ -47,6 +55,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     return <Navigate to='/login' replace />;
+  }
+
+  // Verificar si necesita completar perfil
+  const needsProfileCompletion = !user.firstName || !user.lastName || 
+                               user.displayName === user.email?.split('@')[0];
+  
+  if (needsProfileCompletion) {
+    return <Navigate to='/complete-profile' replace />;
   }
 
   // Si es psicólogo, redirigir al dashboard de psicólogos
