@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Calendar, X, Check } from 'lucide-react';
+import { Bell, Calendar, X, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePsychologistAppointments } from '../hooks/usePsychologistAppointments';
 
@@ -20,6 +20,33 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
 
   const pendingAppointments = getPendingAppointments();
 
+  // Verificar si el usuario necesita completar perfil
+  const needsProfileCompletion = !user?.firstName || !user?.lastName;
+  
+  // Crear notificación de perfil incompleto si es necesario
+  const profileNotification = needsProfileCompletion ? {
+    id: 'profile-incomplete',
+    type: 'profile' as const,
+    title: 'Perfil Incompleto',
+    message: 'Necesitas completar tu perfil para acceder a todas las funcionalidades',
+    priority: 'high' as const,
+    createdAt: new Date(),
+  } : null;
+
+  // Combinar notificaciones
+  const allNotifications = [
+    ...(profileNotification ? [profileNotification] : []),
+    ...pendingAppointments.map(apt => ({
+      id: apt.id,
+      type: 'appointment' as const,
+      title: 'Nueva Cita Pendiente',
+      message: `Cita con ${apt.patientName} el ${apt.date.toLocaleDateString()}`,
+      priority: 'medium' as const,
+      createdAt: apt.createdAt,
+      appointmentId: apt.id,
+    }))
+  ];
+
   const handleAcceptAppointment = async (appointmentId: string) => {
     try {
       await updateAppointmentStatus(appointmentId, 'accepted');
@@ -36,7 +63,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
     }
   };
 
-  const unreadCount = pendingAppointments.length;
+  const unreadCount = allNotifications.length;
 
   return (
     <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
@@ -101,7 +128,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
               <p className={`text-sm transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                No hay citas pendientes
+                No hay notificaciones pendientes
               </p>
               <p className={`text-xs transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-500' : 'text-gray-400'
@@ -114,7 +141,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
               <p className={`text-sm transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                {unreadCount} cita{unreadCount !== 1 ? 's' : ''} pendiente{unreadCount !== 1 ? 's' : ''}
+                {unreadCount} notificación{unreadCount !== 1 ? 'es' : ''} pendiente{unreadCount !== 1 ? 's' : ''}
               </p>
               <p className={`text-xs transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-500' : 'text-gray-400'
@@ -152,51 +179,73 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
               </p>
             </div>
           ) : (
-            pendingAppointments.map((appointment) => (
+            allNotifications.map((notification) => (
               <div
-                key={appointment.id}
+                key={notification.id}
                 className={`p-4 rounded-lg border-l-4 transition-colors duration-500 ${
-                  isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-500'
+                  notification.type === 'profile' 
+                    ? (isDarkMode ? 'bg-gray-700 border-red-500' : 'bg-red-50 border-red-500')
+                    : (isDarkMode ? 'bg-gray-700 border-blue-500' : 'bg-blue-50 border-blue-500')
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
-                    <Calendar className="w-5 h-5 text-blue-500 mt-1" />
+                    {notification.type === 'profile' ? (
+                      <AlertCircle className="w-5 h-5 text-red-500 mt-1" />
+                    ) : (
+                      <Calendar className="w-5 h-5 text-blue-500 mt-1" />
+                    )}
                     <div className="flex-1">
                       <h4 className={`font-medium transition-colors duration-500 ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
-                        Nueva cita solicitada
+                        {notification.title}
                       </h4>
                       <p className={`text-sm transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-600'
                       }`}>
-                        <strong>{appointment.userName}</strong> solicitó una cita
+                        {notification.message}
                       </p>
-                      <p className={`text-xs transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      }`}>
-                        {appointment.appointmentDate?.toLocaleDateString()} - {appointment.reason}
-                      </p>
+                      {notification.type === 'appointment' && (
+                        <p className={`text-xs transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {notification.createdAt.toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  {notification.type === 'appointment' && (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleAcceptAppointment(notification.appointmentId!)}
+                        className="p-1 text-green-600 hover:bg-green-100 rounded"
+                        title="Aceptar cita"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRejectAppointment(notification.appointmentId!)}
+                        className="p-1 text-red-600 hover:bg-red-100 rounded"
+                        title="Rechazar cita"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {notification.type === 'profile' && (
                     <button
-                      onClick={() => handleAcceptAppointment(appointment.id)}
-                      className="p-1 text-green-600 hover:bg-green-100 rounded"
-                      title="Aceptar cita"
+                      onClick={() => {
+                        // Navegar a completar perfil
+                        window.location.href = '/complete-profile';
+                      }}
+                      className="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors"
                     >
-                      <Check className="w-4 h-4" />
+                      Completar
                     </button>
-                    <button
-                      onClick={() => handleRejectAppointment(appointment.id)}
-                      className="p-1 text-red-600 hover:bg-red-100 rounded"
-                      title="Rechazar cita"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
             ))

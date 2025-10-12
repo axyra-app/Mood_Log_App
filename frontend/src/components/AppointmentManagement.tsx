@@ -152,7 +152,18 @@ const AppointmentManagement: React.FC = () => {
             <span>{showHistory ? 'Ocultar Historial' : 'Ver Historial'}</span>
           </button>
           
-          <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2">
+          <button 
+            onClick={() => {
+              // Verificar si el usuario necesita completar perfil
+              if (!user?.firstName || !user?.lastName) {
+                toast.error('Necesitas completar tu perfil antes de crear una cita');
+                return;
+              }
+              // TODO: Navegar a página de creación de cita
+              toast.info('Funcionalidad de nueva cita próximamente disponible');
+            }}
+            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
+          >
             <Calendar className="w-4 h-4" />
             <span>Nueva Cita</span>
           </button>
