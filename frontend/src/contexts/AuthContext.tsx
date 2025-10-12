@@ -339,7 +339,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       
-      
       // Verificar si el popup está bloqueado
       const popup = window.open('', '_blank', 'width=500,height=600');
       if (!popup || popup.closed || typeof popup.closed === 'undefined') {
@@ -348,6 +347,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       popup.close();
       
       const result = await signInWithPopup(auth, provider);
+      
+      // Verificar si es un usuario nuevo
+      const isNewUser = result.additionalUserInfo?.isNewUser;
+      
+      if (isNewUser) {
+        console.log('✅ Usuario nuevo registrado con Google');
+        // El perfil se creará automáticamente en onAuthStateChanged
+      } else {
+        console.log('✅ Usuario existente inició sesión con Google');
+        // El usuario existente será manejado en onAuthStateChanged
+      }
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {

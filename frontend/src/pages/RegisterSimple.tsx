@@ -45,18 +45,11 @@ const RegisterSimple: React.FC = () => {
         return; // No redirigir si ya estamos en otra página
       }
 
-      // Verificar si el usuario necesita completar su perfil
-      const isGoogleUser = user.email && user.username === user.email.split('@')[0];
+      // Para usuarios recién registrados, siempre ir a complete-profile
+      // Esto incluye usuarios nuevos de Google y usuarios manuales
+      const isNewUser = user.displayName === user.email?.split('@')[0] && user.role === 'user';
       
-      // Lógica mejorada: Solo necesita completar perfil si:
-      // 1. Es usuario de Google (username = email sin dominio)
-      // 2. Y tiene role 'user' (rol por defecto)
-      // 3. Y NO tiene displayName personalizado (solo el del email)
-      const needsProfileCompletion = isGoogleUser && 
-                                   user.role === 'user' && 
-                                   user.displayName === user.email?.split('@')[0];
-
-      if (needsProfileCompletion) {
+      if (isNewUser) {
         // Redirigir a completar perfil
         navigate('/complete-profile');
       } else {
@@ -191,9 +184,7 @@ const RegisterSimple: React.FC = () => {
 
       toast.success('¡Cuenta creada! Completa tu perfil para continuar');
 
-      setTimeout(() => {
-        navigate('/complete-profile');
-      }, 1500);
+      // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.error(error.message || 'Error al crear la cuenta');
@@ -206,7 +197,9 @@ const RegisterSimple: React.FC = () => {
     try {
       setLoading(true);
       await signUpWithGoogle();
-      toast.success('¡Cuenta creada con Google!');
+      toast.success('¡Cuenta creada con Google! Completa tu perfil para continuar');
+      
+      // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
       console.error('Google registration error:', error);
       toast.error(error.message || 'Error al registrarse con Google');
