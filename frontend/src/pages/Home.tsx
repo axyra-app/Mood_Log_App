@@ -12,7 +12,6 @@ const Home: React.FC = () => {
           <div className="flex justify-between items-center py-4 sm:py-6">
             <div className="flex items-center space-x-3">
               <Logo size="lg" />
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">MOOD LOG</h1>
             </div>
             <div className="flex space-x-3 sm:space-x-4">
               <Link

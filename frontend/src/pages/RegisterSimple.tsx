@@ -266,7 +266,6 @@ const RegisterSimple: React.FC = () => {
           >
             <div className='p-8'>
               <div className='text-center mb-8'>
-                <Logo className='mx-auto mb-6' />
                 <h1
                   className={`text-3xl font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
