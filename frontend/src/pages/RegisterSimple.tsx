@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useValidation } from '../hooks/useValidation';
+import CountrySelector from '../components/CountrySelector';
 import { uploadFile } from '../services/firebase';
 import Logo from '../components/Logo';
 
@@ -30,6 +31,7 @@ const RegisterSimple: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState({ code: 'CO', name: 'Colombia', phoneCode: '+57', flag: '🇨🇴' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -166,7 +168,7 @@ const RegisterSimple: React.FC = () => {
               yearsOfExperience: formData.yearsOfExperience,
               bio: formData.bio,
               licenseNumber: formData.licenseNumber,
-              phone: formData.phone,
+              phone: `${selectedCountry.phoneCode} ${formData.phone}`,
               cvUrl: cvUrl,
             }
           : undefined;
@@ -579,17 +581,48 @@ const RegisterSimple: React.FC = () => {
                       >
                         TELÉFONO
                       </label>
+                      <div className="flex space-x-2">
+                        <div className="w-32">
+                          <CountrySelector
+                            selectedCountry={selectedCountry}
+                            onCountryChange={setSelectedCountry}
+                            isDarkMode={isDarkMode}
+                          />
+                        </div>
+                        <input
+                          type='tel'
+                          name='phone'
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className={`flex-1 px-4 py-3 rounded-lg border transition-all duration-300 ${
+                            isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
+                          }`}
+                          placeholder='300 123 4567'
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                        }`}
+                      >
+                        UBICACIÓN
+                      </label>
                       <input
-                        type='tel'
-                        name='phone'
-                        value={formData.phone}
-                        onChange={handleInputChange}
+                        type='text'
+                        name='location'
+                        value={selectedCountry.name}
+                        readOnly
                         className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                           isDarkMode
-                            ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                            : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
+                            ? 'border-gray-600 bg-gray-800 text-gray-300'
+                            : 'border-gray-300 bg-gray-100 text-gray-600'
                         }`}
-                        placeholder='+57 300 123 4567'
+                        placeholder='Se selecciona automáticamente según el país'
                       />
                     </div>
 

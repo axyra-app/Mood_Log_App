@@ -13,12 +13,13 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface Notification {
   id: string;
   userId: string;
   psychologistId?: string;
-  type: 'chat_message' | 'appointment_request' | 'appointment_accepted' | 'appointment_rejected' | 'medical_report';
+  type: 'chat_message' | 'appointment_request' | 'appointment_accepted' | 'appointment_rejected' | 'medical_report' | 'profile_incomplete';
   title: string;
   message: string;
   isRead: boolean;
@@ -27,6 +28,7 @@ export interface Notification {
 }
 
 export const useNotifications = (userId: string, userRole: 'user' | 'psychologist') => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,28 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
             };
           });
 
-          setNotifications(notificationsData);
+          // Verificar si el usuario necesita completar perfil
+          const needsProfileCompletion = !user?.firstName || !user?.lastName;
+          
+          // Crear notificación de perfil incompleto si es necesario
+          const profileNotification = needsProfileCompletion ? {
+            id: 'profile-incomplete',
+            userId: userId,
+            type: 'profile_incomplete' as const,
+            title: 'Perfil Incompleto',
+            message: 'Necesitas completar tu perfil para acceder a todas las funcionalidades',
+            isRead: false,
+            createdAt: new Date(),
+            data: null,
+          } : null;
+
+          // Combinar notificaciones
+          const allNotifications = [
+            ...(profileNotification ? [profileNotification] : []),
+            ...notificationsData
+          ];
+
+          setNotifications(allNotifications);
           setError(null);
         } catch (err) {
           console.error('Error processing notifications:', err);

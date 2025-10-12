@@ -15,6 +15,7 @@ import AIChat from './pages/AIChat';
 import Chat from './pages/Chat';
 import ChatSelection from './pages/ChatSelection';
 import CompleteProfile from './pages/CompleteProfile';
+import CreateAppointment from './pages/CreateAppointment';
 import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
@@ -44,6 +45,7 @@ function App() {
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
               <Route path='/complete-profile' element={<CompleteProfile />} />
+              <Route path='/create-appointment' element={<CreateAppointment />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/terms' element={<TermsSimple />} />
               <Route path='/privacy' element={<PrivacySimple />} />

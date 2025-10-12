@@ -18,27 +18,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     user?.role || 'user'
   );
 
-  // Verificar si el usuario necesita completar perfil
-  const needsProfileCompletion = !user?.firstName || !user?.lastName;
-  
-  // Crear notificación de perfil incompleto si es necesario
-  const profileNotification = needsProfileCompletion ? {
-    id: 'profile-incomplete',
-    type: 'profile_incomplete',
-    title: 'Perfil Incompleto',
-    message: 'Necesitas completar tu perfil para acceder a todas las funcionalidades',
-    priority: 'high',
-    createdAt: new Date(),
-    isRead: false,
-  } : null;
-
-  // Combinar notificaciones
-  const allNotifications = [
-    ...(profileNotification ? [profileNotification] : []),
-    ...notifications
-  ];
-
-  const totalUnreadCount = allNotifications.filter(n => !n.isRead).length;
+  const totalUnreadCount = unreadCount;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -212,7 +192,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
                 </div>
               ) : (
                 <div className='divide-y divide-gray-200 dark:divide-gray-700'>
-                  {allNotifications.map((notification) => (
+                  {notifications.map((notification) => (
                     <div
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}

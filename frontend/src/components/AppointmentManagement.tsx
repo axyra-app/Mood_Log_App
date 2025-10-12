@@ -1,6 +1,7 @@
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle, Trash2, Edit, Eye } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserAppointments } from '../hooks/useUserAppointments';
 
@@ -20,6 +21,7 @@ interface Appointment {
 
 const AppointmentManagement: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { appointments, loading, updateAppointment, deleteAppointment } = useUserAppointments();
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'accepted' | 'completed' | 'cancelled' | 'expired'>('all');
   const [showHistory, setShowHistory] = useState(false);
@@ -159,8 +161,8 @@ const AppointmentManagement: React.FC = () => {
                 toast.error('Necesitas completar tu perfil antes de crear una cita');
                 return;
               }
-              // TODO: Navegar a página de creación de cita
-              toast.info('Funcionalidad de nueva cita próximamente disponible');
+              // Navegar a página de creación de cita
+              navigate('/create-appointment');
             }}
             className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
           >
