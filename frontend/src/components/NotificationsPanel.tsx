@@ -1,4 +1,4 @@
-import { Bell, Calendar, Check, FileText, MessageCircle, X } from 'lucide-react';
+import { Bell, Calendar, Check, FileText, MessageCircle, X, AlertCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,8 +18,32 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     user?.role || 'user'
   );
 
+  // Verificar si el usuario necesita completar perfil
+  const needsProfileCompletion = !user?.firstName || !user?.lastName;
+  
+  // Crear notificación de perfil incompleto si es necesario
+  const profileNotification = needsProfileCompletion ? {
+    id: 'profile-incomplete',
+    type: 'profile_incomplete',
+    title: 'Perfil Incompleto',
+    message: 'Necesitas completar tu perfil para acceder a todas las funcionalidades',
+    priority: 'high',
+    createdAt: new Date(),
+    isRead: false,
+  } : null;
+
+  // Combinar notificaciones
+  const allNotifications = [
+    ...(profileNotification ? [profileNotification] : []),
+    ...notifications
+  ];
+
+  const totalUnreadCount = allNotifications.filter(n => !n.isRead).length;
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'profile_incomplete':
+        return <AlertCircle className='w-4 h-4' />;
       case 'chat_message':
         return <MessageCircle className='w-4 h-4' />;
       case 'appointment_request':
@@ -35,6 +59,8 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
 
   const getNotificationColor = (type: string) => {
     switch (type) {
+      case 'profile_incomplete':
+        return isDarkMode ? 'text-red-400' : 'text-red-600';
       case 'chat_message':
         return isDarkMode ? 'text-blue-400' : 'text-blue-600';
       case 'appointment_request':
@@ -76,6 +102,13 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
   };
 
   const handleNotificationClick = (notification: any) => {
+    // Manejar notificación de perfil incompleto
+    if (notification.type === 'profile_incomplete') {
+      setIsOpen(false);
+      navigate('/complete-profile');
+      return;
+    }
+    
     // Marcar como leída
     markAsRead(notification.id);
     
@@ -127,9 +160,9 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
         }`}
       >
         <Bell className='w-5 h-5' />
-        {unreadCount > 0 && (
+        {totalUnreadCount > 0 && (
           <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
           </span>
         )}
       </button>
@@ -179,7 +212,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
                 </div>
               ) : (
                 <div className='divide-y divide-gray-200 dark:divide-gray-700'>
-                  {notifications.map((notification) => (
+                  {allNotifications.map((notification) => (
                     <div
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}

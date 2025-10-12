@@ -138,6 +138,35 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
             </>
           ) : (
             <>
+              {/* Mostrar vista previa de la notificación más importante */}
+              {allNotifications.length > 0 && (
+                <div className={`p-3 rounded-lg border-l-4 mb-3 ${
+                  allNotifications[0].type === 'profile' 
+                    ? (isDarkMode ? 'bg-gray-700 border-red-500' : 'bg-red-50 border-red-500')
+                    : (isDarkMode ? 'bg-gray-700 border-blue-500' : 'bg-blue-50 border-blue-500')
+                }`}>
+                  <div className="flex items-center space-x-2">
+                    {allNotifications[0].type === 'profile' ? (
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                    ) : (
+                      <Calendar className="w-4 h-4 text-blue-500" />
+                    )}
+                    <div className="text-left flex-1">
+                      <p className={`text-sm font-medium ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {allNotifications[0].title}
+                      </p>
+                      <p className={`text-xs ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        {allNotifications[0].message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <p className={`text-sm transition-colors duration-500 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
