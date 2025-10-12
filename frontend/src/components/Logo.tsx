@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -7,6 +7,9 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
+  const [logoError, setLogoError] = useState(false);
+  const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
+ 
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
@@ -44,26 +47,46 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   const sizes = getSizeClasses();
 
+  // URLs alternativas para probar
+  const logoUrls = [
+    'https://postimg.cc/5HYdCCDB',
+    'https://i.postimg.cc/5HYdCCDB/Logo-Mood-log-app.png',
+    'https://imgur.com/ZUuTjJT.png',
+    'https://i.imgur.com/ZUuTjJT.png',
+  ];
+
+  const handleImageError = () => {
+    console.log(`Error loading logo from URL ${currentUrlIndex}: ${logoUrls[currentUrlIndex]}`);
+    
+    if (currentUrlIndex < logoUrls.length - 1) {
+      // Probar siguiente URL
+      setCurrentUrlIndex(currentUrlIndex + 1);
+    } else {
+      // Todas las URLs fallaron, mostrar fallback
+      setLogoError(true);
+    }
+  };
+
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
       {/* Logo Image */}
-      <img
-        src='https://i.imgur.com/ZUuTjJT.png'
-        alt='Mood Log App Logo'
-        className={`${sizes.image} rounded-lg flex-shrink-0`}
-        onError={(e) => {
-          // Fallback si la imagen no carga
-          e.currentTarget.style.display = 'none';
-          e.currentTarget.nextElementSibling.style.display = 'flex';
-        }}
-      />
+      {!logoError && (
+        <img
+          src={logoUrls[currentUrlIndex]}
+          alt='Mood Log App Logo'
+          className={`${sizes.image} rounded-lg flex-shrink-0`}
+          onError={handleImageError}
+        />
+      )}
 
       {/* Fallback Logo */}
-      <div
-        className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 hidden`}
-      >
-        <div className={`${sizes.image} text-white font-bold text-center leading-none`}>✓</div>
-      </div>
+      {logoError && (
+        <div
+          className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}
+        >
+          <div className={`${sizes.image} text-white font-bold text-center leading-none`}>✓</div>
+        </div>
+      )}
 
       {/* Logo Text */}
       {showText && (
