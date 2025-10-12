@@ -7,32 +7,39 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
+  const [imageError, setImageError] = useState(false);
+
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
         return {
           container: 'w-6 h-6',
           text: 'text-sm',
+          image: 'w-6 h-6',
         };
       case 'md':
         return {
           container: 'w-8 h-8',
           text: 'text-base',
+          image: 'w-8 h-8',
         };
       case 'lg':
         return {
           container: 'w-12 h-12',
           text: 'text-xl',
+          image: 'w-12 h-12',
         };
       case 'xl':
         return {
           container: 'w-16 h-16',
           text: 'text-2xl',
+          image: 'w-16 h-16',
         };
       default:
         return {
           container: 'w-8 h-8',
           text: 'text-base',
+          image: 'w-8 h-8',
         };
     }
   };
@@ -41,12 +48,22 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Logo Icon */}
-      <div
-        className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}
-      >
-        <div className={`${sizes.container} text-white font-bold text-center leading-none`}>😊</div>
-      </div>
+      {/* Logo Image */}
+      {!imageError ? (
+        <img
+          src="/logo.png"
+          alt="Mood Log App Logo"
+          className={`${sizes.image} rounded-lg flex-shrink-0`}
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        /* Fallback Logo */
+        <div
+          className={`${sizes.container} bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}
+        >
+          <div className={`${sizes.image} text-white font-bold text-center leading-none`}>😊</div>
+        </div>
+      )}
 
       {/* Logo Text */}
       {showText && (
