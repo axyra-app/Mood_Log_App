@@ -17,6 +17,7 @@ import ChatSelection from './pages/ChatSelection';
 import CompleteProfile from './pages/CompleteProfile';
 import CreateAppointment from './pages/CreateAppointment';
 import DashboardPsychologist from './pages/DashboardPsychologist';
+import EditProfile from './pages/EditProfile';
 import DashboardSimple from './pages/DashboardSimple';
 import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
@@ -160,6 +161,14 @@ function App() {
                 element={
                   <ProtectedRouteBoth>
                     <Settings />
+                  </ProtectedRouteBoth>
+                }
+              />
+              <Route
+                path='/edit-profile'
+                element={
+                  <ProtectedRouteBoth>
+                    <EditProfile />
                   </ProtectedRouteBoth>
                 }
               />

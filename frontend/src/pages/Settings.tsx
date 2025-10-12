@@ -463,87 +463,21 @@ const Settings: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between">
               <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  value={profileData.displayName}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, displayName: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                  }`}
-                />
+                <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Editar Perfil Completo
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Modifica tu nombre, información de contacto, biografía y más
+                </p>
               </div>
-
-              <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  value={profileData.phone}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Ubicación
-                </label>
-                <input
-                  type="text"
-                  value={profileData.location}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                  }`}
-                />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                Biografía
-              </label>
-              <textarea
-                value={profileData.bio}
-                onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                  isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                }`}
-                placeholder="Cuéntanos un poco sobre ti..."
-              />
-            </div>
-
-            <div className="mt-6">
               <button
-                onClick={saveProfile}
-                disabled={loading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                onClick={() => navigate('/edit-profile')}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
-                <Save className="w-4 h-4" />
-                <span>Guardar Perfil</span>
+                <User className="w-4 h-4" />
+                <span>Editar Perfil</span>
               </button>
             </div>
           </div>
