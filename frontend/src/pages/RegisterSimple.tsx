@@ -45,20 +45,11 @@ const RegisterSimple: React.FC = () => {
         return; // No redirigir si ya estamos en otra página
       }
 
-      // Para usuarios recién registrados, siempre ir a complete-profile
-      // Esto incluye usuarios nuevos de Google y usuarios manuales
-      const isNewUser = user.displayName === user.email?.split('@')[0] && user.role === 'user';
-      
-      if (isNewUser) {
-        // Redirigir a completar perfil
-        navigate('/complete-profile');
+      // Redirigir según el rol del usuario
+      if (user.role === 'psychologist') {
+        navigate('/dashboard-psychologist');
       } else {
-        // Redirigir según el rol del usuario
-        if (user.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
       }
     }
   }, [user, navigate]);
@@ -180,9 +171,9 @@ const RegisterSimple: React.FC = () => {
             }
           : undefined;
 
-      await signUp(formData.email, formData.password, 'user', undefined);
+      await signUp(formData.email, formData.password, formData.role, professionalData);
 
-      toast.success('¡Cuenta creada! Completa tu perfil para continuar');
+      toast.success(`¡Cuenta creada! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
 
       // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
@@ -276,6 +267,50 @@ const RegisterSimple: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className='space-y-6'>
+                <div>
+                  <label
+                    className={`block text-sm font-bold mb-3 transition-colors duration-500 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}
+                  >
+                    TIPO DE CUENTA
+                  </label>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <button
+                      type='button'
+                      onClick={() => setFormData((prev) => ({ ...prev, role: 'user' }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        formData.role === 'user'
+                          ? isDarkMode
+                            ? 'border-purple-500 bg-purple-500/20 text-purple-400'
+                            : 'border-purple-500 bg-purple-50 text-purple-600'
+                          : isDarkMode
+                          ? 'border-gray-600 text-gray-400 hover:border-gray-500'
+                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className='text-2xl mb-2'>👤</div>
+                      <div className='font-bold text-sm'>USUARIO</div>
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => setFormData((prev) => ({ ...prev, role: 'psychologist' }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        formData.role === 'psychologist'
+                          ? isDarkMode
+                            ? 'border-purple-500 bg-purple-500/20 text-purple-400'
+                            : 'border-purple-500 bg-purple-50 text-purple-600'
+                          : isDarkMode
+                          ? 'border-gray-600 text-gray-400 hover:border-gray-500'
+                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className='text-2xl mb-2'>🧠</div>
+                      <div className='font-bold text-sm'>PSICÓLOGO</div>
+                    </button>
+                  </div>
+                </div>
+
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label
