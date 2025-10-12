@@ -78,13 +78,6 @@ const ForgotPassword: React.FC = () => {
               <div className='flex items-center justify-between'>
                 <Link to='/' className='flex items-center space-x-3 group'>
                   <Logo size='lg' />
-                  <span
-                    className={`text-3xl font-black transition-colors duration-500 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    MOOD LOG
-                  </span>
                 </Link>
 
                 <div className='flex items-center space-x-4'>
@@ -270,13 +263,6 @@ const ForgotPassword: React.FC = () => {
             <div className='flex items-center justify-between'>
               <Link to='/' className='flex items-center space-x-3 group'>
                 <Logo size='lg' />
-                <span
-                  className={`text-3xl font-black transition-colors duration-500 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  MOOD LOG
-                </span>
               </Link>
 
               <div className='flex items-center space-x-4'>
@@ -461,7 +447,7 @@ const ForgotPassword: React.FC = () => {
                     }`}
                   >
                     <p className='font-black'>📧 Email de soporte:</p>
-                    <p className='text-purple-600 font-bold'>support@moodlogapp.com</p>
+                    <p className='text-purple-600 font-bold'>moodloga@gmail.com</p>
                   </div>
                 </div>
               </div>

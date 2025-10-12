@@ -208,7 +208,9 @@ const DashboardSimple: React.FC = () => {
                 </p>
               </div>
               <div className='w-8 h-8 flex items-center justify-center'>
-                <Logo size='lg' />
+                <div className={`w-6 h-6 rounded-full ${isDarkMode ? 'bg-purple-500' : 'bg-purple-100'} flex items-center justify-center`}>
+                  <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-purple-600'}`}>📊</span>
+                </div>
               </div>
             </div>
           </div>

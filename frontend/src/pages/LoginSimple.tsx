@@ -123,13 +123,6 @@ const LoginSimple: React.FC = () => {
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
           <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
             <Logo size="lg" />
-            <span
-              className={`text-lg sm:text-xl lg:text-2xl font-black transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              MOOD LOG
-            </span>
           </Link>
 
           <button

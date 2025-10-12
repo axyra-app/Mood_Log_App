@@ -187,16 +187,12 @@ const RegisterSimple: React.FC = () => {
             }
           : undefined;
 
-      await signUp(formData.email, formData.password, formData.role, professionalData);
+      await signUp(formData.email, formData.password, 'user', undefined);
 
-      toast.success(`¡Cuenta creada! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
+      toast.success('¡Cuenta creada! Completa tu perfil para continuar');
 
       setTimeout(() => {
-        if (formData.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/complete-profile');
       }, 1500);
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -263,50 +259,6 @@ const RegisterSimple: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className='space-y-6'>
-                <div>
-                  <label
-                    className={`block text-sm font-bold mb-3 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
-                    TIPO DE CUENTA
-                  </label>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <button
-                      type='button'
-                      onClick={() => setFormData((prev) => ({ ...prev, role: 'user' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        formData.role === 'user'
-                          ? isDarkMode
-                            ? 'border-purple-500 bg-purple-500/20 text-purple-400'
-                            : 'border-purple-500 bg-purple-50 text-purple-600'
-                          : isDarkMode
-                          ? 'border-gray-600 text-gray-400 hover:border-gray-500'
-                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
-                      <div className='text-2xl mb-2'>👤</div>
-                      <div className='font-bold text-sm'>USUARIO</div>
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => setFormData((prev) => ({ ...prev, role: 'psychologist' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        formData.role === 'psychologist'
-                          ? isDarkMode
-                            ? 'border-purple-500 bg-purple-500/20 text-purple-400'
-                            : 'border-purple-500 bg-purple-50 text-purple-600'
-                          : isDarkMode
-                          ? 'border-gray-600 text-gray-400 hover:border-gray-500'
-                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
-                      <div className='text-2xl mb-2'>🧠</div>
-                      <div className='font-bold text-sm'>PSICÓLOGO</div>
-                    </button>
-                  </div>
-                </div>
-
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label
