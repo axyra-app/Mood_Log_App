@@ -49,10 +49,10 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   // URLs alternativas para probar
   const logoUrls = [
+    'https://postimg.cc/0KfXKknj',
+    'https://i.postimg.cc/0KfXKknj/Logo-Mood-log-app.png',
     'https://postimg.cc/5HYdCCDB',
     'https://i.postimg.cc/5HYdCCDB/Logo-Mood-log-app.png',
-    'https://imgur.com/ZUuTjJT.png',
-    'https://i.imgur.com/ZUuTjJT.png',
   ];
 
   const handleImageError = () => {
