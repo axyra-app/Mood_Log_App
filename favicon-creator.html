@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Creator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        button { background: #8B5CF6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Crear Favicon desde tu Logo</h2>
+    
+    <div>
+        <h3>16x16</h3>
+        <canvas id="c16" width="16" height="16"></canvas>
+        <button onclick="download('c16', 'favicon-16x16.png')">Descargar 16x16</button>
+    </div>
+    
+    <div>
+        <h3>32x32</h3>
+        <canvas id="c32" width="32" height="32"></canvas>
+        <button onclick="download('c32', 'favicon-32x32.png')">Descargar 32x32</button>
+    </div>
+    
+    <div>
+        <h3>180x180 (Apple)</h3>
+        <canvas id="c180" width="180" height="180"></canvas>
+        <button onclick="download('c180', 'apple-touch-icon.png')">Descargar 180x180</button>
+    </div>
+
+    <script>
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        
+        img.onload = function() {
+            drawAll();
+        };
+        
+        img.onerror = function() {
+            console.log('Error cargando imagen, usando fallback');
+            drawFallback();
+        };
+        
+        img.src = 'https://postimg.cc/5HYdCCDB';
+
+        function drawAll() {
+            drawCanvas('c16', 16);
+            drawCanvas('c32', 32);
+            drawCanvas('c180', 180);
+        }
+
+        function drawFallback() {
+            drawCanvas('c16', 16);
+            drawCanvas('c32', 32);
+            drawCanvas('c180', 180);
+        }
+
+        function drawCanvas(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, size, size);
+            
+            if (img.complete && img.naturalWidth !== 0) {
+                ctx.drawImage(img, 0, 0, size, size);
+            } else {
+                // Fallback
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#8B5CF6');
+                gradient.addColorStop(1, '#EC4899');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size * 0.4}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('✓', size / 2, size / 2);
+            }
+        }
+
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Auto-generate after 1 second
+        setTimeout(() => {
+            if (img.complete) {
+                drawAll();
+            } else {
+                drawFallback();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
