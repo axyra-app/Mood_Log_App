@@ -35,17 +35,68 @@ export const storage = getStorage(app);
 // Initialize Analytics (only in browser environment)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-// Función para subir archivos
+// Función para subir archivos con retry y mejor manejo de errores
 export const uploadFile = async (file: File, path: string): Promise<string> => {
-  try {
-    const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    throw new Error('Error al subir el archivo');
+  const maxRetries = 3;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`📤 Upload attempt ${retryCount + 1}/${maxRetries}:`, { 
+        fileName: file.name, 
+        path, 
+        size: file.size,
+        type: file.type 
+      });
+      
+      const storageRef = ref(storage, path);
+      
+      // Configurar metadata específica para evitar problemas de CORS
+      const metadata = {
+        contentType: file.type || 'application/octet-stream',
+        cacheControl: 'public, max-age=31536000',
+        customMetadata: {
+          uploadedAt: new Date().toISOString(),
+          originalName: file.name,
+        },
+      };
+      
+      console.log('📤 Uploading with metadata:', metadata);
+      
+      const snapshot = await uploadBytes(storageRef, file, metadata);
+      console.log('✅ Upload successful:', snapshot);
+      
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('🔗 Download URL generated:', downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Upload attempt ${retryCount} failed:`, error);
+      
+      if (retryCount >= maxRetries) {
+        console.error('❌ All upload attempts failed');
+        console.error('❌ Final error details:', {
+          code: (error as any)?.code,
+          message: (error as any)?.message,
+          serverResponse: (error as any)?.serverResponse,
+          name: (error as any)?.name,
+        });
+        
+        // Si es un error de CORS, sugerir solución alternativa
+        if ((error as any)?.message?.includes('CORS') || (error as any)?.code === 'storage/unauthorized') {
+          throw new Error('Error de CORS: La configuración de Firebase Storage necesita ser actualizada. Contacta al administrador.');
+        }
+        
+        throw new Error(`Error al subir el archivo después de ${maxRetries} intentos: ${(error as any)?.message || 'Error desconocido'}`);
+      }
+      
+      // Esperar antes del siguiente intento
+      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+    }
   }
+  
+  throw new Error('Error inesperado en la subida de archivos');
 };
 
 export default app;
