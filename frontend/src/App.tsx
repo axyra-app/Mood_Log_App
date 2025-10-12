@@ -6,7 +6,6 @@ import { AuthProvider } from './contexts/AuthContext';
 // Components
 import AdvancedReports from './components/AdvancedReports';
 import ErrorBoundary from './components/ErrorBoundary';
-import FaviconUpdater from './components/FaviconUpdater';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRouteBoth from './components/ProtectedRouteBoth';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
@@ -39,7 +38,6 @@ function App() {
       <AuthProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <div className='App'>
-            <FaviconUpdater />
             <Routes>
               {/* Public routes */}
               <Route path='/' element={<Home />} />
