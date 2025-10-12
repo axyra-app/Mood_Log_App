@@ -1,6 +1,8 @@
 {
   "projects": {
-    "axyra-48238": "axyra-48238"
+    "axyra-48238": "axyra-48238",
+    "mood log app": "mood-log-app-01",
+    "default": "mood-log-app-01"
   },
   "targets": {},
   "etags": {}

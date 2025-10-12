@@ -103,7 +103,10 @@ const CompleteProfile: React.FC = () => {
     try {
       setLoading(true);
 
+      // TEMPORALMENTE DESHABILITADO: Subida de archivos CV
+      // TODO: Habilitar cuando Firebase Storage esté configurado correctamente
       let cvUrl = '';
+      /*
       if (formData.role === 'psychologist' && formData.cvFile) {
         setUploadingFile(true);
         try {
@@ -117,6 +120,7 @@ const CompleteProfile: React.FC = () => {
           setUploadingFile(false);
         }
       }
+      */
 
       const updateData: any = {
         displayName: formData.displayName,
@@ -458,8 +462,21 @@ const CompleteProfile: React.FC = () => {
                       <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
-                        Hoja de vida (PDF) - Opcional
+                        Hoja de vida (PDF) - Temporalmente deshabilitado
                       </label>
+                      <div className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                        isDarkMode
+                          ? 'border-gray-600 bg-gray-800 text-gray-400'
+                          : 'border-gray-300 bg-gray-100 text-gray-500'
+                      }`}>
+                        📁 Subida de archivos temporalmente deshabilitada
+                      </div>
+                      <p className={`text-sm mt-1 transition-colors duration-500 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        La funcionalidad de subida de archivos estará disponible próximamente.
+                      </p>
+                      {/* TEMPORALMENTE DESHABILITADO
                       <input
                         type='file'
                         name='cvFile'
@@ -476,6 +493,7 @@ const CompleteProfile: React.FC = () => {
                       }`}>
                         Máximo 5MB. Formatos permitidos: PDF
                       </p>
+                      */}
                     </div>
                   </>
                 )}
