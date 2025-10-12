@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 console.error('Error creando perfil básico:', error);
               }
 
-              // Crear usuario básico para el estado
+              // Crear usuario básico para el estado - siempre necesita completar perfil
               const userDataWithAuth: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,

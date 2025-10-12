@@ -221,6 +221,42 @@ const RegisterSimple: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+      {/* Header */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-500 ${
+          isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
+        } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+      >
+        <div className='max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4'>
+          <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
+            <Logo size="lg" />
+          </Link>
+
+          <div className='flex items-center space-x-3 sm:space-x-4'>
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 sm:p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
+                isDarkMode
+                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            <Link
+              to='/login'
+              className={`font-bold text-sm uppercase tracking-wider py-2 px-4 sm:py-3 sm:px-6 rounded-xl transition-all duration-500 hover:scale-105 ${
+                isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <span className='hidden sm:inline'>Iniciar Sesión</span>
+              <span className='sm:hidden'>Entrar</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <div className='min-h-screen flex items-center justify-center p-4'>
         <div className='w-full max-w-2xl'>
           <div
@@ -230,17 +266,6 @@ const RegisterSimple: React.FC = () => {
           >
             <div className='p-8'>
               <div className='text-center mb-8'>
-                <button
-                  onClick={toggleDarkMode}
-                  className={`mb-4 p-2 rounded-full transition-colors duration-300 ${
-                    isDarkMode
-                      ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                      : 'bg-white/20 text-yellow-300 hover:bg-white/30'
-                  }`}
-                >
-                  {isDarkMode ? '☀️' : '🌙'}
-                </button>
-
                 <Logo className='mx-auto mb-6' />
                 <h1
                   className={`text-3xl font-bold mb-2 transition-colors duration-500 ${
