@@ -51,7 +51,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
       {/* Logo Image */}
       {!imageError ? (
         <img
-          src="/logo.png"
+          src="/Logo_Mood_log_app.png"
           alt="Mood Log App Logo"
           className={`${sizes.image} rounded-lg flex-shrink-0`}
           onError={() => setImageError(true)}
