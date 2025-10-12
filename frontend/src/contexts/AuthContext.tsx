@@ -358,7 +358,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // El perfil se creará automáticamente en onAuthStateChanged
       } else {
         console.log('✅ Usuario existente inició sesión con Google');
-        // El usuario existente será manejado en onAuthStateChanged
+        // Verificar si realmente existe en Firestore
+        try {
+          const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+          if (!userDoc.exists()) {
+            console.log('⚠️ Usuario de Firebase Auth existe pero no en Firestore, creando perfil básico');
+            // Crear perfil básico para usuario que existe en Auth pero no en Firestore
+            const basicUserData = {
+              email: result.user.email,
+              displayName: result.user.displayName || result.user.email?.split('@')[0],
+              username: result.user.email?.split('@')[0],
+              role: 'user',
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            };
+            await setDoc(doc(db, 'users', result.user.uid), basicUserData);
+            console.log('✅ Perfil básico creado para usuario existente');
+          }
+        } catch (error) {
+          console.error('Error verificando usuario existente:', error);
+        }
       }
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged

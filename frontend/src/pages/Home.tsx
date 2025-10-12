@@ -161,7 +161,6 @@ const Home: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <Logo size="sm" />
-              <span className="text-gray-900 font-semibold text-sm sm:text-base">MOOD LOG</span>
             </div>
             <div className="flex space-x-4 sm:space-x-6">
               <Link to="/terms" className="text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base">
