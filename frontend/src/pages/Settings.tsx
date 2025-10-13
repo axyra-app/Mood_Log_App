@@ -197,7 +197,18 @@ const Settings: React.FC = () => {
 
     setLoading(true);
     try {
-      // Reautenticar usuario
+      // Verificar si el usuario se registró con Google
+      const providerData = user?.providerData || [];
+      const isGoogleUser = providerData.some(provider => provider.providerId === 'google.com');
+      
+      if (isGoogleUser) {
+        // Para usuarios de Google, no podemos cambiar la contraseña directamente
+        // porque Google maneja la autenticación
+        toast.error('No puedes cambiar la contraseña porque te registraste con Google. Tu contraseña se gestiona a través de tu cuenta de Google.');
+        return;
+      }
+
+      // Reautenticar usuario con email/contraseña
       const credential = EmailAuthProvider.credential(
         user?.email || '',
         passwordData.currentPassword
@@ -219,6 +230,8 @@ const Settings: React.FC = () => {
         toast.error('La contraseña actual es incorrecta');
       } else if (error.code === 'auth/weak-password') {
         toast.error('La nueva contraseña es muy débil');
+      } else if (error.code === 'auth/requires-recent-login') {
+        toast.error('Por seguridad, necesitas iniciar sesión nuevamente antes de cambiar la contraseña');
       } else {
         toast.error('Error al cambiar la contraseña');
       }
@@ -498,6 +511,32 @@ const Settings: React.FC = () => {
               </div>
             </div>
 
+            {/* Información para usuarios de Google */}
+            {user?.providerData?.some(provider => provider.providerId === 'google.com') && (
+              <div className={`p-4 rounded-lg border-l-4 border-blue-500 ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} mb-6`}>
+                <div className="flex items-start space-x-3">
+                  <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+                  <div>
+                    <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                      Usuario de Google
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-blue-200' : 'text-blue-700'} mt-1`}>
+                      Te registraste con Google, por lo que tu contraseña se gestiona a través de tu cuenta de Google. 
+                      Para cambiar tu contraseña, ve a{' '}
+                      <a 
+                        href="https://myaccount.google.com/security" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="underline hover:no-underline"
+                      >
+                        Configuración de seguridad de Google
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
@@ -508,13 +547,15 @@ const Settings: React.FC = () => {
                     type={showPasswords.current ? 'text' : 'password'}
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    disabled={user?.providerData?.some(provider => provider.providerId === 'google.com')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
+                    } ${user?.providerData?.some(provider => provider.providerId === 'google.com') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                    disabled={user?.providerData?.some(provider => provider.providerId === 'google.com')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   >
                     {showPasswords.current ? (
@@ -535,13 +576,15 @@ const Settings: React.FC = () => {
                     type={showPasswords.new ? 'text' : 'password'}
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    disabled={user?.providerData?.some(provider => provider.providerId === 'google.com')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
+                    } ${user?.providerData?.some(provider => provider.providerId === 'google.com') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                    disabled={user?.providerData?.some(provider => provider.providerId === 'google.com')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   >
                     {showPasswords.new ? (
@@ -562,13 +605,15 @@ const Settings: React.FC = () => {
                     type={showPasswords.confirm ? 'text' : 'password'}
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    disabled={user?.providerData?.some(provider => provider.providerId === 'google.com')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
+                    } ${user?.providerData?.some(provider => provider.providerId === 'google.com') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                    disabled={user?.providerData?.some(provider => provider.providerId === 'google.com')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   >
                     {showPasswords.confirm ? (
@@ -584,7 +629,7 @@ const Settings: React.FC = () => {
             <div className="mt-6">
               <button
                 onClick={changePassword}
-                disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || user?.providerData?.some(provider => provider.providerId === 'google.com')}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
               >
                 <Lock className="w-4 h-4" />
