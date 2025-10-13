@@ -12,11 +12,13 @@ Esta aplicación está configurada para funcionar en múltiples plataformas usan
 ## 🚀 Construcción Rápida
 
 ### Windows
+
 ```bash
 build-multiplatform.bat
 ```
 
 ### Linux/macOS
+
 ```bash
 ./build-multiplatform.sh
 ```
@@ -24,11 +26,13 @@ build-multiplatform.bat
 ## 📱 Android
 
 ### Requisitos
+
 - Java 11 o superior
 - Android Studio (recomendado)
 - Android SDK
 
 ### Construir APK
+
 ```bash
 # Construir proyecto web
 npm run build
@@ -44,6 +48,7 @@ cd android
 El APK se generará en: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ### Abrir en Android Studio
+
 ```bash
 npx cap open android
 ```
@@ -51,11 +56,13 @@ npx cap open android
 ## 🍎 iOS
 
 ### Requisitos
+
 - macOS
 - Xcode
 - CocoaPods
 
 ### Construir para iOS
+
 ```bash
 # Construir proyecto web
 npm run build
@@ -70,11 +77,13 @@ npx cap open ios
 ## 🌐 Web
 
 ### Desarrollo
+
 ```bash
 npm run dev
 ```
 
 ### Producción
+
 ```bash
 npm run build
 ```
@@ -103,6 +112,7 @@ frontend/
 ## 🔧 Configuración
 
 ### Capacitor Config (`capacitor.config.ts`)
+
 ```typescript
 import { CapacitorConfig } from '@capacitor/cli';
 
@@ -111,8 +121,8 @@ const config: CapacitorConfig = {
   appName: 'Mood Log App',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
-  }
+    androidScheme: 'https',
+  },
 };
 
 export default config;
@@ -152,15 +162,18 @@ npx cap run ios
 ## 🚀 Despliegue
 
 ### Web
+
 - ✅ **Vercel**: Despliegue automático desde GitHub
 - ✅ **Firebase Hosting**: `firebase deploy --only hosting`
 
 ### Android
+
 1. Construir APK: `cd android && ./gradlew assembleDebug`
 2. Firmar APK para producción
 3. Subir a Google Play Store
 
 ### iOS
+
 1. Abrir en Xcode: `npx cap open ios`
 2. Configurar certificados de desarrollo
 3. Construir y subir a App Store Connect
@@ -168,12 +181,14 @@ npx cap run ios
 ## 🔍 Debugging
 
 ### Android
+
 ```bash
 # Ver logs en tiempo real
 adb logcat | grep "Mood Log"
 ```
 
 ### iOS
+
 ```bash
 # Ver logs en Xcode
 # Window > Devices and Simulators > View Device Logs

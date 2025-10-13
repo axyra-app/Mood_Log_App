@@ -4,4 +4,6 @@
     <string name="title_activity_main">Mood Log App</string>
     <string name="package_name">com.moodlog.app</string>
     <string name="custom_url_scheme">com.moodlog.app</string>
+    <string name="app_description">Tu compañero personal para el seguimiento del estado de ánimo con inteligencia artificial</string>
+    <string name="app_short_description">Seguimiento del estado de ánimo con IA</string>
 </resources>

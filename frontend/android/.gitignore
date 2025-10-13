@@ -57,6 +57,12 @@ captures/
 #*.jks
 #*.keystore
 
+# Archivos de firma para producción
+keystore.properties
+app/keystore/
+*.keystore
+*.jks
+
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 .cxx/
