@@ -38,6 +38,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  profileLoaded: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, role?: 'user' | 'psychologist', professionalData?: any) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -63,6 +64,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [forceLoadingFalse, setForceLoadingFalse] = useState(false);
 
   // Timeout de seguridad para forzar loading = false
@@ -128,10 +130,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   username: firebaseUser.email?.split('@')[0],
                   role: userData.role || 'user',
                 };
-                if (isMounted) setUser(basicUserData);
+                if (isMounted) {
+                  setUser(basicUserData);
+                  setProfileLoaded(true);
+                }
               } else {
                 console.log('✅ Usuario con perfil completo');
-                if (isMounted) setUser(userDataWithAuth);
+                if (isMounted) {
+                  setUser(userDataWithAuth);
+                  setProfileLoaded(true);
+                }
               }
             } else {
               // Si no existe el documento, crear uno básico para usuarios de Google
@@ -160,7 +168,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 username: firebaseUser.email?.split('@')[0],
                 role: 'user',
               };
-              if (isMounted) setUser(userDataWithAuth);
+              if (isMounted) {
+                setUser(userDataWithAuth);
+                setProfileLoaded(true);
+              }
             }
           } catch (error) {
             console.error('Error loading user profile:', error);
@@ -171,11 +182,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               displayName: firebaseUser.displayName,
               role: 'user',
             };
-            if (isMounted) setUser(userData);
+            if (isMounted) {
+              setUser(userData);
+              setProfileLoaded(true);
+            }
           }
         } else {
           // Usuario no autenticado
-          if (isMounted) setUser(null);
+          if (isMounted) {
+            setUser(null);
+            setProfileLoaded(false);
+          }
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
@@ -515,6 +532,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         console.log('✅ Estado del usuario refrescado:', userDataWithAuth);
         setUser(userDataWithAuth);
+        setProfileLoaded(true);
       }
     } catch (error) {
       console.error('❌ Error refreshing user state:', error);
@@ -527,6 +545,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     loading: effectiveLoading,
+    profileLoaded,
     signIn,
     signUp,
     signInWithGoogle,

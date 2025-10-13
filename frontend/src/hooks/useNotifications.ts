@@ -28,13 +28,13 @@ export interface Notification {
 }
 
 export const useNotifications = (userId: string, userRole: 'user' | 'psychologist') => {
-  const { user } = useAuth();
+  const { user, profileLoaded } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userId || !user) {
+    if (!userId || !user || !profileLoaded) {
       setLoading(false);
       return;
     }
@@ -45,7 +45,8 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
       userFirstName: user?.firstName,
       userLastName: user?.lastName,
       needsProfileCompletion: !user?.firstName || !user?.lastName,
-      userLoaded: !!user
+      userLoaded: !!user,
+      profileLoaded
     });
 
     // Query diferente según el rol del usuario
@@ -128,7 +129,7 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     );
 
     return () => unsubscribe();
-  }, [userId, userRole, user]);
+  }, [userId, userRole, user, profileLoaded]);
 
   const markAsRead = async (notificationId: string) => {
     try {
