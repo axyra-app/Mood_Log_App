@@ -49,14 +49,17 @@ export const usePsychologistAppointments = (psychologistId: string) => {
               );
               const userSnapshot = await getDocs(userQuery);
               const userData = userSnapshot.empty ? 
-                { displayName: 'Usuario', email: 'usuario@ejemplo.com' } : 
+                null : 
                 userSnapshot.docs[0].data();
+              
+              // Si no hay datos de usuario, omitir esta cita
+              if (!userData) return null;
               
               return {
                 id: doc.id,
                 userId: data.userId,
                 userName: userData.displayName || 'Usuario',
-                userEmail: userData.email || 'usuario@ejemplo.com',
+                userEmail: userData.email || '',
                 psychologistId: data.psychologistId,
                 appointmentDate: data.appointmentDate?.toDate(),
                 duration: data.duration || 60,
@@ -70,7 +73,7 @@ export const usePsychologistAppointments = (psychologistId: string) => {
             })
           );
           
-          setAppointments(appointmentsData);
+          setAppointments(appointmentsData.filter(appointment => appointment !== null));
           setError(null);
         } catch (err) {
           console.error('Error processing appointments:', err);

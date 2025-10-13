@@ -1,475 +1,422 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Save, User, Mail, Phone, MapPin, FileText, Camera } from 'lucide-react';
-import Logo from '../components/Logo';
+import { User, Mail, Phone, MapPin, BookOpen, Briefcase, Award, FileText, Image, ArrowLeft, Save } from 'lucide-react';
+import LoadingSpinner from '../components/LoadingSpinner';
+import CountrySelector from '../components/CountrySelector';
+import { countries } from '../utils/countries';
+
+interface ProfileData {
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  // Psychologist specific fields
+  professionalTitle?: string;
+  specialization?: string;
+  yearsOfExperience?: string;
+  licenseNumber?: string;
+  cvUrl?: string;
+  profilePhotoUrl?: string;
+}
 
 const EditProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData>({
+    displayName: '',
     firstName: '',
     lastName: '',
-    displayName: '',
     email: '',
     phone: '',
     location: '',
     bio: '',
-    professionalTitle: '',
-    specialization: '',
-    yearsOfExperience: '',
-    licenseNumber: '',
   });
+  const [userRole, setUserRole] = useState<'user' | 'psychologist'>('user');
+  const [selectedCountry, setSelectedCountry] = useState(countries.find(c => c.name === 'Colombia') || countries[0]);
 
   useEffect(() => {
-    setIsLoaded(true);
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      loadUserData();
-    }
-  }, [user]);
-
-  const loadUserData = async () => {
-    if (!user) return;
-
-    try {
-      // Intentar obtener datos del usuario
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setFormData({
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          displayName: userData.displayName || '',
-          email: userData.email || user.email || '',
-          phone: userData.phone || '',
-          location: userData.location || '',
-          bio: userData.bio || '',
-          professionalTitle: userData.professionalTitle || '',
-          specialization: userData.specialization || '',
-          yearsOfExperience: userData.yearsOfExperience?.toString() || '',
-          licenseNumber: userData.licenseNumber || '',
-        });
-      } else {
-        // Si no existe en users, verificar si es psicólogo
-        const psychologistDoc = await getDoc(doc(db, 'psychologists', user.uid));
-        if (psychologistDoc.exists()) {
-          const psychologistData = psychologistDoc.data();
-          setFormData({
-            firstName: psychologistData.firstName || '',
-            lastName: psychologistData.lastName || '',
-            displayName: psychologistData.displayName || '',
-            email: psychologistData.email || user.email || '',
-            phone: psychologistData.phone || '',
-            location: psychologistData.location || '',
-            bio: psychologistData.bio || '',
-            professionalTitle: psychologistData.professionalTitle || '',
-            specialization: psychologistData.specialization || '',
-            yearsOfExperience: psychologistData.yearsOfExperience?.toString() || '',
-            licenseNumber: psychologistData.licenseNumber || '',
-          });
-        }
+    const loadUserData = async () => {
+      if (!user) {
+        setLoading(false);
+        navigate('/login');
+        return;
       }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      toast.error('Error al cargar los datos del usuario');
-    }
-  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUserRole('user');
+          const userData = userDoc.data();
+          setProfileData({
+            displayName: userData.displayName || user.displayName || '',
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || user.email || '',
+            phone: userData.phone || '',
+            location: userData.location || '',
+            bio: userData.bio || '',
+            profilePhotoUrl: userData.profilePhotoUrl || '',
+          });
+          const countryFromPhone = countries.find(c => userData.phone?.startsWith(c.phoneCode));
+          if (countryFromPhone) setSelectedCountry(countryFromPhone);
+        } else {
+          const psychologistDoc = await getDoc(doc(db, 'psychologists', user.uid));
+          if (psychologistDoc.exists()) {
+            setUserRole('psychologist');
+            const psychologistData = psychologistDoc.data();
+            setProfileData({
+              displayName: psychologistData.name || user.displayName || '',
+              firstName: psychologistData.firstName || '',
+              lastName: psychologistData.lastName || '',
+              email: psychologistData.email || user.email || '',
+              phone: psychologistData.phone || '',
+              location: psychologistData.location || '',
+              bio: psychologistData.bio || '',
+              professionalTitle: psychologistData.professionalTitle || '',
+              specialization: psychologistData.specialization || '',
+              yearsOfExperience: psychologistData.yearsOfExperience || '',
+              licenseNumber: psychologistData.licenseNumber || '',
+              cvUrl: psychologistData.cvUrl || '',
+              profilePhotoUrl: psychologistData.profilePhotoUrl || '',
+            });
+            const countryFromPhone = countries.find(c => psychologistData.phone?.startsWith(c.phoneCode));
+            if (countryFromPhone) setSelectedCountry(countryFromPhone);
+          } else {
+            toast.error('No se encontraron datos de perfil.');
+            navigate('/complete-profile');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        toast.error('Error al cargar los datos del perfil.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, navigate]);
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setProfileData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const rawPhone = e.target.value.replace(selectedCountry.phoneCode, '').trim();
+    setProfileData(prev => ({ ...prev, phone: rawPhone }));
+  };
+
+  const handleCountryChange = (country: any) => {
+    setSelectedCountry(country);
+    setProfileData(prev => ({ ...prev, location: country.name }));
+  };
+
+  const handleSaveProfile = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!user) {
+      toast.error('Usuario no autenticado.');
+      return;
+    }
+    setSaving(true);
 
     try {
-      const updateData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        displayName: formData.displayName,
-        email: formData.email,
-        phone: formData.phone,
-        location: formData.location,
-        bio: formData.bio,
+      const fullPhoneNumber = `${selectedCountry.phoneCode} ${profileData.phone}`;
+      const updates = {
+        ...profileData,
+        phone: fullPhoneNumber,
+        location: selectedCountry.name,
         updatedAt: serverTimestamp(),
       };
 
-      // Si es psicólogo, agregar campos profesionales
-      if (user?.role === 'psychologist') {
-        updateData.professionalTitle = formData.professionalTitle;
-        updateData.specialization = formData.specialization;
-        updateData.yearsOfExperience = parseInt(formData.yearsOfExperience) || 0;
-        updateData.licenseNumber = formData.licenseNumber;
+      if (userRole === 'user') {
+        await updateDoc(doc(db, 'users', user.uid), updates);
+      } else {
+        await updateDoc(doc(db, 'psychologists', user.uid), updates);
       }
 
-      await updateUserProfile(updateData);
-      toast.success('Perfil actualizado exitosamente');
+      // Also update AuthContext user state
+      await updateUserProfile({
+        displayName: profileData.displayName,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        phone: fullPhoneNumber,
+        location: selectedCountry.name,
+        bio: profileData.bio,
+      });
+
+      toast.success('Perfil actualizado exitosamente!');
       navigate('/settings');
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Error al actualizar el perfil');
+      console.error('Error saving profile:', error);
+      toast.error('Error al guardar el perfil. Inténtalo de nuevo.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    localStorage.setItem('theme', !isDarkMode ? 'dark' : 'light');
-  };
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-      </div>
-    );
+  if (loading) {
+    return <LoadingSpinner />;
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <header className={`border-b transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/settings')}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </button>
-              <Logo size="md" />
-              <div>
-                <h1 className={`text-xl font-bold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Editar Perfil
-                </h1>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Actualiza tu información personal
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-colors duration-300 ${
-                  isDarkMode
-                    ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-            </div>
-          </div>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} p-4 sm:p-6 lg:p-8`}>
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate('/settings')}
+            className={`flex items-center ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            <span>Volver a Configuración</span>
+          </button>
+          <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Editar Perfil
+          </h2>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className={`rounded-xl shadow-sm transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        } border p-6`}>
-          
-          {/* Profile Picture Section */}
-          <div className="flex items-center space-x-6 mb-8">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-            }`}>
-              <User className="w-12 h-12 text-gray-400" />
+        <form onSubmit={handleSaveProfile} className={`space-y-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 sm:p-8`}>
+          {/* Profile Photo Placeholder */}
+          <div className="flex flex-col items-center space-y-4 mb-6">
+            <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+              {profileData.profilePhotoUrl ? (
+                <img src={profileData.profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-12 h-12 text-gray-400" />
+              )}
             </div>
-            <div>
-              <h2 className={`text-xl font-semibold transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Foto de Perfil
-              </h2>
-              <p className={`text-sm transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Haz clic para cambiar tu foto de perfil
-              </p>
-              <button className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
-                <Camera className="w-4 h-4" />
-                <span>Cambiar Foto</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2"
+            >
+              <Image className="w-4 h-4" />
+              <span>Cambiar Foto de Perfil</span>
+            </button>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              (Funcionalidad de subida de imagen próximamente)
+            </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Information */}
+          {/* Personal Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Información Personal
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    <User className="w-4 h-4 inline mr-2" />
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    Apellido *
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  name="displayName"
-                  value={formData.displayName}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div>
-              <h3 className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Información de Contacto
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    <Mail className="w-4 h-4 inline mr-2" />
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    <Phone className="w-4 h-4 inline mr-2" />
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  <MapPin className="w-4 h-4 inline mr-2" />
-                  Ubicación
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Professional Information (for psychologists) */}
-            {user?.role === 'psychologist' && (
-              <div>
-                <h3 className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Información Profesional
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Título Profesional
-                    </label>
-                    <input
-                      type="text"
-                      name="professionalTitle"
-                      value={formData.professionalTitle}
-                      onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                      }`}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Especialización
-                    </label>
-                    <input
-                      type="text"
-                      name="specialization"
-                      value={formData.specialization}
-                      onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Años de Experiencia
-                    </label>
-                    <input
-                      type="number"
-                      name="yearsOfExperience"
-                      value={formData.yearsOfExperience}
-                      onChange={handleInputChange}
-                      min="0"
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                      }`}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Número de Licencia
-                    </label>
-                    <input
-                      type="text"
-                      name="licenseNumber"
-                      value={formData.licenseNumber}
-                      onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                        isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                      }`}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Bio */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-colors duration-500 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                <FileText className="w-4 h-4 inline mr-2" />
-                Biografía
+              <label htmlFor="firstName" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Nombre
               </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
+                value={profileData.firstName}
                 onChange={handleInputChange}
-                rows={4}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
                 }`}
-                placeholder="Cuéntanos sobre ti..."
+                required
               />
             </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end pt-6">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>{loading ? 'Guardando...' : 'Guardar Cambios'}</span>
-              </button>
+            <div>
+              <label htmlFor="lastName" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Apellido
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                value={profileData.lastName}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                }`}
+                required
+              />
             </div>
-          </form>
-        </div>
-      </main>
+            <div>
+              <label htmlFor="email" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={profileData.email}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                }`}
+                disabled
+              />
+            </div>
+            <div>
+              <label htmlFor="phone" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Teléfono
+              </label>
+              <div className="flex space-x-2">
+                <div className="w-32">
+                  <CountrySelector
+                    selectedCountry={selectedCountry}
+                    onCountryChange={handleCountryChange}
+                    isDarkMode={isDarkMode}
+                  />
+                </div>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={profileData.phone}
+                  onChange={handlePhoneChange}
+                  className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  }`}
+                  placeholder="300 123 4567"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="location" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Ubicación
+              </label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                value={selectedCountry.name}
+                readOnly
+                className={`w-full px-3 py-2 border rounded-lg ${
+                  isDarkMode ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-gray-100 border-gray-300 text-gray-600'
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label htmlFor="bio" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Biografía
+            </label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={profileData.bio}
+              onChange={handleInputChange}
+              rows={4}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+              }`}
+              placeholder="Cuéntanos un poco sobre ti..."
+            />
+          </div>
+
+          {/* Psychologist Specific Fields */}
+          {userRole === 'psychologist' && (
+            <div className="space-y-4 border-t pt-6">
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Información Profesional
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="professionalTitle" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Título Profesional
+                  </label>
+                  <input
+                    type="text"
+                    id="professionalTitle"
+                    name="professionalTitle"
+                    value={profileData.professionalTitle || ''}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                    placeholder="Psicólogo Clínico"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="specialization" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Especialización
+                  </label>
+                  <input
+                    type="text"
+                    id="specialization"
+                    name="specialization"
+                    value={profileData.specialization || ''}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                    placeholder="Terapia Cognitivo-Conductual"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="yearsOfExperience" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Años de Experiencia
+                  </label>
+                  <input
+                    type="number"
+                    id="yearsOfExperience"
+                    name="yearsOfExperience"
+                    value={profileData.yearsOfExperience || ''}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                    placeholder="5"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="licenseNumber" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Número de Licencia
+                  </label>
+                  <input
+                    type="text"
+                    id="licenseNumber"
+                    name="licenseNumber"
+                    value={profileData.licenseNumber || ''}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    }`}
+                    placeholder="PS-12345"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-6 border-t">
+            <button
+              type="submit"
+              disabled={saving}
+              className={`px-6 py-3 rounded-lg font-semibold text-white transition-colors flex items-center space-x-2 ${
+                saving ? 'bg-purple-400 cursor-not-allowed' : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+              }`}
+            >
+              {saving ? (
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <Save className="w-5 h-5" />
+              )}
+              <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

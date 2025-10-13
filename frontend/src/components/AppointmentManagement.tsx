@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserAppointments } from '../hooks/useUserAppointments';
+import CreateAppointmentModal from './CreateAppointmentModal';
 
 interface Appointment {
   id: string;
@@ -25,6 +26,7 @@ const AppointmentManagement: React.FC = () => {
   const { appointments, loading, updateAppointment, deleteAppointment } = useUserAppointments();
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'accepted' | 'completed' | 'cancelled' | 'expired'>('all');
   const [showHistory, setShowHistory] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Filtrar citas por estado
   const filteredAppointments = appointments.filter(appointment => {
@@ -161,8 +163,8 @@ const AppointmentManagement: React.FC = () => {
                 toast.error('Necesitas completar tu perfil antes de crear una cita');
                 return;
               }
-              // Navegar a página de creación de cita
-              navigate('/create-appointment');
+              // Abrir modal de creación de cita
+              setShowCreateModal(true);
             }}
             className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
           >
@@ -334,6 +336,16 @@ const AppointmentManagement: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Modal de Crear Cita */}
+      <CreateAppointmentModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onAppointmentCreated={() => {
+          // Aquí podrías refrescar la lista de citas si es necesario
+          console.log('Cita creada exitosamente');
+        }}
+      />
     </div>
   );
 };
