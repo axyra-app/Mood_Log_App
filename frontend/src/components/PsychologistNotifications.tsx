@@ -267,8 +267,8 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                   {notification.type === 'profile' && (
                     <button
                       onClick={() => {
-                        // Navegar a completar perfil
-                        window.location.href = '/complete-profile';
+                        // Navegar a editar perfil en lugar de completar perfil
+                        window.location.href = '/edit-profile';
                       }}
                       className="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors"
                     >

@@ -85,7 +85,9 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     // Manejar notificación de perfil incompleto
     if (notification.type === 'profile_incomplete') {
       setIsOpen(false);
-      navigate('/complete-profile');
+      // Redirigir a edit-profile en lugar de complete-profile
+      // porque el usuario ya tiene un perfil básico pero necesita completar información
+      navigate('/edit-profile');
       return;
     }
     
