@@ -200,14 +200,20 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
         </div>
         <div className="flex space-x-3">
           <button
-            onClick={() => setShowHistoryModal(true)}
+            onClick={() => {
+              console.log('🔍 Botón Ver Historial clickeado');
+              setShowHistoryModal(true);
+            }}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
           >
             <Eye className="w-4 h-4" />
             Ver Historial
           </button>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              console.log('🔍 Botón Nueva Historia clickeado');
+              setShowCreateModal(true);
+            }}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -345,7 +351,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
 
       {/* Modal Crear Historia Médica */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Nueva Historia Médica</h3>
             
@@ -661,7 +667,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
 
       {/* Modal Ver Historial Completo */}
       {showHistoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-semibold">Historial Completo de Reportes Médicos</h3>

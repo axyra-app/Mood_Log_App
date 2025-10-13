@@ -23,6 +23,8 @@ interface User {
   username?: string;
   createdAt?: any;
   updatedAt?: any;
+  firstName?: string;
+  lastName?: string;
   // Campos profesionales para psicólogos
   professionalTitle?: string;
   specialization?: string;
@@ -413,20 +415,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       if (!user) throw new Error('No user logged in');
 
+      console.log('🔍 Actualizando perfil con datos:', updates);
+
       // Actualizar en Firestore
       const userRef = doc(db, 'users', user.uid);
+      const updateData = {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      };
+      
+      console.log('🔍 Datos a guardar en Firestore:', updateData);
+      
       await setDoc(
         userRef,
-        {
-          ...updates,
-          updatedAt: serverTimestamp(),
-        },
+        updateData,
         { merge: true }
       );
+
+      console.log('✅ Perfil actualizado en Firestore');
 
       // Actualizar el estado local del usuario
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
+      
+      console.log('✅ Estado local del usuario actualizado:', updatedUser);
 
       // Si es psicólogo, también actualizar en la colección de psicólogos
       if (updates.role === 'psychologist' || user.role === 'psychologist') {
@@ -457,10 +469,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
+      // Forzar una recarga del estado del usuario para actualizar las verificaciones
+      await refreshUserState();
+
       // User profile updated
     } catch (error: any) {
-      console.error('Error updating user profile:', error);
+      console.error('❌ Error updating user profile:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
       throw new Error(getAuthErrorMessage(error));
+    }
+  };
+
+  const refreshUserState = async () => {
+    try {
+      if (!auth.currentUser) return;
+      
+      console.log('🔄 Refrescando estado del usuario...');
+      
+      // Obtener datos actualizados de Firestore
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const userDataWithAuth: User = {
+          uid: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          displayName: auth.currentUser.displayName,
+          role: userData.role || 'user',
+          username: userData.username,
+          createdAt: userData.createdAt,
+          updatedAt: userData.updatedAt,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          professionalTitle: userData.professionalTitle,
+          specialization: userData.specialization,
+          yearsOfExperience: userData.yearsOfExperience,
+          bio: userData.bio,
+          licenseNumber: userData.licenseNumber,
+          phone: userData.phone,
+          cvUrl: userData.cvUrl,
+        };
+        
+        console.log('✅ Estado del usuario refrescado:', userDataWithAuth);
+        setUser(userDataWithAuth);
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing user state:', error);
     }
   };
 
