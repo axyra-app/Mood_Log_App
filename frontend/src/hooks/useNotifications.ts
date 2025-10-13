@@ -34,7 +34,7 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || !user) {
       setLoading(false);
       return;
     }
@@ -44,7 +44,8 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
       userRole,
       userFirstName: user?.firstName,
       userLastName: user?.lastName,
-      needsProfileCompletion: !user?.firstName || !user?.lastName
+      needsProfileCompletion: !user?.firstName || !user?.lastName,
+      userLoaded: !!user
     });
 
     // Query diferente según el rol del usuario
@@ -75,13 +76,15 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
           });
 
           // Verificar si el usuario necesita completar perfil
-          const needsProfileCompletion = !user?.firstName || !user?.lastName;
+          // Solo crear notificación si el usuario está completamente cargado y le faltan datos
+          const needsProfileCompletion = user && (!user.firstName || !user.lastName);
           
           console.log('🔔 useNotifications: Estado del perfil:', {
             firstName: user?.firstName,
             lastName: user?.lastName,
             needsProfileCompletion,
-            willCreateProfileNotification: needsProfileCompletion
+            willCreateProfileNotification: needsProfileCompletion,
+            userExists: !!user
           });
           
           // Crear notificación de perfil incompleto si es necesario
