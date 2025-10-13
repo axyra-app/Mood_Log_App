@@ -39,6 +39,14 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
       return;
     }
 
+    console.log('🔔 useNotifications: Verificando perfil del usuario:', {
+      userId,
+      userRole,
+      userFirstName: user?.firstName,
+      userLastName: user?.lastName,
+      needsProfileCompletion: !user?.firstName || !user?.lastName
+    });
+
     // Query diferente según el rol del usuario
     const notificationsQuery = query(
       collection(db, 'notifications'),
@@ -69,6 +77,13 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
           // Verificar si el usuario necesita completar perfil
           const needsProfileCompletion = !user?.firstName || !user?.lastName;
           
+          console.log('🔔 useNotifications: Estado del perfil:', {
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            needsProfileCompletion,
+            willCreateProfileNotification: needsProfileCompletion
+          });
+          
           // Crear notificación de perfil incompleto si es necesario
           const profileNotification = needsProfileCompletion ? {
             id: 'profile-incomplete',
@@ -87,6 +102,12 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
             ...notificationsData
           ];
 
+          console.log('🔔 useNotifications: Notificaciones finales:', {
+            totalNotifications: allNotifications.length,
+            profileNotification: profileNotification ? 'SÍ' : 'NO',
+            otherNotifications: notificationsData.length
+          });
+
           setNotifications(allNotifications);
           setError(null);
         } catch (err) {
@@ -104,7 +125,7 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     );
 
     return () => unsubscribe();
-  }, [userId, userRole]);
+  }, [userId, userRole, user]);
 
   const markAsRead = async (notificationId: string) => {
     try {
