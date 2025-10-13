@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">mood-log-app-main.vercel.app</domain>
-        <domain includeSubdomains="true">mood-log-app-01.web.app</domain>
-        <domain includeSubdomains="true">firebase.googleapis.com</domain>
-        <domain includeSubdomains="true">firebaseapp.com</domain>
-    </domain-config>
-</network-security-config>
