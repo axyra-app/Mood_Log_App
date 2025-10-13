@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRouteBoth from './components/ProtectedRouteBoth';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
+import ProtectedRouteEditProfile from './components/ProtectedRouteEditProfile';
 
 // Pages
 import AIChat from './pages/AIChat';
@@ -167,9 +168,9 @@ function App() {
               <Route
                 path='/edit-profile'
                 element={
-                  <ProtectedRouteBoth>
+                  <ProtectedRouteEditProfile>
                     <EditProfile />
-                  </ProtectedRouteBoth>
+                  </ProtectedRouteEditProfile>
                 }
               />
               <Route

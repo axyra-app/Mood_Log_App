@@ -12,6 +12,8 @@ export interface Patient {
   lastSeen: any;
   moodLogs?: any[];
   appointments?: any[];
+  averageMood?: number | null;
+  moodLogsCount?: number;
 }
 
 export interface PatientStats {
@@ -91,13 +93,42 @@ export const usePatients = (psychologistId: string) => {
             );
             
             const moodSnapshot = await getDocs(moodQuery);
-            patient.moodLogs = moodSnapshot.docs.map(doc => ({
+            const moodLogs = moodSnapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
             }));
+            
+            patient.moodLogs = moodLogs;
+            
+            // Calcular estadísticas en tiempo real
+            if (moodLogs.length > 0) {
+              // Última actividad (fecha del último mood log)
+              patient.lastSeen = moodLogs[0].createdAt?.toDate ? moodLogs[0].createdAt.toDate() : new Date(moodLogs[0].createdAt);
+              
+              // Promedio de estado de ánimo
+              const moodScores = moodLogs
+                .filter(log => log.moodScore && typeof log.moodScore === 'number')
+                .map(log => log.moodScore);
+              
+              if (moodScores.length > 0) {
+                patient.averageMood = moodScores.reduce((sum, score) => sum + score, 0) / moodScores.length;
+              } else {
+                patient.averageMood = null;
+              }
+              
+              // Contador de registros de ánimo
+              patient.moodLogsCount = moodLogs.length;
+            } else {
+              patient.lastSeen = null;
+              patient.averageMood = null;
+              patient.moodLogsCount = 0;
+            }
           } catch (moodError) {
             console.error(`Error fetching mood logs for ${patient.uid}:`, moodError);
             patient.moodLogs = [];
+            patient.lastSeen = null;
+            patient.averageMood = null;
+            patient.moodLogsCount = 0;
           }
         }
 

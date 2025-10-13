@@ -18,6 +18,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState<MedicalReport | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,8 +57,8 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
     }
 
     try {
-      await createMedicalReport({
-        patientId: formData.patientId,
+      await createMedicalReport(formData.patientId, {
+        userId: formData.patientId,
         psychologistId: psychologistId,
         reportType: formData.reportType,
         title: formData.title,
@@ -65,7 +66,15 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
         diagnosis: formData.diagnosis,
         treatment: formData.treatment,
         recommendations: formData.recommendations,
-        nextAppointment: formData.nextAppointment ? new Date(formData.nextAppointment) : undefined
+        nextAppointment: formData.nextAppointment ? new Date(formData.nextAppointment) : undefined,
+        sessionDate: new Date().toISOString().split('T')[0],
+        sessionType: 'individual',
+        symptoms: [],
+        progress: 'new',
+        notes: formData.content,
+        moodScore: 0,
+        anxietyLevel: 0,
+        depressionLevel: 0,
       });
 
       toast.success('Historia médica creada exitosamente');
@@ -189,13 +198,22 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
           <h2 className="text-2xl font-bold text-gray-900">Historias Médicas</h2>
           <p className="text-gray-600">Gestiona el historial médico de tus pacientes</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva Historia
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            Ver Historial
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva Historia
+          </button>
+        </div>
       </div>
 
       {/* Filtros y Búsqueda */}
@@ -637,6 +655,97 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ver Historial Completo */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold">Historial Completo de Reportes Médicos</h3>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {psychologistReports.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No hay reportes médicos registrados</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {psychologistReports.map((report) => (
+                    <div key={report.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h4 className="font-semibold text-lg">{report.title}</h4>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getReportTypeColor(report.reportType)}`}>
+                              {getReportTypeLabel(report.reportType)}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              <span>{getPatientName(report.patientId)}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              <span>{report.createdAt.toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-sm text-gray-700 line-clamp-3">
+                              {report.content.length > 200 
+                                ? `${report.content.substring(0, 200)}...` 
+                                : report.content}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleViewReport(report)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                            title="Ver detalles"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEditReport(report)}
+                            className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteReport(report.id)}
+                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
