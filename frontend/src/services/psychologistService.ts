@@ -78,8 +78,28 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
       try {
         const psychologistData = docSnapshot.data();
         
-        // Validar que tenemos los datos necesarios (más flexible)
+        // Validar que tenemos los datos necesarios y que es realmente un psicólogo
         if (!psychologistData.name && !psychologistData.displayName && !psychologistData.email) {
+          continue;
+        }
+        
+        // Filtrar entradas que no son psicólogos reales
+        const name = psychologistData.name || psychologistData.displayName || '';
+        const email = psychologistData.email || '';
+        
+        // Excluir entradas que parecen ser de la aplicación o no son psicólogos reales
+        if (
+          name.toLowerCase().includes('mood log') ||
+          name.toLowerCase().includes('app') ||
+          name.toLowerCase().includes('sistema') ||
+          name.toLowerCase().includes('admin') ||
+          email.toLowerCase().includes('moodlog') ||
+          email.toLowerCase().includes('admin') ||
+          email.toLowerCase().includes('system') ||
+          !psychologistData.role || 
+          psychologistData.role !== 'psychologist'
+        ) {
+          console.log('🔍 Excluyendo entrada no-psicólogo:', { name, email, role: psychologistData.role });
           continue;
         }
         
