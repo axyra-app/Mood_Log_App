@@ -67,9 +67,9 @@ export interface ChatMessage {
 // Obtener todos los psicólogos disponibles
 export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
   try {
-    // Usar la colección psychologists que tiene reglas más permisivas
+    // Consultar directamente solo usuarios con role: "psychologist"
     const psychologistsRef = collection(db, 'psychologists');
-    const q = query(psychologistsRef);
+    const q = query(psychologistsRef, where('role', '==', 'psychologist'));
     const querySnapshot = await getDocs(q);
 
     const psychologists: Psychologist[] = [];
@@ -78,30 +78,12 @@ export const getAvailablePsychologists = async (): Promise<Psychologist[]> => {
       try {
         const psychologistData = docSnapshot.data();
         
-        // Validar que tenemos los datos necesarios y que es realmente un psicólogo
+        // Validar que tenemos los datos necesarios
         if (!psychologistData.name && !psychologistData.displayName && !psychologistData.email) {
           continue;
         }
         
-        // Filtrar entradas que no son psicólogos reales
-        const name = psychologistData.name || psychologistData.displayName || '';
-        const email = psychologistData.email || '';
-        
-        // Excluir entradas que parecen ser de la aplicación o no son psicólogos reales
-        if (
-          name.toLowerCase().includes('mood log') ||
-          name.toLowerCase().includes('app') ||
-          name.toLowerCase().includes('sistema') ||
-          name.toLowerCase().includes('admin') ||
-          email.toLowerCase().includes('moodlog') ||
-          email.toLowerCase().includes('admin') ||
-          email.toLowerCase().includes('system') ||
-          !psychologistData.role || 
-          psychologistData.role !== 'psychologist'
-        ) {
-          console.log('🔍 Excluyendo entrada no-psicólogo:', { name, email, role: psychologistData.role });
-          continue;
-        }
+        // Ya no necesitamos verificar el role porque la consulta ya filtra por role: "psychologist"
         
         // Verificar si el psicólogo está realmente conectado
         const isOnline = await checkPsychologistOnlineStatus(psychologistData.userId || docSnapshot.id);
