@@ -26,7 +26,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
 
     // Verificar si necesita completar perfil
-    const needsProfileCompletion = !user.firstName || !user.lastName || 
+    const needsProfileCompletion = !user.displayName || !user.username || 
                                  user.displayName === user.email?.split('@')[0];
     
     if (needsProfileCompletion) {
@@ -58,7 +58,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Verificar si necesita completar perfil
-  const needsProfileCompletion = !user.firstName || !user.lastName || 
+  const needsProfileCompletion = !user.displayName || !user.username || 
                                user.displayName === user.email?.split('@')[0];
   
   if (needsProfileCompletion) {

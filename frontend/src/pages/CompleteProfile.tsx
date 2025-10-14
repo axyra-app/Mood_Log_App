@@ -138,7 +138,9 @@ const CompleteProfile: React.FC = () => {
         updateData.cvUrl = cvUrl;
       }
 
+      console.log('🔍 CompleteProfile: Datos a enviar:', updateData);
       await updateUserProfile(updateData);
+      console.log('✅ CompleteProfile: Perfil actualizado exitosamente');
 
       // Si es psicólogo, crear documento en la colección psychologists
       if (formData.role === 'psychologist' && user) {
@@ -170,7 +172,13 @@ const CompleteProfile: React.FC = () => {
 
       toast.success(`¡Perfil completado! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
 
+      console.log('🔍 CompleteProfile: Preparando redirección...', {
+        role: formData.role,
+        targetRoute: formData.role === 'psychologist' ? '/dashboard-psychologist' : '/dashboard'
+      });
+
       setTimeout(() => {
+        console.log('🔍 CompleteProfile: Ejecutando redirección...');
         if (formData.role === 'psychologist') {
           navigate('/dashboard-psychologist');
         } else {
