@@ -114,10 +114,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
               // Verificar si necesita completar perfil
               // Un usuario necesita completar perfil si:
-              // 1. No tiene firstName o lastName (campos requeridos)
+              // 1. No tiene displayName o username (campos requeridos en CompleteProfile)
               // 2. O si es un usuario básico creado automáticamente
-              const needsProfileCompletion = !userData.firstName || 
-                                           !userData.lastName || 
+              const needsProfileCompletion = !userData.displayName || 
+                                           !userData.username || 
                                            userData.displayName === firebaseUser.email?.split('@')[0];
               
               if (needsProfileCompletion) {
@@ -514,7 +514,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userDataWithAuth: User = {
           uid: auth.currentUser.uid,
           email: auth.currentUser.email,
-          displayName: auth.currentUser.displayName,
+          displayName: userData.displayName || auth.currentUser.displayName,
           role: userData.role || 'user',
           username: userData.username,
           createdAt: userData.createdAt,

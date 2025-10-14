@@ -42,9 +42,9 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     console.log('🔔 useNotifications: Verificando perfil del usuario:', {
       userId,
       userRole,
-      userFirstName: user?.firstName,
-      userLastName: user?.lastName,
-      needsProfileCompletion: !user?.firstName || !user?.lastName,
+      userDisplayName: user?.displayName,
+      userUsername: user?.username,
+      needsProfileCompletion: !user?.displayName || !user?.username,
       userLoaded: !!user,
       profileLoaded
     });
@@ -78,11 +78,12 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
 
           // Verificar si el usuario necesita completar perfil
           // Solo crear notificación si el usuario está completamente cargado y le faltan datos
-          const needsProfileCompletion = user && (!user.firstName || !user.lastName);
+          // Verificar displayName y username (campos requeridos en CompleteProfile)
+          const needsProfileCompletion = user && (!user.displayName || !user.username);
           
           console.log('🔔 useNotifications: Estado del perfil:', {
-            firstName: user?.firstName,
-            lastName: user?.lastName,
+            displayName: user?.displayName,
+            username: user?.username,
             needsProfileCompletion,
             willCreateProfileNotification: needsProfileCompletion,
             userExists: !!user
