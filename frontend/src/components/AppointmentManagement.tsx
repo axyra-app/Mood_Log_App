@@ -160,7 +160,7 @@ const AppointmentManagement: React.FC = () => {
             onClick={() => {
               console.log('🔍 Botón Nueva Cita clickeado');
               // Verificar si el usuario necesita completar perfil
-              if (!user?.firstName || !user?.lastName) {
+              if (!user?.displayName || !user?.username) {
                 console.log('❌ Usuario necesita completar perfil');
                 toast.error('Necesitas completar tu perfil antes de crear una cita');
                 return;
