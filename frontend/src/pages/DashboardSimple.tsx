@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, LogOut, Moon, Sun } from 'lucide-react';
+import { BarChart3, Calendar, LogOut, Moon, Sun, Menu, X, BookOpen, Heart, MessageCircle, BarChart, FileText, Settings } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentSection from '../components/AppointmentSection';
@@ -16,6 +16,7 @@ const DashboardSimple: React.FC = () => {
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -46,46 +47,39 @@ const DashboardSimple: React.FC = () => {
     }
   };
 
-  const quickActions = [
-    {
-      title: 'Mi Diario',
-      description: 'Reflexiona sobre tu día',
-      icon: '📖',
-      color: 'bg-gradient-to-r from-indigo-500 to-purple-500',
-      action: () => navigate('/journal'),
-    },
+  const secondaryModules = [
     {
       title: 'Registrar Estado de Ánimo',
       description: 'Cómo te sientes hoy',
-      icon: '😊',
+      icon: Heart,
       color: 'bg-gradient-to-r from-purple-500 to-pink-500',
       action: () => navigate('/mood-flow'),
     },
     {
       title: 'Ver Estadísticas',
       description: 'Tu progreso emocional',
-      icon: '📊',
+      icon: BarChart,
       color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
       action: () => navigate('/statistics'),
     },
     {
       title: 'Chat de Apoyo',
       description: 'IA o psicólogo real',
-      icon: '💬',
+      icon: MessageCircle,
       color: 'bg-gradient-to-r from-green-500 to-emerald-500',
       action: () => navigate('/chat'),
     },
     {
       title: 'Reportes Avanzados',
       description: 'Análisis detallados',
-      icon: '📋',
+      icon: FileText,
       color: 'bg-gradient-to-r from-yellow-500 to-orange-500',
       action: () => navigate('/reports'),
     },
     {
       title: 'Configuración',
       description: 'Personaliza tu experiencia',
-      icon: '⚙️',
+      icon: Settings,
       color: 'bg-gradient-to-r from-orange-500 to-red-500',
       action: () => navigate('/settings'),
     },
@@ -126,6 +120,16 @@ const DashboardSimple: React.FC = () => {
               {/* Notificaciones */}
               <NotificationsPanel isDarkMode={isDarkMode} />
               
+              {/* Botón del menú */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                }`}
+              >
+                {isMenuOpen ? <X className='w-4 h-4 sm:w-5 sm:h-5' /> : <Menu className='w-4 h-4 sm:w-5 sm:h-5' />}
+              </button>
+              
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors ${
@@ -156,27 +160,131 @@ const DashboardSimple: React.FC = () => {
             ¡Hola, {user?.displayName || user?.email?.split('@')[0] || 'Usuario'}! 👋
           </h2>
           <p className={`text-base sm:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            ¿Cómo te sientes hoy? Registra tu estado de ánimo y mantén un seguimiento de tu bienestar emocional.
+            ¿Cómo te sientes hoy? Reflexiona sobre tu día y mantén un seguimiento de tu bienestar emocional.
           </p>
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8'>
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              onClick={action.action}
-              className={`${action.color} p-4 sm:p-6 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg`}
-            >
-              <div className='text-3xl sm:text-4xl mb-2 sm:mb-3'>{action.icon}</div>
-              <h3 className='text-base sm:text-lg font-semibold mb-1 sm:mb-2'>{action.title}</h3>
-              <p className='text-xs sm:text-sm opacity-90'>{action.description}</p>
-            </button>
-          ))}
+        {/* Journal Section - Destacado como función principal */}
+        <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        } mb-8`}>
+          <div className='p-6 border-b border-gray-200 dark:border-gray-700'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center space-x-3'>
+                <div className='w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center'>
+                  <BookOpen className='w-6 h-6 text-white' />
+                </div>
+                <div>
+                  <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Mi Diario Personal
+                  </h3>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Reflexiona sobre tu día y documenta tus pensamientos
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/journal')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDarkMode
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                }`}
+              >
+                Escribir Entrada
+              </button>
+            </div>
+          </div>
+          
+          <div className='p-6'>
+            {journalEntries.length === 0 ? (
+              <div className='text-center py-8'>
+                <div className='text-6xl mb-4'>📝</div>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Aún no tienes entradas en tu diario
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Comienza escribiendo sobre tu día
+                </p>
+                <button
+                  onClick={() => navigate('/journal')}
+                  className='mt-4 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:scale-105 transition-transform duration-200'
+                >
+                  Escribir en el Diario
+                </button>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {journalEntries.slice(0, 2).map((entry, index) => (
+                  <div
+                    key={entry.id || index}
+                    className={`p-4 rounded-lg border ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className='flex items-start justify-between'>
+                      <div className='flex-1'>
+                        <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {entry.title}
+                        </h4>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                          {entry.date.toLocaleDateString('es-ES', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mt-2 line-clamp-2`}>
+                          {entry.content.substring(0, 150)}...
+                        </p>
+                        {entry.tags.length > 0 && (
+                          <div className='flex flex-wrap gap-1 mt-2'>
+                            {entry.tags.slice(0, 3).map((tag, tagIndex) => (
+                              <span
+                                key={tagIndex}
+                                className={`px-2 py-1 text-xs rounded-full ${
+                                  isDarkMode ? 'bg-purple-600 text-purple-100' : 'bg-purple-100 text-purple-700'
+                                }`}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {entry.mood && (
+                        <div className='ml-4 text-center'>
+                          <div className='text-2xl'>
+                            {entry.mood <= 2 ? '😢' : entry.mood <= 3 ? '😐' : entry.mood <= 4 ? '🙂' : '😊'}
+                          </div>
+                          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {entry.mood}/10
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {journalEntries.length > 2 && (
+                  <div className='text-center pt-4'>
+                    <button
+                      onClick={() => navigate('/journal')}
+                      className={`text-sm font-medium ${
+                        isDarkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-700'
+                      }`}
+                    >
+                      Ver todas las entradas ({journalEntries.length})
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8'>
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8'>
           <div
             className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg border ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
@@ -241,205 +349,138 @@ const DashboardSimple: React.FC = () => {
           <AppointmentSection />
         </div>
 
-        {/* Recent Activity - Split into Journal and Mood Logs */}
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-          {/* Recent Journal Entries */}
-          <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
-          >
-            <div className='p-6 border-b border-gray-200 dark:border-gray-700'>
-              <div className='flex items-center justify-between'>
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  📖 Entradas del Diario
-                </h3>
-                <button
-                  onClick={() => navigate('/journal')}
-                  className={`px-3 py-1 text-sm rounded-lg font-medium ${
-                    isDarkMode
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                  }`}
-                >
-                  Ver todas
-                </button>
+        {/* Menú desplegable de módulos secundarios */}
+        {isMenuOpen && (
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          } mb-8`}>
+            <div className='p-6'>
+              <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Más Herramientas
+              </h3>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {secondaryModules.map((module, index) => {
+                  const IconComponent = module.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        module.action();
+                        setIsMenuOpen(false);
+                      }}
+                      className={`${module.color} p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
+                    >
+                      <div className='flex items-center space-x-3 mb-2'>
+                        <IconComponent className='w-5 h-5' />
+                        <h4 className='font-semibold'>{module.title}</h4>
+                      </div>
+                      <p className='text-sm opacity-90'>{module.description}</p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className='p-6'>
-              {journalEntries.length === 0 ? (
-                <div className='text-center py-8'>
-                  <div className='text-6xl mb-4'>📝</div>
-                  <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Aún no tienes entradas en tu diario
-                  </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Comienza escribiendo sobre tu día
-                  </p>
-                  <button
-                    onClick={() => navigate('/journal')}
-                    className='mt-4 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:scale-105 transition-transform duration-200'
-                  >
-                    Escribir en el Diario
-                  </button>
-                </div>
-              ) : (
-                <div className='space-y-4'>
-                  {journalEntries.slice(0, 3).map((entry, index) => (
+          </div>
+        )}
+
+        {/* Recent Mood Logs */}
+        <div
+          className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}
+        >
+          <div className='p-6 border-b border-gray-200 dark:border-gray-700'>
+            <div className='flex items-center justify-between'>
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                😊 Registros de Estado de Ánimo
+              </h3>
+              <button
+                onClick={() => navigate('/statistics')}
+                className={`px-3 py-1 text-sm rounded-lg font-medium ${
+                  isDarkMode
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                Ver todas
+              </button>
+            </div>
+          </div>
+          <div className='p-6'>
+            {moodLoading ? (
+              <div className='text-center py-8'>
+                <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4'></div>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Cargando registros...</p>
+              </div>
+            ) : moodLogs.length === 0 ? (
+              <div className='text-center py-8'>
+                <div className='text-6xl mb-4'>😊</div>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Aún no tienes registros de estado de ánimo
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Comienza registrando cómo te sientes hoy
+                </p>
+                <button
+                  onClick={() => navigate('/mood-flow')}
+                  className='mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200'
+                >
+                  Registrar Estado de Ánimo
+                </button>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {moodLogs.slice(0, 3).map((log, index) => {
+                  const logDate =
+                    log.createdAt && typeof log.createdAt.toDate === 'function'
+                      ? log.createdAt.toDate()
+                      : new Date(log.createdAt);
+                  const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
+                  const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
+
+                  return (
                     <div
-                      key={entry.id || index}
+                      key={log.id || index}
                       className={`p-4 rounded-lg border ${
                         isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
                       }`}
                     >
-                      <div className='flex items-start justify-between'>
-                        <div className='flex-1'>
-                          <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {entry.title}
-                          </h4>
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-                            {entry.date.toLocaleDateString('es-ES', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mt-2 line-clamp-2`}>
-                            {entry.content.substring(0, 100)}...
-                          </p>
-                          {entry.tags.length > 0 && (
-                            <div className='flex flex-wrap gap-1 mt-2'>
-                              {entry.tags.slice(0, 3).map((tag, tagIndex) => (
-                                <span
-                                  key={tagIndex}
-                                  className={`px-2 py-1 text-xs rounded-full ${
-                                    isDarkMode ? 'bg-purple-600 text-purple-100' : 'bg-purple-100 text-purple-700'
-                                  }`}
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {entry.mood && (
-                          <div className='ml-4 text-center'>
-                            <div className='text-2xl'>
-                              {entry.mood <= 2 ? '😢' : entry.mood <= 3 ? '😐' : entry.mood <= 4 ? '🙂' : '😊'}
-                            </div>
-                            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {entry.mood}/10
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center space-x-3'>
+                          <span className='text-2xl'>{moodEmojis[log.mood - 1]}</span>
+                          <div>
+                            <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {moodLabels[log.mood - 1]} ({log.mood}/5)
+                            </p>
+                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {logDate.toLocaleDateString('es-ES', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </p>
                           </div>
-                        )}
+                        </div>
+                        <div className='text-right'>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Energía: {log.energy}/10
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Estrés: {log.stress}/10
+                          </p>
+                        </div>
                       </div>
+                      {log.notes && (
+                        <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          "{log.notes}"
+                        </p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Mood Logs */}
-          <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
-          >
-            <div className='p-6 border-b border-gray-200 dark:border-gray-700'>
-              <div className='flex items-center justify-between'>
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  😊 Registros de Estado de Ánimo
-                </h3>
-                <button
-                  onClick={() => navigate('/statistics')}
-                  className={`px-3 py-1 text-sm rounded-lg font-medium ${
-                    isDarkMode
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
-                >
-                  Ver todas
-                </button>
+                  );
+                })}
               </div>
-            </div>
-            <div className='p-6'>
-              {moodLoading ? (
-                <div className='text-center py-8'>
-                  <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4'></div>
-                  <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Cargando registros...</p>
-                </div>
-              ) : moodLogs.length === 0 ? (
-                <div className='text-center py-8'>
-                  <div className='text-6xl mb-4'>😊</div>
-                  <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Aún no tienes registros de estado de ánimo
-                  </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Comienza registrando cómo te sientes hoy
-                  </p>
-                  <button
-                    onClick={() => navigate('/mood-flow')}
-                    className='mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200'
-                  >
-                    Registrar Estado de Ánimo
-                  </button>
-                </div>
-              ) : (
-                <div className='space-y-4'>
-                  {moodLogs.slice(0, 3).map((log, index) => {
-                    const logDate =
-                      log.createdAt && typeof log.createdAt.toDate === 'function'
-                        ? log.createdAt.toDate()
-                        : new Date(log.createdAt);
-                    const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
-                    const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
-
-                    return (
-                      <div
-                        key={log.id || index}
-                        className={`p-4 rounded-lg border ${
-                          isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        <div className='flex items-center justify-between'>
-                          <div className='flex items-center space-x-3'>
-                            <span className='text-2xl'>{moodEmojis[log.mood - 1]}</span>
-                            <div>
-                              <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                {moodLabels[log.mood - 1]} ({log.mood}/5)
-                              </p>
-                              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {logDate.toLocaleDateString('es-ES', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                          <div className='text-right'>
-                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Energía: {log.energy}/10
-                            </p>
-                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Estrés: {log.stress}/10
-                            </p>
-                          </div>
-                        </div>
-                        {log.notes && (
-                          <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                            "{log.notes}"
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </main>
