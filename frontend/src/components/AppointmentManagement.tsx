@@ -11,7 +11,7 @@ interface Appointment {
   psychologistId: string;
   psychologistName: string;
   date: Date;
-  time: string;
+  appointmentTime?: string;
   duration: number;
   type: string;
   reason: string;
@@ -126,7 +126,7 @@ const AppointmentManagement: React.FC = () => {
   };
 
   const formatTime = (time: string) => {
-    return time;
+    return time || 'Hora no especificada';
   };
 
   if (loading) {
@@ -226,7 +226,7 @@ const AppointmentManagement: React.FC = () => {
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center space-x-2">
                           <Clock className="w-4 h-4" />
-                          <span>{formatTime(appointment.time)} - {appointment.duration} min</span>
+                          <span>{formatTime(appointment.appointmentTime || '')} - {appointment.duration} min</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <User className="w-4 h-4" />
@@ -308,7 +308,7 @@ const AppointmentManagement: React.FC = () => {
                         <div className="space-y-1 text-sm text-gray-600">
                           <div className="flex items-center space-x-2">
                             <Clock className="w-4 h-4" />
-                            <span>{formatTime(appointment.time)} - {appointment.duration} min</span>
+                            <span>{formatTime(appointment.appointmentTime || '')} - {appointment.duration} min</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <User className="w-4 h-4" />

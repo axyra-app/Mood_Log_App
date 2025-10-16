@@ -11,6 +11,7 @@ export interface UserAppointment {
   psychologistId: string;
   psychologistName: string;
   appointmentDate: Date;
+  appointmentTime?: string;
   duration: number; // en minutos
   type: 'consultation' | 'follow-up' | 'emergency';
   reason: string;
@@ -67,6 +68,7 @@ export const useUserAppointments = (userId: string) => {
               psychologistId: data.psychologistId,
               psychologistName,
               appointmentDate: data.appointmentDate?.toDate ? data.appointmentDate.toDate() : new Date(data.appointmentDate),
+              appointmentTime: data.appointmentTime || '',
               duration: data.duration || 60,
               type: data.type || 'consultation',
               reason: data.reason || '',
@@ -99,11 +101,12 @@ export const useUserAppointments = (userId: string) => {
   const createAppointment = async (appointmentData: {
     psychologistId: string;
     appointmentDate: Date;
+    appointmentTime?: string;
     duration: number;
     type: 'consultation' | 'follow-up' | 'emergency';
     reason: string;
     notes?: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+    status?: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
   }) => {
     try {
       // Log temporal para debugging
@@ -153,11 +156,12 @@ export const useUserAppointments = (userId: string) => {
         psychologistId: appointmentData.psychologistId,
         psychologistName,
         appointmentDate: appointmentData.appointmentDate,
+        appointmentTime: appointmentData.appointmentTime || '',
         duration: appointmentData.duration,
         type: appointmentData.type,
         reason: appointmentData.reason,
         notes: appointmentData.notes || '',
-        status: appointmentData.status,
+        status: appointmentData.status || 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
