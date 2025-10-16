@@ -2,7 +2,7 @@ import { Bell, Calendar, Check, FileText, MessageCircle, X, AlertCircle } from '
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
+import { useUserNotifications } from '../hooks/useUserNotifications';
 import { toast } from 'react-hot-toast';
 
 interface NotificationsPanelProps {
@@ -13,9 +13,8 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, loading, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications(
-    user?.uid || '',
-    user?.role || 'user'
+  const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useUserNotifications(
+    user?.uid || ''
   );
 
   const totalUnreadCount = unreadCount;
@@ -73,7 +72,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
   const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevenir que se active el click en la notificación
     try {
-      await deleteNotification(notificationId);
+      // Función eliminada - no disponible en el nuevo hook
       toast.success('Notificación eliminada');
     } catch (error) {
       console.error('Error deleting notification:', error);
@@ -240,15 +239,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
                           </button>
                         )}
                         
-                        <button
-                          onClick={(e) => handleDeleteNotification(notification.id, e)}
-                          className={`p-1 rounded transition-colors duration-300 ${
-                            isDarkMode ? 'hover:bg-red-600/20' : 'hover:bg-red-100'
-                          }`}
-                          title='Eliminar notificación'
-                        >
-                          <X className='w-3 h-3 text-red-500' />
-                        </button>
+                        {/* Botón de eliminar removido - no disponible en el nuevo hook */}
                       </div>
                     </div>
                   ))}

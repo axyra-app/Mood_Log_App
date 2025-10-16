@@ -174,7 +174,7 @@ export const useUserAppointments = (userId: string) => {
         await createAppointmentRequestNotification({
           userId: userId,
           userName: userName,
-          userEmail: user?.email || '',
+          userEmail: userName + '@email.com', // Usar userName como base para email
           psychologistId: appointmentData.psychologistId,
           appointmentDate: appointmentData.appointmentDate,
           appointmentTime: appointmentData.appointmentTime || '',
