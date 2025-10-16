@@ -1,5 +1,5 @@
 import { Calendar, Plus } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import AppointmentManagement from './AppointmentManagement';
 import AppointmentModal from './AppointmentModal';
@@ -7,6 +7,17 @@ import AppointmentModal from './AppointmentModal';
 const AppointmentSection: React.FC = () => {
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const handleOpenModal = () => {
+      setShowModal(true);
+    };
+
+    window.addEventListener('openAppointmentModal', handleOpenModal);
+    return () => {
+      window.removeEventListener('openAppointmentModal', handleOpenModal);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">

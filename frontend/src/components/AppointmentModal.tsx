@@ -30,8 +30,9 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedPsychologist) {
-      toast.error('Por favor selecciona un psicólogo');
+    // Verificar que se haya seleccionado una opción (psicólogo específico o 'all')
+    if (!formData.psychologistId) {
+      toast.error('Por favor selecciona un psicólogo o la opción "Notificar a Todos"');
       return;
     }
 
@@ -42,7 +43,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose }) 
 
     try {
       await createAppointment({
-        psychologistId: selectedPsychologist.id,
+        psychologistId: formData.psychologistId,
         appointmentDate: new Date(formData.appointmentDate),
         appointmentTime: formData.appointmentTime,
         duration: formData.duration,

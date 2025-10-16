@@ -123,9 +123,10 @@ const DashboardSimple: React.FC = () => {
               {/* Botón del menú */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-lg transition-colors shadow-md ${
                   isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                }`}
+                } ${isMenuOpen ? 'ring-2 ring-purple-500' : ''}`}
+                title="Más herramientas"
               >
                 {isMenuOpen ? <X className='w-4 h-4 sm:w-5 sm:h-5' /> : <Menu className='w-4 h-4 sm:w-5 sm:h-5' />}
               </button>
@@ -167,9 +168,14 @@ const DashboardSimple: React.FC = () => {
       } lg:hidden`}>
         {/* Header del menú */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Más Herramientas
-          </h3>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <Menu className="w-4 h-4 text-white" />
+            </div>
+            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Más Herramientas
+            </h3>
+          </div>
           <button
             onClick={() => setIsMenuOpen(false)}
             className={`p-2 rounded-lg transition-colors ${

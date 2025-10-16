@@ -142,11 +142,6 @@ const AppointmentManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Mis Citas</h2>
-          <p className="text-gray-600">Gestiona tus citas con psicólogos</p>
-        </div>
-        
         <div className="flex space-x-3">
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -179,9 +174,20 @@ const AppointmentManagement: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Citas Activas</h3>
         {activeAppointments.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No tienes citas activas</p>
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-6xl mb-4">📅</div>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No tienes citas activas</h4>
+            <p className="text-gray-600 mb-4">Crea tu primera cita con un psicólogo</p>
+            <button
+              onClick={() => {
+                // Trigger the appointment creation from parent component
+                const event = new CustomEvent('openAppointmentModal');
+                window.dispatchEvent(event);
+              }}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
+            >
+              Crear Primera Cita
+            </button>
           </div>
         ) : (
           <div className="grid gap-4">
