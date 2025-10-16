@@ -81,9 +81,13 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
   };
 
   const handleNotificationClick = (notification: any) => {
+    console.log('🔔 Click en notificación:', notification);
+    
+    // Cerrar el panel inmediatamente
+    setIsOpen(false);
+    
     // Manejar notificación de perfil incompleto
     if (notification.type === 'profile_incomplete') {
-      setIsOpen(false);
       // Redirigir a edit-profile en lugar de complete-profile
       // porque el usuario ya tiene un perfil básico pero necesita completar información
       navigate('/edit-profile');
@@ -92,9 +96,6 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     
     // Marcar como leída
     markAsRead(notification.id);
-    
-    // Cerrar el panel
-    setIsOpen(false);
     
     // Navegar según el tipo de notificación
     switch (notification.type) {

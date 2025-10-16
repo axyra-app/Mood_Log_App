@@ -10,7 +10,7 @@ interface Appointment {
   id: string;
   psychologistId: string;
   psychologistName: string;
-  date: Date;
+  appointmentDate: Date;
   appointmentTime?: string;
   duration: number;
   type: string;
@@ -48,10 +48,10 @@ const AppointmentManagement: React.FC = () => {
   // Separar citas activas e históricas
   const now = new Date();
   const activeAppointments = filteredAppointments.filter(apt => 
-    new Date(apt.date) >= now && apt.status !== 'completed' && apt.status !== 'cancelled'
+    new Date(apt.appointmentDate) >= now && apt.status !== 'completed' && apt.status !== 'cancelled'
   );
   const historicalAppointments = filteredAppointments.filter(apt => 
-    new Date(apt.date) < now || apt.status === 'completed' || apt.status === 'cancelled'
+    new Date(apt.appointmentDate) < now || apt.status === 'completed' || apt.status === 'cancelled'
   );
 
   const getStatusColor = (status: string) => {

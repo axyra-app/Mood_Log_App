@@ -63,7 +63,7 @@ export const createAppointmentRequestNotification = async (appointmentData: {
           type: 'appointment_request',
           title: 'Nueva Solicitud de Cita',
           message: `${appointmentData.userName} solicita una cita para ${appointmentData.appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentData.appointmentTime}`,
-          userId: appointmentData.userId,
+          // NO incluir userId aquí - solo para psicólogos
           psychologistId: doc.id,
           appointmentId: '', // Se actualizará después de crear la cita
           isRead: false,
@@ -82,7 +82,7 @@ export const createAppointmentRequestNotification = async (appointmentData: {
         type: 'appointment_request',
         title: 'Nueva Solicitud de Cita',
         message: `${appointmentData.userName} solicita una cita para ${appointmentData.appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentData.appointmentTime}`,
-        userId: appointmentData.userId,
+        // NO incluir userId aquí - solo para psicólogos
         psychologistId: appointmentData.psychologistId,
         appointmentId: '', // Se actualizará después de crear la cita
         isRead: false,

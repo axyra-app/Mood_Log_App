@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AppointmentSection from '../components/AppointmentSection';
 import Logo from '../components/Logo';
 import NotificationsPanel from '../components/NotificationsPanel';
+import LateralSidebar from '../components/LateralSidebar';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
@@ -153,62 +154,12 @@ const DashboardSimple: React.FC = () => {
         </div>
       </header>
 
-      {/* Menú lateral deslizante */}
-      {/* Overlay */}
-      {isMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsMenuOpen(false)}
-        />
-      )}
-      
-      {/* Menú lateral */}
-      <div className={`fixed top-0 left-0 h-full w-80 bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-        isMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:hidden`}>
-        {/* Header del menú */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Menu className="w-4 h-4 text-white" />
-            </div>
-            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Más Herramientas
-            </h3>
-          </div>
-          <button
-            onClick={() => setIsMenuOpen(false)}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
-            }`}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        
-        {/* Contenido del menú */}
-        <div className="p-6 space-y-4 overflow-y-auto h-full pb-20">
-          {secondaryModules.map((module, index) => {
-            const IconComponent = module.icon;
-            return (
-              <button
-                key={index}
-                onClick={() => {
-                  module.action();
-                  setIsMenuOpen(false);
-                }}
-                className={`${module.color} w-full p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
-              >
-                <div className='flex items-center space-x-3 mb-2'>
-                  <IconComponent className='w-5 h-5' />
-                  <h4 className='font-semibold'>{module.title}</h4>
-                </div>
-                <p className='text-sm opacity-90'>{module.description}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Nuevo Lateral Sidebar */}
+      <LateralSidebar 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        isDarkMode={isDarkMode} 
+      />
 
       {/* Menú desktop (solo visible en pantallas grandes) */}
       <div className="hidden lg:block mb-8">
