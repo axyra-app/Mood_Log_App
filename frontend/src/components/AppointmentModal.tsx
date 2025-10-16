@@ -1,4 +1,4 @@
-import { Calendar, Plus, Shield, Star, User, X } from 'lucide-react';
+import { Calendar, Plus, Shield, Star, User, X, Bell } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -93,8 +93,52 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose }) 
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Seleccionar Psicólogo
               </label>
+              
+              {/* Opción para notificar a todos */}
+              <div className="mb-4">
+                <div
+                  onClick={() => {
+                    setSelectedPsychologist(null);
+                    setFormData(prev => ({ ...prev, psychologistId: 'all' }));
+                  }}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    formData.psychologistId === 'all'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">Notificar a Todos los Psicólogos</h4>
+                      <p className="text-sm text-gray-600">Cualquier psicólogo disponible puede aceptar tu cita</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-sm text-blue-600 font-medium">Recomendado</span>
+                        <span className="text-sm text-gray-500">• Respuesta más rápida</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Separador */}
+              <div className="flex items-center my-4">
+                <div className="flex-1 border-t border-gray-200"></div>
+                <span className="px-3 text-sm text-gray-500">O selecciona un psicólogo específico</span>
+                <div className="flex-1 border-t border-gray-200"></div>
+              </div>
+
+              {/* Lista de psicólogos */}
               {psychologistsLoading ? (
                 <div className="animate-pulse bg-gray-200 h-10 rounded-lg"></div>
+              ) : psychologists.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <div className="text-4xl mb-2">👥</div>
+                  <p className="text-gray-600">No hay psicólogos disponibles</p>
+                  <p className="text-sm text-gray-500">Usa la opción "Notificar a Todos" arriba</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {psychologists.map((psychologist) => (

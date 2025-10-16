@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, limit, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { usePatientRelations } from './usePatientRelations';
+import { createAppointmentRequestNotification } from '../services/notificationService';
 
 export interface UserAppointment {
   id: string;
@@ -168,10 +169,32 @@ export const useUserAppointments = (userId: string) => {
 
       const docRef = await addDoc(collection(db, 'appointments'), firebaseAppointmentData);
       
+      // Crear notificaciones para psicólogos
+      try {
+        await createAppointmentRequestNotification({
+          userId: userId,
+          userName: userName,
+          userEmail: user?.email || '',
+          psychologistId: appointmentData.psychologistId,
+          appointmentDate: appointmentData.appointmentDate,
+          appointmentTime: appointmentData.appointmentTime || '',
+          duration: appointmentData.duration,
+          type: appointmentData.type,
+          reason: appointmentData.reason,
+          notes: appointmentData.notes,
+        });
+        console.log('✅ Notificaciones de cita creadas');
+      } catch (notificationError) {
+        console.error('⚠️ Error creando notificaciones:', notificationError);
+        // No lanzar error aquí para no interrumpir la creación de la cita
+      }
+      
       // Crear relación paciente-psicólogo para permitir acceso a moodLogs
       try {
-        await createPatientRelation(userId, appointmentData.psychologistId);
-        console.log('✅ Relación paciente-psicólogo creada');
+        if (appointmentData.psychologistId !== 'all') {
+          await createPatientRelation(userId, appointmentData.psychologistId);
+          console.log('✅ Relación paciente-psicólogo creada');
+        }
       } catch (relationError) {
         console.error('⚠️ Error creando relación paciente-psicólogo:', relationError);
         // No lanzar error aquí para no interrumpir la creación de la cita

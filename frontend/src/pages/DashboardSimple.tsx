@@ -152,6 +152,92 @@ const DashboardSimple: React.FC = () => {
         </div>
       </header>
 
+      {/* Menú lateral deslizante */}
+      {/* Overlay */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+      
+      {/* Menú lateral */}
+      <div className={`fixed top-0 left-0 h-full w-80 bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:hidden`}>
+        {/* Header del menú */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Más Herramientas
+          </h3>
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
+            }`}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {/* Contenido del menú */}
+        <div className="p-6 space-y-4 overflow-y-auto h-full pb-20">
+          {secondaryModules.map((module, index) => {
+            const IconComponent = module.icon;
+            return (
+              <button
+                key={index}
+                onClick={() => {
+                  module.action();
+                  setIsMenuOpen(false);
+                }}
+                className={`${module.color} w-full p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
+              >
+                <div className='flex items-center space-x-3 mb-2'>
+                  <IconComponent className='w-5 h-5' />
+                  <h4 className='font-semibold'>{module.title}</h4>
+                </div>
+                <p className='text-sm opacity-90'>{module.description}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Menú desktop (solo visible en pantallas grandes) */}
+      <div className="hidden lg:block mb-8">
+        <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}>
+          <div className='p-6'>
+            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Más Herramientas
+            </h3>
+            <div className='grid grid-cols-3 gap-4'>
+              {secondaryModules.map((module, index) => {
+                const IconComponent = module.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      module.action();
+                      setIsMenuOpen(false);
+                    }}
+                    className={`${module.color} p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
+                  >
+                    <div className='flex items-center space-x-3 mb-2'>
+                      <IconComponent className='w-5 h-5' />
+                      <h4 className='font-semibold'>{module.title}</h4>
+                    </div>
+                    <p className='text-sm opacity-90'>{module.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
         {/* Welcome Section */}
@@ -348,40 +434,6 @@ const DashboardSimple: React.FC = () => {
         <div className='mb-8'>
           <AppointmentSection />
         </div>
-
-        {/* Menú desplegable de módulos secundarios */}
-        {isMenuOpen && (
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
-          } mb-8`}>
-            <div className='p-6'>
-              <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Más Herramientas
-              </h3>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-                {secondaryModules.map((module, index) => {
-                  const IconComponent = module.icon;
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        module.action();
-                        setIsMenuOpen(false);
-                      }}
-                      className={`${module.color} p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
-                    >
-                      <div className='flex items-center space-x-3 mb-2'>
-                        <IconComponent className='w-5 h-5' />
-                        <h4 className='font-semibold'>{module.title}</h4>
-                      </div>
-                      <p className='text-sm opacity-90'>{module.description}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Recent Mood Logs */}
         <div
