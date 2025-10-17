@@ -8,7 +8,7 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
   const [imageError, setImageError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState('/Logo_Mood_log_app.png');
+  const [currentSrc, setCurrentSrc] = useState('https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png');
 
   const getSizeClasses = () => {
     switch (size) {
@@ -49,10 +49,10 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   const handleImageError = () => {
     console.log('Error loading logo, trying fallback...');
-    if (currentSrc === '/Logo_Mood_log_app.png') {
+    if (currentSrc === 'https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png') {
+      setCurrentSrc('/Logo_Mood_log_app.png');
+    } else if (currentSrc === '/Logo_Mood_log_app.png') {
       setCurrentSrc('/favicon.png');
-    } else if (currentSrc === '/favicon.png') {
-      setCurrentSrc('/favicon.svg');
     } else {
       setImageError(true);
     }
