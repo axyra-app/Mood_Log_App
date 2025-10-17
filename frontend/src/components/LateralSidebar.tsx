@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Home, BarChart3, ShoppingBag, CheckSquare, FileText, Bell, Settings, Search } from 'lucide-react';
+import { X, BarChart3, Settings, Heart, MessageCircle, FileText, Search, Calendar, BookOpen, Users, Activity, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LateralSidebarProps {
   isOpen: boolean;
@@ -8,14 +9,65 @@ interface LateralSidebarProps {
 }
 
 const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDarkMode }) => {
+  const navigate = useNavigate();
+  
   const menuItems = [
-    { icon: Home, label: 'Home', path: '/dashboard' },
-    { icon: BarChart3, label: 'Dashboard', path: '/dashboard' },
-    { icon: ShoppingBag, label: 'Store', path: '/store', hasSubmenu: true, submenu: ['Products', 'Orders', 'Subscriptions'] },
-    { icon: CheckSquare, label: 'Task', path: '/tasks' },
-    { icon: FileText, label: 'Files', path: '/files' },
-    { icon: Bell, label: 'Notifications', path: '/notifications' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { 
+      icon: Heart, 
+      label: 'Registrar Estado de Ánimo', 
+      path: '/mood-flow',
+      description: 'Cómo te sientes hoy',
+      color: 'bg-gradient-to-r from-purple-500 to-pink-500'
+    },
+    { 
+      icon: BarChart3, 
+      label: 'Ver Estadísticas', 
+      path: '/statistics',
+      description: 'Tu progreso emocional',
+      color: 'bg-gradient-to-r from-blue-500 to-cyan-500'
+    },
+    { 
+      icon: MessageCircle, 
+      label: 'Chat de Apoyo', 
+      path: '/chat',
+      description: 'IA o psicólogo real',
+      color: 'bg-gradient-to-r from-green-500 to-emerald-500'
+    },
+    { 
+      icon: FileText, 
+      label: 'Reportes Avanzados', 
+      path: '/reports',
+      description: 'Análisis detallados',
+      color: 'bg-gradient-to-r from-orange-500 to-amber-500'
+    },
+    { 
+      icon: Settings, 
+      label: 'Configuración', 
+      path: '/settings',
+      description: 'Personaliza tu experiencia',
+      color: 'bg-gradient-to-r from-orange-500 to-red-500'
+    },
+    { 
+      icon: Calendar, 
+      label: 'Mis Citas', 
+      path: '/dashboard',
+      description: 'Gestiona tus citas',
+      color: 'bg-gradient-to-r from-indigo-500 to-purple-500'
+    },
+    { 
+      icon: BookOpen, 
+      label: 'Mi Diario', 
+      path: '/journal',
+      description: 'Reflexiona sobre tu día',
+      color: 'bg-gradient-to-r from-teal-500 to-blue-500'
+    },
+    { 
+      icon: Users, 
+      label: 'Psicólogos', 
+      path: '/psychologists',
+      description: 'Encuentra profesionales',
+      color: 'bg-gradient-to-r from-pink-500 to-rose-500'
+    },
   ];
 
   return (
@@ -35,10 +87,10 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-gray-900 font-bold text-lg">👻</span>
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <Heart className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-semibold">Ghostly</span>
+            <span className="text-xl font-semibold">Mood Log</span>
           </div>
           <button
             onClick={onClose}
@@ -61,37 +113,29 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
         </div>
         
         {/* Menu Items */}
-        <div className="px-6 space-y-2">
-          {menuItems.map((item, index) => {
-            const IconComponent = item.icon;
-            return (
-              <div key={index}>
+        <div className="px-6 space-y-3 overflow-y-auto flex-1">
+          <h3 className="text-lg font-semibold text-gray-300 mb-4">Más Herramientas</h3>
+          <div className="grid grid-cols-1 gap-3">
+            {menuItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
                 <button
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors text-left"
+                  key={index}
+                  onClick={() => {
+                    navigate(item.path);
+                    onClose();
+                  }}
+                  className={`${item.color} w-full p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
                 >
-                  <IconComponent className="w-5 h-5" />
-                  <span>{item.label}</span>
-                  {item.hasSubmenu && (
-                    <span className="ml-auto">▼</span>
-                  )}
-                </button>
-                
-                {/* Submenu */}
-                {item.hasSubmenu && (
-                  <div className="ml-8 mt-1 space-y-1">
-                    {item.submenu?.map((subItem, subIndex) => (
-                      <button
-                        key={subIndex}
-                        className="w-full flex items-center px-3 py-1 rounded-lg hover:bg-gray-700 transition-colors text-left text-sm text-gray-300"
-                      >
-                        {subItem}
-                      </button>
-                    ))}
+                  <div className='flex items-center space-x-3 mb-2'>
+                    <IconComponent className='w-5 h-5' />
+                    <h4 className='font-semibold text-sm'>{item.label}</h4>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  <p className='text-xs opacity-90'>{item.description}</p>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </>
