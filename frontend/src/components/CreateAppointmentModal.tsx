@@ -41,7 +41,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       }
 
       // Here you would typically call a service to create the appointment in Firestore
-      console.log('Creating appointment with data:', formData);
+      
 
       toast.success('Solicitud de cita enviada. Esperando confirmación del psicólogo.');
       
@@ -67,7 +67,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
   if (!isOpen) return null;
 
-  console.log('🔍 CreateAppointmentModal renderizando, isOpen:', isOpen);
+  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">

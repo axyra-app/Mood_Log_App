@@ -82,7 +82,7 @@ const MedicalHistory: React.FC = () => {
 
     try {
       // Aquí implementarías la lógica para guardar el reporte en Firebase
-      console.log('Guardando reporte para:', selectedPatient.userName, reportData);
+      
       
       // Simular guardado exitoso
       alert('Reporte médico creado exitosamente');

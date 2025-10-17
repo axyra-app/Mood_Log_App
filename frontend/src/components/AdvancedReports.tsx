@@ -86,7 +86,7 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateMoodReport = async () => {
-    console.log('🔍 Generando reporte de estado de ánimo con datos reales...');
+    
     setLoading(true);
     try {
       if (!user?.uid) {
@@ -143,7 +143,7 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateDiaryReport = async () => {
-    console.log('🔍 Generando reporte de diario con datos reales...');
+    
     setLoading(true);
     try {
       if (!user?.uid) {
@@ -284,7 +284,7 @@ const AdvancedReports: React.FC = () => {
           <div className='flex items-center gap-4 mb-4'>
             <button
               onClick={() => {
-                console.log('🔍 Navegando al dashboard...');
+                
                 navigate('/dashboard');
               }}
               className='flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors'

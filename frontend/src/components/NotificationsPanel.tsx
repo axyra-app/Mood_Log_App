@@ -81,7 +81,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
   };
 
   const handleNotificationClick = (notification: any) => {
-    console.log('🔔 Click en notificación:', notification);
+    
     
     // Cerrar el panel inmediatamente
     setIsOpen(false);

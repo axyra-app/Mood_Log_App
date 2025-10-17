@@ -89,10 +89,10 @@ export const checkRequiredEnvVars = () => {
 // Función para mostrar información de la configuración (solo en desarrollo)
 export const logEnvironmentInfo = () => {
   if (isDevelopment()) {
-    console.log('🔧 Información del entorno:');
-    console.log('- Modo:', isDevelopment() ? 'Desarrollo' : 'Producción');
-    console.log('- URL base:', getBaseUrl());
-    console.log('- Firebase configurado:', !!getEnvVar('VITE_FIREBASE_API_KEY'));
-    console.log('- OpenAI configurado:', !!getEnvVar('VITE_OPENAI_API_KEY'));
+    
+     ? 'Desarrollo' : 'Producción');
+    );
+    );
+    );
   }
 };

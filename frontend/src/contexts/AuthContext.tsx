@@ -141,7 +141,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             } else {
               // Si no existe el documento, crear uno básico para usuarios de Google
-              console.log('✅ Usuario nuevo detectado, creando perfil básico');
               const basicUserData = {
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
@@ -153,7 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
               try {
                 await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData);
-                console.log('✅ Perfil básico creado exitosamente');
+                
               } catch (error) {
                 console.error('❌ Error creando perfil básico:', error);
               }
@@ -369,15 +368,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const isNewUser = result.additionalUserInfo?.isNewUser;
       
       if (isNewUser) {
-        console.log('✅ Usuario nuevo registrado con Google');
+        
         // El perfil se creará automáticamente en onAuthStateChanged
       } else {
-        console.log('✅ Usuario existente inició sesión con Google');
+        
         // Verificar si realmente existe en Firestore
         try {
           const userDoc = await getDoc(doc(db, 'users', result.user.uid));
           if (!userDoc.exists()) {
-            console.log('⚠️ Usuario de Firebase Auth existe pero no en Firestore, creando perfil básico');
+            
             // Crear perfil básico para usuario que existe en Auth pero no en Firestore
             const basicUserData = {
               email: result.user.email,
@@ -388,7 +387,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               updatedAt: serverTimestamp(),
             };
             await setDoc(doc(db, 'users', result.user.uid), basicUserData);
-            console.log('✅ Perfil básico creado para usuario existente');
+            
           }
         } catch (error) {
           console.error('Error verificando usuario existente:', error);
@@ -430,7 +429,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       if (!user) throw new Error('No user logged in');
 
-      console.log('🔍 Actualizando perfil con datos:', updates);
+      
 
       // Actualizar en Firestore
       const userRef = doc(db, 'users', user.uid);
@@ -439,7 +438,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         updatedAt: serverTimestamp(),
       };
       
-      console.log('🔍 Datos a guardar en Firestore:', updateData);
+      
       
       await setDoc(
         userRef,
@@ -447,13 +446,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         { merge: true }
       );
 
-      console.log('✅ Perfil actualizado en Firestore');
+      
 
       // Actualizar el estado local del usuario
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
       
-      console.log('✅ Estado local del usuario actualizado:', updatedUser);
+      
 
       // Si es psicólogo, también actualizar en la colección de psicólogos
       if (updates.role === 'psychologist' || user.role === 'psychologist') {
@@ -503,7 +502,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       if (!auth.currentUser) return;
       
-      console.log('🔄 Refrescando estado del usuario...');
+      
       
       // Obtener datos actualizados de Firestore
       const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
@@ -528,7 +527,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           cvUrl: userData.cvUrl,
         };
         
-        console.log('✅ Estado del usuario refrescado:', userDataWithAuth);
+        
         setUser(userDataWithAuth);
         setProfileLoaded(true);
       }

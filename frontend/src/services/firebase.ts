@@ -17,7 +17,7 @@ const firebaseConfig = {
 
 // Debug: Log configuration (only in development)
 if (import.meta.env.DEV) {
-  console.log('🔥 Firebase Config:', firebaseConfig);
+  
 }
 
 // Initialize Firebase
@@ -61,13 +61,13 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
         },
       };
       
-      console.log('📤 Uploading with metadata:', metadata);
+      
       
       const snapshot = await uploadBytes(storageRef, file, metadata);
-      console.log('✅ Upload successful:', snapshot);
+      
       
       const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log('🔗 Download URL generated:', downloadURL);
+      
       
       return downloadURL;
     } catch (error) {

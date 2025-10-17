@@ -238,7 +238,7 @@ export const useChatMessages = (sessionId: string | null) => {
 
   const sendMessage = async (sessionId: string, senderId: string, senderName: string, content: string) => {
     try {
-      console.log('📤 Enviando mensaje:', { sessionId, senderId, senderName, content });
+      
       
       const messageData = {
         sessionId,
@@ -251,7 +251,7 @@ export const useChatMessages = (sessionId: string | null) => {
       };
 
       const messageRef = await addDoc(collection(db, 'chatMessages'), messageData);
-      console.log('📤 Mensaje enviado con ID:', messageRef.id);
+      
 
       // Actualizar la sesión con el último mensaje
       const sessionRef = doc(db, 'chatSessions', sessionId);
@@ -260,7 +260,7 @@ export const useChatMessages = (sessionId: string | null) => {
         lastMessageAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      console.log('📤 Sesión actualizada');
+      
 
       // Crear notificación para el usuario SOLO si el mensaje viene del psicólogo
       try {
@@ -270,9 +270,9 @@ export const useChatMessages = (sessionId: string | null) => {
           // Solo crear notificación si el mensaje viene del psicólogo (no del usuario)
           if (senderId !== sessionData.userId) {
             await createPsychologistChatNotification(sessionData.userId, senderId, senderName, content);
-            console.log('📤 Notificación creada para usuario');
+            
           } else {
-            console.log('📤 No se crea notificación - mensaje del propio usuario');
+            
           }
         }
       } catch (notificationError) {

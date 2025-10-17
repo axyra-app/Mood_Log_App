@@ -45,7 +45,7 @@ export const createAppointmentRequestNotification = async (appointmentData: {
   notes?: string;
 }) => {
   try {
-    console.log('🔔 Creando notificación de solicitud de cita:', appointmentData);
+    
 
     // Si psychologistId es 'all', crear notificación para todos los psicólogos
     if (appointmentData.psychologistId === 'all') {
@@ -75,7 +75,7 @@ export const createAppointmentRequestNotification = async (appointmentData: {
       });
 
       await Promise.all(notificationPromises);
-      console.log('✅ Notificaciones creadas para todos los psicólogos');
+      
     } else if (appointmentData.psychologistId) {
       // Crear notificación para un psicólogo específico
       const notificationData = {
@@ -91,7 +91,7 @@ export const createAppointmentRequestNotification = async (appointmentData: {
       };
 
       await addDoc(collection(db, 'notifications'), notificationData);
-      console.log('✅ Notificación creada para psicólogo específico');
+      
     }
 
     return true;
@@ -138,7 +138,7 @@ export const markNotificationAsRead = async (notificationId: string) => {
       isRead: true,
       updatedAt: serverTimestamp(),
     });
-    console.log('✅ Notificación marcada como leída');
+    
   } catch (error) {
     console.error('❌ Error marcando notificación como leída:', error);
     throw error;
@@ -167,7 +167,7 @@ export const createAppointmentResponseNotification = async (
     };
 
     await addDoc(collection(db, 'notifications'), notificationData);
-    console.log('✅ Notificación de respuesta de cita creada');
+    
   } catch (error) {
     console.error('❌ Error creando notificación de respuesta de cita:', error);
     throw error;

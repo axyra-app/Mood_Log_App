@@ -139,9 +139,9 @@ const CompleteProfile: React.FC = () => {
         updateData.cvUrl = cvUrl;
       }
 
-      console.log('🔍 CompleteProfile: Datos a enviar:', updateData);
+      
       await updateUserProfile(updateData);
-      console.log('✅ CompleteProfile: Perfil actualizado exitosamente');
+      
 
       // Si es psicólogo, crear documento en la colección psychologists
       if (formData.role === 'psychologist' && user) {
@@ -163,7 +163,7 @@ const CompleteProfile: React.FC = () => {
           };
 
           await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
-          console.log('Psychologist document created successfully');
+          
         } catch (error) {
           console.error('Error creating psychologist document:', error);
           toast.error('Error al crear el perfil de psicólogo');
@@ -179,7 +179,7 @@ const CompleteProfile: React.FC = () => {
       });
 
       setTimeout(() => {
-        console.log('🔍 CompleteProfile: Ejecutando redirección...');
+        
         if (formData.role === 'psychologist') {
           navigate('/dashboard-psychologist');
         } else {

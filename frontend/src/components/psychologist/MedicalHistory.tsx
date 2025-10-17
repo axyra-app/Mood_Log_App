@@ -201,7 +201,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
         <div className="flex space-x-3">
           <button
             onClick={() => {
-              console.log('🔍 Botón Ver Historial clickeado');
+              
               setShowHistoryModal(true);
             }}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
@@ -211,7 +211,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ psychologistId }) => {
           </button>
           <button
             onClick={() => {
-              console.log('🔍 Botón Nueva Historia clickeado');
+              
               setShowCreateModal(true);
             }}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
