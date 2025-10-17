@@ -38,7 +38,7 @@ export const useUserAppointments = (userId: string) => {
     }
 
     // Ejecutar limpieza automática de citas al cargar
-    runAppointmentCleanup().catch(error => {
+    runAppointmentCleanup(userId).catch(error => {
       console.error('Error ejecutando limpieza automática:', error);
     });
 

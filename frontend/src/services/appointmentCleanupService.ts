@@ -18,18 +18,19 @@ export interface Appointment {
 
 class AppointmentCleanupService {
   /**
-   * Elimina citas que han pasado más de 3 días de su fecha programada
+   * Elimina citas del usuario actual que han pasado más de 3 días de su fecha programada
    */
-  async cleanupExpiredAppointments(): Promise<number> {
+  async cleanupExpiredAppointments(userId: string): Promise<number> {
     try {
       console.log('🧹 Iniciando limpieza de citas expiradas...');
       
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       
-      // Buscar citas en la colección de usuarios
+      // Solo buscar citas del usuario actual
       const userAppointmentsQuery = query(
         collection(db, 'appointments'),
+        where('userId', '==', userId),
         where('appointmentDate', '<', Timestamp.fromDate(threeDaysAgo)),
         where('status', 'in', ['completed', 'cancelled', 'expired'])
       );
@@ -37,34 +38,14 @@ class AppointmentCleanupService {
       const userAppointmentsSnapshot = await getDocs(userAppointmentsQuery);
       let deletedCount = 0;
       
-      // Eliminar citas de usuarios
+      // Eliminar solo las citas del usuario actual
       for (const docSnapshot of userAppointmentsSnapshot.docs) {
         try {
           await deleteDoc(doc(db, 'appointments', docSnapshot.id));
           deletedCount++;
-          console.log(`🗑️ Cita de usuario eliminada: ${docSnapshot.id}`);
+          console.log(`🗑️ Cita del usuario eliminada: ${docSnapshot.id}`);
         } catch (error) {
-          console.error(`❌ Error eliminando cita de usuario ${docSnapshot.id}:`, error);
-        }
-      }
-      
-      // Buscar citas en la colección de psicólogos
-      const psychologistAppointmentsQuery = query(
-        collection(db, 'psychologistAppointments'),
-        where('appointmentDate', '<', Timestamp.fromDate(threeDaysAgo)),
-        where('status', 'in', ['completed', 'cancelled', 'expired'])
-      );
-      
-      const psychologistAppointmentsSnapshot = await getDocs(psychologistAppointmentsQuery);
-      
-      // Eliminar citas de psicólogos
-      for (const docSnapshot of psychologistAppointmentsSnapshot.docs) {
-        try {
-          await deleteDoc(doc(db, 'psychologistAppointments', docSnapshot.id));
-          deletedCount++;
-          console.log(`🗑️ Cita de psicólogo eliminada: ${docSnapshot.id}`);
-        } catch (error) {
-          console.error(`❌ Error eliminando cita de psicólogo ${docSnapshot.id}:`, error);
+          console.error(`❌ Error eliminando cita del usuario ${docSnapshot.id}:`, error);
         }
       }
       
@@ -78,17 +59,18 @@ class AppointmentCleanupService {
   }
   
   /**
-   * Marca citas como expiradas si han pasado su fecha
+   * Marca citas del usuario actual como expiradas si han pasado su fecha
    */
-  async markExpiredAppointments(): Promise<number> {
+  async markExpiredAppointments(userId: string): Promise<number> {
     try {
       console.log('⏰ Marcando citas como expiradas...');
       
       const now = new Date();
       
-      // Buscar citas pendientes o aceptadas que ya pasaron su fecha
+      // Solo buscar citas del usuario actual
       const expiredQuery = query(
         collection(db, 'appointments'),
+        where('userId', '==', userId),
         where('appointmentDate', '<', Timestamp.fromDate(now)),
         where('status', 'in', ['pending', 'accepted'])
       );
@@ -119,13 +101,13 @@ class AppointmentCleanupService {
   }
   
   /**
-   * Ejecuta la limpieza completa (marcar expiradas + eliminar antiguas)
+   * Ejecuta la limpieza completa para el usuario actual
    */
-  async runFullCleanup(): Promise<{ marked: number; deleted: number }> {
+  async runFullCleanup(userId: string): Promise<{ marked: number; deleted: number }> {
     console.log('🚀 Ejecutando limpieza completa de citas...');
     
-    const marked = await this.markExpiredAppointments();
-    const deleted = await this.cleanupExpiredAppointments();
+    const marked = await this.markExpiredAppointments(userId);
+    const deleted = await this.cleanupExpiredAppointments(userId);
     
     console.log(`🎯 Limpieza completa: ${marked} marcadas como expiradas, ${deleted} eliminadas`);
     
@@ -135,10 +117,10 @@ class AppointmentCleanupService {
 
 export const appointmentCleanupService = new AppointmentCleanupService();
 
-// Función para ejecutar limpieza automática (puede ser llamada desde un cron job o al iniciar la app)
-export const runAppointmentCleanup = async () => {
+// Función para ejecutar limpieza automática (requiere userId)
+export const runAppointmentCleanup = async (userId: string) => {
   try {
-    const result = await appointmentCleanupService.runFullCleanup();
+    const result = await appointmentCleanupService.runFullCleanup(userId);
     return result;
   } catch (error) {
     console.error('❌ Error ejecutando limpieza automática:', error);
