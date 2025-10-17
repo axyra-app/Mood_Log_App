@@ -73,9 +73,7 @@ const DashboardSimple: React.FC = () => {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-3 sm:py-4'>
             <div className='flex items-center space-x-2 sm:space-x-3'>
-              <div className='w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md'>
-                <span className='text-white text-lg sm:text-xl'>🧠</span>
-              </div>
+              <Logo size="sm" showText={false} />
               <h1 className={`text-lg sm:text-xl lg:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 MOOD LOG
               </h1>

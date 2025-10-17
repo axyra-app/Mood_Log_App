@@ -307,7 +307,9 @@ const RegisterSimple: React.FC = () => {
                           : 'border-gray-300 text-gray-600 hover:border-gray-400'
                       }`}
                     >
-                      <div className='text-2xl mb-2'>🧠</div>
+                      <div className='mb-2'>
+                        <Logo size="sm" showText={false} />
+                      </div>
                       <div className='font-bold text-sm'>PSICÓLOGO</div>
                     </button>
                   </div>
