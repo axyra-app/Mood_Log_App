@@ -209,14 +209,16 @@ const MoodFlowSimple: React.FC = () => {
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
 
-              {/* Logout */}
+              {/* Volver al Dashboard */}
               <button
-                onClick={() => setShowLogoutModal(true)}
-                className={`p-2 rounded-lg ${
-                  isDarkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-100'
+                onClick={() => navigate('/dashboard')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDarkMode 
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                    : 'bg-purple-500 hover:bg-purple-600 text-white'
                 }`}
               >
-                🚪
+                ← Volver al Dashboard
               </button>
             </div>
           </div>
