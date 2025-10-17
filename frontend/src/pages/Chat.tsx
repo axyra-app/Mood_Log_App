@@ -18,6 +18,7 @@ import { getUserChats } from '../services/firestore';
 import { subscribeToMessages, sendMessage, createChat } from '../services/chatService';
 import { usePsychologists } from '../hooks/usePsychologists';
 import { Chat as ChatType, ChatMessage, Psychologist } from '../types';
+import Logo from '../components/Logo';
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
@@ -193,6 +194,7 @@ const Chat: React.FC = () => {
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='flex justify-between items-center h-16'>
               <div className='flex items-center space-x-4'>
+                <Logo size="sm" />
                 <Link
                   to='/dashboard'
                   className='inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors'

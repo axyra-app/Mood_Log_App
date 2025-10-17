@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
+import Logo from '../components/Logo';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
@@ -225,6 +226,9 @@ const CompleteProfile: React.FC = () => {
                 </button>
 
                 <div className='text-6xl mb-4'>👤</div>
+                <div className='mb-4'>
+                  <Logo size="lg" />
+                </div>
                 <h1
                   className={`text-3xl font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'

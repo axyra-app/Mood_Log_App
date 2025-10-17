@@ -1,5 +1,4 @@
 import React from 'react';
-import logoImage from '../assets/Logo_Mood_log_app.png';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -47,11 +46,16 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Logo Image - Always use your original logo */}
+      {/* Logo Image - Using the correct logo from public directory */}
       <img
-        src={logoImage}
+        src="/Logo_Mood_log_app.png"
         alt="Mood Log App Logo"
         className={`${sizes.image} rounded-lg flex-shrink-0`}
+        onError={(e) => {
+          console.error('Error loading logo:', e);
+          // Fallback to a simple div with initials
+          e.currentTarget.style.display = 'none';
+        }}
       />
 
       {/* Logo Text */}

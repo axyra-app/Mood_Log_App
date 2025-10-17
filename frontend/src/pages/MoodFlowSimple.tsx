@@ -5,6 +5,7 @@ import LogoutModal from '../components/LogoutModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
 import { aiService, MoodAnalysisResult } from '../services/aiService';
+import Logo from '../components/Logo';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -194,7 +195,7 @@ const MoodFlowSimple: React.FC = () => {
         <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center'>
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>🧠 Mood Log</h1>
+              <Logo size="md" />
             </div>
 
             <div className='flex items-center space-x-4'>
