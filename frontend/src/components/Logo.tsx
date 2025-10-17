@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -7,6 +7,9 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
+  const [imageError, setImageError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState('/favicon.svg');
+
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
@@ -44,19 +47,34 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   const sizes = getSizeClasses();
 
+  const handleImageError = () => {
+    console.log('Error loading logo, trying fallback...');
+    if (currentSrc === '/favicon.svg') {
+      setCurrentSrc('/Logo_Mood_log_app.png');
+    } else if (currentSrc === '/Logo_Mood_log_app.png') {
+      setCurrentSrc('/favicon.png');
+    } else {
+      setImageError(true);
+    }
+  };
+
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Logo Image - Using the correct logo from public directory */}
-      <img
-        src="/Logo_Mood_log_app.png"
-        alt="Mood Log App Logo"
-        className={`${sizes.image} rounded-lg flex-shrink-0`}
-        onError={(e) => {
-          console.error('Error loading logo:', e);
-          // Fallback to a simple div with initials
-          e.currentTarget.style.display = 'none';
-        }}
-      />
+      {/* Logo Image with fallback */}
+      {!imageError ? (
+        <img
+          src={currentSrc}
+          alt="Mood Log App Logo"
+          className={`${sizes.image} rounded-lg flex-shrink-0`}
+          onError={handleImageError}
+          onLoad={() => console.log('Logo loaded successfully:', currentSrc)}
+        />
+      ) : (
+        // Fallback: Simple gradient circle with initials
+        <div className={`${sizes.image} rounded-lg flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center`}>
+          <span className="text-white font-bold text-xs">ML</span>
+        </div>
+      )}
 
       {/* Logo Text */}
       {showText && (
