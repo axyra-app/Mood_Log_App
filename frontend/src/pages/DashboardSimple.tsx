@@ -325,7 +325,7 @@ const DashboardSimple: React.FC = () => {
 
         {/* Appointment Section */}
         <div className='mb-8'>
-          <AppointmentSection />
+          <AppointmentSection isDarkMode={isDarkMode} />
         </div>
 
         {/* Recent Mood Logs */}

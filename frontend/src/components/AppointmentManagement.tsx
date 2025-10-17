@@ -19,31 +19,17 @@ interface Appointment {
   updatedAt: Date;
 }
 
-const AppointmentManagement: React.FC = () => {
+interface AppointmentManagementProps {
+  isDarkMode?: boolean;
+}
+
+const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMode = false }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { appointments, loading, updateAppointment, deleteAppointment } = useUserAppointments(user?.uid || '');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Detectar modo oscuro
-    const checkDarkMode = () => {
-      const isDark = document.documentElement.classList.contains('dark') || 
-                    localStorage.getItem('darkMode') === 'true' ||
-                    window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkMode(isDark);
-    };
-
-    checkDarkMode();
-    
-    // Escuchar cambios en el modo oscuro
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', checkDarkMode);
-
     const handleToggleHistory = () => {
       // Esta función ya no es necesaria pero la mantenemos por compatibilidad
     };
@@ -51,8 +37,6 @@ const AppointmentManagement: React.FC = () => {
     window.addEventListener('toggleAppointmentHistory', handleToggleHistory);
     
     return () => {
-      observer.disconnect();
-      mediaQuery.removeEventListener('change', checkDarkMode);
       window.removeEventListener('toggleAppointmentHistory', handleToggleHistory);
     };
   }, []);

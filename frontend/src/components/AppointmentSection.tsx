@@ -4,7 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import AppointmentManagement from './AppointmentManagement';
 import AppointmentModal from './AppointmentModal';
 
-const AppointmentSection: React.FC = () => {
+interface AppointmentSectionProps {
+  isDarkMode?: boolean;
+}
+
+const AppointmentSection: React.FC<AppointmentSectionProps> = ({ isDarkMode = false }) => {
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
 
@@ -28,8 +32,8 @@ const AppointmentSection: React.FC = () => {
             <Calendar className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Mis Citas</h2>
-            <p className="text-gray-600">Gestiona tus citas con psicólogos</p>
+            <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Mis Citas</h2>
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Gestiona tus citas con psicólogos</p>
           </div>
         </div>
         
@@ -43,7 +47,7 @@ const AppointmentSection: React.FC = () => {
       </div>
 
       {/* Gestión de Citas */}
-      <AppointmentManagement />
+      <AppointmentManagement isDarkMode={isDarkMode} />
 
       {/* Modal de Nueva Cita */}
       <AppointmentModal isOpen={showModal} onClose={() => setShowModal(false)} />
