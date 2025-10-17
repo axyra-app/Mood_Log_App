@@ -84,9 +84,9 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
       {/* Sidebar */}
       <div className={`fixed top-0 left-0 h-full bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } w-64`}>
+      } w-64 flex flex-col`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
           <Logo size="md" showText={true} className="text-white" />
           <button
             onClick={onClose}
@@ -96,12 +96,12 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
           </button>
         </div>
         
-        {/* Menu Items */}
-        <div className="flex flex-col h-full">
-          <div className="px-6 py-4">
+        {/* Menu Items - Scrollable */}
+        <div className="flex-1 overflow-hidden">
+          <div className="px-6 py-4 flex-shrink-0">
             <h3 className="text-lg font-semibold text-gray-300 mb-4">Más Herramientas</h3>
           </div>
-          <div className="flex-1 px-6 pb-6 overflow-y-auto">
+          <div className="px-6 pb-6 h-full overflow-y-auto">
             <div className="space-y-3">
               {menuItems.map((item, index) => {
                 const IconComponent = item.icon;

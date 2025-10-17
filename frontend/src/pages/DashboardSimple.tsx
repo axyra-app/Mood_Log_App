@@ -1,10 +1,10 @@
-import { BarChart3, Calendar, LogOut, Moon, Sun, Menu, X, BookOpen, Heart, MessageCircle, BarChart, FileText, Settings } from 'lucide-react';
+import { BarChart3, BookOpen, Calendar, LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentSection from '../components/AppointmentSection';
+import LateralSidebar from '../components/LateralSidebar';
 import Logo from '../components/Logo';
 import NotificationsPanel from '../components/NotificationsPanel';
-import LateralSidebar from '../components/LateralSidebar';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
@@ -73,7 +73,7 @@ const DashboardSimple: React.FC = () => {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-3 sm:py-4'>
             <div className='flex items-center space-x-2 sm:space-x-3'>
-              <Logo size="sm" showText={false} />
+              <Logo size='sm' showText={false} />
               <h1 className={`text-lg sm:text-xl lg:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 MOOD LOG
               </h1>
@@ -82,22 +82,26 @@ const DashboardSimple: React.FC = () => {
             <div className='flex items-center space-x-2 sm:space-x-4'>
               {/* Notificaciones */}
               <NotificationsPanel isDarkMode={isDarkMode} />
-              
+
               {/* Botón del menú */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className={`p-2 rounded-lg transition-colors shadow-md ${
-                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
                 } ${isMenuOpen ? 'ring-2 ring-purple-500' : ''}`}
-                title="Más herramientas"
+                title='Más herramientas'
               >
                 {isMenuOpen ? <X className='w-4 h-4 sm:w-5 sm:h-5' /> : <Menu className='w-4 h-4 sm:w-5 sm:h-5' />}
               </button>
-              
+
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
                 }`}
               >
                 {isDarkMode ? <Sun className='w-4 h-4 sm:w-5 sm:h-5' /> : <Moon className='w-4 h-4 sm:w-5 sm:h-5' />}
@@ -117,11 +121,7 @@ const DashboardSimple: React.FC = () => {
       </header>
 
       {/* Nuevo Lateral Sidebar */}
-      <LateralSidebar 
-        isOpen={isMenuOpen} 
-        onClose={() => setIsMenuOpen(false)} 
-        isDarkMode={isDarkMode} 
-      />
+      <LateralSidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} isDarkMode={isDarkMode} />
 
       {/* Menú desktop (solo visible en pantallas grandes) - REMOVIDO */}
 
@@ -138,9 +138,11 @@ const DashboardSimple: React.FC = () => {
         </div>
 
         {/* Journal Section - Destacado como función principal */}
-        <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        } mb-8`}>
+        <div
+          className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          } mb-8`}
+        >
           <div className='p-6 border-b border-gray-200 dark:border-gray-700'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center space-x-3'>
@@ -168,7 +170,7 @@ const DashboardSimple: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           <div className='p-6'>
             {journalEntries.length === 0 ? (
               <div className='text-center py-8'>
@@ -192,7 +194,9 @@ const DashboardSimple: React.FC = () => {
                   <div
                     key={entry.id || index}
                     className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-white border-gray-200 hover:bg-gray-50'
+                      isDarkMode
+                        ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                        : 'bg-white border-gray-200 hover:bg-gray-50'
                     }`}
                     onClick={() => navigate('/journal')}
                   >
@@ -201,29 +205,33 @@ const DashboardSimple: React.FC = () => {
                         {entry.title || `Entrada ${index + 1}`}
                       </h4>
                       <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {entry.date ? entry.date.toLocaleDateString('es-ES', {
-                          day: 'numeric',
-                          month: 'short'
-                        }) : 'Hoy'}
+                        {entry.date
+                          ? entry.date.toLocaleDateString('es-ES', {
+                              day: 'numeric',
+                              month: 'short',
+                            })
+                          : 'Hoy'}
                       </span>
                     </div>
-                    
+
                     <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-2 line-clamp-2`}>
-                      {entry.content ? entry.content.substring(0, 80) + (entry.content.length > 80 ? '...' : '') : 'Sin contenido'}
+                      {entry.content
+                        ? entry.content.substring(0, 80) + (entry.content.length > 80 ? '...' : '')
+                        : 'Sin contenido'}
                     </p>
-                    
+
                     <div className='flex items-center justify-between'>
                       <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {entry.date ? entry.date.toLocaleTimeString('es-ES', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) : 'Ahora'}
+                        {entry.date
+                          ? entry.date.toLocaleTimeString('es-ES', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'Ahora'}
                       </span>
                       <div className='flex items-center space-x-1'>
                         {entry.mood && (
-                          <span className='text-xs'>
-                            {entry.mood <= 2 ? '😢' : entry.mood <= 3 ? '😐' : '😊'}
-                          </span>
+                          <span className='text-xs'>{entry.mood <= 2 ? '😢' : entry.mood <= 3 ? '😐' : '😊'}</span>
                         )}
                         <span className={`text-xs ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
                           Ver más →
@@ -232,7 +240,7 @@ const DashboardSimple: React.FC = () => {
                     </div>
                   </div>
                 ))}
-                
+
                 {journalEntries.length > 6 && (
                   <div className={`col-span-full text-center pt-4`}>
                     <button
@@ -285,7 +293,11 @@ const DashboardSimple: React.FC = () => {
                 </p>
               </div>
               <div className='w-8 h-8 flex items-center justify-center'>
-                <div className={`w-6 h-6 rounded-full ${isDarkMode ? 'bg-purple-500' : 'bg-purple-100'} flex items-center justify-center`}>
+                <div
+                  className={`w-6 h-6 rounded-full ${
+                    isDarkMode ? 'bg-purple-500' : 'bg-purple-100'
+                  } flex items-center justify-center`}
+                >
                   <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-purple-600'}`}>📊</span>
                 </div>
               </div>
