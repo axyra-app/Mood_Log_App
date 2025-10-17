@@ -8,7 +8,7 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
   const [imageError, setImageError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState('/favicon.svg');
+  const [currentSrc, setCurrentSrc] = useState('/Logo_Mood_log_app.png');
 
   const getSizeClasses = () => {
     switch (size) {
@@ -49,14 +49,36 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   const handleImageError = () => {
     console.log('Error loading logo, trying fallback...');
-    if (currentSrc === '/favicon.svg') {
-      setCurrentSrc('/Logo_Mood_log_app.png');
-    } else if (currentSrc === '/Logo_Mood_log_app.png') {
+    if (currentSrc === '/Logo_Mood_log_app.png') {
       setCurrentSrc('/favicon.png');
+    } else if (currentSrc === '/favicon.png') {
+      setCurrentSrc('/favicon.svg');
     } else {
       setImageError(true);
     }
   };
+
+  // SVG Logo inline como fallback principal
+  const LogoSVG = () => (
+    <svg 
+      className={`${sizes.image} rounded-lg flex-shrink-0`}
+      viewBox="0 0 100 100" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="50%" stopColor="#EC4899" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="20" fill="url(#logoGradient)" />
+      <circle cx="35" cy="35" r="8" fill="white" />
+      <circle cx="65" cy="35" r="8" fill="white" />
+      <path d="M25 65 Q50 80 75 65" stroke="white" strokeWidth="6" strokeLinecap="round" fill="none" />
+    </svg>
+  );
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
@@ -70,10 +92,8 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
           onLoad={() => console.log('Logo loaded successfully:', currentSrc)}
         />
       ) : (
-        // Fallback: Simple gradient circle with initials
-        <div className={`${sizes.image} rounded-lg flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center`}>
-          <span className="text-white font-bold text-xs">ML</span>
-        </div>
+        // Fallback: SVG inline logo
+        <LogoSVG />
       )}
 
       {/* Logo Text */}
