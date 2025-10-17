@@ -287,8 +287,8 @@ const RegisterSimple: React.FC = () => {
                             ? 'border-purple-500 bg-purple-500/20 text-purple-400'
                             : 'border-purple-500 bg-purple-50 text-purple-600'
                           : isDarkMode
-                          ? 'border-gray-600 text-gray-400 hover:border-gray-500'
-                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                          ? 'border-gray-600 bg-gray-700 text-gray-400 hover:border-gray-500'
+                          : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
                       }`}
                     >
                       <div className='text-2xl mb-2'>👤</div>
@@ -303,8 +303,8 @@ const RegisterSimple: React.FC = () => {
                             ? 'border-purple-500 bg-purple-500/20 text-purple-400'
                             : 'border-purple-500 bg-purple-50 text-purple-600'
                           : isDarkMode
-                          ? 'border-gray-600 text-gray-400 hover:border-gray-500'
-                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                          ? 'border-gray-600 bg-gray-700 text-gray-400 hover:border-gray-500'
+                          : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
                       }`}
                     >
                       <div className='mb-2'>

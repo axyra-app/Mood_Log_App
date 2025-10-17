@@ -131,8 +131,28 @@ const MoodFlowSimple: React.FC = () => {
         setAiAnalysis(analysis);
       } catch (aiError) {
         console.error('Error generating AI analysis:', aiError);
-        // Fallback analysis will be provided by the service
-        setAiAnalysis(null);
+        // Provide fallback analysis
+        const fallbackAnalysis = {
+          summary: 'Análisis básico basado en tus datos',
+          insights: [
+            `Estado de ánimo: ${currentMood <= 2 ? 'Bajo' : currentMood >= 4 ? 'Alto' : 'Moderado'}`,
+            `Energía: ${energy < 5 ? 'Baja' : energy > 7 ? 'Alta' : 'Moderada'}`,
+            `Estrés: ${stress > 6 ? 'Alto' : stress < 4 ? 'Bajo' : 'Moderado'}`
+          ],
+          recommendations: [
+            {
+              type: 'general' as const,
+              priority: 'medium' as const,
+              title: 'Continúa registrando',
+              description: 'Mantén el hábito de registrar tu estado de ánimo diariamente.',
+              actionable: 'Intenta registrar tu estado de ánimo a la misma hora cada día.',
+              category: 'Hábitos'
+            }
+          ],
+          moodTrend: 'stable' as const,
+          riskLevel: 'low' as const
+        };
+        setAiAnalysis(fallbackAnalysis);
       } finally {
         setAnalyzing(false);
       }

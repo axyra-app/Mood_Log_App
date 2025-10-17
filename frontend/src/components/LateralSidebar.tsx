@@ -49,13 +49,6 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
       color: 'bg-gradient-to-r from-orange-500 to-red-500'
     },
     { 
-      icon: Calendar, 
-      label: 'Mis Citas', 
-      path: '/dashboard',
-      description: 'Gestiona tus citas',
-      color: 'bg-gradient-to-r from-indigo-500 to-purple-500'
-    },
-    { 
       icon: BookOpen, 
       label: 'Mi Diario', 
       path: '/journal',
@@ -65,7 +58,7 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
     { 
       icon: Users, 
       label: 'Psicólogos', 
-      path: '/psychologists',
+      path: '/dashboard',
       description: 'Encuentra profesionales',
       color: 'bg-gradient-to-r from-pink-500 to-rose-500'
     },
