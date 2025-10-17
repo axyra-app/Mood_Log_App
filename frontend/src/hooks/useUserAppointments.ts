@@ -3,6 +3,7 @@ import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, addDoc, 
 import { db } from '../services/firebase';
 import { usePatientRelations } from './usePatientRelations';
 import { createAppointmentRequestNotification } from '../services/notificationService';
+import { runAppointmentCleanup } from '../services/appointmentCleanupService';
 
 export interface UserAppointment {
   id: string;
@@ -35,6 +36,11 @@ export const useUserAppointments = (userId: string) => {
       setLoading(false);
       return;
     }
+
+    // Ejecutar limpieza automática de citas al cargar
+    runAppointmentCleanup().catch(error => {
+      console.error('Error ejecutando limpieza automática:', error);
+    });
 
     const appointmentsQuery = query(
       collection(db, 'appointments'),

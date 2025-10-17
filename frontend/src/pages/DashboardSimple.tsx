@@ -48,43 +48,7 @@ const DashboardSimple: React.FC = () => {
     }
   };
 
-  const secondaryModules = [
-    {
-      title: 'Registrar Estado de Ánimo',
-      description: 'Cómo te sientes hoy',
-      icon: Heart,
-      color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-      action: () => navigate('/mood-flow'),
-    },
-    {
-      title: 'Ver Estadísticas',
-      description: 'Tu progreso emocional',
-      icon: BarChart,
-      color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
-      action: () => navigate('/statistics'),
-    },
-    {
-      title: 'Chat de Apoyo',
-      description: 'IA o psicólogo real',
-      icon: MessageCircle,
-      color: 'bg-gradient-to-r from-green-500 to-emerald-500',
-      action: () => navigate('/chat'),
-    },
-    {
-      title: 'Reportes Avanzados',
-      description: 'Análisis detallados',
-      icon: FileText,
-      color: 'bg-gradient-to-r from-yellow-500 to-orange-500',
-      action: () => navigate('/reports'),
-    },
-    {
-      title: 'Configuración',
-      description: 'Personaliza tu experiencia',
-      icon: Settings,
-      color: 'bg-gradient-to-r from-orange-500 to-red-500',
-      action: () => navigate('/settings'),
-    },
-  ];
+  // Removed secondaryModules array - now handled by sidebar
 
   if (!isLoaded) {
     return (
@@ -225,60 +189,54 @@ const DashboardSimple: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className='space-y-4'>
-                {journalEntries.slice(0, 2).map((entry, index) => (
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {journalEntries.slice(0, 6).map((entry, index) => (
                   <div
                     key={entry.id || index}
-                    className={`p-4 rounded-lg border ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                    className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-white border-gray-200 hover:bg-gray-50'
                     }`}
+                    onClick={() => navigate('/journal')}
                   >
-                    <div className='flex items-start justify-between'>
-                      <div className='flex-1'>
-                        <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {entry.title}
-                        </h4>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-                          {entry.date.toLocaleDateString('es-ES', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mt-2 line-clamp-2`}>
-                          {entry.content.substring(0, 150)}...
-                        </p>
-                        {entry.tags.length > 0 && (
-                          <div className='flex flex-wrap gap-1 mt-2'>
-                            {entry.tags.slice(0, 3).map((tag, tagIndex) => (
-                              <span
-                                key={tagIndex}
-                                className={`px-2 py-1 text-xs rounded-full ${
-                                  isDarkMode ? 'bg-purple-600 text-purple-100' : 'bg-purple-100 text-purple-700'
-                                }`}
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
+                    <div className='flex items-start justify-between mb-2'>
+                      <h4 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'} truncate`}>
+                        {entry.title || `Entrada ${index + 1}`}
+                      </h4>
+                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {entry.date ? entry.date.toLocaleDateString('es-ES', {
+                          day: 'numeric',
+                          month: 'short'
+                        }) : 'Hoy'}
+                      </span>
+                    </div>
+                    
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-2 line-clamp-2`}>
+                      {entry.content ? entry.content.substring(0, 80) + (entry.content.length > 80 ? '...' : '') : 'Sin contenido'}
+                    </p>
+                    
+                    <div className='flex items-center justify-between'>
+                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {entry.date ? entry.date.toLocaleTimeString('es-ES', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'Ahora'}
+                      </span>
+                      <div className='flex items-center space-x-1'>
+                        {entry.mood && (
+                          <span className='text-xs'>
+                            {entry.mood <= 2 ? '😢' : entry.mood <= 3 ? '😐' : '😊'}
+                          </span>
                         )}
+                        <span className={`text-xs ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                          Ver más →
+                        </span>
                       </div>
-                      {entry.mood && (
-                        <div className='ml-4 text-center'>
-                          <div className='text-2xl'>
-                            {entry.mood <= 2 ? '😢' : entry.mood <= 3 ? '😐' : entry.mood <= 4 ? '🙂' : '😊'}
-                          </div>
-                          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {entry.mood}/10
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
-                {journalEntries.length > 2 && (
-                  <div className='text-center pt-4'>
+                
+                {journalEntries.length > 6 && (
+                  <div className={`col-span-full text-center pt-4`}>
                     <button
                       onClick={() => navigate('/journal')}
                       className={`text-sm font-medium ${

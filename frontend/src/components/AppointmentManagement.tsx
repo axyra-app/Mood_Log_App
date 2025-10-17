@@ -74,11 +74,26 @@ const AppointmentManagement: React.FC = () => {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      // Si es un string, convertir a Date
+      if (typeof date === 'string') {
+        date = new Date(date);
+      }
+      
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return 'Fecha no válida';
+      }
+      
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Fecha no válida';
+    }
   };
 
   const formatTime = (time: string) => {

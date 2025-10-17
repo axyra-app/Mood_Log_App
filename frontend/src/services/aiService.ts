@@ -1,473 +1,227 @@
-import { ChatMessage } from '../types';
-
-export interface AIResponse {
-  message: string;
-  suggestions?: string[];
-  followUpQuestions?: string[];
+// AI Service for Mood Analysis and Recommendations
+export interface MoodAnalysis {
+  overallMood: number;
+  energy: number;
+  stress: number;
+  sleep: number;
+  activities: string[];
+  emotions: string[];
+  feelings: string;
 }
 
-export interface AIDoctorProfile {
-  id: string;
-  name: string;
-  specialty: string;
-  personality: string;
-  responseStyle: string;
+export interface AIRecommendation {
+  type: 'energy' | 'stress' | 'sleep' | 'mood' | 'general';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  actionable: string;
+  category: string;
 }
 
-// Perfiles de doctores IA simulados - Versión Profesional
-export const AI_DOCTORS: Record<string, AIDoctorProfile> = {
-  general: {
-    id: 'ai-general',
-    name: 'Dra. Sofia Martínez',
-    specialty: 'Psicología Clínica',
-    personality: 'Empática, profesional y comprensiva',
-    responseStyle: 'Científicamente fundamentada pero cálida y accesible'
-  },
-  specialist: {
-    id: 'ai-specialist',
-    name: 'Dr. Carlos Rodríguez',
-    specialty: 'Psiquiatría y Terapia Cognitivo-Conductual',
-    personality: 'Analítico, detallado y orientado a soluciones',
-    responseStyle: 'Técnicamente precisa pero comprensible'
-  }
-};
+export interface MoodAnalysisResult {
+  summary: string;
+  insights: string[];
+  recommendations: AIRecommendation[];
+  moodTrend: 'improving' | 'stable' | 'declining';
+  riskLevel: 'low' | 'medium' | 'high';
+}
 
-// Función para generar respuestas de IA profesional y realista
-export const generateAIResponse = async (
-  userMessage: string,
-  chatHistory: ChatMessage[],
-  doctorType: 'general' | 'specialist' = 'general'
-): Promise<AIResponse> => {
-  try {
-    const doctor = AI_DOCTORS[doctorType];
+class AIService {
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor() {
+    // Using OpenAI API for real AI analysis
+    this.apiKey = process.env.REACT_APP_OPENAI_API_KEY || '';
+    this.baseUrl = 'https://api.openai.com/v1';
+  }
+
+  async analyzeMood(moodData: MoodAnalysis): Promise<MoodAnalysisResult> {
+    try {
+      // If no API key, return fallback analysis
+      if (!this.apiKey) {
+        return this.getFallbackAnalysis(moodData);
+      }
+
+      const prompt = this.buildAnalysisPrompt(moodData);
+      
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'Eres un psicólogo experto en análisis de estado de ánimo. Proporciona análisis profesionales y recomendaciones prácticas basadas en datos de bienestar emocional.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const analysisText = data.choices[0].message.content;
+      
+      return this.parseAIResponse(analysisText, moodData);
+    } catch (error) {
+      console.error('Error calling AI service:', error);
+      return this.getFallbackAnalysis(moodData);
+    }
+  }
+
+  private buildAnalysisPrompt(moodData: MoodAnalysis): string {
+    return `
+Analiza el siguiente estado de ánimo y proporciona recomendaciones profesionales:
+
+DATOS DEL USUARIO:
+- Estado de ánimo general: ${moodData.overallMood}/5
+- Energía: ${moodData.energy}/10
+- Estrés: ${moodData.stress}/10
+- Calidad del sueño: ${moodData.sleep}/10
+- Actividades realizadas: ${moodData.activities.join(', ')}
+- Emociones identificadas: ${moodData.emotions.join(', ')}
+- Descripción de sentimientos: "${moodData.feelings}"
+
+Por favor proporciona:
+1. Un resumen general del estado emocional
+2. 3-5 insights clave sobre patrones observados
+3. 4-6 recomendaciones específicas y accionables
+4. Evaluación de tendencia (mejorando/estable/empeorando)
+5. Nivel de riesgo (bajo/medio/alto)
+
+Formato de respuesta en JSON:
+{
+  "summary": "resumen del estado emocional",
+  "insights": ["insight 1", "insight 2", "insight 3"],
+  "recommendations": [
+    {
+      "type": "energy|stress|sleep|mood|general",
+      "priority": "high|medium|low",
+      "title": "Título de la recomendación",
+      "description": "Descripción detallada",
+      "actionable": "Acción específica a tomar",
+      "category": "Categoría de la recomendación"
+    }
+  ],
+  "moodTrend": "improving|stable|declining",
+  "riskLevel": "low|medium|high"
+}
+    `;
+  }
+
+  private parseAIResponse(responseText: string, moodData: MoodAnalysis): MoodAnalysisResult {
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          summary: parsed.summary || 'Análisis completado',
+          insights: parsed.insights || [],
+          recommendations: parsed.recommendations || [],
+          moodTrend: parsed.moodTrend || 'stable',
+          riskLevel: parsed.riskLevel || 'low',
+        };
+      }
+    } catch (error) {
+      console.error('Error parsing AI response:', error);
+    }
+
+    // Fallback if parsing fails
+    return this.getFallbackAnalysis(moodData);
+  }
+
+  private getFallbackAnalysis(moodData: MoodAnalysis): MoodAnalysisResult {
+    const recommendations: AIRecommendation[] = [];
     
-    // Detectar urgencia usando función local
-    const urgency = detectUrgency(userMessage);
-    
-    if (urgency === 'high' || urgency === 'medium') {
-      return generateUrgentResponse(urgency);
+    // Generate recommendations based on mood data
+    if (moodData.overallMood <= 2) {
+      recommendations.push({
+        type: 'mood',
+        priority: 'high',
+        title: 'Apoyo Emocional',
+        description: 'Tu estado de ánimo está bajo. Es importante buscar apoyo.',
+        actionable: 'Considera hablar con un profesional de salud mental o un ser querido.',
+        category: 'Salud Mental'
+      });
     }
 
-    // Simular delay de procesamiento realista
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 3000));
-
-    // Análisis contextual del mensaje del usuario
-    const message = userMessage.toLowerCase();
-    const context = analyzeMessageContext(message, chatHistory);
-    
-    // Respuestas profesionales basadas en evidencia científica
-    if (context.includes('ansiedad') || context.includes('panic') || context.includes('nerviosismo')) {
-      return generateAnxietyResponse(doctor, message, chatHistory);
+    if (moodData.energy < 5) {
+      recommendations.push({
+        type: 'energy',
+        priority: 'medium',
+        title: 'Aumentar Energía',
+        description: 'Tu nivel de energía está bajo.',
+        actionable: 'Intenta hacer ejercicio ligero, caminar o tomar una ducha refrescante.',
+        category: 'Bienestar Físico'
+      });
     }
 
-    if (context.includes('depresión') || context.includes('tristeza') || context.includes('melancolía')) {
-      return generateDepressionResponse(doctor, message, chatHistory);
+    if (moodData.stress > 6) {
+      recommendations.push({
+        type: 'stress',
+        priority: 'high',
+        title: 'Manejo del Estrés',
+        description: 'Tu nivel de estrés es alto.',
+        actionable: 'Practica técnicas de relajación como respiración profunda o meditación.',
+        category: 'Relajación'
+      });
     }
 
-    if (context.includes('estrés') || context.includes('presión') || context.includes('sobrecarga')) {
-      return generateStressResponse(doctor, message, chatHistory);
+    if (moodData.sleep < 5) {
+      recommendations.push({
+        type: 'sleep',
+        priority: 'medium',
+        title: 'Mejorar el Sueño',
+        description: 'La calidad de tu sueño necesita atención.',
+        actionable: 'Establece una rutina de sueño consistente y evita pantallas antes de dormir.',
+        category: 'Hábitos Saludables'
+      });
     }
 
-    if (context.includes('sueño') || context.includes('insomnio') || context.includes('fatiga')) {
-      return generateSleepResponse(doctor, message, chatHistory);
+    // Add general recommendations
+    if (moodData.activities.length === 0) {
+      recommendations.push({
+        type: 'general',
+        priority: 'medium',
+        title: 'Actividades Positivas',
+        description: 'No se registraron actividades específicas.',
+        actionable: 'Intenta realizar al menos una actividad que disfrutes cada día.',
+        category: 'Actividades'
+      });
     }
 
-    if (context.includes('relaciones') || context.includes('social') || context.includes('familia')) {
-      return generateRelationshipResponse(doctor, message, chatHistory);
+    const insights = [
+      `Estado de ánimo general: ${moodData.overallMood <= 2 ? 'Bajo' : moodData.overallMood >= 4 ? 'Alto' : 'Moderado'}`,
+      `Nivel de energía: ${moodData.energy < 5 ? 'Bajo' : moodData.energy > 7 ? 'Alto' : 'Moderado'}`,
+      `Estrés: ${moodData.stress > 6 ? 'Alto' : moodData.stress < 4 ? 'Bajo' : 'Moderado'}`,
+    ];
+
+    if (moodData.emotions.length > 0) {
+      insights.push(`Emociones principales: ${moodData.emotions.slice(0, 3).join(', ')}`);
     }
 
-    if (context.includes('trabajo') || context.includes('laboral') || context.includes('carrera')) {
-      return generateWorkResponse(doctor, message, chatHistory);
-    }
-
-    if (context.includes('salud') || context.includes('físico') || context.includes('cuerpo')) {
-      return generateHealthResponse(doctor, message, chatHistory);
-    }
-
-    if (context.includes('hola') || context.includes('saludo') || context.includes('inicio')) {
-      return generateGreetingResponse(doctor, chatHistory);
-    }
-
-    // Respuesta contextual inteligente
-    return generateContextualResponse(doctor, message, chatHistory);
-
-  } catch (error) {
-    console.error('Error generating AI response:', error);
     return {
-      message: 'Disculpa, estoy experimentando dificultades técnicas temporales. Por favor, intenta de nuevo en un momento. Si el problema persiste, considera contactar directamente con un profesional de la salud mental.',
-      suggestions: ['Reintentar consulta', 'Contactar soporte técnico', 'Buscar ayuda profesional'],
-      followUpQuestions: ['¿Podrías reformular tu pregunta?', '¿Hay algo específico que necesitas abordar?']
+      summary: `Análisis basado en tu estado de ánimo (${moodData.overallMood}/5), energía (${moodData.energy}/10), estrés (${moodData.stress}/10) y sueño (${moodData.sleep}/10).`,
+      insights,
+      recommendations,
+      moodTrend: moodData.overallMood >= 4 ? 'improving' : moodData.overallMood <= 2 ? 'declining' : 'stable',
+      riskLevel: moodData.overallMood <= 2 && moodData.stress > 7 ? 'high' : moodData.overallMood <= 3 ? 'medium' : 'low',
     };
   }
-};
+}
 
-// Funciones auxiliares para análisis contextual
-const analyzeMessageContext = (message: string, chatHistory: ChatMessage[]): string => {
-  const contextKeywords = [
-    'ansiedad', 'panic', 'nerviosismo', 'preocupación', 'miedo',
-    'depresión', 'tristeza', 'melancolía', 'desesperanza',
-    'estrés', 'presión', 'sobrecarga', 'tensión',
-    'sueño', 'insomnio', 'fatiga', 'cansancio',
-    'relaciones', 'social', 'familia', 'amigos',
-    'trabajo', 'laboral', 'carrera', 'profesional',
-    'salud', 'físico', 'cuerpo', 'síntomas'
-  ];
-  
-  return contextKeywords.find(keyword => message.includes(keyword)) || 'general';
-};
-
-// Función para generar respuesta profesional sobre ansiedad
-const generateAnxietyResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `Entiendo que estás experimentando síntomas de ansiedad. Como ${doctor.name}, especialista en ${doctor.specialty}, es importante que sepas que la ansiedad es una respuesta natural del sistema nervioso, pero cuando se vuelve persistente puede afectar significativamente tu calidad de vida.`,
-      suggestions: [
-        'Técnica de respiración diafragmática 4-7-8',
-        'Ejercicios de relajación muscular progresiva',
-        'Técnicas de mindfulness y grounding',
-        'Identificación de patrones de pensamiento'
-      ],
-      followUpQuestions: [
-        '¿Cuándo comenzó a experimentar estos síntomas?',
-        '¿Hay situaciones específicas que desencadenen la ansiedad?',
-        '¿Cómo está afectando esto su funcionamiento diario?',
-        '¿Ha notado algún patrón en la intensidad de los síntomas?'
-      ]
-    },
-    {
-      message: `La ansiedad puede manifestarse de diversas formas. Como profesional en ${doctor.specialty}, considero importante evaluar tanto los síntomas físicos como los cognitivos. ¿Podría describir más específicamente qué sensaciones está experimentando?`,
-      suggestions: [
-        'Registro de síntomas y desencadenantes',
-        'Técnicas de respiración controlada',
-        'Ejercicios de visualización positiva',
-        'Estrategias de distracción cognitiva'
-      ],
-      followUpQuestions: [
-        '¿Experimenta síntomas físicos como palpitaciones o sudoración?',
-        '¿Tiene dificultades para concentrarse o tomar decisiones?',
-        '¿Los síntomas interfieren con su sueño o apetito?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta profesional sobre depresión
-const generateDepressionResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `Comprendo que está pasando por un momento difícil. La depresión es una condición médica seria que afecta tanto el estado de ánimo como el funcionamiento general. Como ${doctor.name}, especialista en ${doctor.specialty}, es crucial abordar esto con la seriedad que merece.`,
-      suggestions: [
-        'Mantener rutinas diarias estructuradas',
-        'Actividad física ligera y regular',
-        'Exposición gradual a la luz solar',
-        'Contacto social regular y significativo'
-      ],
-      followUpQuestions: [
-        '¿Cuánto tiempo lleva experimentando estos síntomas?',
-        '¿Ha notado cambios en su patrón de sueño o apetito?',
-        '¿Ha perdido interés en actividades que antes disfrutaba?',
-        '¿Tiene pensamientos recurrentes sobre hacerse daño?'
-      ]
-    },
-    {
-      message: `La depresión puede manifestarse de manera diferente en cada persona. Como profesional en ${doctor.specialty}, es importante evaluar tanto los síntomas emocionales como los físicos. ¿Podría compartir más detalles sobre cómo se siente actualmente?`,
-      suggestions: [
-        'Registro diario de estado de ánimo',
-        'Actividades placenteras graduales',
-        'Técnicas de activación conductual',
-        'Estrategias de autocuidado básico'
-      ],
-      followUpQuestions: [
-        '¿Se siente más irritable o triste últimamente?',
-        '¿Tiene dificultades para levantarse por las mañanas?',
-        '¿Se siente culpable o sin valor?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta profesional sobre estrés
-const generateStressResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `El estrés crónico puede tener efectos significativos en su salud física y mental. Como ${doctor.name}, especialista en ${doctor.specialty}, es importante desarrollar estrategias efectivas de manejo del estrés para prevenir el agotamiento.`,
-      suggestions: [
-        'Técnicas de gestión del tiempo y priorización',
-        'Ejercicios de respiración y relajación',
-        'Actividades de desconexión y ocio',
-        'Establecimiento de límites saludables'
-      ],
-      followUpQuestions: [
-        '¿Qué situaciones específicas le generan más estrés?',
-        '¿Cómo está afectando el estrés su rendimiento?',
-        '¿Tiene tiempo para actividades de autocuidado?',
-        '¿Ha notado cambios en su salud física?'
-      ]
-    },
-    {
-      message: `El estrés es una respuesta natural del cuerpo, pero cuando se vuelve crónico puede ser perjudicial. Como profesional en ${doctor.specialty}, considero importante identificar tanto las fuentes de estrés como sus recursos de afrontamiento.`,
-      suggestions: [
-        'Identificación de estresores específicos',
-        'Técnicas de relajación muscular',
-        'Ejercicio físico regular',
-        'Apoyo social y profesional'
-      ],
-      followUpQuestions: [
-        '¿Qué estrategias ha usado anteriormente para manejar el estrés?',
-        '¿Tiene una red de apoyo disponible?',
-        '¿El estrés está afectando sus relaciones?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta profesional sobre sueño
-const generateSleepResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `Los problemas de sueño pueden afectar significativamente su bienestar general. Como ${doctor.name}, especialista en ${doctor.specialty}, es importante abordar tanto la higiene del sueño como cualquier factor psicológico que pueda estar contribuyendo.`,
-      suggestions: [
-        'Higiene del sueño: horarios regulares',
-        'Rutina relajante antes de dormir',
-        'Optimización del ambiente de sueño',
-        'Limitación de estimulantes y pantallas'
-      ],
-      followUpQuestions: [
-        '¿Cuántas horas de sueño obtiene normalmente?',
-        '¿Tiene dificultad para conciliar el sueño o mantenerlo?',
-        '¿Se despierta sintiéndose descansado?',
-        '¿Usa dispositivos electrónicos antes de dormir?'
-      ]
-    },
-    {
-      message: `El sueño es fundamental para la salud mental y física. Como profesional en ${doctor.specialty}, considero importante evaluar tanto los patrones de sueño como los factores que pueden estar interfiriendo.`,
-      suggestions: [
-        'Registro de patrones de sueño',
-        'Técnicas de relajación para el sueño',
-        'Gestión de preocupaciones antes de dormir',
-        'Ejercicio físico regular (no cerca de la hora de dormir)'
-      ],
-      followUpQuestions: [
-        '¿Tiene pensamientos acelerados al intentar dormir?',
-        '¿Se despierta preocupado o ansioso?',
-        '¿Toma medicamentos o suplementos que puedan afectar el sueño?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta profesional sobre relaciones
-const generateRelationshipResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `Las relaciones interpersonales son fundamentales para nuestro bienestar emocional. Como ${doctor.name}, especialista en ${doctor.specialty}, es importante entender cómo las dinámicas relacionales están afectando su estado emocional.`,
-      suggestions: [
-        'Comunicación asertiva y efectiva',
-        'Establecimiento de límites saludables',
-        'Desarrollo de habilidades sociales',
-        'Gestión de conflictos interpersonales'
-      ],
-      followUpQuestions: [
-        '¿Qué tipo de relaciones le están causando más dificultades?',
-        '¿Se siente apoyado por su red social?',
-        '¿Tiene dificultades para expresar sus necesidades?',
-        '¿Los conflictos le generan mucha ansiedad?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta profesional sobre trabajo
-const generateWorkResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `El trabajo puede ser una fuente significativa de satisfacción o estrés. Como ${doctor.name}, especialista en ${doctor.specialty}, es importante evaluar cómo el ambiente laboral está impactando su bienestar mental.`,
-      suggestions: [
-        'Gestión del tiempo y prioridades',
-        'Comunicación efectiva con colegas',
-        'Equilibrio trabajo-vida personal',
-        'Desarrollo de habilidades de afrontamiento'
-      ],
-      followUpQuestions: [
-        '¿Se siente satisfecho con su trabajo actual?',
-        '¿Tiene buenas relaciones con sus colegas?',
-        '¿El trabajo le está causando estrés excesivo?',
-        '¿Ve oportunidades de crecimiento profesional?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta profesional sobre salud física
-const generateHealthResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `La conexión entre la salud física y mental es bidireccional. Como ${doctor.name}, especialista en ${doctor.specialty}, es importante considerar cómo los factores físicos pueden estar influyendo en su bienestar emocional.`,
-      suggestions: [
-        'Ejercicio físico regular y moderado',
-        'Alimentación balanceada y nutritiva',
-        'Hidratación adecuada',
-        'Revisiones médicas regulares'
-      ],
-      followUpQuestions: [
-        '¿Ha notado cambios en su energía o vitalidad?',
-        '¿Tiene alguna condición médica que pueda estar afectando su estado de ánimo?',
-        '¿Mantiene una rutina de ejercicio regular?',
-        '¿Su alimentación ha cambiado recientemente?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para generar respuesta de saludo profesional
-const generateGreetingResponse = (doctor: AIDoctorProfile, chatHistory: ChatMessage[]): AIResponse => {
-  const isFirstInteraction = chatHistory.length <= 1;
-  
-  if (isFirstInteraction) {
-    return {
-      message: `Buenos días. Soy ${doctor.name}, especialista en ${doctor.specialty}. Estoy aquí para brindarle apoyo profesional en temas de salud mental y bienestar. ¿En qué puedo asistirle hoy?`,
-      suggestions: [
-        'Consulta sobre síntomas específicos',
-        'Información sobre técnicas de manejo emocional',
-        'Orientación sobre recursos de salud mental',
-        'Apoyo en situaciones de crisis'
-      ],
-      followUpQuestions: [
-        '¿Cómo se siente hoy?',
-        '¿Hay algo específico que le preocupa?',
-        '¿Necesita ayuda con algún síntoma en particular?',
-        '¿Ha estado experimentando cambios en su estado de ánimo?'
-      ]
-    };
-  } else {
-    return {
-      message: `Hola de nuevo. Continuemos trabajando en su bienestar. ¿Cómo se siente después de nuestra conversación anterior?`,
-      suggestions: [
-        'Continuar con el tema anterior',
-        'Explorar nuevos aspectos',
-        'Revisar progreso',
-        'Abordar nuevas preocupaciones'
-      ],
-      followUpQuestions: [
-        '¿Ha notado algún cambio desde la última vez?',
-        '¿Hay algo nuevo que le gustaría discutir?',
-        '¿Las sugerencias anteriores le han sido útiles?'
-      ]
-    };
-  }
-};
-
-// Función para generar respuesta contextual inteligente
-const generateContextualResponse = (doctor: AIDoctorProfile, message: string, chatHistory: ChatMessage[]): AIResponse => {
-  const responses = [
-    {
-      message: `Aprecio que comparta sus experiencias conmigo. Como ${doctor.name}, especialista en ${doctor.specialty}, considero importante entender mejor su situación para poder brindarle el apoyo más adecuado.`,
-      suggestions: [
-        'Proporcionar más detalles específicos',
-        'Describir síntomas o sensaciones',
-        'Compartir contexto de la situación',
-        'Mencionar factores desencadenantes'
-      ],
-      followUpQuestions: [
-        '¿Podría describir más específicamente lo que está experimentando?',
-        '¿Cuándo comenzó a notar estos cambios?',
-        '¿Cómo está afectando esto su vida diaria?',
-        '¿Ha notado algún patrón en estos síntomas?'
-      ]
-    },
-    {
-      message: `Entiendo que está pasando por una situación compleja. Como profesional en ${doctor.specialty}, es importante que sepa que no está solo y que hay recursos disponibles para ayudarle.`,
-      suggestions: [
-        'Buscar apoyo profesional especializado',
-        'Explorar recursos de la comunidad',
-        'Desarrollar estrategias de afrontamiento',
-        'Considerar terapia o asesoramiento'
-      ],
-      followUpQuestions: [
-        '¿Ha considerado buscar ayuda profesional?',
-        '¿Tiene acceso a servicios de salud mental?',
-        '¿Qué tipo de apoyo cree que necesitaría?',
-        '¿Hay algo específico que le gustaría explorar?'
-      ]
-    }
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-// Función para detectar urgencia en el mensaje
-export const detectUrgency = (message: string): 'low' | 'medium' | 'high' => {
-  const urgentKeywords = [
-    'suicidio', 'matarme', 'morir', 'acabar con todo', 'no vale la pena vivir',
-    'quiero morir', 'mejor muerto', 'no quiero vivir', 'terminar con todo',
-    'autolesión', 'cortarme', 'lastimarme', 'hacerme daño'
-  ];
-  const mediumKeywords = [
-    'crisis', 'emergencia', 'ayuda urgente', 'no puedo más', 'desesperado',
-    'pánico', 'ataque', 'no puedo respirar', 'me siento muy mal',
-    'necesito ayuda ya', 'situación crítica', 'no aguanto más'
-  ];
-  
-  const lowerMessage = message.toLowerCase();
-  
-  if (urgentKeywords.some(keyword => lowerMessage.includes(keyword))) {
-    return 'high';
-  }
-  
-  if (mediumKeywords.some(keyword => lowerMessage.includes(keyword))) {
-    return 'medium';
-  }
-  
-  return 'low';
-};
-
-// Función para generar respuesta de urgencia profesional
-export const generateUrgentResponse = (urgency: 'medium' | 'high'): AIResponse => {
-  if (urgency === 'high') {
-    return {
-      message: `Entiendo que está pasando por un momento extremadamente difícil y que tiene pensamientos sobre hacerse daño. Su vida tiene valor incalculable y es importante que sepa que no está solo/a. Como profesional de la salud mental, le recomiendo encarecidamente que busque ayuda inmediata.`,
-      suggestions: [
-        'Línea Nacional de Prevención del Suicidio: 106 (Colombia)',
-        'Acudir inmediatamente a urgencias del hospital más cercano',
-        'Contactar con un psicólogo o psiquiatra de emergencia',
-        'Buscar apoyo de familiares o amigos cercanos'
-      ],
-      followUpQuestions: [
-        '¿Tiene alguien cerca que pueda ayudarle en este momento?',
-        '¿Puede ir a un lugar seguro donde se sienta protegido/a?',
-        '¿Necesita que le ayude a contactar con servicios de emergencia?',
-        '¿Hay algún profesional de la salud mental que pueda contactar?'
-      ]
-    };
-  }
-  
-  return {
-    message: `Reconozco que está experimentando una crisis emocional significativa. Es importante que busque apoyo profesional lo antes posible. Como especialista en salud mental, le recomiendo que no maneje esta situación solo/a.`,
-    suggestions: [
-      'Contactar inmediatamente con un psicólogo o psiquiatra',
-      'Acudir a un centro de salud mental o consulta de urgencia',
-      'Programar una cita médica para evaluación profesional',
-      'Buscar apoyo en centros comunitarios de salud mental'
-    ],
-    followUpQuestions: [
-      '¿Tiene acceso a servicios de salud mental en su área?',
-      '¿Prefiere consulta presencial o virtual de emergencia?',
-      '¿Necesita ayuda para encontrar recursos profesionales?',
-      '¿Tiene seguro médico que cubra servicios de salud mental?'
-    ]
-  };
-};
+export const aiService = new AIService();

@@ -4,6 +4,7 @@ import CrisisAlert from '../components/CrisisAlert';
 import LogoutModal from '../components/LogoutModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useMood } from '../hooks/useMood';
+import { aiService, MoodAnalysisResult } from '../services/aiService';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
@@ -23,6 +24,8 @@ const MoodFlowSimple: React.FC = () => {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [moodData, setMoodData] = useState<any>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<MoodAnalysisResult | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
@@ -111,6 +114,28 @@ const MoodFlowSimple: React.FC = () => {
 
       const result = await createMoodLog(moodLogData);
       setMoodData(result);
+      
+      // Generate AI analysis
+      setAnalyzing(true);
+      try {
+        const analysis = await aiService.analyzeMood({
+          overallMood: currentMood,
+          energy,
+          stress,
+          sleep,
+          activities,
+          emotions,
+          feelings,
+        });
+        setAiAnalysis(analysis);
+      } catch (aiError) {
+        console.error('Error generating AI analysis:', aiError);
+        // Fallback analysis will be provided by the service
+        setAiAnalysis(null);
+      } finally {
+        setAnalyzing(false);
+      }
+      
       setShowAnalysis(true);
     } catch (error) {
       console.error('Error creating mood log:', error);
@@ -553,25 +578,55 @@ const MoodFlowSimple: React.FC = () => {
               >
                 <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>💡 Recomendaciones</h4>
                 <div className='mt-2 space-y-1'>
-                  {currentMood! >= 4 && (
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      ✨ ¡Excelente estado de ánimo! Mantén las actividades que te hacen sentir bien.
-                    </p>
-                  )}
-                  {energy < 5 && (
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      🔋 Considera hacer ejercicio ligero o tomar una caminata para aumentar tu energía.
-                    </p>
-                  )}
-                  {stress > 6 && (
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      🧘 Practica técnicas de relajación como respiración profunda o meditación.
-                    </p>
-                  )}
-                  {sleep < 5 && (
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      😴 Intenta establecer una rutina de sueño más consistente.
-                    </p>
+                  {analyzing ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Generando recomendaciones personalizadas...
+                      </p>
+                    </div>
+                  ) : aiAnalysis ? (
+                    <div className="space-y-2">
+                      {aiAnalysis.recommendations.map((rec, index) => (
+                        <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border-l-4 ${
+                          rec.priority === 'high' ? 'border-red-500' : 
+                          rec.priority === 'medium' ? 'border-yellow-500' : 'border-green-500'
+                        }`}>
+                          <h5 className={`font-medium text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {rec.title}
+                          </h5>
+                          <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
+                            {rec.description}
+                          </p>
+                          <p className={`text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'} mt-1`}>
+                            💡 {rec.actionable}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {currentMood! >= 4 && (
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          ✨ ¡Excelente estado de ánimo! Mantén las actividades que te hacen sentir bien.
+                        </p>
+                      )}
+                      {energy < 5 && (
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          🔋 Considera hacer ejercicio ligero o tomar una caminata para aumentar tu energía.
+                        </p>
+                      )}
+                      {stress > 6 && (
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          🧘 Practica técnicas de relajación como respiración profunda o meditación.
+                        </p>
+                      )}
+                      {sleep < 5 && (
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          😴 Intenta establecer una rutina de sueño más consistente.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
