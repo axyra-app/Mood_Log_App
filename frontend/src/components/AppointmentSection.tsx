@@ -33,27 +33,13 @@ const AppointmentSection: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex space-x-3">
-          <button
-            onClick={() => {
-              // Trigger the appointment history view
-              const event = new CustomEvent('toggleAppointmentHistory');
-              window.dispatchEvent(event);
-            }}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
-          >
-            <Eye className="w-4 h-4" />
-            <span>Ver Historial</span>
-          </button>
-          
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nueva Cita</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Nueva Cita</span>
+        </button>
       </div>
 
       {/* Gestión de Citas */}

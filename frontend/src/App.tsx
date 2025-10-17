@@ -27,6 +27,7 @@ import LoginSimple from './pages/LoginSimple';
 import MedicalHistory from './pages/MedicalHistory';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
+import Profile from './pages/Profile';
 import PsychologistChat from './pages/PsychologistChat';
 import PsychologistSelection from './pages/PsychologistSelection';
 import RegisterSimple from './pages/RegisterSimple';
@@ -47,6 +48,7 @@ function App() {
               <Route path='/login' element={<LoginSimple />} />
               <Route path='/register' element={<RegisterSimple />} />
               <Route path='/complete-profile' element={<CompleteProfile />} />
+              <Route path='/profile' element={<Profile />} />
               <Route path='/create-appointment' element={<CreateAppointment />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/terms' element={<TermsSimple />} />

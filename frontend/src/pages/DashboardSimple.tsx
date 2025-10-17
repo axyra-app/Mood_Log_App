@@ -161,39 +161,7 @@ const DashboardSimple: React.FC = () => {
         isDarkMode={isDarkMode} 
       />
 
-      {/* Menú desktop (solo visible en pantallas grandes) */}
-      <div className="hidden lg:block mb-8">
-        <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
-          <div className='p-6'>
-            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Más Herramientas
-            </h3>
-            <div className='grid grid-cols-3 gap-4'>
-              {secondaryModules.map((module, index) => {
-                const IconComponent = module.icon;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      module.action();
-                      setIsMenuOpen(false);
-                    }}
-                    className={`${module.color} p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
-                  >
-                    <div className='flex items-center space-x-3 mb-2'>
-                      <IconComponent className='w-5 h-5' />
-                      <h4 className='font-semibold'>{module.title}</h4>
-                    </div>
-                    <p className='text-sm opacity-90'>{module.description}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Menú desktop (solo visible en pantallas grandes) - REMOVIDO */}
 
       {/* Main Content */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>

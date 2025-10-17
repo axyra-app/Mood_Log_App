@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, BarChart3, Settings, Heart, MessageCircle, FileText, Search, Calendar, BookOpen, Users, Activity, TrendingUp } from 'lucide-react';
+import { X, BarChart3, Settings, Heart, MessageCircle, FileText, Calendar, BookOpen, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Logo from './Logo';
 
 interface LateralSidebarProps {
   isOpen: boolean;
@@ -86,12 +87,7 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
       } w-64`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-xl font-semibold">Mood Log</span>
-          </div>
+          <Logo size="md" showText={true} className="text-white" />
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
@@ -100,41 +96,33 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
           </button>
         </div>
         
-        {/* Search Bar */}
-        <div className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search"
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        
         {/* Menu Items */}
-        <div className="px-6 space-y-3 overflow-y-auto flex-1">
-          <h3 className="text-lg font-semibold text-gray-300 mb-4">Más Herramientas</h3>
-          <div className="grid grid-cols-1 gap-3">
-            {menuItems.map((item, index) => {
-              const IconComponent = item.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={() => {
-                    navigate(item.path);
-                    onClose();
-                  }}
-                  className={`${item.color} w-full p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
-                >
-                  <div className='flex items-center space-x-3 mb-2'>
-                    <IconComponent className='w-5 h-5' />
-                    <h4 className='font-semibold text-sm'>{item.label}</h4>
-                  </div>
-                  <p className='text-xs opacity-90'>{item.description}</p>
-                </button>
-              );
-            })}
+        <div className="flex flex-col h-full">
+          <div className="px-6 py-4">
+            <h3 className="text-lg font-semibold text-gray-300 mb-4">Más Herramientas</h3>
+          </div>
+          <div className="flex-1 px-6 pb-6 overflow-y-auto">
+            <div className="space-y-3">
+              {menuItems.map((item, index) => {
+                const IconComponent = item.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      navigate(item.path);
+                      onClose();
+                    }}
+                    className={`${item.color} w-full p-4 rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left`}
+                  >
+                    <div className='flex items-center space-x-3 mb-2'>
+                      <IconComponent className='w-5 h-5' />
+                      <h4 className='font-semibold text-sm'>{item.label}</h4>
+                    </div>
+                    <p className='text-xs opacity-90'>{item.description}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

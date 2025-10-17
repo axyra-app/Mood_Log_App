@@ -5,7 +5,7 @@ import { useJournal } from '../hooks/useJournal';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import JournalEditor from '../components/JournalEditor';
 import Header from '../components/Header';
-import { Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { Plus, Search, Sparkles, Trash2, Edit } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const Journal: React.FC = () => {
