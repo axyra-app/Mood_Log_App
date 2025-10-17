@@ -48,7 +48,6 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
   const sizes = getSizeClasses();
 
   const handleImageError = () => {
-    console.log('Error loading logo, trying fallback...');
     if (currentSrc === 'https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png') {
       setCurrentSrc('/Logo_Mood_log_app.png');
     } else if (currentSrc === '/Logo_Mood_log_app.png') {
@@ -89,7 +88,6 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
           alt="Mood Log App Logo"
           className={`${sizes.image} rounded-lg flex-shrink-0`}
           onError={handleImageError}
-          onLoad={() => console.log('Logo loaded successfully:', currentSrc)}
         />
       ) : (
         // Fallback: SVG inline logo

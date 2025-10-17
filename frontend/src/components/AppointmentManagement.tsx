@@ -291,7 +291,7 @@ const AppointmentManagement: React.FC = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onAppointmentCreated={() => {
-          console.log('Cita creada exitosamente');
+          // Cita creada exitosamente
         }}
       />
     </div>

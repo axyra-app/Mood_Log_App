@@ -22,8 +22,6 @@ class AppointmentCleanupService {
    */
   async cleanupExpiredAppointments(userId: string): Promise<number> {
     try {
-      console.log('🧹 Iniciando limpieza de citas expiradas...');
-      
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       
@@ -43,17 +41,15 @@ class AppointmentCleanupService {
         try {
           await deleteDoc(doc(db, 'appointments', docSnapshot.id));
           deletedCount++;
-          console.log(`🗑️ Cita del usuario eliminada: ${docSnapshot.id}`);
         } catch (error) {
-          console.error(`❌ Error eliminando cita del usuario ${docSnapshot.id}:`, error);
+          console.error(`Error eliminando cita del usuario ${docSnapshot.id}:`, error);
         }
       }
       
-      console.log(`✅ Limpieza completada. ${deletedCount} citas eliminadas.`);
       return deletedCount;
       
     } catch (error) {
-      console.error('❌ Error durante la limpieza de citas:', error);
+      console.error('Error durante la limpieza de citas:', error);
       return 0;
     }
   }
@@ -63,8 +59,6 @@ class AppointmentCleanupService {
    */
   async markExpiredAppointments(userId: string): Promise<number> {
     try {
-      console.log('⏰ Marcando citas como expiradas...');
-      
       const now = new Date();
       
       // Solo buscar citas del usuario actual
@@ -85,17 +79,15 @@ class AppointmentCleanupService {
             updatedAt: Timestamp.now()
           });
           markedCount++;
-          console.log(`⏰ Cita marcada como expirada: ${docSnapshot.id}`);
         } catch (error) {
-          console.error(`❌ Error marcando cita como expirada ${docSnapshot.id}:`, error);
+          console.error(`Error marcando cita como expirada ${docSnapshot.id}:`, error);
         }
       }
       
-      console.log(`✅ ${markedCount} citas marcadas como expiradas.`);
       return markedCount;
       
     } catch (error) {
-      console.error('❌ Error marcando citas como expiradas:', error);
+      console.error('Error marcando citas como expiradas:', error);
       return 0;
     }
   }
@@ -104,12 +96,8 @@ class AppointmentCleanupService {
    * Ejecuta la limpieza completa para el usuario actual
    */
   async runFullCleanup(userId: string): Promise<{ marked: number; deleted: number }> {
-    console.log('🚀 Ejecutando limpieza completa de citas...');
-    
     const marked = await this.markExpiredAppointments(userId);
     const deleted = await this.cleanupExpiredAppointments(userId);
-    
-    console.log(`🎯 Limpieza completa: ${marked} marcadas como expiradas, ${deleted} eliminadas`);
     
     return { marked, deleted };
   }
@@ -123,7 +111,7 @@ export const runAppointmentCleanup = async (userId: string) => {
     const result = await appointmentCleanupService.runFullCleanup(userId);
     return result;
   } catch (error) {
-    console.error('❌ Error ejecutando limpieza automática:', error);
+    console.error('Error ejecutando limpieza automática:', error);
     return { marked: 0, deleted: 0 };
   }
 };

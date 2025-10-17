@@ -121,7 +121,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                                            userData.displayName === firebaseUser.email?.split('@')[0];
               
               if (needsProfileCompletion) {
-                console.log('⚠️ Usuario necesita completar perfil');
                 // Establecer el usuario con datos básicos para redirigir a completar perfil
                 const basicUserData: User = {
                   uid: firebaseUser.uid,
@@ -135,7 +134,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   setProfileLoaded(true);
                 }
               } else {
-                console.log('✅ Usuario con perfil completo');
                 if (isMounted) {
                   setUser(userDataWithAuth);
                   setProfileLoaded(true);
