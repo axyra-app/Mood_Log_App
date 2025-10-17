@@ -24,14 +24,35 @@ const AppointmentManagement: React.FC = () => {
   const navigate = useNavigate();
   const { appointments, loading, updateAppointment, deleteAppointment } = useUserAppointments(user?.uid || '');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
+    // Detectar modo oscuro
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark') || 
+                    localStorage.getItem('darkMode') === 'true' ||
+                    window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setIsDarkMode(isDark);
+    };
+
+    checkDarkMode();
+    
+    // Escuchar cambios en el modo oscuro
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', checkDarkMode);
+
     const handleToggleHistory = () => {
       // Esta función ya no es necesaria pero la mantenemos por compatibilidad
     };
 
     window.addEventListener('toggleAppointmentHistory', handleToggleHistory);
+    
     return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener('change', checkDarkMode);
       window.removeEventListener('toggleAppointmentHistory', handleToggleHistory);
     };
   }, []);
@@ -122,7 +143,7 @@ const AppointmentManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-        <span className="ml-2 text-gray-600">Cargando citas...</span>
+        <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Cargando citas...</span>
       </div>
     );
   }
@@ -132,13 +153,13 @@ const AppointmentManagement: React.FC = () => {
       {/* Dos contenedores lado a lado */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Citas Activas */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Citas Activas</h3>
+        <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
+          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Citas Activas</h3>
           {activeAppointments.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className={`text-center py-12 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg`}>
               <div className="text-6xl mb-4">📅</div>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No tienes citas activas</h4>
-              <p className="text-gray-600 mb-4">Crea tu primera cita con un psicólogo</p>
+              <h4 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>No tienes citas activas</h4>
+              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Crea tu primera cita con un psicólogo</p>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
@@ -149,7 +170,7 @@ const AppointmentManagement: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {activeAppointments.map((appointment) => (
-                <div key={appointment.id} className="bg-gray-50 rounded-lg border p-4">
+                <div key={appointment.id} className={`${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} rounded-lg border p-4`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
                       <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -158,7 +179,7 @@ const AppointmentManagement: React.FC = () => {
                       
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-semibold text-gray-700 text-sm">
+                          <h4 className={`font-semibold text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                             {formatDate(appointment.appointmentDate)}
                           </h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
@@ -166,7 +187,7 @@ const AppointmentManagement: React.FC = () => {
                           </span>
                         </div>
                         
-                        <div className="space-y-1 text-sm text-gray-600">
+                        <div className={`space-y-1 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           <div className="flex items-center space-x-2">
                             <Clock className="w-4 h-4" />
                             <span>{formatTime(appointment.appointmentTime || '')} - {appointment.duration} min</span>
@@ -189,7 +210,7 @@ const AppointmentManagement: React.FC = () => {
                       {appointment.status === 'accepted' && (
                         <button
                           onClick={() => handleStatusChange(appointment.id, 'completed')}
-                          className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                          className={`p-2 text-green-500 ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-green-50'} rounded-lg transition-colors`}
                           title="Marcar como completada"
                         >
                           <CheckCircle className="w-4 h-4" />
@@ -197,7 +218,7 @@ const AppointmentManagement: React.FC = () => {
                       )}
                       <button
                         onClick={() => handleDeleteAppointment(appointment.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className={`p-2 text-red-500 ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-red-50'} rounded-lg transition-colors`}
                         title="Eliminar cita"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -211,18 +232,18 @@ const AppointmentManagement: React.FC = () => {
         </div>
 
         {/* Historial de Citas */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Historial de Citas</h3>
+        <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
+          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Historial de Citas</h3>
           {historicalAppointments.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className={`text-center py-12 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg`}>
               <div className="text-6xl mb-4">📚</div>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No hay historial de citas</h4>
-              <p className="text-gray-600">Las citas completadas aparecerán aquí</p>
+              <h4 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>No hay historial de citas</h4>
+              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Las citas completadas aparecerán aquí</p>
             </div>
           ) : (
             <div className="space-y-4">
               {historicalAppointments.map((appointment) => (
-                <div key={appointment.id} className="bg-gray-50 rounded-lg border p-4">
+                <div key={appointment.id} className={`${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} rounded-lg border p-4`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
                       <div className="w-10 h-10 bg-gray-400 rounded-lg flex items-center justify-center">
@@ -231,7 +252,7 @@ const AppointmentManagement: React.FC = () => {
                       
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-semibold text-gray-700 text-sm">
+                          <h4 className={`font-semibold text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                             {formatDate(appointment.appointmentDate)}
                           </h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
@@ -239,7 +260,7 @@ const AppointmentManagement: React.FC = () => {
                           </span>
                         </div>
                         
-                        <div className="space-y-1 text-sm text-gray-600">
+                        <div className={`space-y-1 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           <div className="flex items-center space-x-2">
                             <Clock className="w-4 h-4" />
                             <span>{formatTime(appointment.appointmentTime || '')} - {appointment.duration} min</span>

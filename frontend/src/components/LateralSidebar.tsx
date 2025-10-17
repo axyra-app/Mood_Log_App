@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, BarChart3, Settings, Heart, MessageCircle, FileText, Calendar, BookOpen, Users } from 'lucide-react';
+import { X, BarChart3, Settings, Heart, MessageCircle, FileText, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 
@@ -54,13 +54,6 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
       path: '/journal',
       description: 'Reflexiona sobre tu día',
       color: 'bg-gradient-to-r from-teal-500 to-blue-500'
-    },
-    { 
-      icon: Users, 
-      label: 'Psicólogos', 
-      path: '/dashboard',
-      description: 'Encuentra profesionales',
-      color: 'bg-gradient-to-r from-pink-500 to-rose-500'
     },
   ];
 
