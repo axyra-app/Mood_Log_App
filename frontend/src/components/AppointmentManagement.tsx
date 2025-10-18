@@ -148,14 +148,23 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
           {activeAppointments.length === 0 ? (
             <div className={`text-center py-12 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg`}>
               <div className="text-6xl mb-4">📅</div>
-              <h4 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>No tienes citas activas</h4>
-              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Crea tu primera cita con un psicólogo</p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
-              >
-                Crear Primera Cita
-              </button>
+              <h4 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                {user?.role === 'psychologist' ? 'No tienes citas programadas' : 'No tienes citas activas'}
+              </h4>
+              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                {user?.role === 'psychologist' 
+                  ? 'Las citas solicitadas por pacientes aparecerán aquí' 
+                  : 'Crea tu primera cita con un psicólogo'
+                }
+              </p>
+              {user?.role !== 'psychologist' && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
+                >
+                  Crear Primera Cita
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">

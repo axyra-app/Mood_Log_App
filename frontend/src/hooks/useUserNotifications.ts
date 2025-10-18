@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { 
   getUserNotifications, 
+  getPsychologistNotifications,
   markNotificationAsRead, 
   Notification 
 } from '../services/notificationService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const useUserNotifications = (userId: string) => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -16,7 +19,12 @@ export const useUserNotifications = (userId: string) => {
       return;
     }
 
-    const unsubscribe = getUserNotifications(userId, (notificationsData) => {
+    // Usar la función correcta según el rol del usuario
+    const getNotificationsFunction = user?.role === 'psychologist' 
+      ? getPsychologistNotifications 
+      : getUserNotifications;
+
+    const unsubscribe = getNotificationsFunction(userId, (notificationsData) => {
       setNotifications(notificationsData);
       
       // Contar notificaciones no leídas
@@ -29,7 +37,7 @@ export const useUserNotifications = (userId: string) => {
     return () => {
       unsubscribe();
     };
-  }, [userId]);
+  }, [userId, user?.role]);
 
   const markAsRead = async (notificationId: string) => {
     try {
