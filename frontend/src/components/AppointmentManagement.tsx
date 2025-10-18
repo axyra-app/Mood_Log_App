@@ -79,8 +79,13 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
     }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string | undefined | null) => {
     try {
+      // Si es undefined o null, retornar mensaje
+      if (!date) {
+        return 'Fecha no disponible';
+      }
+      
       // Si es un string, convertir a Date
       if (typeof date === 'string') {
         date = new Date(date);

@@ -40,7 +40,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
       id: apt.id,
       type: 'appointment' as const,
       title: 'Nueva Cita Pendiente',
-      message: `Cita con ${apt.patientName} el ${apt.date.toLocaleDateString()}`,
+      message: `Cita con ${apt.patientName} el ${apt.date ? apt.date.toLocaleDateString() : 'fecha no disponible'}`,
       priority: 'medium' as const,
       createdAt: apt.createdAt,
       appointmentId: apt.id,
@@ -239,7 +239,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                         <p className={`text-xs transition-colors duration-500 ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         }`}>
-                          {notification.createdAt.toLocaleDateString()}
+                          {notification.createdAt ? notification.createdAt.toLocaleDateString() : 'Fecha no disponible'}
                         </p>
                       )}
                     </div>

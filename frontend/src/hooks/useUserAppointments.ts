@@ -74,15 +74,15 @@ export const useUserAppointments = (userId: string) => {
               userEmail: data.userEmail || '',
               psychologistId: data.psychologistId,
               psychologistName,
-              appointmentDate: data.appointmentDate?.toDate ? data.appointmentDate.toDate() : new Date(data.appointmentDate),
+              appointmentDate: data.appointmentDate?.toDate ? data.appointmentDate.toDate() : (data.appointmentDate ? new Date(data.appointmentDate) : new Date()),
               appointmentTime: data.appointmentTime || '',
               duration: data.duration || 60,
               type: data.type || 'consultation',
               reason: data.reason || '',
               notes: data.notes || '',
               status: data.status || 'pending',
-              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
-              updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : new Date()),
+              updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : (data.updatedAt ? new Date(data.updatedAt) : new Date()),
             });
           }
           
