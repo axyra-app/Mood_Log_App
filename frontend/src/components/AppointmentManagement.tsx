@@ -146,7 +146,10 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
               <h4 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>No tienes citas activas</h4>
               <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Crea tu primera cita con un psicólogo</p>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => {
+                  console.log('Crear Primera Cita clicked, showCreateModal:', showCreateModal);
+                  setShowCreateModal(true);
+                }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200"
               >
                 Crear Primera Cita
@@ -272,22 +275,26 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
       </div>
 
       {/* Modal de Crear Cita */}
-      {user?.role === 'psychologist' ? (
-        <PsychologistCreateAppointmentModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onAppointmentCreated={() => {
-            // Cita creada exitosamente
-          }}
-        />
-      ) : (
-        <CreateAppointmentModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onAppointmentCreated={() => {
-            // Cita creada exitosamente
-          }}
-        />
+      {showCreateModal && (
+        <>
+          {user?.role === 'psychologist' ? (
+            <PsychologistCreateAppointmentModal
+              isOpen={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onAppointmentCreated={() => {
+                // Cita creada exitosamente
+              }}
+            />
+          ) : (
+            <CreateAppointmentModal
+              isOpen={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onAppointmentCreated={() => {
+                // Cita creada exitosamente
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );
