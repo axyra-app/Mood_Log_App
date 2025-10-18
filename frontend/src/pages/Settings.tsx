@@ -209,6 +209,8 @@ const Settings: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const changePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('Las contraseñas nuevas no coinciden');
       return;
