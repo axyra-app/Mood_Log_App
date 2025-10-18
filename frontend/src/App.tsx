@@ -1,4 +1,5 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -6,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 // Components
 import AdvancedReports from './components/AdvancedReports';
 import ErrorBoundary from './components/ErrorBoundary';
+import FloatingChatBubble from './components/FloatingChatBubble';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRouteBoth from './components/ProtectedRouteBoth';
 import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
@@ -37,6 +39,21 @@ import TermsSimple from './pages/TermsSimple';
 import UserChat from './pages/UserChat';
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Detectar modo oscuro del sistema
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDarkMode(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -212,6 +229,9 @@ function App() {
                 }
               />
             </Routes>
+            
+            {/* Burbuja flotante de chat IA - Solo en rutas protegidas */}
+            <FloatingChatBubble isDarkMode={isDarkMode} />
           </div>
         </Router>
       </AuthProvider>

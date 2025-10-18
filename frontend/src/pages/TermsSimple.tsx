@@ -145,7 +145,30 @@ const TermsSimple: React.FC = () => {
               <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                5. USO RESPONSABLE
+                5. RETENCIÓN Y ELIMINACIÓN DE DATOS
+              </h2>
+              <p className="text-lg leading-relaxed">
+                Para optimizar el rendimiento y proteger tu privacidad, implementamos políticas de retención automática:
+              </p>
+              <ul className="list-disc list-inside space-y-2 mt-4">
+                <li><strong>Mensajes de chat:</strong> Se conservan por 10 días para mantener continuidad en las conversaciones</li>
+                <li><strong>Citas médicas:</strong> Se eliminan automáticamente 3 días después de la fecha programada</li>
+                <li><strong>Notificaciones:</strong> Se archivan después de 7 días de inactividad</li>
+                <li><strong>Datos de sesión:</strong> Se limpian automáticamente cada 30 días</li>
+                <li><strong>Registros de estado de ánimo:</strong> Se mantienen indefinidamente para análisis de tendencias</li>
+                <li><strong>Entradas de diario:</strong> Se conservan permanentemente a menos que solicites su eliminación</li>
+              </ul>
+              <p className="text-lg leading-relaxed mt-4">
+                Puedes solicitar la eliminación completa de tu cuenta y todos tus datos en cualquier momento 
+                contactando nuestro equipo de soporte.
+              </p>
+            </section>
+
+            <section>
+              <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                6. USO RESPONSABLE
               </h2>
               <p className="text-lg leading-relaxed">
                 Te comprometes a utilizar el servicio de manera responsable y ética. No debes:
@@ -162,7 +185,7 @@ const TermsSimple: React.FC = () => {
               <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                6. SERVICIOS PROFESIONALES
+                7. SERVICIOS PROFESIONALES
               </h2>
               <p className="text-lg leading-relaxed">
                 Los psicólogos en nuestra plataforma son profesionales certificados. Sin embargo, Mood Log App 
@@ -174,7 +197,7 @@ const TermsSimple: React.FC = () => {
               <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                7. MODIFICACIONES
+                8. MODIFICACIONES
               </h2>
               <p className="text-lg leading-relaxed">
                 Nos reservamos el derecho de modificar estos términos en cualquier momento. 
@@ -186,7 +209,7 @@ const TermsSimple: React.FC = () => {
               <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                8. CONTACTO
+                9. CONTACTO
               </h2>
               <p className="text-lg leading-relaxed">
                 Si tienes preguntas sobre estos términos, puedes contactarnos en:
