@@ -244,7 +244,7 @@ Formato de respuesta en JSON:
           priority: 'high',
           title: 'Estrategias de Regulación Emocional',
           description: `Identificaste emociones desafiantes: ${negativeEmotions.join(', ')}. Estas emociones son válidas y normales, pero necesitan manejo adecuado.`,
-          actionable: `1. Validación emocional: Reconoce que tus emociones son válidas y temporales\n2. Técnica STOP: Para, respira, observa tus pensamientos, procede con calma\n3. Escritura terapéutica: Escribe sobre tus emociones sin juzgarlas\n4. Distracción saludable: Actividades que requieran concentración (puzzles, música)\5. Apoyo social: Habla con alguien de confianza sobre tus sentimientos\n6. Técnicas de grounding: 5-4-3-2-1 (5 cosas que ves, 4 que tocas, etc.)`,
+          actionable: `1. Validación emocional: Reconoce que tus emociones son válidas y temporales\n2. Técnica STOP: Para, respira, observa tus pensamientos, procede con calma\n3. Escritura terapéutica: Escribe sobre tus emociones sin juzgarlas\n4. Distracción saludable: Actividades que requieran concentración (puzzles, música)\n5. Apoyo social: Habla con alguien de confianza sobre tus sentimientos\n6. Técnicas de grounding: 5-4-3-2-1 (5 cosas que ves, 4 que tocas, etc.)`,
           category: 'Regulación Emocional Avanzada'
         });
       }
