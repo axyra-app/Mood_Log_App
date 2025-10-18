@@ -285,7 +285,7 @@ Formato de respuesta en JSON:
     }
 
     return {
-      summary: `Análisis personalizado basado en tu estado de ánimo (${moodData.overallMood}/5), energía (${moodData.energy}/10), estrés (${moodData.stress}/10) y sueño (${moodData.sleep}/10). ${moodData.feelings ? `Tus sentimientos: "${moodData.feelings}"` : ''}`,
+      summary: `Análisis personalizado basado en tu estado de ánimo (${moodData.overallMood.toFixed(1)}/5), energía (${moodData.energy.toFixed(1)}/10), estrés (${moodData.stress.toFixed(1)}/10) y sueño (${moodData.sleep.toFixed(1)}/10). ${moodData.feelings ? `Tus sentimientos: "${moodData.feelings}"` : ''}`,
       insights,
       recommendations: finalRecommendations,
       moodTrend: moodData.overallMood >= 4 ? 'improving' : moodData.overallMood <= 2 ? 'declining' : 'stable',
