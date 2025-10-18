@@ -21,7 +21,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
   const pendingAppointments = getPendingAppointments();
 
   // Verificar si el usuario necesita completar perfil
-  const needsProfileCompletion = !user?.firstName || !user?.lastName;
+  const needsProfileCompletion = !user?.displayName || !user?.username;
   
   // Crear notificación de perfil incompleto si es necesario
   const profileNotification = needsProfileCompletion ? {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 import { 
   ArrowLeft, 
   Bell, 
@@ -20,7 +20,7 @@ import {
   Globe,
   Clock
 } from 'lucide-react';
-import { db } from '../services/firebase';
+import { auth, db } from '../services/firebase';
 import Logo from '../components/Logo';
 
 const Settings: React.FC = () => {
@@ -185,7 +185,30 @@ const Settings: React.FC = () => {
     }
   };
 
-  const changePassword = async () => {
+  const requestPasswordReset = async () => {
+    if (!user?.email) {
+      toast.error('No se encontró un correo electrónico asociado');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Usar Firebase para enviar email de reset de contraseña
+      await sendPasswordResetEmail(auth, user.email);
+      toast.success('Se ha enviado un enlace de cambio de contraseña a tu correo electrónico');
+    } catch (error: any) {
+      console.error('Error requesting password reset:', error);
+      if (error.code === 'auth/user-not-found') {
+        toast.error('No se encontró una cuenta con este correo electrónico');
+      } else if (error.code === 'auth/invalid-email') {
+        toast.error('El correo electrónico no es válido');
+      } else {
+        toast.error('Error al enviar el enlace de cambio de contraseña');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('Las contraseñas nuevas no coinciden');
       return;
