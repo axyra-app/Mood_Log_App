@@ -137,11 +137,11 @@ export const useChatHistory = (userId: string, chatType: 'ai-chat' | 'psychologi
   // Limpiar mensajes antiguos
   const cleanupOldMessages = useCallback(async () => {
     try {
-      await chatHistoryService.cleanupOldMessages();
+      await chatHistoryService.cleanupOldMessages(userId);
     } catch (err) {
       console.error('Error cleaning up old messages:', err);
     }
-  }, []);
+  }, [userId]);
 
   // Efectos
   useEffect(() => {

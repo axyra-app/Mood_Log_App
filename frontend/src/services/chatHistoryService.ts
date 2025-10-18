@@ -33,10 +33,14 @@ class ChatHistoryService {
    */
   async saveMessage(messageData: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<string> {
     try {
-      const messageRef = await addDoc(collection(db, this.CHAT_MESSAGES_COLLECTION), {
+      // Limpiar datos antes de guardar
+      const cleanData = {
         ...messageData,
+        psychologistId: messageData.psychologistId || null, // Convertir undefined a null
         timestamp: Timestamp.now(),
-      });
+      };
+
+      const messageRef = await addDoc(collection(db, this.CHAT_MESSAGES_COLLECTION), cleanData);
 
       // Actualizar la sesión de chat
       await this.updateChatSession(messageData.sessionId, messageData.userId, messageData.psychologistId);
@@ -256,23 +260,32 @@ class ChatHistoryService {
   }
 
   /**
-   * Limpiar mensajes antiguos (más de 10 días)
+   * Limpiar mensajes antiguos (más de 10 días) - Solo para el usuario actual
    */
-  async cleanupOldMessages(): Promise<void> {
+  async cleanupOldMessages(userId?: string): Promise<void> {
     try {
       const tenDaysAgo = new Date();
       tenDaysAgo.setDate(tenDaysAgo.getDate() - this.RETENTION_DAYS);
 
-      const q = query(
-        collection(db, this.CHAT_MESSAGES_COLLECTION),
-        where('timestamp', '<', Timestamp.fromDate(tenDaysAgo))
-      );
+      let q;
+      if (userId) {
+        // Solo limpiar mensajes del usuario específico
+        q = query(
+          collection(db, this.CHAT_MESSAGES_COLLECTION),
+          where('userId', '==', userId),
+          where('timestamp', '<', Timestamp.fromDate(tenDaysAgo))
+        );
+      } else {
+        // Si no hay userId, no hacer nada (evitar errores de permisos)
+        console.log('No userId provided for cleanup, skipping...');
+        return;
+      }
 
       const querySnapshot = await getDocs(q);
       
       // En una implementación real, aquí eliminarías los mensajes antiguos
       // Por ahora, solo registramos cuántos se encontrarían
-      console.log(`Found ${querySnapshot.size} old messages to clean up`);
+      console.log(`Found ${querySnapshot.size} old messages to clean up for user ${userId}`);
       
     } catch (error) {
       console.error('Error cleaning up old messages:', error);

@@ -533,16 +533,6 @@
       ]
     },
     {
-      "collectionGroup": "userSettings",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "advancedReports",
       "queryScope": "COLLECTION",
       "fields": [
@@ -557,15 +547,37 @@
       ]
     },
     {
-      "collectionGroup": "statistics",
+      "collectionGroup": "chatMessages",
       "queryScope": "COLLECTION",
       "fields": [
+        {
+          "fieldPath": "sender",
+          "order": "ASCENDING"
+        },
         {
           "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
+          "fieldPath": "timestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chatSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastActivity",
           "order": "DESCENDING"
         }
       ]
