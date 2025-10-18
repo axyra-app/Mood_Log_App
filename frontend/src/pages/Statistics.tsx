@@ -20,12 +20,14 @@ import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
-import { moodAnalyzerAgent } from '../services/specializedAgents';
+import { useUserAppointments } from '../hooks/useUserAppointments';
+import { aiService } from '../services/aiService';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
   const { statistics, loading, getMoodTrend, getAverageMood, getMoodStreak } = useMood();
   const { entries: journalEntries, getJournalStats } = useJournal(user?.uid || '');
+  const { appointments } = useUserAppointments(user?.uid || '');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -80,24 +82,23 @@ const Statistics: React.FC = () => {
       const { startDate, endDate } = getPeriodData();
 
       // Obtener datos de estado de ánimo del período
+      const moodLogs = statistics?.moodLogs?.filter((log) => {
+        const logDate = new Date(log.createdAt);
+        return logDate >= startDate && logDate <= endDate;
+      }) || [];
+
+      // Crear datos para el análisis de IA
       const moodData = {
-        moodLogs:
-          statistics?.moodLogs?.filter((log) => {
-            const logDate = new Date(log.createdAt);
-            return logDate >= startDate && logDate <= endDate;
-          }) || [],
-        averageMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
-        moodTrend: getMoodTrend(),
-        streak: getMoodStreak(),
-        journalEntries: journalEntries
-          .filter((entry) => {
-            const entryDate = new Date(entry.date);
-            return entryDate >= startDate && entryDate <= endDate;
-          })
-          .map((entry) => entry.content),
+        overallMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
+        energy: moodLogs.length > 0 ? moodLogs.reduce((sum, log) => sum + (log.energy || 5), 0) / moodLogs.length : 5,
+        stress: moodLogs.length > 0 ? moodLogs.reduce((sum, log) => sum + (log.stress || 5), 0) / moodLogs.length : 5,
+        sleep: moodLogs.length > 0 ? moodLogs.reduce((sum, log) => sum + (log.sleep || 5), 0) / moodLogs.length : 5,
+        emotions: moodLogs.flatMap(log => log.emotions || []),
+        activities: moodLogs.flatMap(log => log.activities || []),
+        feelings: moodLogs.length > 0 ? moodLogs[moodLogs.length - 1]?.feelings || '' : '',
       };
 
-      const analysis = await moodAnalyzerAgent.analyzeMood(moodData);
+      const analysis = await aiService.analyzeMood(moodData);
       setAiAnalysis(analysis);
 
       toast.success('Análisis de IA generado exitosamente');
@@ -292,7 +293,9 @@ const Statistics: React.FC = () => {
         <div className='bg-white rounded-xl shadow-sm border p-6 mb-8'>
           <div className='flex items-center justify-between mb-6'>
             <div className='flex items-center space-x-3'>
-              <Logo size='sm' showText={false} />
+              <div className='w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
+                <span className='text-white text-lg'>🧠</span>
+              </div>
               <div>
                 <h3 className='text-lg font-semibold text-gray-900'>Análisis Profesional con IA</h3>
                 <p className='text-sm text-gray-600'>Insights psicológicos basados en tus datos</p>
@@ -413,7 +416,9 @@ const Statistics: React.FC = () => {
             </div>
           ) : (
             <div className='text-center py-8 text-gray-500'>
-              <Logo size='lg' showText={false} className='mx-auto mb-4 text-gray-300' />
+              <div className='w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <span className='text-2xl'>🧠</span>
+              </div>
               <p className='font-medium'>Análisis Inteligente de tu Bienestar</p>
               <p className='text-sm'>Haz clic en "Generar Análisis" para obtener insights personalizados</p>
             </div>
@@ -427,33 +432,102 @@ const Statistics: React.FC = () => {
             Actividad Reciente
           </h3>
 
-          {statistics?.moodLogs && statistics.moodLogs.length > 0 ? (
-            <div className='space-y-3'>
-              {statistics.moodLogs.slice(0, 5).map((log, index) => (
-                <div key={index} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
-                  <div className='flex items-center space-x-3'>
-                    <div className='w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center'>
-                      <span className='text-sm font-medium text-purple-600'>{log.mood}</span>
+          {(() => {
+            // Combinar todas las actividades
+            const allActivities: Array<{
+              type: 'mood' | 'journal' | 'appointment';
+              title: string;
+              description: string;
+              date: Date;
+              icon: string;
+              color: string;
+            }> = [];
+
+            // Agregar registros de estado de ánimo
+            if (statistics?.moodLogs) {
+              statistics.moodLogs.forEach((log) => {
+                allActivities.push({
+                  type: 'mood',
+                  title: 'Estado de ánimo registrado',
+                  description: `Nivel ${log.mood}/5 - ${getMoodLevel(log.mood).level}`,
+                  date: new Date(log.createdAt),
+                  icon: getMoodLevel(log.mood).icon,
+                  color: 'purple',
+                });
+              });
+            }
+
+            // Agregar entradas de diario
+            journalEntries.forEach((entry) => {
+              allActivities.push({
+                type: 'journal',
+                title: 'Entrada de diario creada',
+                description: entry.title || 'Sin título',
+                date: new Date(entry.date),
+                icon: '📝',
+                color: 'blue',
+              });
+            });
+
+            // Agregar citas
+            appointments.forEach((apt) => {
+              allActivities.push({
+                type: 'appointment',
+                title: 'Cita programada',
+                description: `Con ${apt.psychologistName || 'psicólogo'} - ${apt.status}`,
+                date: new Date(apt.appointmentDate),
+                icon: '📅',
+                color: 'green',
+              });
+            });
+
+            // Ordenar por fecha (más reciente primero)
+            allActivities.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+            if (allActivities.length === 0) {
+              return (
+                <div className='text-center py-8 text-gray-500'>
+                  <Activity className='w-12 h-12 mx-auto mb-4 text-gray-300' />
+                  <p>No hay actividad reciente</p>
+                  <p className='text-sm'>Comienza registrando tu estado de ánimo</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className='space-y-3'>
+                {allActivities.slice(0, 10).map((activity, index) => (
+                  <div key={index} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                    <div className='flex items-center space-x-3'>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        activity.color === 'purple' ? 'bg-purple-100' :
+                        activity.color === 'blue' ? 'bg-blue-100' :
+                        'bg-green-100'
+                      }`}>
+                        <span className='text-sm'>{activity.icon}</span>
+                      </div>
+                      <div>
+                        <p className='text-sm font-medium text-gray-900'>{activity.title}</p>
+                        <p className='text-xs text-gray-500'>{activity.description}</p>
+                        <p className='text-xs text-gray-400'>
+                          {formatDateColombian(activity.date)} a las{' '}
+                          {formatTimeColombian(activity.date)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className='text-sm font-medium text-gray-900'>Estado de ánimo registrado</p>
-                      <p className='text-xs text-gray-500'>
-                        {formatDateColombian(new Date(log.createdAt))} a las{' '}
-                        {formatTimeColombian(new Date(log.createdAt))}
-                      </p>
+                    <div className={`text-xs px-2 py-1 rounded-full ${
+                      activity.color === 'purple' ? 'bg-purple-100 text-purple-600' :
+                      activity.color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                      'bg-green-100 text-green-600'
+                    }`}>
+                      {activity.type === 'mood' ? 'Estado de ánimo' :
+                       activity.type === 'journal' ? 'Diario' : 'Cita'}
                     </div>
                   </div>
-                  <div className='text-sm text-gray-500'>{getMoodLevel(log.mood).icon}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className='text-center py-8 text-gray-500'>
-              <Activity className='w-12 h-12 mx-auto mb-4 text-gray-300' />
-              <p>No hay actividad reciente</p>
-              <p className='text-sm'>Comienza registrando tu estado de ánimo</p>
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
