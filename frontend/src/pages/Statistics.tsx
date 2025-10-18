@@ -375,14 +375,27 @@ const Statistics: React.FC = () => {
                     <Target className='w-5 h-5 mr-2 text-purple-500' />
                     Recomendaciones Profesionales
                   </h4>
-                  <div className='space-y-2'>
-                    {aiAnalysis.recommendations.map((rec: string, index: number) => (
+                  <div className='space-y-4'>
+                    {aiAnalysis.recommendations.map((rec: any, index: number) => (
                       <div
                         key={index}
-                        className='flex items-start space-x-3 bg-purple-50 rounded-lg p-3 border border-purple-200'
+                        className='bg-purple-50 rounded-lg p-4 border border-purple-200'
                       >
-                        <Target className='w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0' />
-                        <p className='text-sm text-purple-800'>{rec}</p>
+                        <div className='flex items-start space-x-3'>
+                          <Target className='w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0' />
+                          <div className='flex-1'>
+                            <h5 className='font-semibold text-purple-800 mb-2'>{rec.title}</h5>
+                            <p className='text-sm text-purple-700 mb-2'>{rec.description}</p>
+                            <div className='bg-white rounded p-3 border border-purple-100'>
+                              <p className='text-sm text-gray-800 whitespace-pre-line'>{rec.actionable}</p>
+                            </div>
+                            <div className='mt-2'>
+                              <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-600'>
+                                {rec.category}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
