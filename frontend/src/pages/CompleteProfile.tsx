@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
+import { cvService } from '../services/cvService';
 import Logo from '../components/Logo';
 
 const CompleteProfile: React.FC = () => {
@@ -104,24 +105,21 @@ const CompleteProfile: React.FC = () => {
     try {
       setLoading(true);
 
-      // TEMPORALMENTE DESHABILITADO: Subida de archivos CV
-      // TODO: Habilitar cuando Firebase Storage esté configurado correctamente
-      let cvUrl = '';
-      /*
+      // Subir hoja de vida si es psicólogo
+      let cvData = null;
       if (formData.role === 'psychologist' && formData.cvFile) {
         setUploadingFile(true);
         try {
-          cvUrl = await uploadFile(formData.cvFile, `psychologists/${user?.email}/cv`);
-          toast.success('Archivo subido correctamente');
+          cvData = await cvService.uploadCV(user?.uid || '', formData.cvFile);
+          toast.success('Hoja de vida subida correctamente');
         } catch (uploadError) {
           console.error('Error uploading CV:', uploadError);
-          toast.error('Error al subir el archivo');
+          toast.error('Error al subir la hoja de vida');
           return;
         } finally {
           setUploadingFile(false);
         }
       }
-      */
 
       const updateData: any = {
         displayName: formData.displayName,
@@ -156,7 +154,7 @@ const CompleteProfile: React.FC = () => {
             bio: formData.bio,
             licenseNumber: formData.licenseNumber,
             phone: formData.phone,
-            cvUrl: cvUrl,
+            cvData: cvData,
             isActive: true,
             createdAt: new Date(),
             updatedAt: new Date()

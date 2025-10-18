@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserAppointments } from '../hooks/useUserAppointments';
 import CreateAppointmentModal from './CreateAppointmentModal';
+import PsychologistCreateAppointmentModal from './PsychologistCreateAppointmentModal';
 
 interface Appointment {
   id: string;
@@ -271,13 +272,23 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
       </div>
 
       {/* Modal de Crear Cita */}
-      <CreateAppointmentModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onAppointmentCreated={() => {
-          // Cita creada exitosamente
-        }}
-      />
+      {user?.role === 'psychologist' ? (
+        <PsychologistCreateAppointmentModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onAppointmentCreated={() => {
+            // Cita creada exitosamente
+          }}
+        />
+      ) : (
+        <CreateAppointmentModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onAppointmentCreated={() => {
+            // Cita creada exitosamente
+          }}
+        />
+      )}
     </div>
   );
 };
