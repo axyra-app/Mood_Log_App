@@ -213,7 +213,7 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                               ? 'bg-gray-700 text-gray-100'
                               : 'bg-gray-100 text-gray-900'
                         }`}>
-                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                           <p className={`text-xs mt-1 ${
                             msg.sender === 'user' ? 'text-purple-100' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>
