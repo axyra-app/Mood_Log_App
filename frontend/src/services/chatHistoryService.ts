@@ -260,9 +260,13 @@ class ChatHistoryService {
   }
 
   /**
-   * Limpiar mensajes antiguos (más de 10 días) - Solo para el usuario actual
+   * Limpiar mensajes antiguos (más de 10 días) - DESHABILITADO TEMPORALMENTE
    */
   async cleanupOldMessages(userId?: string): Promise<void> {
+    // Temporalmente deshabilitado para evitar errores de permisos
+    console.log('Cleanup de mensajes deshabilitado temporalmente');
+    return;
+    
     try {
       const tenDaysAgo = new Date();
       tenDaysAgo.setDate(tenDaysAgo.getDate() - this.RETENTION_DAYS);

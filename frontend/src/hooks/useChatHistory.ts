@@ -134,8 +134,13 @@ export const useChatHistory = (userId: string, chatType: 'ai-chat' | 'psychologi
     return chatHistoryService.generateSessionId(userId, psychologistId);
   }, [userId, psychologistId]);
 
-  // Limpiar mensajes antiguos
+  // Limpiar mensajes antiguos (deshabilitado temporalmente para evitar errores de permisos)
   const cleanupOldMessages = useCallback(async () => {
+    // Temporalmente deshabilitado para evitar errores de permisos
+    // TODO: Implementar limpieza con permisos adecuados
+    console.log('Cleanup de mensajes deshabilitado temporalmente');
+    return;
+    
     try {
       await chatHistoryService.cleanupOldMessages(userId);
     } catch (err) {
