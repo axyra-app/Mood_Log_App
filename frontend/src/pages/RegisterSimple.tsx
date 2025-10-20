@@ -1,12 +1,12 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { Link, useNavigate } from 'react-router-dom';
+import CountrySelector from '../components/CountrySelector';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useValidation } from '../hooks/useValidation';
-import CountrySelector from '../components/CountrySelector';
 import { uploadFile } from '../services/firebase';
-import Logo from '../components/Logo';
 
 const RegisterSimple: React.FC = () => {
   const { signUp, signUpWithGoogle, user } = useAuth();
@@ -31,7 +31,12 @@ const RegisterSimple: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState({ code: 'CO', name: 'Colombia', phoneCode: '+57', flag: '🇨🇴' });
+  const [selectedCountry, setSelectedCountry] = useState({
+    code: 'CO',
+    name: 'Colombia',
+    phoneCode: '+57',
+    flag: '🇨🇴',
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -205,7 +210,7 @@ const RegisterSimple: React.FC = () => {
       setLoading(true);
       await signUpWithGoogle();
       toast.success('¡Cuenta creada con Google! Completa tu perfil para continuar');
-      
+
       // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
       console.error('Google registration error:', error);
@@ -229,7 +234,7 @@ const RegisterSimple: React.FC = () => {
       >
         <div className='max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4'>
           <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
-            <Logo size="lg" />
+            <Logo size='lg' />
           </Link>
 
           <div className='flex items-center space-x-3 sm:space-x-4'>
@@ -274,9 +279,7 @@ const RegisterSimple: React.FC = () => {
                   Crear Cuenta
                 </h1>
                 <p
-                  className={`text-lg transition-colors duration-500 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}
+                  className={`text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
                 >
                   Únete a nuestra comunidad de bienestar
                 </p>
@@ -350,9 +353,7 @@ const RegisterSimple: React.FC = () => {
                       }`}
                       placeholder='Tu nombre'
                     />
-                    {hasError('firstName') && (
-                      <p className='text-red-500 text-sm mt-1'>{getError('firstName')}</p>
-                    )}
+                    {hasError('firstName') && <p className='text-red-500 text-sm mt-1'>{getError('firstName')}</p>}
                   </div>
 
                   <div>
@@ -377,9 +378,7 @@ const RegisterSimple: React.FC = () => {
                       }`}
                       placeholder='Tu apellido'
                     />
-                    {hasError('lastName') && (
-                      <p className='text-red-500 text-sm mt-1'>{getError('lastName')}</p>
-                    )}
+                    {hasError('lastName') && <p className='text-red-500 text-sm mt-1'>{getError('lastName')}</p>}
                   </div>
                 </div>
 
@@ -405,9 +404,7 @@ const RegisterSimple: React.FC = () => {
                     }`}
                     placeholder='tu@email.com'
                   />
-                  {hasError('email') && (
-                    <p className='text-red-500 text-sm mt-1'>{getError('email')}</p>
-                  )}
+                  {hasError('email') && <p className='text-red-500 text-sm mt-1'>{getError('email')}</p>}
                 </div>
 
                 <div className='grid grid-cols-2 gap-4'>
@@ -433,9 +430,7 @@ const RegisterSimple: React.FC = () => {
                       }`}
                       placeholder='Mínimo 6 caracteres'
                     />
-                    {hasError('password') && (
-                      <p className='text-red-500 text-sm mt-1'>{getError('password')}</p>
-                    )}
+                    {hasError('password') && <p className='text-red-500 text-sm mt-1'>{getError('password')}</p>}
                   </div>
 
                   <div>
@@ -595,8 +590,8 @@ const RegisterSimple: React.FC = () => {
                       >
                         TELÉFONO
                       </label>
-                      <div className="flex space-x-2">
-                        <div className="w-32">
+                      <div className='flex space-x-2'>
+                        <div className='w-32'>
                           <CountrySelector
                             selectedCountry={selectedCountry}
                             onCountryChange={setSelectedCountry}

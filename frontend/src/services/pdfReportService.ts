@@ -20,26 +20,59 @@ export class PDFReportGenerator {
     this.doc = new jsPDF();
   }
 
-  private addHeader(title: string, subtitle: string) {
-    // Logo placeholder (se reemplazará con el logo real)
-    this.doc.setFillColor(147, 51, 234); // Purple
-    this.doc.rect(this.margin, this.margin, 15, 15, 'F');
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.setFontSize(12);
-    this.doc.text('ML', this.margin + 7, this.margin + 10, { align: 'center' });
+  private async addHeader(title: string, subtitle: string) {
+    try {
+      // Intentar cargar el logo como imagen
+      const logoUrl = 'https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png';
+      
+      // Crear una imagen del logo
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = logoUrl;
+      });
 
-    // Title
-    this.doc.setTextColor(0, 0, 0);
-    this.doc.setFontSize(20);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text(title, this.margin + 20, this.margin + 10);
+      // Agregar el logo al PDF
+      this.doc.addImage(img, 'PNG', this.margin, this.margin, 20, 20);
+      
+      // Title
+      this.doc.setTextColor(0, 0, 0);
+      this.doc.setFontSize(20);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(title, this.margin + 25, this.margin + 12);
 
-    // Subtitle
-    this.doc.setFontSize(12);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text(subtitle, this.margin + 20, this.margin + 18);
+      // Subtitle
+      this.doc.setFontSize(12);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(subtitle, this.margin + 25, this.margin + 20);
 
-    this.currentY = this.margin + 30;
+      this.currentY = this.margin + 30;
+    } catch (error) {
+      console.warn('No se pudo cargar el logo, usando placeholder:', error);
+      
+      // Fallback: usar placeholder como antes
+      this.doc.setFillColor(147, 51, 234); // Purple
+      this.doc.rect(this.margin, this.margin, 15, 15, 'F');
+      this.doc.setTextColor(255, 255, 255);
+      this.doc.setFontSize(12);
+      this.doc.text('ML', this.margin + 7, this.margin + 10, { align: 'center' });
+
+      // Title
+      this.doc.setTextColor(0, 0, 0);
+      this.doc.setFontSize(20);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(title, this.margin + 20, this.margin + 10);
+
+      // Subtitle
+      this.doc.setFontSize(12);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(subtitle, this.margin + 20, this.margin + 18);
+
+      this.currentY = this.margin + 30;
+    }
   }
 
   private addSection(title: string, content: string[]) {
@@ -107,7 +140,7 @@ export class PDFReportGenerator {
       const analysis = await moodAnalyzerAgent.analyzeMood(moodData);
 
       // Generar PDF
-      this.addHeader(
+      await this.addHeader(
         'Reporte de Estado de Ánimo',
         `Período: ${data.period.start.toLocaleDateString('es-CO')} - ${data.period.end.toLocaleDateString('es-CO')}`
       );
@@ -208,7 +241,7 @@ export class PDFReportGenerator {
       });
 
       // Generar PDF
-      this.addHeader(
+      await this.addHeader(
         'Reporte de Diario Personal',
         `Período: ${data.period.start.toLocaleDateString('es-CO')} - ${data.period.end.toLocaleDateString('es-CO')}`
       );

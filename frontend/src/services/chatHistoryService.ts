@@ -1,4 +1,4 @@
-import { collection, addDoc, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { Timestamp, addDoc, collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface ChatMessage {
@@ -193,7 +193,7 @@ class ChatHistoryService {
 
       // Intentar actualizar la sesión existente
       const existingSession = await this.getSessionById(sessionId);
-      
+
       if (existingSession) {
         // Actualizar sesión existente
         await this.updateSessionMessageCount(sessionId);
@@ -217,17 +217,14 @@ class ChatHistoryService {
    */
   private async getSessionById(sessionId: string): Promise<ChatSession | null> {
     try {
-      const q = query(
-        collection(db, this.CHAT_SESSIONS_COLLECTION),
-        where('id', '==', sessionId)
-      );
+      const q = query(collection(db, this.CHAT_SESSIONS_COLLECTION), where('id', '==', sessionId));
 
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) return null;
 
       const doc = querySnapshot.docs[0];
       const data = doc.data();
-      
+
       return {
         id: doc.id,
         userId: data.userId,
@@ -266,7 +263,7 @@ class ChatHistoryService {
     // Temporalmente deshabilitado para evitar errores de permisos
     console.log('Cleanup de mensajes deshabilitado temporalmente');
     return;
-    
+
     try {
       const tenDaysAgo = new Date();
       tenDaysAgo.setDate(tenDaysAgo.getDate() - this.RETENTION_DAYS);
@@ -286,11 +283,10 @@ class ChatHistoryService {
       }
 
       const querySnapshot = await getDocs(q);
-      
+
       // En una implementación real, aquí eliminarías los mensajes antiguos
       // Por ahora, solo registramos cuántos se encontrarían
       console.log(`Found ${querySnapshot.size} old messages to clean up for user ${userId}`);
-      
     } catch (error) {
       console.error('Error cleaning up old messages:', error);
     }

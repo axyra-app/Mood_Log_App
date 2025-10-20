@@ -32,43 +32,114 @@ const Statistics: React.FC = () => {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  // Función para exportar estadísticas
-  const exportStatistics = () => {
+  // Función para exportar estadísticas como PDF
+  const exportStatistics = async () => {
     try {
-      const exportData = {
-        periodo: timeRange === 'week' ? 'Semana' : timeRange === 'month' ? 'Mes' : 'Año',
-        fechaExportacion: new Date().toLocaleDateString('es-ES'),
-        estadisticas: {
-          estadoAnimoPromedio: periodStats.averageMood.toFixed(1),
-          registrosAnimo: periodStats.totalMoodLogs,
-          rachaActual: periodStats.streak,
-          tendencia: getTrendText(periodStats.trend),
-          entradasDiario: periodStats.journalEntries,
-        },
-        analisisIA: aiAnalysis || null,
-        actividadesRecientes: statistics?.moodLogs?.slice(0, 10).map(log => ({
-          fecha: new Date(log.createdAt).toLocaleDateString('es-ES'),
-          estadoAnimo: log.mood,
-          nivel: getMoodLevel(log.mood).level
-        })) || []
+      // Importar jsPDF dinámicamente
+      const { default: jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+
+      // Configuración del documento
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Función para agregar texto con wrap
+      const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: string = '#000000') => {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+        doc.setTextColor(color);
+        
+        const lines = doc.splitTextToSize(text, pageWidth - 40);
+        doc.text(lines, 20, yPosition);
+        yPosition += lines.length * (fontSize * 0.4) + 5;
       };
 
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
+      // Logo y título
+      doc.setFillColor(147, 51, 234); // Purple
+      doc.rect(0, 0, pageWidth, 30, 'F');
       
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `estadisticas-mood-log-${timeRange}-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Mood Log App', 20, 20);
+      
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Reporte de Estadísticas de Bienestar', 20, 25);
 
-      toast.success('Estadísticas exportadas exitosamente');
+      yPosition = 40;
+
+      // Información del período
+      addText(`Período: ${timeRange === 'week' ? 'Semana' : timeRange === 'month' ? 'Mes' : 'Año'}`, 16, true, '#374151');
+      addText(`${formatDateColombian(getPeriodData().startDate)} - ${formatDateColombian(getPeriodData().endDate)}`, 12, false, '#6B7280');
+      yPosition += 10;
+
+      // Estadísticas principales
+      addText('Resumen Ejecutivo', 16, true, '#374151');
+      yPosition += 5;
+
+      const statsData = [
+        { label: 'Estado de Ánimo Promedio', value: `${periodStats.averageMood.toFixed(1)}/10 (${moodLevel.level})` },
+        { label: 'Registros de Ánimo', value: `${periodStats.totalMoodLogs} registros` },
+        { label: 'Racha Actual', value: `${periodStats.streak} días consecutivos` },
+        { label: 'Tendencia', value: getTrendText(periodStats.trend) },
+        { label: 'Entradas de Diario', value: `${periodStats.journalEntries} entradas` }
+      ];
+
+      statsData.forEach(stat => {
+        addText(`${stat.label}: ${stat.value}`, 12, false, '#374151');
+      });
+
+      yPosition += 10;
+
+      // Análisis de IA si está disponible
+      if (aiAnalysis) {
+        addText('Análisis Profesional con IA', 16, true, '#374151');
+        yPosition += 5;
+
+        if (aiAnalysis.summary) {
+          addText('Resumen:', 14, true, '#374151');
+          addText(aiAnalysis.summary, 12, false, '#6B7280');
+          yPosition += 5;
+        }
+
+        if (aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0) {
+          addText('Recomendaciones:', 14, true, '#374151');
+          aiAnalysis.recommendations.forEach((rec: string) => {
+            addText(`• ${rec}`, 12, false, '#6B7280');
+          });
+          yPosition += 5;
+        }
+      }
+
+      // Actividad reciente
+      if (statistics?.moodLogs && statistics.moodLogs.length > 0) {
+        addText('Actividad Reciente', 16, true, '#374151');
+        yPosition += 5;
+
+        const recentLogs = statistics.moodLogs.slice(0, 10);
+        recentLogs.forEach((log: any) => {
+          const date = new Date(log.createdAt).toLocaleDateString('es-CO');
+          const moodLevel = getMoodLevel(log.mood);
+          addText(`${date}: ${moodLevel.level} (${log.mood}/10)`, 12, false, '#6B7280');
+        });
+      }
+
+      // Pie de página
+      yPosition = pageHeight - 20;
+      doc.setFontSize(10);
+      doc.setTextColor('#6B7280');
+      doc.text(`Generado el ${new Date().toLocaleDateString('es-CO')} por Mood Log App`, 20, yPosition);
+
+      // Guardar el PDF
+      const fileName = `estadisticas-mood-log-${timeRange}-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success('Reporte PDF generado exitosamente');
     } catch (error) {
-      console.error('Error exporting statistics:', error);
-      toast.error('Error al exportar estadísticas');
+      console.error('Error generating PDF:', error);
+      toast.error('Error al generar el reporte PDF');
     }
   };
 
@@ -226,7 +297,7 @@ const Statistics: React.FC = () => {
     <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
       <Header 
         title="Estadísticas de Bienestar"
-        subtitle={`Período: ${formatDateColombian(getPeriodData().startDate)} - ${formatDateColombian(getPeriodData().endDate)}`}
+        subtitle="Análisis de tu progreso emocional"
         backTo="/dashboard"
         backLabel="Volver al Dashboard"
         actions={
@@ -259,6 +330,13 @@ const Statistics: React.FC = () => {
       />
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+        {/* Información del Período */}
+        <div className='mb-6'>
+          <p className='text-sm text-gray-600 dark:text-gray-400'>
+            Período: {formatDateColombian(getPeriodData().startDate)} - {formatDateColombian(getPeriodData().endDate)}
+          </p>
+        </div>
+
         {/* Métricas Principales */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
           <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6'>

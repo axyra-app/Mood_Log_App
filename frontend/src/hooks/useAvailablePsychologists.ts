@@ -43,8 +43,13 @@ export const useAvailablePsychologists = () => {
           for (const docSnapshot of snapshot.docs) {
             const data = docSnapshot.data();
             
-            // Considerar todos los psicólogos como online por ahora para testing
-            const isOnline = true;
+            // Verificar estado online real basado en lastActive
+            const lastActive = data.lastActive?.toDate();
+            const now = new Date();
+            const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+            
+            // Está online si está marcado como online O si su última actividad fue hace menos de 5 minutos
+            const isOnline = data.isOnline || (lastActive && lastActive > fiveMinutesAgo);
             
             psychologistsData.push({
               id: docSnapshot.id,

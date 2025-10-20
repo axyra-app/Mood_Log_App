@@ -1,5 +1,5 @@
+import { BarChart3, BookOpen, FileText, Heart, MessageCircle, Settings, X } from 'lucide-react';
 import React from 'react';
-import { X, BarChart3, Settings, Heart, MessageCircle, FileText, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 
@@ -11,84 +11,81 @@ interface LateralSidebarProps {
 
 const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDarkMode }) => {
   const navigate = useNavigate();
-  
+
   const menuItems = [
-    { 
-      icon: Heart, 
-      label: 'Registrar Estado de Ánimo', 
+    {
+      icon: Heart,
+      label: 'Registrar Estado de Ánimo',
       path: '/mood-flow',
       description: 'Cómo te sientes hoy',
-      color: 'bg-gradient-to-r from-purple-500 to-pink-500'
+      color: 'bg-gradient-to-r from-purple-500 to-pink-500',
     },
-    { 
-      icon: BarChart3, 
-      label: 'Ver Estadísticas', 
+    {
+      icon: BarChart3,
+      label: 'Ver Estadísticas',
       path: '/statistics',
       description: 'Tu progreso emocional',
-      color: 'bg-gradient-to-r from-blue-500 to-cyan-500'
+      color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
     },
-    { 
-      icon: MessageCircle, 
-      label: 'Chat de Apoyo', 
+    {
+      icon: MessageCircle,
+      label: 'Chat de Apoyo',
       path: '/chat',
       description: 'IA o psicólogo real',
-      color: 'bg-gradient-to-r from-green-500 to-emerald-500'
+      color: 'bg-gradient-to-r from-green-500 to-emerald-500',
     },
-    { 
-      icon: FileText, 
-      label: 'Reportes Avanzados', 
+    {
+      icon: FileText,
+      label: 'Reportes Avanzados',
       path: '/reports',
       description: 'Análisis detallados',
-      color: 'bg-gradient-to-r from-orange-500 to-amber-500'
+      color: 'bg-gradient-to-r from-orange-500 to-amber-500',
     },
-    { 
-      icon: Settings, 
-      label: 'Configuración', 
+    {
+      icon: Settings,
+      label: 'Configuración',
       path: '/settings',
       description: 'Personaliza tu experiencia',
-      color: 'bg-gradient-to-r from-orange-500 to-red-500'
+      color: 'bg-gradient-to-r from-orange-500 to-red-500',
     },
-    { 
-      icon: BookOpen, 
-      label: 'Mi Diario', 
+    {
+      icon: BookOpen,
+      label: 'Mi Diario',
       path: '/journal',
       description: 'Reflexiona sobre tu día',
-      color: 'bg-gradient-to-r from-teal-500 to-blue-500'
+      color: 'bg-gradient-to-r from-teal-500 to-blue-500',
     },
   ];
 
   return (
     <>
       {/* Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={onClose}
-        />
-      )}
-      
+      {isOpen && <div className='fixed inset-0 bg-black bg-opacity-50 z-40' onClick={onClose} />}
+
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } w-64 flex flex-col`}>
+      <div
+        className={`fixed top-0 left-0 h-full bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } w-64 flex flex-col`}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
-          <Logo size="md" showText={true} className="text-white" />
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
+        <div className='flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0'>
+          <Logo size='md' showText={true} className='text-white' />
+          <button onClick={onClose} className='p-2 hover:bg-gray-700 rounded-lg transition-colors'>
+            <X className='w-5 h-5' />
           </button>
         </div>
-        
+
         {/* Menu Items - Scrollable */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="px-6 py-4 flex-shrink-0">
-            <h3 className="text-lg font-semibold text-gray-300 mb-4">Más Herramientas</h3>
+        <div className='flex-1 overflow-hidden flex flex-col'>
+          <div className='px-6 py-4 flex-shrink-0'>
+            <h3 className='text-lg font-semibold text-gray-300 mb-4'>Más Herramientas</h3>
           </div>
-          <div className="flex-1 px-6 pb-6 overflow-y-auto overflow-x-hidden" style={{ maxHeight: 'calc(100vh - 120px)' }}>
-            <div className="space-y-3">
+          <div
+            className='flex-1 px-6 pb-6 overflow-y-auto overflow-x-hidden'
+            style={{ maxHeight: 'calc(100vh - 120px)' }}
+          >
+            <div className='space-y-3'>
               {menuItems.map((item, index) => {
                 const IconComponent = item.icon;
                 return (

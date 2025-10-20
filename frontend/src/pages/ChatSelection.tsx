@@ -1,6 +1,7 @@
-import { MessageCircle, Bot, User, ArrowRight, Shield, Clock, Star, Sun, Moon } from 'lucide-react';
+import { MessageCircle, Bot, User, ArrowRight, Shield, Clock, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 
 const ChatSelection: React.FC = () => {
@@ -28,45 +29,12 @@ const ChatSelection: React.FC = () => {
     <div className={`min-h-screen transition-colors duration-500 ${
       isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 to-pink-50'
     }`}>
-      {/* Header */}
-      <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${
-        isDarkMode ? 'border-gray-700' : 'border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-white" />
-              </div>
-              <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Chat de Apoyo
-              </h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-              
-              <button
-                onClick={() => navigate('/dashboard')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                ← Volver al Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header 
+        title="Chat de Apoyo"
+        subtitle="Elige el tipo de ayuda que mejor se adapte a tus necesidades"
+        backTo="/dashboard"
+        backLabel="Volver al Dashboard"
+      />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}

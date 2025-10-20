@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { chatHistoryService, ChatMessage, ChatSession } from '../services/chatHistoryService';
+import { useCallback, useEffect, useState } from 'react';
+import { ChatMessage, ChatSession, chatHistoryService } from '../services/chatHistoryService';
 
 interface UseChatHistoryProps {
   userId: string;
@@ -8,7 +8,12 @@ interface UseChatHistoryProps {
   chatType?: 'ai-chat' | 'psychologist-chat';
 }
 
-export const useChatHistory = (userId: string, chatType: 'ai-chat' | 'psychologist-chat' = 'ai-chat', psychologistId?: string, sessionId?: string) => {
+export const useChatHistory = (
+  userId: string,
+  chatType: 'ai-chat' | 'psychologist-chat' = 'ai-chat',
+  psychologistId?: string,
+  sessionId?: string
+) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,76 +63,82 @@ export const useChatHistory = (userId: string, chatType: 'ai-chat' | 'psychologi
   }, [userId]);
 
   // Enviar mensaje (simplificado para la burbuja flotante)
-  const sendMessage = useCallback(async (message: string, sender: 'user' | 'ai' | 'psychologist' = 'user') => {
-    if (!userId || !message.trim()) return;
+  const sendMessage = useCallback(
+    async (message: string, sender: 'user' | 'ai' | 'psychologist' = 'user') => {
+      if (!userId || !message.trim()) return;
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const currentSessionId = sessionId || chatHistoryService.generateSessionId(userId, psychologistId);
-      
-      const messageId = await chatHistoryService.saveMessage({
-        userId,
-        psychologistId,
-        message: message.trim(),
-        sender,
-        sessionId: currentSessionId,
-        messageType: 'text',
-      });
+      try {
+        const currentSessionId = sessionId || chatHistoryService.generateSessionId(userId, psychologistId);
 
-      // Actualizar mensajes localmente
-      const newMessage: ChatMessage = {
-        id: messageId,
-        userId,
-        psychologistId,
-        message: message.trim(),
-        sender,
-        sessionId: currentSessionId,
-        messageType: 'text',
-        timestamp: new Date(),
-        isRead: true,
-      };
+        const messageId = await chatHistoryService.saveMessage({
+          userId,
+          psychologistId,
+          message: message.trim(),
+          sender,
+          sessionId: currentSessionId,
+          messageType: 'text',
+        });
 
-      setMessages(prev => [...prev, newMessage]);
-      
-      return messageId;
-    } catch (err) {
-      setError('Error al enviar el mensaje');
-      console.error('Error sending message:', err);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, psychologistId, sessionId]);
+        // Actualizar mensajes localmente
+        const newMessage: ChatMessage = {
+          id: messageId,
+          userId,
+          psychologistId,
+          message: message.trim(),
+          sender,
+          sessionId: currentSessionId,
+          messageType: 'text',
+          timestamp: new Date(),
+          isRead: true,
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+
+        return messageId;
+      } catch (err) {
+        setError('Error al enviar el mensaje');
+        console.error('Error sending message:', err);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [userId, psychologistId, sessionId]
+  );
 
   // Guardar mensaje (método original)
-  const saveMessage = useCallback(async (messageData: {
-    message: string;
-    sender: 'user' | 'psychologist' | 'ai';
-    sessionId: string;
-    messageType?: 'text' | 'image' | 'file';
-  }) => {
-    try {
-      const messageId = await chatHistoryService.saveMessage({
-        userId,
-        psychologistId,
-        message: messageData.message,
-        sender: messageData.sender,
-        sessionId: messageData.sessionId,
-        messageType: messageData.messageType || 'text',
-      });
+  const saveMessage = useCallback(
+    async (messageData: {
+      message: string;
+      sender: 'user' | 'psychologist' | 'ai';
+      sessionId: string;
+      messageType?: 'text' | 'image' | 'file';
+    }) => {
+      try {
+        const messageId = await chatHistoryService.saveMessage({
+          userId,
+          psychologistId,
+          message: messageData.message,
+          sender: messageData.sender,
+          sessionId: messageData.sessionId,
+          messageType: messageData.messageType || 'text',
+        });
 
-      // Recargar mensajes después de guardar
-      await loadMessages();
-      
-      return messageId;
-    } catch (err) {
-      setError('Error al guardar el mensaje');
-      console.error('Error saving message:', err);
-      throw err;
-    }
-  }, [userId, psychologistId, loadMessages]);
+        // Recargar mensajes después de guardar
+        await loadMessages();
+
+        return messageId;
+      } catch (err) {
+        setError('Error al guardar el mensaje');
+        console.error('Error saving message:', err);
+        throw err;
+      }
+    },
+    [userId, psychologistId, loadMessages]
+  );
 
   // Generar nueva sesión
   const createSession = useCallback(() => {
@@ -140,7 +151,7 @@ export const useChatHistory = (userId: string, chatType: 'ai-chat' | 'psychologi
     // TODO: Implementar limpieza con permisos adecuados
     console.log('Cleanup de mensajes deshabilitado temporalmente');
     return;
-    
+
     try {
       await chatHistoryService.cleanupOldMessages(userId);
     } catch (err) {

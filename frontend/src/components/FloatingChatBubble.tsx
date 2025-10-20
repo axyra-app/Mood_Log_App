@@ -16,12 +16,24 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  const [unreadAIMessages, setUnreadAIMessages] = useState(0);
+
   const { 
     messages, 
     sendMessage, 
     isLoading: chatLoading,
     error 
   } = useChatHistory(user?.uid || '', 'ai-chat');
+
+  // Contar mensajes no leídos de la IA
+  useEffect(() => {
+    if (!isOpen) {
+      const aiMessages = messages.filter(msg => msg.sender === 'ai');
+      setUnreadAIMessages(aiMessages.length);
+    } else {
+      setUnreadAIMessages(0);
+    }
+  }, [messages, isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -119,9 +131,9 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
           }`}
         >
           <MessageCircle className="w-6 h-6 text-white mx-auto" />
-          {messages.length > 0 && (
+          {unreadAIMessages > 0 && (
             <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {messages.length > 9 ? '9+' : messages.length}
+              {unreadAIMessages > 9 ? '9+' : unreadAIMessages}
             </div>
           )}
         </button>
@@ -213,7 +225,7 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                               ? 'bg-gray-700 text-gray-100'
                               : 'bg-gray-100 text-gray-900'
                         }`}>
-                          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                           <p className={`text-xs mt-1 ${
                             msg.sender === 'user' ? 'text-purple-100' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>

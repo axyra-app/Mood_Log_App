@@ -316,7 +316,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   />
                 </div>
                 <div>
-                  <label className='block text-sm text-gray-600 mb-1'>Calidad de Sueño (1=Muy mala, 10=Excelente)</label>
+                  <label className='block text-sm text-gray-600 mb-1'>
+                    Calidad de Sueño (1=Muy mala, 10=Excelente)
+                  </label>
                   <input
                     type='number'
                     min='1'

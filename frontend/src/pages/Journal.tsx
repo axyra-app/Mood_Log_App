@@ -1,18 +1,19 @@
+import { Edit, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import JournalEditor from '../components/JournalEditor';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
-import JournalEditor from '../components/JournalEditor';
-import Header from '../components/Header';
-import { Plus, Search, Sparkles, Trash2, Edit } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } = useJournal(user?.uid || '');
-  
+  const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } =
+    useJournal(user?.uid || '');
+
   const [showEditor, setShowEditor] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
@@ -21,6 +22,14 @@ const Journal: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [showPrompts, setShowPrompts] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (error) {
@@ -28,10 +37,11 @@ const Journal: React.FC = () => {
     }
   }, [error]);
 
-  const filteredEntries = entries.filter(entry => {
-    const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         entry.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredEntries = entries.filter((entry) => {
+    const matchesSearch =
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.content.toLowerCase().includes(searchTerm.toLowerCase());
+
     // Arreglar filtro por fecha - manejar tanto Date como Timestamp de Firebase
     let entryDate: Date;
     if (entry.date && typeof entry.date === 'object' && 'toDate' in entry.date) {
@@ -44,7 +54,7 @@ const Journal: React.FC = () => {
       // Fallback
       entryDate = new Date(entry.date);
     }
-    
+
     const matchesDate = !selectedDate || entryDate.toDateString() === new Date(selectedDate).toDateString();
     return matchesSearch && matchesDate;
   });
@@ -117,22 +127,22 @@ const Journal: React.FC = () => {
 
   if (loading && entries.length === 0) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center`}>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Cargando tu diario...</p>
+          <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Cargando tu diario...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
-      <Header 
-        title="Mi Diario"
-        subtitle="Reflexiona sobre tus pensamientos y emociones"
-        backTo="/dashboard"
-        backLabel="Volver al Dashboard"
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <Header
+        title='Mi Diario'
+        subtitle='Reflexiona sobre tus pensamientos y emociones'
+        backTo='/dashboard'
+        backLabel='Volver al Dashboard'
       />
 
       {/* Contenido Principal */}
@@ -149,18 +159,18 @@ const Journal: React.FC = () => {
                 <Plus className='w-4 h-4' />
                 <span>Nueva Entrada</span>
               </button>
-              
+
               <button
                 onClick={() => setShowTemplates(!showTemplates)}
-                className='flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+                className={`flex items-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors`}
               >
                 <Sparkles className='w-4 h-4' />
                 <span>Plantillas</span>
               </button>
-              
+
               <button
                 onClick={() => setShowPrompts(!showPrompts)}
-                className='flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+                className={`flex items-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors`}
               >
                 <Sparkles className='w-4 h-4' />
                 <span>Prompts</span>
@@ -170,38 +180,38 @@ const Journal: React.FC = () => {
             {/* Filtros */}
             <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
               <div className='relative'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} w-4 h-4`} />
                 <input
                   type='text'
                   placeholder='Buscar entradas...'
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className='pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64'
+                  className={`pl-10 pr-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64`}
                 />
               </div>
-              
+
               <input
                 type='date'
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                className={`px-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               />
             </div>
           </div>
 
           {/* Plantillas */}
           {showTemplates && (
-            <div className='mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-3'>Plantillas</h3>
+            <div className={`mt-4 p-4 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg border shadow-sm`}>
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Plantillas</h3>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
                 {templates.map((template) => (
                   <button
                     key={template.id}
                     onClick={() => handleTemplateSelect(template)}
-                    className='p-3 text-left border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors'
+                    className={`p-3 text-left border ${isDarkMode ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'} rounded-lg transition-colors`}
                   >
-                    <h4 className='font-medium text-gray-900'>{template.name}</h4>
-                    <p className='text-sm text-gray-600 mt-1'>{template.description}</p>
+                    <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{template.name}</h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>{template.description}</p>
                   </button>
                 ))}
               </div>
@@ -210,17 +220,17 @@ const Journal: React.FC = () => {
 
           {/* Prompts */}
           {showPrompts && (
-            <div className='mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-3'>Prompts de Escritura</h3>
+            <div className={`mt-4 p-4 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg border shadow-sm`}>
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Prompts de Escritura</h3>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
                 {prompts.map((prompt) => (
                   <button
                     key={prompt.id}
                     onClick={() => handlePromptSelect(prompt)}
-                    className='p-3 text-left border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors'
+                    className={`p-3 text-left border ${isDarkMode ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'} rounded-lg transition-colors`}
                   >
-                    <h4 className='font-medium text-gray-900'>{prompt.title}</h4>
-                    <p className='text-sm text-gray-600 mt-1'>{prompt.prompt}</p>
+                    <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{prompt.title}</h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>{prompt.prompt}</p>
                   </button>
                 ))}
               </div>
@@ -232,14 +242,13 @@ const Journal: React.FC = () => {
         {filteredEntries.length === 0 ? (
           <div className='text-center py-12'>
             <div className='text-6xl mb-4'>📝</div>
-            <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+            <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
               {searchTerm || selectedDate ? 'No se encontraron entradas' : 'Tu diario está vacío'}
             </h3>
-            <p className='text-gray-600 mb-6'>
-              {searchTerm || selectedDate 
-                ? 'Intenta con otros términos de búsqueda o filtros' 
-                : 'Comienza escribiendo tu primera entrada para reflexionar sobre tu día'
-              }
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
+              {searchTerm || selectedDate
+                ? 'Intenta con otros términos de búsqueda o filtros'
+                : 'Comienza escribiendo tu primera entrada para reflexionar sobre tu día'}
             </p>
             {!searchTerm && !selectedDate && (
               <button
@@ -255,32 +264,32 @@ const Journal: React.FC = () => {
             {filteredEntries.map((entry) => (
               <div
                 key={entry.id}
-                className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow'
+                className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-sm border p-4 sm:p-6 hover:shadow-md transition-shadow`}
               >
                 <div className='flex items-start justify-between mb-4'>
                   <div className='flex-1'>
                     <div className='flex items-center space-x-2 mb-2'>
-                      <h3 className='text-lg font-semibold text-gray-900'>{entry.title}</h3>
+                      <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{entry.title}</h3>
                       {entry.mood && (
                         <span className='text-lg' title={`Estado de ánimo: ${entry.mood}/10`}>
                           {getMoodEmoji(entry.mood)}
                         </span>
                       )}
                     </div>
-                    <p className='text-sm text-gray-500 mb-2'>{formatDate(entry.date)}</p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>{formatDate(entry.date)}</p>
                   </div>
-                  
+
                   <div className='flex items-center space-x-2'>
                     <button
                       onClick={() => handleEditEntry(entry)}
-                      className='p-2 text-gray-400 hover:text-gray-600 transition-colors'
+                      className={`p-2 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
                       title='Editar entrada'
                     >
                       <Edit className='w-4 h-4' />
                     </button>
                     <button
                       onClick={() => handleDeleteEntry(entry.id)}
-                      className='p-2 text-gray-400 hover:text-red-600 transition-colors'
+                      className={`p-2 ${isDarkMode ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-red-600'} transition-colors`}
                       title='Eliminar entrada'
                     >
                       <Trash2 className='w-4 h-4' />
@@ -289,7 +298,7 @@ const Journal: React.FC = () => {
                 </div>
 
                 <div className='mb-4'>
-                  <p className='text-gray-700 line-clamp-3'>
+                  <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} line-clamp-3`}>
                     {entry.content.length > 200 ? entry.content.substring(0, 200) + '...' : entry.content}
                   </p>
                 </div>
@@ -297,7 +306,7 @@ const Journal: React.FC = () => {
                 {entry.tags.length > 0 && (
                   <div className='flex flex-wrap gap-2 mb-4'>
                     {entry.tags.map((tag, index) => (
-                      <span key={index} className='px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs'>
+                      <span key={index} className={`px-2 py-1 ${isDarkMode ? 'bg-purple-800 text-purple-200' : 'bg-purple-100 text-purple-700'} rounded-full text-xs`}>
                         {tag}
                       </span>
                     ))}
@@ -305,30 +314,30 @@ const Journal: React.FC = () => {
                 )}
 
                 {entry.aiAnalysis && (
-                  <div className='p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200'>
+                  <div className={`p-4 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-700' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'} rounded-lg border`}>
                     <div className='flex items-center space-x-2 mb-3'>
-                      <Sparkles className='w-5 h-5 text-purple-600' />
-                      <span className='text-sm font-semibold text-purple-800'>Análisis de IA</span>
+                      <Sparkles className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                      <span className={`text-sm font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>Análisis de IA</span>
                     </div>
-                    
+
                     {/* Resumen Principal */}
                     {entry.aiAnalysis.summary && (
-                      <div className='mb-3 p-3 bg-white rounded-lg border border-purple-100'>
-                        <div className='text-sm font-medium text-purple-800 mb-1'>Resumen:</div>
-                        <div className='text-sm text-gray-700'>{entry.aiAnalysis.summary}</div>
+                      <div className={`mb-3 p-3 ${isDarkMode ? 'bg-gray-800 border-purple-600' : 'bg-white border-purple-100'} rounded-lg border`}>
+                        <div className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-800'} mb-1`}>Resumen:</div>
+                        <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{entry.aiAnalysis.summary}</div>
                       </div>
                     )}
-                    
+
                     {/* Sentimiento */}
                     <div className='mb-2'>
-                      <span className='text-sm font-medium text-purple-700'>Sentimiento: </span>
+                      <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Sentimiento: </span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           entry.aiAnalysis.sentiment === 'positive'
-                            ? 'bg-green-100 text-green-800'
+                            ? isDarkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800'
                             : entry.aiAnalysis.sentiment === 'negative'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? isDarkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-800'
+                            : isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {entry.aiAnalysis.sentiment === 'positive'
@@ -338,44 +347,44 @@ const Journal: React.FC = () => {
                           : 'Neutral'}
                       </span>
                     </div>
-                    
+
                     {/* Temas */}
                     {entry.aiAnalysis.themes && entry.aiAnalysis.themes.length > 0 && (
                       <div className='mb-2'>
-                        <span className='text-sm font-medium text-purple-700'>Temas: </span>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Temas: </span>
                         <div className='flex flex-wrap gap-1 mt-1'>
                           {entry.aiAnalysis.themes.map((theme, index) => (
-                            <span key={index} className='px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs'>
+                            <span key={index} className={`px-2 py-1 ${isDarkMode ? 'bg-purple-800 text-purple-200' : 'bg-purple-100 text-purple-700'} rounded-full text-xs`}>
                               {theme}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Insights */}
                     {entry.aiAnalysis.insights && entry.aiAnalysis.insights.length > 0 && (
                       <div className='mb-2'>
-                        <span className='text-sm font-medium text-purple-700'>Insights: </span>
-                        <ul className='text-xs text-gray-600 mt-1 space-y-1'>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Insights: </span>
+                        <ul className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1 space-y-1`}>
                           {entry.aiAnalysis.insights.map((insight, index) => (
                             <li key={index} className='flex items-start'>
-                              <span className='text-purple-500 mr-1'>•</span>
+                              <span className={`${isDarkMode ? 'text-purple-400' : 'text-purple-500'} mr-1`}>•</span>
                               <span>{insight}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                     )}
-                    
+
                     {/* Recomendaciones */}
                     {entry.aiAnalysis.recommendations && entry.aiAnalysis.recommendations.length > 0 && (
                       <div>
-                        <span className='text-sm font-medium text-purple-700'>Recomendaciones: </span>
-                        <ul className='text-xs text-gray-600 mt-1 space-y-1'>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Recomendaciones: </span>
+                        <ul className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1 space-y-1`}>
                           {entry.aiAnalysis.recommendations.map((rec, index) => (
                             <li key={index} className='flex items-start'>
-                              <span className='text-green-500 mr-1'>→</span>
+                              <span className={`${isDarkMode ? 'text-green-400' : 'text-green-500'} mr-1`}>→</span>
                               <span>{rec}</span>
                             </li>
                           ))}

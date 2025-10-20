@@ -457,7 +457,17 @@ const UserChat: React.FC = () => {
                               isDarkMode ? 'text-white' : 'text-gray-900'
                             }`}
                           >
-                            {mySessions.find((s) => s.id === selectedSession)?.psychologistName || 'Psicólogo'}
+                            {(() => {
+                              const currentSession = mySessions.find(s => s.id === selectedSession);
+                              if (!currentSession) return 'Psicólogo';
+                              
+                              // Intentar obtener el nombre del psicólogo de la sesión o de la lista disponible
+                              const psychologistName = currentSession.psychologistName || 
+                                availablePsychs.find(p => p.userId === currentSession.psychologistId)?.displayName || 
+                                'Psicólogo';
+                              
+                              return psychologistName;
+                            })()}
                           </h3>
                           <p
                             className={`text-sm transition-colors duration-500 ${

@@ -1,7 +1,8 @@
-import { AlertTriangle, ArrowLeft, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import Header from './Header';
 import { useAuth } from '../contexts/AuthContext';
 import { generateAndDownloadReport } from '../services/pdfReportService';
 import { getRealMoodData } from '../services/realDataService';
@@ -86,7 +87,6 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateMoodReport = async () => {
-    
     setLoading(true);
     try {
       if (!user?.uid) {
@@ -100,7 +100,9 @@ const AdvancedReports: React.FC = () => {
       const realMoodData = await getRealMoodData(user.uid, start, end);
 
       if (realMoodData.moodLogs.length === 0) {
-        toast.error('No hay datos de estado de ánimo para el período seleccionado. Por favor, registra algunos estados de ánimo antes de generar el reporte.');
+        toast.error(
+          'No hay datos de estado de ánimo para el período seleccionado. Por favor, registra algunos estados de ánimo antes de generar el reporte.'
+        );
         return;
       }
 
@@ -136,14 +138,15 @@ const AdvancedReports: React.FC = () => {
       toast.success(`Reporte generado exitosamente con ${realMoodData.moodLogs.length} registros reales`);
     } catch (error) {
       console.error('Error generating mood report:', error);
-      toast.error('Error al generar el reporte de estado de ánimo. Por favor, intenta nuevamente o contacta soporte si el problema persiste.');
+      toast.error(
+        'Error al generar el reporte de estado de ánimo. Por favor, intenta nuevamente o contacta soporte si el problema persiste.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const generateDiaryReport = async () => {
-    
     setLoading(true);
     try {
       if (!user?.uid) {
@@ -173,7 +176,9 @@ const AdvancedReports: React.FC = () => {
       };
 
       if (diaryData.entries.length === 0) {
-        toast.error('No hay entradas de diario para el período seleccionado. Por favor, escribe algunas entradas en tu diario antes de generar el reporte.');
+        toast.error(
+          'No hay entradas de diario para el período seleccionado. Por favor, escribe algunas entradas en tu diario antes de generar el reporte.'
+        );
         return;
       }
 
@@ -215,7 +220,9 @@ const AdvancedReports: React.FC = () => {
       toast.success(`Reporte de diario generado exitosamente con ${diaryData.entries.length} entradas`);
     } catch (error) {
       console.error('Error generating diary report:', error);
-      toast.error('Error al generar el reporte de diario. Por favor, intenta nuevamente o contacta soporte si el problema persiste.');
+      toast.error(
+        'Error al generar el reporte de diario. Por favor, intenta nuevamente o contacta soporte si el problema persiste.'
+      );
     } finally {
       setLoading(false);
     }
@@ -278,33 +285,23 @@ const AdvancedReports: React.FC = () => {
         isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
       }`}
     >
+      <Header 
+        title="Reportes Avanzados"
+        subtitle="Análisis detallados de tu bienestar emocional"
+        backTo="/dashboard"
+        backLabel="Volver al Dashboard"
+      />
+
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {/* Header */}
-        <div className='mb-8'>
-          <div className='flex items-center gap-4 mb-4'>
-            <button
-              onClick={() => {
-                
-                navigate('/dashboard');
-              }}
-              className='flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors'
-            >
-              <ArrowLeft className='w-5 h-5' />
-              <span>Volver al Dashboard</span>
-            </button>
-          </div>
-          <h1 className='text-3xl font-bold mb-2'>Reportes Avanzados</h1>
-          <p className='text-gray-600'>Análisis detallados de tu bienestar emocional</p>
-        </div>
 
         {/* Controls */}
         <div className={`p-6 rounded-lg shadow-lg mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <h2 className='text-xl font-semibold mb-4'>Generar Nuevo Reporte</h2>
+          <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Generar Nuevo Reporte</h2>
 
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             {/* Period Selection */}
             <div>
-              <label className='block text-sm font-medium mb-2'>Período de Análisis</label>
+              <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Período de Análisis</label>
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value as 'week' | 'month' | 'custom')}
@@ -322,7 +319,7 @@ const AdvancedReports: React.FC = () => {
             {selectedPeriod === 'custom' && (
               <div className='grid grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-sm font-medium mb-2'>Fecha Inicio</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Fecha Inicio</label>
                   <input
                     type='date'
                     value={customStartDate}
@@ -333,7 +330,7 @@ const AdvancedReports: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium mb-2'>Fecha Fin</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Fecha Fin</label>
                   <input
                     type='date'
                     value={customEndDate}
@@ -371,13 +368,13 @@ const AdvancedReports: React.FC = () => {
 
         {/* Reports List */}
         <div className={`p-6 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <h2 className='text-xl font-semibold mb-4'>Reportes Generados</h2>
+          <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Reportes Generados</h2>
 
           {reports.length === 0 ? (
             <div className='text-center py-12'>
-              <FileText className='w-16 h-16 mx-auto mb-4 text-gray-300' />
-              <p className='text-gray-500 text-lg'>No hay reportes generados aún</p>
-              <p className='text-gray-400'>Genera tu primer reporte usando los controles de arriba</p>
+              <FileText className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
+              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-500'} text-lg`}>No hay reportes generados aún</p>
+              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>Genera tu primer reporte usando los controles de arriba</p>
             </div>
           ) : (
             <div className='space-y-4'>
@@ -402,12 +399,12 @@ const AdvancedReports: React.FC = () => {
                         </span>
                       </div>
 
-                      <p className='text-gray-600 mb-3'>{report.content}</p>
+                      <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-3`}>{report.content}</p>
 
                       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <div>
-                          <h4 className='font-medium mb-2'>Insights:</h4>
-                          <ul className='text-sm text-gray-600 space-y-1'>
+                          <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Insights:</h4>
+                          <ul className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} space-y-1`}>
                             {report.insights.map((insight, idx) => (
                               <li key={idx}>• {insight}</li>
                             ))}
@@ -415,8 +412,8 @@ const AdvancedReports: React.FC = () => {
                         </div>
 
                         <div>
-                          <h4 className='font-medium mb-2'>Recomendaciones:</h4>
-                          <ul className='text-sm text-gray-600 space-y-1'>
+                          <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Recomendaciones:</h4>
+                          <ul className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} space-y-1`}>
                             {report.recommendations.map((rec, idx) => (
                               <li key={idx}>• {rec}</li>
                             ))}
@@ -428,7 +425,7 @@ const AdvancedReports: React.FC = () => {
                     <div className='flex items-center space-x-2 ml-4'>
                       <button
                         onClick={() => downloadReport(report)}
-                        className='p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors'
+                        className={`p-2 ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'} rounded-lg transition-colors`}
                         title='Descargar Reporte'
                       >
                         <Download className='w-5 h-5' />
@@ -436,8 +433,8 @@ const AdvancedReports: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className='mt-3 pt-3 border-t border-gray-200'>
-                    <div className='flex items-center justify-between text-sm text-gray-500'>
+                  <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className={`flex items-center justify-between text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       <span className='flex items-center'>
                         <Calendar className='w-4 h-4 mr-1' />
                         Generado: {report.createdAt.toLocaleDateString()}
