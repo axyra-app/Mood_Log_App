@@ -301,13 +301,13 @@ const Statistics: React.FC = () => {
         backTo="/dashboard"
         backLabel="Volver al Dashboard"
         actions={
-          <div className='flex items-center space-x-4'>
+          <div className='flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4'>
             <div className='flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1'>
               {(['week', 'month', 'year'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
-                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                     timeRange === range 
                       ? 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm' 
                       : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -320,7 +320,7 @@ const Statistics: React.FC = () => {
 
             <button 
               onClick={exportStatistics}
-              className='px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2'
+              className='px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm sm:text-base'
             >
               <Download className='w-4 h-4' />
               <span>Exportar</span>

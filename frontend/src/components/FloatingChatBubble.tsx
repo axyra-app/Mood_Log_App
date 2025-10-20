@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useChatHistory } from '../hooks/useChatHistory';
-import { Send, X, Minimize2, MessageCircle, Bot, User } from 'lucide-react';
+import { Bot, MessageCircle, Minimize2, Send, User, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FloatingChatBubbleProps {
   isDarkMode?: boolean;
+}
+
+interface ChatMessage {
+  id: string;
+  message: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
 }
 
 const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = false }) => {
@@ -16,24 +22,8 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const [unreadAIMessages, setUnreadAIMessages] = useState(0);
-
-  const { 
-    messages, 
-    sendMessage, 
-    isLoading: chatLoading,
-    error 
-  } = useChatHistory(user?.uid || '', 'ai-chat');
-
-  // Contar mensajes no leídos de la IA
-  useEffect(() => {
-    if (!isOpen) {
-      const aiMessages = messages.filter(msg => msg.sender === 'ai');
-      setUnreadAIMessages(aiMessages.length);
-    } else {
-      setUnreadAIMessages(0);
-    }
-  }, [messages, isOpen]);
+  // Estado local para mensajes
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,11 +33,12 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (error) {
-      toast.error('Error en el chat de IA');
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
-  }, [error]);
+  };
 
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading) return;
@@ -57,12 +48,25 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
     setIsLoading(true);
 
     try {
-      await sendMessage(userMessage, 'user');
+      // Agregar mensaje del usuario
+      const userMsg: ChatMessage = {
+        id: Date.now().toString(),
+        message: userMessage,
+        sender: 'user',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMsg]);
       
       // Simular respuesta de IA
-      setTimeout(async () => {
+      setTimeout(() => {
         const aiResponse = generateAIResponse(userMessage, user?.displayName || 'Usuario');
-        await sendMessage(aiResponse, 'ai');
+        const aiMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          message: aiResponse,
+          sender: 'ai',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMsg]);
         setIsLoading(false);
       }, 1000);
       
@@ -109,31 +113,25 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
     return `Gracias por compartir eso conmigo, ${userName}. 🤗 Cada experiencia es única y valiosa. Me gustaría entenderte mejor para poder ayudarte de la manera más efectiva.\n\n¿Podrías contarme más sobre cómo te sientes en este momento? ¿Hay algo específico que te gustaría trabajar o mejorar en tu bienestar emocional?`;
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
+  // No mostrar si no hay usuario autenticado
   if (!user) return null;
 
   return (
     <>
-      {/* Burbuja flotante */}
+      {/* Botón flotante */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${
-            isDarkMode 
-              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' 
+            isDarkMode
+              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
               : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
           }`}
         >
           <MessageCircle className="w-6 h-6 text-white mx-auto" />
-          {unreadAIMessages > 0 && (
+          {messages.filter(msg => msg.sender === 'ai').length > 0 && (
             <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadAIMessages > 9 ? '9+' : unreadAIMessages}
+              {messages.filter(msg => msg.sender === 'ai').length > 9 ? '9+' : messages.filter(msg => msg.sender === 'ai').length}
             </div>
           )}
         </button>
@@ -141,14 +139,17 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
 
       {/* Ventana de chat */}
       {isOpen && (
-        <div className={`fixed bottom-6 right-6 z-50 w-80 h-96 rounded-xl shadow-2xl transition-all duration-300 ${
-          isMinimized ? 'h-12' : ''
-        } ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-          
+        <div
+          className={`fixed bottom-6 right-6 z-50 w-80 h-96 rounded-xl shadow-2xl transition-all duration-300 ${
+            isMinimized ? 'h-12' : ''
+          } ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
+        >
           {/* Header */}
-          <div className={`flex items-center justify-between p-4 rounded-t-xl ${
-            isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
-          }`}>
+          <div
+            className={`flex items-center justify-between p-4 rounded-t-xl ${
+              isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+            }`}
+          >
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                 <Bot className="w-4 h-4 text-white" />
@@ -162,7 +163,7 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
@@ -197,11 +198,8 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                     </p>
                   </div>
                 ) : (
-                  messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
+                  messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`flex items-start space-x-2 max-w-[80%] ${
                         msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                       }`}>
@@ -225,11 +223,11 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                               ? 'bg-gray-700 text-gray-100'
                               : 'bg-gray-100 text-gray-900'
                         }`}>
-                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                           <p className={`text-xs mt-1 ${
                             msg.sender === 'user' ? 'text-purple-100' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>
-                            {new Date(msg.timestamp).toLocaleTimeString('es-ES', { 
+                            {msg.timestamp.toLocaleTimeString('es-CO', { 
                               hour: '2-digit', 
                               minute: '2-digit' 
                             })}
@@ -239,10 +237,11 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                     </div>
                   ))
                 )}
-                
+
+                {/* Indicador de carga */}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className={`flex items-start space-x-2 max-w-[80%]`}>
+                    <div className="flex items-start space-x-2 max-w-[80%]">
                       <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                         <Bot className="w-3 h-3 text-white" />
                       </div>
@@ -258,7 +257,7 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
 
@@ -276,7 +275,6 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     }`}
-                    disabled={isLoading}
                   />
                   <button
                     onClick={handleSendMessage}
@@ -292,7 +290,7 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
-                
+
                 <div className="mt-2 text-center">
                   <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     💡 Recuerda: Esta es una consulta virtual. Para síntomas graves o emergencias, consulta con un profesional en persona.

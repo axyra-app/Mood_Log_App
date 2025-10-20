@@ -345,23 +345,25 @@ const AdvancedReports: React.FC = () => {
           </div>
 
           {/* Generate Buttons */}
-          <div className='flex flex-wrap gap-4 mt-6'>
+          <div className='flex flex-col sm:flex-row gap-4 mt-6'>
             <button
               onClick={generateMoodReport}
               disabled={loading}
-              className='flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              className='flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base'
             >
-              <TrendingUp className='w-5 h-5 mr-2' />
-              Generar Reporte de Estado de Ánimo
+              <TrendingUp className='w-4 h-4 sm:w-5 sm:h-5' />
+              <span className='hidden sm:inline'>Generar Reporte de Estado de Ánimo</span>
+              <span className='sm:hidden'>Reporte de Ánimo</span>
             </button>
 
             <button
               onClick={generateDiaryReport}
               disabled={loading}
-              className='flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              className='flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base'
             >
-              <FileText className='w-5 h-5 mr-2' />
-              Generar Reporte de Diario
+              <FileText className='w-4 h-4 sm:w-5 sm:h-5' />
+              <span className='hidden sm:inline'>Generar Reporte de Diario</span>
+              <span className='sm:hidden'>Reporte de Diario</span>
             </button>
           </div>
         </div>

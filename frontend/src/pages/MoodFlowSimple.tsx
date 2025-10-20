@@ -215,10 +215,10 @@ const MoodFlowSimple: React.FC = () => {
         <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center'>
-              <Logo size="md" />
+              <Logo size="sm" />
             </div>
 
-            <div className='flex items-center space-x-4'>
+            <div className='flex items-center space-x-2 sm:space-x-4'>
               {/* Modo oscuro */}
               <button
                 onClick={toggleDarkMode}
@@ -232,13 +232,14 @@ const MoodFlowSimple: React.FC = () => {
               {/* Volver al Dashboard */}
               <button
                 onClick={() => navigate('/dashboard')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                   isDarkMode 
                     ? 'bg-purple-600 hover:bg-purple-700 text-white' 
                     : 'bg-purple-500 hover:bg-purple-600 text-white'
                 }`}
               >
-                ← Volver al Dashboard
+                <span className='hidden sm:inline'>← Volver al Dashboard</span>
+                <span className='sm:hidden'>← Dashboard</span>
               </button>
             </div>
           </div>

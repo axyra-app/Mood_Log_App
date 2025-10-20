@@ -120,25 +120,27 @@ const DashboardPsychologist: React.FC = () => {
       >
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
-            <div className='flex items-center space-x-4'>
-              <Logo className='h-8' />
+            <div className='flex items-center space-x-2 sm:space-x-4'>
+              <Logo className='h-6 sm:h-8' />
               <div>
                 <h1
-                  className={`text-xl font-bold transition-colors duration-500 ${
+                  className={`text-lg sm:text-xl font-bold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
-                  Dashboard Psicólogo
+                  <span className='hidden sm:inline'>Dashboard Psicólogo</span>
+                  <span className='sm:hidden'>Psicólogo</span>
                 </h1>
                 <p
-                  className={`text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                  className={`text-xs sm:text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
                 >
-                  Bienvenido, {user.displayName}
+                  <span className='hidden sm:inline'>Bienvenido, {user.displayName}</span>
+                  <span className='sm:hidden'>{user.displayName}</span>
                 </p>
               </div>
             </div>
 
-            <div className='flex items-center space-x-4'>
+            <div className='flex items-center space-x-2 sm:space-x-4'>
               {/* Notificaciones */}
               <NotificationsPanel isDarkMode={isDarkMode} />
 
@@ -167,13 +169,16 @@ const DashboardPsychologist: React.FC = () => {
 
               <button
                 onClick={handleLogout}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-300 ${
+                className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-lg transition-colors duration-300 ${
                   isDarkMode
                     ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                <span>Cerrar Sesión</span>
+                <span className='text-sm sm:text-base'>
+                  <span className='hidden sm:inline'>Cerrar Sesión</span>
+                  <span className='sm:hidden'>Salir</span>
+                </span>
               </button>
             </div>
           </div>

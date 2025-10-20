@@ -289,7 +289,11 @@ const Settings: React.FC = () => {
           {/* Notificaciones */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-6'>
-              <div className={`w-10 h-10 ${isDarkMode ? 'bg-blue-900' : 'bg-blue-100'} rounded-lg flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${
+                  isDarkMode ? 'bg-blue-900' : 'bg-blue-100'
+                } rounded-lg flex items-center justify-center`}
+              >
                 <Bell className={`w-5 h-5 ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`} />
               </div>
               <div>
@@ -346,7 +350,11 @@ const Settings: React.FC = () => {
           {/* Configuración de Email */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-6'>
-              <div className={`w-10 h-10 ${isDarkMode ? 'bg-green-900' : 'bg-green-100'} rounded-lg flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${
+                  isDarkMode ? 'bg-green-900' : 'bg-green-100'
+                } rounded-lg flex items-center justify-center`}
+              >
                 <Mail className={`w-5 h-5 ${isDarkMode ? 'text-green-300' : 'text-green-600'}`} />
               </div>
               <div>
@@ -439,7 +447,11 @@ const Settings: React.FC = () => {
           {/* Información Personal */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-6'>
-              <div className={`w-10 h-10 ${isDarkMode ? 'bg-purple-900' : 'bg-purple-100'} rounded-lg flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${
+                  isDarkMode ? 'bg-purple-900' : 'bg-purple-100'
+                } rounded-lg flex items-center justify-center`}
+              >
                 <User className={`w-5 h-5 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`} />
               </div>
               <div>
@@ -472,7 +484,11 @@ const Settings: React.FC = () => {
           {/* Cambiar Contraseña */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-6'>
-              <div className={`w-10 h-10 ${isDarkMode ? 'bg-red-900' : 'bg-red-100'} rounded-lg flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${
+                  isDarkMode ? 'bg-red-900' : 'bg-red-100'
+                } rounded-lg flex items-center justify-center`}
+              >
                 <Lock className={`w-5 h-5 ${isDarkMode ? 'text-red-300' : 'text-red-600'}`} />
               </div>
               <div>
@@ -637,7 +653,11 @@ const Settings: React.FC = () => {
           {/* Información del Sistema */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-6'>
-              <div className={`w-10 h-10 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                } rounded-lg flex items-center justify-center`}
+              >
                 <Info className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
               </div>
               <div>
