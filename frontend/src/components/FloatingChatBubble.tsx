@@ -22,8 +22,15 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Estado local para mensajes
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Estado local para mensajes - inicializado con un mensaje de bienvenida
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      message: `¡Hola ${user?.displayName || 'Usuario'}! 👋 Soy tu asistente de bienestar emocional. ¿En qué puedo ayudarte hoy?`,
+      sender: 'ai',
+      timestamp: new Date(),
+    }
+  ]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,23 +57,31 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
     try {
       // Agregar mensaje del usuario
       const userMsg: ChatMessage = {
-        id: Date.now().toString(),
+        id: `user_${Date.now()}`,
         message: userMessage,
         sender: 'user',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, userMsg]);
+      
+      setMessages(prev => {
+        console.log('Adding user message:', userMsg);
+        return [...prev, userMsg];
+      });
       
       // Simular respuesta de IA
       setTimeout(() => {
         const aiResponse = generateAIResponse(userMessage, user?.displayName || 'Usuario');
         const aiMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+          id: `ai_${Date.now()}`,
           message: aiResponse,
           sender: 'ai',
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, aiMsg]);
+        
+        setMessages(prev => {
+          console.log('Adding AI message:', aiMsg);
+          return [...prev, aiMsg];
+        });
         setIsLoading(false);
       }, 1000);
       
@@ -129,9 +144,9 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
           }`}
         >
           <MessageCircle className="w-6 h-6 text-white mx-auto" />
-          {messages.filter(msg => msg.sender === 'ai').length > 0 && (
+          {messages.filter(msg => msg.sender === 'ai' && msg.id !== 'welcome').length > 0 && !isOpen && (
             <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {messages.filter(msg => msg.sender === 'ai').length > 9 ? '9+' : messages.filter(msg => msg.sender === 'ai').length}
+              {messages.filter(msg => msg.sender === 'ai' && msg.id !== 'welcome').length > 9 ? '9+' : messages.filter(msg => msg.sender === 'ai' && msg.id !== 'welcome').length}
             </div>
           )}
         </button>
@@ -188,55 +203,44 @@ const FloatingChatBubble: React.FC<FloatingChatBubbleProps> = ({ isDarkMode = fa
             <>
               {/* Mensajes */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 h-64">
-                {messages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Bot className={`w-12 h-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-300'}`} />
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      ¡Hola {user.displayName || 'Usuario'}! 👋<br />
-                      Soy tu asistente de bienestar emocional.<br />
-                      ¿En qué puedo ayudarte hoy?
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`flex items-start space-x-2 max-w-[80%] ${
-                        msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex items-start space-x-2 max-w-[80%] ${
+                      msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                    }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        msg.sender === 'user' 
+                          ? 'bg-purple-500' 
+                          : 'bg-gradient-to-r from-purple-500 to-pink-500'
                       }`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          msg.sender === 'user' 
-                            ? 'bg-purple-500' 
-                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                        {msg.sender === 'user' ? (
+                          <User className="w-3 h-3 text-white" />
+                        ) : (
+                          <Bot className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <div className={`px-3 py-2 rounded-lg ${
+                        msg.sender === 'user'
+                          ? isDarkMode 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-purple-500 text-white'
+                          : isDarkMode
+                            ? 'bg-gray-700 text-gray-100'
+                            : 'bg-gray-100 text-gray-900'
+                      }`}>
+                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                        <p className={`text-xs mt-1 ${
+                          msg.sender === 'user' ? 'text-purple-100' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         }`}>
-                          {msg.sender === 'user' ? (
-                            <User className="w-3 h-3 text-white" />
-                          ) : (
-                            <Bot className="w-3 h-3 text-white" />
-                          )}
-                        </div>
-                        <div className={`px-3 py-2 rounded-lg ${
-                          msg.sender === 'user'
-                            ? isDarkMode 
-                              ? 'bg-purple-600 text-white' 
-                              : 'bg-purple-500 text-white'
-                            : isDarkMode
-                              ? 'bg-gray-700 text-gray-100'
-                              : 'bg-gray-100 text-gray-900'
-                        }`}>
-                          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                          <p className={`text-xs mt-1 ${
-                            msg.sender === 'user' ? 'text-purple-100' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}>
-                            {msg.timestamp.toLocaleTimeString('es-CO', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </p>
-                        </div>
+                          {msg.timestamp.toLocaleTimeString('es-CO', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
                       </div>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
 
                 {/* Indicador de carga */}
                 {isLoading && (
