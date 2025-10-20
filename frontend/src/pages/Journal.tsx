@@ -31,7 +31,21 @@ const Journal: React.FC = () => {
   const filteredEntries = entries.filter(entry => {
     const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entry.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDate = !selectedDate || entry.date.toDateString() === new Date(selectedDate).toDateString();
+    
+    // Arreglar filtro por fecha - manejar tanto Date como Timestamp de Firebase
+    let entryDate: Date;
+    if (entry.date && typeof entry.date === 'object' && 'toDate' in entry.date) {
+      // Es un Timestamp de Firebase
+      entryDate = entry.date.toDate();
+    } else if (entry.date instanceof Date) {
+      // Es un Date nativo
+      entryDate = entry.date;
+    } else {
+      // Fallback
+      entryDate = new Date(entry.date);
+    }
+    
+    const matchesDate = !selectedDate || entryDate.toDateString() === new Date(selectedDate).toDateString();
     return matchesSearch && matchesDate;
   });
 

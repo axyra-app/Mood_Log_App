@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import Header from '../components/Header';
 import { 
   ArrowLeft, 
   Bell, 
@@ -285,38 +286,11 @@ const Settings: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center space-x-4">
-              <Logo size="sm" />
-              <button
-                onClick={() => navigate('/dashboard')}
-                className={`flex items-center ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                <span>Volver al Dashboard</span>
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-              >
-                {isDarkMode ? (
-                  <span className="text-yellow-500">☀️</span>
-                ) : (
-                  <span className="text-gray-600">🌙</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        title="Configuración" 
+        subtitle="Gestiona tu perfil y preferencias"
+        backTo="/dashboard"
+      />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">

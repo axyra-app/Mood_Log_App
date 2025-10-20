@@ -83,13 +83,27 @@ const RegisterSimple: React.FC = () => {
   const validateForm = () => {
     let isValid = true;
 
+    // Validar nombre sin números
     if (!formData.firstName.trim()) {
       validate('firstName', 'El nombre es requerido');
       isValid = false;
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.firstName)) {
+      validate('firstName', 'El nombre no debe contener números ni caracteres especiales');
+      isValid = false;
+    } else if (formData.firstName.trim().length < 2) {
+      validate('firstName', 'El nombre debe tener al menos 2 caracteres');
+      isValid = false;
     }
 
+    // Validar apellido sin números
     if (!formData.lastName.trim()) {
       validate('lastName', 'El apellido es requerido');
+      isValid = false;
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.lastName)) {
+      validate('lastName', 'El apellido no debe contener números ni caracteres especiales');
+      isValid = false;
+    } else if (formData.lastName.trim().length < 2) {
+      validate('lastName', 'El apellido debe tener al menos 2 caracteres');
       isValid = false;
     }
 

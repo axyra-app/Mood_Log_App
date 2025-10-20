@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, FileText, User, Calendar, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePsychologistAppointments } from '../hooks/usePsychologistAppointments';
+import Header from '../components/Header';
 
 const MedicalHistory: React.FC = () => {
   const { user } = useAuth();
@@ -115,48 +116,11 @@ const MedicalHistory: React.FC = () => {
     <div className={`min-h-screen transition-colors duration-500 ${
       isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
-      {/* Header */}
-      <header className={`border-b transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard-psychologist')}
-                className={`p-2 rounded-lg transition-colors duration-300 ${
-                  isDarkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <h1 className={`text-xl font-bold transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Historial Médico
-              </h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-colors duration-300 ${
-                  isDarkMode
-                    ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header 
+        title="Historial Médico" 
+        subtitle="Gestiona reportes médicos de pacientes"
+        backTo="/dashboard-psychologist"
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className={`rounded-xl shadow-sm border transition-colors duration-500 ${

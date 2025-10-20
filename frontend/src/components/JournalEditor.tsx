@@ -176,7 +176,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
               type='text'
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder='Título de tu entrada...'
+              placeholder='Título de tu entrada... (obligatorio)'
               className='w-full text-2xl font-bold border-none outline-none mb-4 placeholder-gray-400'
               onKeyDown={handleKeyPress}
             />
@@ -283,7 +283,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
               <h3 className='font-semibold text-gray-900 mb-3'>Estado de Ánimo</h3>
               <div className='space-y-3'>
                 <div>
-                  <label className='block text-sm text-gray-600 mb-1'>Humor (1-10)</label>
+                  <label className='block text-sm text-gray-600 mb-1'>Estado de Ánimo (1=Muy mal, 10=Excelente)</label>
                   <input
                     type='number'
                     min='1'
@@ -294,7 +294,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   />
                 </div>
                 <div>
-                  <label className='block text-sm text-gray-600 mb-1'>Energía (1-10)</label>
+                  <label className='block text-sm text-gray-600 mb-1'>Nivel de Energía (1=Muy bajo, 10=Muy alto)</label>
                   <input
                     type='number'
                     min='1'
@@ -305,7 +305,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   />
                 </div>
                 <div>
-                  <label className='block text-sm text-gray-600 mb-1'>Estrés (1-10)</label>
+                  <label className='block text-sm text-gray-600 mb-1'>Nivel de Estrés (1=Muy bajo, 10=Muy alto)</label>
                   <input
                     type='number'
                     min='1'
@@ -316,7 +316,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   />
                 </div>
                 <div>
-                  <label className='block text-sm text-gray-600 mb-1'>Sueño (1-10)</label>
+                  <label className='block text-sm text-gray-600 mb-1'>Calidad de Sueño (1=Muy mala, 10=Excelente)</label>
                   <input
                     type='number'
                     min='1'

@@ -100,7 +100,7 @@ const AdvancedReports: React.FC = () => {
       const realMoodData = await getRealMoodData(user.uid, start, end);
 
       if (realMoodData.moodLogs.length === 0) {
-        toast.error('No hay datos de estado de ánimo para el período seleccionado');
+        toast.error('No hay datos de estado de ánimo para el período seleccionado. Por favor, registra algunos estados de ánimo antes de generar el reporte.');
         return;
       }
 
@@ -136,7 +136,7 @@ const AdvancedReports: React.FC = () => {
       toast.success(`Reporte generado exitosamente con ${realMoodData.moodLogs.length} registros reales`);
     } catch (error) {
       console.error('Error generating mood report:', error);
-      toast.error('Error al generar el reporte');
+      toast.error('Error al generar el reporte de estado de ánimo. Por favor, intenta nuevamente o contacta soporte si el problema persiste.');
     } finally {
       setLoading(false);
     }
@@ -173,7 +173,7 @@ const AdvancedReports: React.FC = () => {
       };
 
       if (diaryData.entries.length === 0) {
-        toast.error('No hay entradas de diario para el período seleccionado');
+        toast.error('No hay entradas de diario para el período seleccionado. Por favor, escribe algunas entradas en tu diario antes de generar el reporte.');
         return;
       }
 
@@ -215,7 +215,7 @@ const AdvancedReports: React.FC = () => {
       toast.success(`Reporte de diario generado exitosamente con ${diaryData.entries.length} entradas`);
     } catch (error) {
       console.error('Error generating diary report:', error);
-      toast.error('Error al generar el reporte de diario');
+      toast.error('Error al generar el reporte de diario. Por favor, intenta nuevamente o contacta soporte si el problema persiste.');
     } finally {
       setLoading(false);
     }
