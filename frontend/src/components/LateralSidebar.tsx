@@ -83,11 +83,11 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
         </div>
         
         {/* Menu Items - Scrollable */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex flex-col">
           <div className="px-6 py-4 flex-shrink-0">
             <h3 className="text-lg font-semibold text-gray-300 mb-4">Más Herramientas</h3>
           </div>
-          <div className="px-6 pb-6 h-full overflow-y-auto">
+          <div className="flex-1 px-6 pb-6 overflow-y-auto overflow-x-hidden" style={{ maxHeight: 'calc(100vh - 120px)' }}>
             <div className="space-y-3">
               {menuItems.map((item, index) => {
                 const IconComponent = item.icon;
