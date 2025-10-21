@@ -37,10 +37,10 @@ export const useUserAppointments = (userId: string) => {
       return;
     }
 
-    // Ejecutar limpieza automática de citas al cargar (DESHABILITADO TEMPORALMENTE)
-    // runAppointmentCleanup(userId).catch(error => {
-    //   console.error('Error ejecutando limpieza automática:', error);
-    // });
+    // Ejecutar limpieza automática de citas al cargar (HABILITADA CON MEJORAS)
+    runAppointmentCleanup(userId).catch(error => {
+      console.error('Error ejecutando limpieza automática:', error);
+    });
 
     const appointmentsQuery = query(
       collection(db, 'appointments'),

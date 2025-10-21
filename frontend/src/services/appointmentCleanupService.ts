@@ -22,6 +22,8 @@ class AppointmentCleanupService {
    */
   async cleanupExpiredAppointments(userId: string): Promise<number> {
     try {
+      console.log('🧹 Iniciando limpieza de citas para usuario:', userId);
+      
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       
@@ -36,20 +38,24 @@ class AppointmentCleanupService {
       const userAppointmentsSnapshot = await getDocs(userAppointmentsQuery);
       let deletedCount = 0;
       
+      console.log(`📋 Encontradas ${userAppointmentsSnapshot.docs.length} citas para limpiar`);
+      
       // Eliminar solo las citas del usuario actual
       for (const docSnapshot of userAppointmentsSnapshot.docs) {
         try {
           await deleteDoc(doc(db, 'appointments', docSnapshot.id));
           deletedCount++;
+          console.log(`✅ Cita eliminada: ${docSnapshot.id}`);
         } catch (error) {
-          console.error(`Error eliminando cita del usuario ${docSnapshot.id}:`, error);
+          console.error(`❌ Error eliminando cita del usuario ${docSnapshot.id}:`, error);
         }
       }
       
+      console.log(`🎉 Limpieza completada: ${deletedCount} citas eliminadas`);
       return deletedCount;
       
     } catch (error) {
-      console.error('Error durante la limpieza de citas:', error);
+      console.error('❌ Error durante la limpieza de citas:', error);
       return 0;
     }
   }
@@ -96,10 +102,19 @@ class AppointmentCleanupService {
    * Ejecuta la limpieza completa para el usuario actual
    */
   async runFullCleanup(userId: string): Promise<{ marked: number; deleted: number }> {
-    const marked = await this.markExpiredAppointments(userId);
-    const deleted = await this.cleanupExpiredAppointments(userId);
-    
-    return { marked, deleted };
+    try {
+      console.log('🚀 Iniciando limpieza completa de citas para usuario:', userId);
+      
+      const marked = await this.markExpiredAppointments(userId);
+      const deleted = await this.cleanupExpiredAppointments(userId);
+      
+      console.log(`📊 Resumen de limpieza: ${marked} citas marcadas como expiradas, ${deleted} citas eliminadas`);
+      
+      return { marked, deleted };
+    } catch (error) {
+      console.error('❌ Error en limpieza completa:', error);
+      return { marked: 0, deleted: 0 };
+    }
   }
 }
 

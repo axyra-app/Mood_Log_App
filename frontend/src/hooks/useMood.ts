@@ -168,6 +168,7 @@ export const useMood = () => {
     if (moodLogs.length === 0) return 0;
 
     let streak = 0;
+    const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -204,6 +205,20 @@ export const useMood = () => {
       const logDate = uniqueDates[i];
       const expectedDate = new Date(today);
       expectedDate.setDate(expectedDate.getDate() - i);
+
+      // Verificar si han pasado más de 24 horas desde el último log
+      if (i === 0) {
+        const lastLogTime = sortedLogs[0].createdAt && typeof sortedLogs[0].createdAt.toDate === 'function' 
+          ? sortedLogs[0].createdAt.toDate() 
+          : new Date(sortedLogs[0].createdAt);
+        
+        const hoursSinceLastLog = (now.getTime() - lastLogTime.getTime()) / (1000 * 60 * 60);
+        
+        // Si han pasado más de 24 horas, reiniciar la racha
+        if (hoursSinceLastLog > 24) {
+          return 0;
+        }
+      }
 
       if (logDate.getTime() === expectedDate.getTime()) {
         streak++;

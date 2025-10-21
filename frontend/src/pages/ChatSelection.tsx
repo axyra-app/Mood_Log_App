@@ -1,5 +1,5 @@
 import { MessageCircle, Bot, User, ArrowRight, Shield, Clock, Star } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,8 +9,40 @@ const ChatSelection: React.FC = () => {
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Sincronizar con el estado global del tema
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+    }
+
+    // Escuchar cambios en el tema desde otros componentes
+    const handleThemeChange = () => {
+      const currentTheme = localStorage.getItem('theme');
+      setIsDarkMode(currentTheme === 'dark');
+    };
+
+    // Agregar listener para cambios de tema
+    window.addEventListener('storage', handleThemeChange);
+    
+    // También escuchar cambios en el mismo tab
+    const interval = setInterval(() => {
+      const currentTheme = localStorage.getItem('theme');
+      if ((currentTheme === 'dark') !== isDarkMode) {
+        setIsDarkMode(currentTheme === 'dark');
+      }
+    }, 100);
+
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      clearInterval(interval);
+    };
+  }, [isDarkMode]);
+
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
   };
 
   const handleAIChat = (doctorType: 'dr-sofia' | 'dr-carlos') => {

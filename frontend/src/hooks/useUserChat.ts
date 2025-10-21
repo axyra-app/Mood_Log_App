@@ -65,8 +65,8 @@ export const useUserChatSessions = (userId: string) => {
       async (snapshot) => {
         try {
           const sessionsData = await Promise.all(
-            snapshot.docs.map(async (doc) => {
-              const data = doc.data();
+            (snapshot.docs || []).map(async (docSnapshot) => {
+              const data = docSnapshot.data();
 
               // Obtener información del psicólogo
               const psychologistDoc = doc(db, 'psychologists', data.psychologistId);
@@ -75,7 +75,7 @@ export const useUserChatSessions = (userId: string) => {
               const psychologistName = psychologistData?.displayName || psychologistData?.name || 'Psicólogo';
 
               return {
-                id: doc.id,
+                id: docSnapshot.id,
                 userId: data.userId,
                 userName: data.userName,
                 userEmail: data.userEmail,

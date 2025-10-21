@@ -461,10 +461,18 @@ const UserChat: React.FC = () => {
                               const currentSession = mySessions.find(s => s.id === selectedSession);
                               if (!currentSession) return 'Psicólogo';
                               
-                              // Intentar obtener el nombre del psicólogo de la sesión o de la lista disponible
-                              const psychologistName = currentSession.psychologistName || 
-                                availablePsychs.find(p => p.userId === currentSession.psychologistId)?.displayName || 
-                                'Psicólogo';
+                              // Intentar obtener el nombre del psicólogo de múltiples fuentes
+                              let psychologistName = currentSession.psychologistName;
+                              
+                              if (!psychologistName) {
+                                const availablePsych = availablePsychs.find(p => p.userId === currentSession.psychologistId);
+                                psychologistName = availablePsych?.displayName || availablePsych?.name;
+                              }
+                              
+                              // Si aún no tenemos nombre, usar el ID como fallback
+                              if (!psychologistName) {
+                                psychologistName = currentSession.psychologistId || 'Psicólogo';
+                              }
                               
                               return psychologistName;
                             })()}
