@@ -125,8 +125,15 @@ const Settings: React.FC = () => {
       if (newDarkMode !== isDarkMode) {
         setIsDarkMode(newDarkMode);
         setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
+        
+        // Aplicar clases CSS inmediatamente
+        if (newDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
       }
-    }, 100);
+    }, 50); // Reducir intervalo para respuesta más rápida
 
     loadUserData();
     setIsLoaded(true);
@@ -149,6 +156,11 @@ const Settings: React.FC = () => {
       localStorage.setItem('theme', 'light');
       document.documentElement.classList.remove('dark');
     }
+
+    // Forzar re-render del componente
+    setTimeout(() => {
+      window.dispatchEvent(new Event('storage'));
+    }, 100);
   };
 
   const handleSettingsChange = (key: string, value: any) => {
