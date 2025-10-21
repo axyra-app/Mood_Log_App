@@ -85,7 +85,15 @@ const Journal: React.FC = () => {
       entryDate = new Date(entry.date);
     }
 
-    const matchesDate = !selectedDate || entryDate.toDateString() === new Date(selectedDate).toDateString();
+    // Normalizar fechas para comparación (solo año, mes, día)
+    const normalizeDate = (date: Date) => {
+      const normalized = new Date(date);
+      normalized.setHours(0, 0, 0, 0);
+      return normalized;
+    };
+
+    const matchesDate = !selectedDate || 
+      normalizeDate(entryDate).getTime() === normalizeDate(new Date(selectedDate)).getTime();
     return matchesSearch && matchesDate;
   });
 
