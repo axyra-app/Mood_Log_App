@@ -132,6 +132,11 @@ const Settings: React.FC = () => {
         } else {
           document.documentElement.classList.remove('dark');
         }
+        
+        // Forzar re-render del componente
+        setTimeout(() => {
+          window.dispatchEvent(new Event('storage'));
+        }, 100);
       }
     }, 50); // Reducir intervalo para respuesta más rápida
 
@@ -157,9 +162,11 @@ const Settings: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
 
-    // Forzar re-render del componente
+    // Forzar re-render del componente y sincronización
     setTimeout(() => {
       window.dispatchEvent(new Event('storage'));
+      // También forzar actualización del estado
+      setIsDarkMode(newDarkMode);
     }, 100);
   };
 
