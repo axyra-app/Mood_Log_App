@@ -36,9 +36,9 @@ export const usePatients = (psychologistId: string) => {
     }
 
     const fetchPatients = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
         // Obtener pacientes que tienen citas con este psicólogo
         const appointmentsQuery = query(
@@ -132,14 +132,14 @@ export const usePatients = (psychologistId: string) => {
           }
         }
 
-        setPatients(patientsData);
-      } catch (err) {
+      setPatients(patientsData);
+    } catch (err) {
         console.error('Error fetching patients:', err);
         setError('Error al cargar los pacientes');
         setPatients([]);
-      } finally {
-        setLoading(false);
-      }
+    } finally {
+      setLoading(false);
+    }
     };
 
     fetchPatients();

@@ -135,7 +135,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
             {isOpen ? <X className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
           </button>
         </div>
-      </div>
+          </div>
 
       {/* Contenido principal */}
       {!isOpen ? (
@@ -180,9 +180,9 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                         isDarkMode ? 'text-gray-300' : 'text-gray-600'
                       }`}>
                         {allNotifications[0].message}
-                      </p>
-                    </div>
-                  </div>
+            </p>
+          </div>
+        </div>
                 </div>
               )}
               
@@ -264,26 +264,26 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                         </p>
                       )}
                     </div>
-                  </div>
-                  
+      </div>
+
                   {notification.type === 'appointment' && (
                     <div className="flex items-center space-x-2">
-                      <button
+          <button
                         onClick={() => handleAcceptAppointment(notification.appointmentId!)}
                         className="p-1 text-green-600 hover:bg-green-100 rounded"
                         title="Aceptar cita"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
+          >
+            <Check className="w-4 h-4" />
+          </button>
+          <button
                         onClick={() => handleRejectAppointment(notification.appointmentId!)}
                         className="p-1 text-red-600 hover:bg-red-100 rounded"
                         title="Rechazar cita"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
                   
                   {notification.type === 'chat_message' && (
                     <button
@@ -301,7 +301,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                   )}
                   
                   {notification.type === 'profile' && (
-                    <button
+          <button
                       onClick={() => {
                         // Navegar a editar perfil en lugar de completar perfil
                         window.location.href = '/edit-profile';
@@ -309,10 +309,10 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                       className="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors"
                     >
                       Completar
-                    </button>
-                  )}
-                </div>
-              </div>
+          </button>
+        )}
+      </div>
+        </div>
             ))
           )}
         </div>

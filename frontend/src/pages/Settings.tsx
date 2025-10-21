@@ -107,8 +107,34 @@ const Settings: React.FC = () => {
       setSettings((prev) => ({ ...prev, darkMode: true }));
     }
 
+    // Escuchar cambios en el tema desde otros componentes
+    const handleThemeChange = () => {
+      const currentTheme = localStorage.getItem('theme');
+      const newDarkMode = currentTheme === 'dark';
+      setIsDarkMode(newDarkMode);
+      setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
+    };
+
+    // Agregar listener para cambios de tema
+    window.addEventListener('storage', handleThemeChange);
+    
+    // También escuchar cambios en el mismo tab
+    const interval = setInterval(() => {
+      const currentTheme = localStorage.getItem('theme');
+      const newDarkMode = currentTheme === 'dark';
+      if (newDarkMode !== isDarkMode) {
+        setIsDarkMode(newDarkMode);
+        setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
+      }
+    }, 100);
+
     loadUserData();
     setIsLoaded(true);
+
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      clearInterval(interval);
+    };
   }, [user]);
 
   const toggleDarkMode = () => {

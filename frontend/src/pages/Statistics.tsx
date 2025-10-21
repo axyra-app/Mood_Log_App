@@ -223,12 +223,17 @@ const Statistics: React.FC = () => {
 
   // Estadísticas del período
   const periodStats = {
-    totalMoodLogs:
-      statistics?.moodLogs?.filter((log) => {
+    totalMoodLogs: (() => {
+      if (!statistics?.moodLogs) return 0;
+      
+      const { startDate, endDate } = getPeriodData();
+      const logsInPeriod = statistics.moodLogs.filter((log) => {
         const logDate = new Date(log.createdAt);
-        const { startDate, endDate } = getPeriodData();
         return logDate >= startDate && logDate <= endDate;
-      }).length || 0,
+      });
+      
+      return logsInPeriod.length;
+    })(),
     averageMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
     streak: getMoodStreak(),
     trend: getMoodTrend(),
