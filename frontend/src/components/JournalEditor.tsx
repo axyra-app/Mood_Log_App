@@ -136,19 +136,19 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
   };
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden'>
-        {/* Header */}
-        <div className='flex items-center justify-between p-6 border-b border-gray-200'>
+    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4'>
+      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden'>
+        {/* Header - Responsive */}
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 gap-3 sm:gap-0'>
           <div className='flex items-center space-x-3'>
-            <BookOpen className='w-6 h-6 text-purple-600' />
-            <h2 className='text-xl font-bold text-gray-900'>{entry ? 'Editar Entrada' : 'Nueva Entrada del Diario'}</h2>
+            <BookOpen className='w-5 h-5 sm:w-6 sm:h-6 text-purple-600' />
+            <h2 className='text-lg sm:text-xl font-bold text-gray-900'>{entry ? 'Editar Entrada' : 'Nueva Entrada del Diario'}</h2>
           </div>
-          <div className='flex items-center space-x-2'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto'>
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !content.trim()}
-              className='flex items-center space-x-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50'
+              className='flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50 text-sm sm:text-base'
             >
               <Sparkles className='w-4 h-4' />
               <span>{isAnalyzing ? 'Analizando...' : 'IA'}</span>
@@ -156,21 +156,21 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
             <button
               onClick={handleSave}
               disabled={isSaving || !title.trim() || !content.trim()}
-              className='flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50'
+              className='flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 text-sm sm:text-base'
             >
               <Save className='w-4 h-4' />
               <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
             </button>
-            <button onClick={onClose} className='p-2 text-gray-400 hover:text-gray-600'>
+            <button onClick={onClose} className='p-2 text-gray-400 hover:text-gray-600 self-end sm:self-auto'>
               ✕
             </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className='flex h-[calc(90vh-80px)]'>
+        {/* Content - Responsive */}
+        <div className='flex flex-col lg:flex-row h-[calc(95vh-120px)] sm:h-[calc(90vh-80px)]'>
           {/* Main Editor */}
-          <div className='flex-1 p-6 overflow-y-auto'>
+          <div className='flex-1 p-4 sm:p-6 overflow-y-auto'>
             {/* Title */}
             <input
               type='text'
@@ -276,12 +276,12 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className='w-80 border-l border-gray-200 p-6 overflow-y-auto bg-gray-50'>
-            {/* Mood & Metrics */}
+          {/* Sidebar - Responsive */}
+          <div className='w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 p-4 sm:p-6 overflow-y-auto bg-gray-50'>
+            {/* Mood & Metrics - Responsive */}
             <div className='mb-6'>
               <h3 className='font-semibold text-gray-900 mb-3'>Estado de Ánimo</h3>
-              <div className='space-y-3'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3'>
                 <div>
                   <label className='block text-sm text-gray-600 mb-1'>Estado de Ánimo (1=Muy mal, 10=Excelente)</label>
                   <input

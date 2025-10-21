@@ -180,43 +180,43 @@ const Journal: React.FC = () => {
         {/* Barra de herramientas */}
         <div className='mb-6 sm:mb-8'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0'>
-            {/* Botones de acción */}
-            <div className='flex flex-wrap gap-2 sm:gap-3'>
+            {/* Botones de acción - Responsive */}
+            <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
               <button
                 onClick={handleCreateEntry}
-                className='flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200'
+                className='flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 w-full sm:w-auto'
               >
                 <Plus className='w-4 h-4' />
-                <span>Nueva Entrada</span>
+                <span className='text-sm sm:text-base'>Nueva Entrada</span>
               </button>
 
               <button
                 onClick={() => setShowTemplates(!showTemplates)}
-                className={`flex items-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors`}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors w-full sm:w-auto`}
               >
                 <Sparkles className='w-4 h-4' />
-                <span>Plantillas</span>
+                <span className='text-sm sm:text-base'>Plantillas</span>
               </button>
 
               <button
                 onClick={() => setShowPrompts(!showPrompts)}
-                className={`flex items-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors`}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors w-full sm:w-auto`}
               >
                 <Sparkles className='w-4 h-4' />
-                <span>Prompts</span>
+                <span className='text-sm sm:text-base'>Prompts</span>
               </button>
             </div>
 
-            {/* Filtros */}
+            {/* Filtros - Responsive */}
             <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
-              <div className='relative'>
+              <div className='relative flex-1'>
                 <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} w-4 h-4`} />
                 <input
                   type='text'
                   placeholder='Buscar entradas...'
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`pl-10 pr-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64`}
+                  className={`pl-10 pr-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full`}
                 />
               </div>
 
@@ -224,7 +224,7 @@ const Journal: React.FC = () => {
                 type='date'
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className={`px-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                className={`px-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-auto`}
               />
             </div>
           </div>

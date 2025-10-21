@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { ArrowLeft, User, Mail, Phone, MapPin, Calendar, Edit, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import Header from '../components/Header';
 
 const Profile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
@@ -51,8 +52,38 @@ const Profile: React.FC = () => {
       setIsDarkMode(true);
     }
 
+    // Escuchar cambios en el tema desde otros componentes
+    const handleThemeChange = () => {
+      const currentTheme = localStorage.getItem('theme');
+      setIsDarkMode(currentTheme === 'dark');
+    };
+
+    // Agregar listener para cambios de tema
+    window.addEventListener('storage', handleThemeChange);
+    
+    // También escuchar cambios en el mismo tab
+    const interval = setInterval(() => {
+      const currentTheme = localStorage.getItem('theme');
+      const newDarkMode = currentTheme === 'dark';
+      if (newDarkMode !== isDarkMode) {
+        setIsDarkMode(newDarkMode);
+        
+        // Aplicar clases CSS inmediatamente
+        if (newDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    }, 50);
+
     loadUserData();
-  }, [user]);
+
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      clearInterval(interval);
+    };
+  }, [user, isDarkMode]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -103,47 +134,14 @@ const Profile: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className={`flex items-center ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                <span>Volver al Dashboard</span>
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-              >
-                {isDarkMode ? (
-                  <span className="text-yellow-500">☀️</span>
-                ) : (
-                  <span className="text-gray-600">🌙</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        title="Mi Perfil"
+        subtitle="Gestiona tu información personal"
+        backTo="/dashboard"
+        backLabel="Volver al Dashboard"
+      />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Mi Perfil
-          </h1>
-          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Gestiona tu información personal
-          </p>
-        </div>
 
         <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border p-6`}>
           <div className="flex items-center justify-between mb-6">
