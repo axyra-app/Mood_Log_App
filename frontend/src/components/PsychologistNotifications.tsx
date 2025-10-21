@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Bell, Calendar, X, Check, AlertCircle } from 'lucide-react';
+import { Bell, Calendar, X, Check, AlertCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePsychologistAppointments } from '../hooks/usePsychologistAppointments';
+import { usePsychologistNotifications } from '../hooks/usePsychologistNotifications';
 
 interface PsychologistNotificationsProps {
   isDarkMode: boolean;
@@ -17,6 +18,14 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
     updateAppointmentStatus,
     loading,
   } = usePsychologistAppointments(user?.uid || '');
+
+  // Obtener notificaciones de chat
+  const {
+    notifications: chatNotifications,
+    loading: chatNotificationsLoading,
+    unreadCount: chatUnreadCount,
+    markAsRead: markChatAsRead,
+  } = usePsychologistNotifications(user?.uid || '');
 
   const pendingAppointments = getPendingAppointments();
 
@@ -44,6 +53,16 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
       priority: 'medium' as const,
       createdAt: apt.createdAt,
       appointmentId: apt.id,
+    })),
+    ...chatNotifications.map(notif => ({
+      id: notif.id,
+      type: 'chat_message' as const,
+      title: notif.title,
+      message: notif.message,
+      priority: 'high' as const,
+      createdAt: notif.createdAt,
+      isRead: notif.isRead,
+      relatedItemId: notif.appointmentId, // Usar appointmentId como relatedItemId
     }))
   ];
 
@@ -63,7 +82,7 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
     }
   };
 
-  const unreadCount = allNotifications.length;
+  const unreadCount = allNotifications.length + chatUnreadCount;
 
   return (
     <div className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
@@ -221,6 +240,8 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                   <div className="flex items-start space-x-3">
                     {notification.type === 'profile' ? (
                       <AlertCircle className="w-5 h-5 text-red-500 mt-1" />
+                    ) : notification.type === 'chat_message' ? (
+                      <MessageCircle className="w-5 h-5 text-purple-500 mt-1" />
                     ) : (
                       <Calendar className="w-5 h-5 text-blue-500 mt-1" />
                     )}
@@ -262,6 +283,21 @@ const PsychologistNotifications: React.FC<PsychologistNotificationsProps> = ({ i
                         <X className="w-4 h-4" />
                       </button>
                     </div>
+                  )}
+                  
+                  {notification.type === 'chat_message' && (
+                    <button
+                      onClick={() => {
+                        // Marcar como leída y navegar al chat
+                        if (notification.id && !notification.isRead) {
+                          markChatAsRead(notification.id);
+                        }
+                        window.location.href = '/psychologist-chat';
+                      }}
+                      className="px-3 py-1 bg-purple-500 text-white text-xs rounded-lg hover:bg-purple-600 transition-colors"
+                    >
+                      Ver Chat
+                    </button>
                   )}
                   
                   {notification.type === 'profile' && (
