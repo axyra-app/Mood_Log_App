@@ -14,6 +14,7 @@ import {
 import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { firebaseConnectionManager } from '../services/firebaseConnectionManager';
 
 export interface Notification {
   id: string;
@@ -57,6 +58,8 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
       limit(50)
     );
 
+    const listenerKey = `notifications-${userId}-${userRole}`;
+    
     const unsubscribe = onSnapshot(
       notificationsQuery,
       (snapshot) => {
@@ -124,12 +127,20 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
       },
       (err) => {
         console.error('Error in notifications listener:', err);
+        firebaseConnectionManager.handleConnectionError(listenerKey, err, () => {
+          // Retry logic handled by connection manager
+        });
         setError('Error en la conexión de notificaciones');
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    // Registrar el listener en el gestor de conexiones
+    firebaseConnectionManager.registerListener(listenerKey, unsubscribe);
+
+    return () => {
+      firebaseConnectionManager.unregisterListener(listenerKey);
+    };
   }, [userId, userRole, user, profileLoaded]);
 
   const markAsRead = async (notificationId: string) => {
