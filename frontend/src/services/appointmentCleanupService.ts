@@ -55,17 +55,18 @@ class AppointmentCleanupService {
   }
   
   /**
-   * Marca citas del usuario actual como expiradas si han pasado su fecha
+   * Marca citas del usuario actual como expiradas si han pasado su fecha O si han pasado 3 días sin respuesta
    */
   async markExpiredAppointments(userId: string): Promise<number> {
     try {
       const now = new Date();
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       
-      // Solo buscar citas del usuario actual
+      // Solo buscar citas del usuario actual que estén pendientes o aceptadas
       const expiredQuery = query(
         collection(db, 'appointments'),
         where('userId', '==', userId),
-        where('appointmentDate', '<', Timestamp.fromDate(now)),
         where('status', 'in', ['pending', 'accepted'])
       );
       
@@ -74,11 +75,26 @@ class AppointmentCleanupService {
       
       for (const docSnapshot of expiredSnapshot.docs) {
         try {
-          await updateDoc(doc(db, 'appointments', docSnapshot.id), {
-            status: 'expired',
-            updatedAt: Timestamp.now()
-          });
-          markedCount++;
+          const appointmentData = docSnapshot.data();
+          const appointmentDate = appointmentData.appointmentDate?.toDate ? 
+            appointmentData.appointmentDate.toDate() : 
+            new Date(appointmentData.appointmentDate);
+          const createdAt = appointmentData.createdAt?.toDate ? 
+            appointmentData.createdAt.toDate() : 
+            new Date(appointmentData.createdAt);
+          
+          // Marcar como expirada si:
+          // 1. La fecha de la cita ya pasó, O
+          // 2. Han pasado 3 días desde que se creó la cita sin respuesta
+          const shouldExpire = appointmentDate < now || createdAt < threeDaysAgo;
+          
+          if (shouldExpire) {
+            await updateDoc(doc(db, 'appointments', docSnapshot.id), {
+              status: 'expired',
+              updatedAt: Timestamp.now()
+            });
+            markedCount++;
+          }
         } catch (error) {
           console.error(`Error marcando cita como expirada ${docSnapshot.id}:`, error);
         }

@@ -38,14 +38,14 @@ const Journal: React.FC = () => {
 
     // Agregar listener para cambios de tema
     window.addEventListener('storage', handleThemeChange);
-    
+
     // También escuchar cambios en el mismo tab
     const interval = setInterval(() => {
       const currentTheme = localStorage.getItem('theme');
       const newDarkMode = currentTheme === 'dark';
       if (newDarkMode !== isDarkMode) {
         setIsDarkMode(newDarkMode);
-        
+
         // Aplicar clases CSS inmediatamente
         if (newDarkMode) {
           document.documentElement.classList.add('dark');
@@ -92,8 +92,8 @@ const Journal: React.FC = () => {
       return normalized;
     };
 
-    const matchesDate = !selectedDate || 
-      normalizeDate(entryDate).getTime() === normalizeDate(new Date(selectedDate)).getTime();
+    const matchesDate =
+      !selectedDate || normalizeDate(entryDate).getTime() === normalizeDate(new Date(selectedDate)).getTime();
     return matchesSearch && matchesDate;
   });
 
@@ -200,7 +200,11 @@ const Journal: React.FC = () => {
 
               <button
                 onClick={() => setShowTemplates(!showTemplates)}
-                className={`flex items-center justify-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors w-full sm:w-auto`}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 ${
+                  isDarkMode
+                    ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                } border rounded-lg transition-colors w-full sm:w-auto`}
               >
                 <Sparkles className='w-4 h-4' />
                 <span className='text-sm sm:text-base'>Plantillas</span>
@@ -208,7 +212,11 @@ const Journal: React.FC = () => {
 
               <button
                 onClick={() => setShowPrompts(!showPrompts)}
-                className={`flex items-center justify-center space-x-2 px-4 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} border rounded-lg transition-colors w-full sm:w-auto`}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 ${
+                  isDarkMode
+                    ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                } border rounded-lg transition-colors w-full sm:w-auto`}
               >
                 <Sparkles className='w-4 h-4' />
                 <span className='text-sm sm:text-base'>Prompts</span>
@@ -218,13 +226,21 @@ const Journal: React.FC = () => {
             {/* Filtros - Responsive */}
             <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
               <div className='relative flex-1'>
-                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} w-4 h-4`} />
+                <Search
+                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  } w-4 h-4`}
+                />
                 <input
                   type='text'
                   placeholder='Buscar entradas...'
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`pl-10 pr-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full`}
+                  className={`pl-10 pr-4 py-2 border ${
+                    isDarkMode
+                      ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400'
+                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                  } rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full`}
                 />
               </div>
 
@@ -232,24 +248,38 @@ const Journal: React.FC = () => {
                 type='date'
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className={`px-4 py-2 border ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-auto`}
+                className={`px-4 py-2 border ${
+                  isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
+                } rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-auto`}
               />
             </div>
           </div>
 
           {/* Plantillas */}
           {showTemplates && (
-            <div className={`mt-4 p-4 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg border shadow-sm`}>
-              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Plantillas</h3>
+            <div
+              className={`mt-4 p-4 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              } rounded-lg border shadow-sm`}
+            >
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                Plantillas
+              </h3>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
                 {templates.map((template) => (
                   <button
                     key={template.id}
                     onClick={() => handleTemplateSelect(template)}
-                    className={`p-3 text-left border ${isDarkMode ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'} rounded-lg transition-colors`}
+                    className={`p-3 text-left border ${
+                      isDarkMode
+                        ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700'
+                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                    } rounded-lg transition-colors`}
                   >
                     <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{template.name}</h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>{template.description}</p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
+                      {template.description}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -258,14 +288,24 @@ const Journal: React.FC = () => {
 
           {/* Prompts */}
           {showPrompts && (
-            <div className={`mt-4 p-4 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg border shadow-sm`}>
-              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Prompts de Escritura</h3>
+            <div
+              className={`mt-4 p-4 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              } rounded-lg border shadow-sm`}
+            >
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                Prompts de Escritura
+              </h3>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
                 {prompts.map((prompt) => (
                   <button
                     key={prompt.id}
                     onClick={() => handlePromptSelect(prompt)}
-                    className={`p-3 text-left border ${isDarkMode ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'} rounded-lg transition-colors`}
+                    className={`p-3 text-left border ${
+                      isDarkMode
+                        ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700'
+                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                    } rounded-lg transition-colors`}
                   >
                     <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{prompt.title}</h4>
                     <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>{prompt.prompt}</p>
@@ -302,32 +342,42 @@ const Journal: React.FC = () => {
             {filteredEntries.map((entry) => (
               <div
                 key={entry.id}
-                className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-sm border p-4 sm:p-6 hover:shadow-md transition-shadow`}
+                className={`${
+                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                } rounded-lg shadow-sm border p-4 sm:p-6 hover:shadow-md transition-shadow`}
               >
                 <div className='flex items-start justify-between mb-4'>
                   <div className='flex-1'>
                     <div className='flex items-center space-x-2 mb-2'>
-                      <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{entry.title}</h3>
+                      <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {entry.title}
+                      </h3>
                       {entry.mood && (
                         <span className='text-lg' title={`Estado de ánimo: ${entry.mood}/10`}>
                           {getMoodEmoji(entry.mood)}
                         </span>
                       )}
                     </div>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>{formatDate(entry.date)}</p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                      {formatDate(entry.date)}
+                    </p>
                   </div>
 
                   <div className='flex items-center space-x-2'>
                     <button
                       onClick={() => handleEditEntry(entry)}
-                      className={`p-2 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                      className={`p-2 ${
+                        isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+                      } transition-colors`}
                       title='Editar entrada'
                     >
                       <Edit className='w-4 h-4' />
                     </button>
                     <button
                       onClick={() => handleDeleteEntry(entry.id)}
-                      className={`p-2 ${isDarkMode ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-red-600'} transition-colors`}
+                      className={`p-2 ${
+                        isDarkMode ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-red-600'
+                      } transition-colors`}
                       title='Eliminar entrada'
                     >
                       <Trash2 className='w-4 h-4' />
@@ -344,7 +394,12 @@ const Journal: React.FC = () => {
                 {entry.tags.length > 0 && (
                   <div className='flex flex-wrap gap-2 mb-4'>
                     {entry.tags.map((tag, index) => (
-                      <span key={index} className={`px-2 py-1 ${isDarkMode ? 'bg-purple-800 text-purple-200' : 'bg-purple-100 text-purple-700'} rounded-full text-xs`}>
+                      <span
+                        key={index}
+                        className={`px-2 py-1 ${
+                          isDarkMode ? 'bg-purple-800 text-purple-200' : 'bg-purple-100 text-purple-700'
+                        } rounded-full text-xs`}
+                      >
                         {tag}
                       </span>
                     ))}
@@ -352,30 +407,56 @@ const Journal: React.FC = () => {
                 )}
 
                 {entry.aiAnalysis && (
-                  <div className={`p-4 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-700' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'} rounded-lg border`}>
+                  <div
+                    className={`p-4 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-700'
+                        : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+                    } rounded-lg border`}
+                  >
                     <div className='flex items-center space-x-2 mb-3'>
                       <Sparkles className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                      <span className={`text-sm font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>Análisis de IA</span>
+                      <span className={`text-sm font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+                        Análisis de IA
+                      </span>
                     </div>
 
                     {/* Resumen Principal */}
                     {entry.aiAnalysis.summary && (
-                      <div className={`mb-3 p-3 ${isDarkMode ? 'bg-gray-800 border-purple-600' : 'bg-white border-purple-100'} rounded-lg border`}>
-                        <div className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-800'} mb-1`}>Resumen:</div>
-                        <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{entry.aiAnalysis.summary}</div>
+                      <div
+                        className={`mb-3 p-3 ${
+                          isDarkMode ? 'bg-gray-800 border-purple-600' : 'bg-white border-purple-100'
+                        } rounded-lg border`}
+                      >
+                        <div
+                          className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-800'} mb-1`}
+                        >
+                          Resumen:
+                        </div>
+                        <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {entry.aiAnalysis.summary}
+                        </div>
                       </div>
                     )}
 
                     {/* Sentimiento */}
                     <div className='mb-2'>
-                      <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Sentimiento: </span>
+                      <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                        Sentimiento:{' '}
+                      </span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           entry.aiAnalysis.sentiment === 'positive'
-                            ? isDarkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800'
+                            ? isDarkMode
+                              ? 'bg-green-800 text-green-200'
+                              : 'bg-green-100 text-green-800'
                             : entry.aiAnalysis.sentiment === 'negative'
-                            ? isDarkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-800'
-                            : isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
+                            ? isDarkMode
+                              ? 'bg-red-800 text-red-200'
+                              : 'bg-red-100 text-red-800'
+                            : isDarkMode
+                            ? 'bg-gray-700 text-gray-300'
+                            : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {entry.aiAnalysis.sentiment === 'positive'
@@ -389,10 +470,17 @@ const Journal: React.FC = () => {
                     {/* Temas */}
                     {entry.aiAnalysis.themes && entry.aiAnalysis.themes.length > 0 && (
                       <div className='mb-2'>
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Temas: </span>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                          Temas:{' '}
+                        </span>
                         <div className='flex flex-wrap gap-1 mt-1'>
                           {entry.aiAnalysis.themes.map((theme, index) => (
-                            <span key={index} className={`px-2 py-1 ${isDarkMode ? 'bg-purple-800 text-purple-200' : 'bg-purple-100 text-purple-700'} rounded-full text-xs`}>
+                            <span
+                              key={index}
+                              className={`px-2 py-1 ${
+                                isDarkMode ? 'bg-purple-800 text-purple-200' : 'bg-purple-100 text-purple-700'
+                              } rounded-full text-xs`}
+                            >
                               {theme}
                             </span>
                           ))}
@@ -403,7 +491,9 @@ const Journal: React.FC = () => {
                     {/* Insights */}
                     {entry.aiAnalysis.insights && entry.aiAnalysis.insights.length > 0 && (
                       <div className='mb-2'>
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Insights: </span>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                          Insights:{' '}
+                        </span>
                         <ul className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1 space-y-1`}>
                           {entry.aiAnalysis.insights.map((insight, index) => (
                             <li key={index} className='flex items-start'>
@@ -418,7 +508,9 @@ const Journal: React.FC = () => {
                     {/* Recomendaciones */}
                     {entry.aiAnalysis.recommendations && entry.aiAnalysis.recommendations.length > 0 && (
                       <div>
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Recomendaciones: </span>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                          Recomendaciones:{' '}
+                        </span>
                         <ul className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1 space-y-1`}>
                           {entry.aiAnalysis.recommendations.map((rec, index) => (
                             <li key={index} className='flex items-start'>

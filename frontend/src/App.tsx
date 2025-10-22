@@ -1,8 +1,8 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Components
 import AdvancedReports from './components/AdvancedReports';
@@ -10,8 +10,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import FloatingChatBubble from './components/FloatingChatBubble';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRouteBoth from './components/ProtectedRouteBoth';
-import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 import ProtectedRouteEditProfile from './components/ProtectedRouteEditProfile';
+import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 
 // Pages
 import AIChat from './pages/AIChat';
@@ -20,8 +20,8 @@ import ChatSelection from './pages/ChatSelection';
 import CompleteProfile from './pages/CompleteProfile';
 import CreateAppointment from './pages/CreateAppointment';
 import DashboardPsychologist from './pages/DashboardPsychologist';
-import EditProfile from './pages/EditProfile';
 import DashboardSimple from './pages/DashboardSimple';
+import EditProfile from './pages/EditProfile';
 import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
@@ -39,202 +39,189 @@ import TermsSimple from './pages/TermsSimple';
 import UserChat from './pages/UserChat';
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Detectar modo oscuro del sistema
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDarkMode(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsDarkMode(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <div className='App'>
-            <Routes>
-              {/* Public routes */}
-              <Route path='/' element={<Home />} />
-              <Route path='/login' element={<LoginSimple />} />
-              <Route path='/register' element={<RegisterSimple />} />
-              <Route path='/complete-profile' element={<CompleteProfile />} />
-              <Route path='/profile' element={<Profile />} />
-              <Route path='/create-appointment' element={<CreateAppointment />} />
-              <Route path='/forgot-password' element={<ForgotPassword />} />
-              <Route path='/terms' element={<TermsSimple />} />
-              <Route path='/privacy' element={<PrivacySimple />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <div className='App'>
+              <Routes>
+                {/* Public routes */}
+                <Route path='/' element={<Home />} />
+                <Route path='/login' element={<LoginSimple />} />
+                <Route path='/register' element={<RegisterSimple />} />
+                <Route path='/complete-profile' element={<CompleteProfile />} />
+                <Route path='/profile' element={<Profile />} />
+                <Route path='/create-appointment' element={<CreateAppointment />} />
+                <Route path='/forgot-password' element={<ForgotPassword />} />
+                <Route path='/terms' element={<TermsSimple />} />
+                <Route path='/privacy' element={<PrivacySimple />} />
 
-              {/* Protected routes */}
-              <Route
-                path='/dashboard'
-                element={
-                  <ProtectedRoute>
-                    <DashboardSimple />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/dashboard-psychologist'
-                element={
-                  <ProtectedRoutePsychologist>
-                    <DashboardPsychologist />
-                  </ProtectedRoutePsychologist>
-                }
-              />
-              <Route
-                path='/psychologist-chat'
-                element={
-                  <ProtectedRoutePsychologist>
-                    <PsychologistChat />
-                  </ProtectedRoutePsychologist>
-                }
-              />
-              <Route
-                path='/medical-history'
-                element={
-                  <ProtectedRoutePsychologist>
-                    <MedicalHistory />
-                  </ProtectedRoutePsychologist>
-                }
-              />
-              <Route
-                path='/user-chat'
-                element={
-                  <ProtectedRoute>
-                    <UserChat />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/mood-flow'
-                element={
-                  <ProtectedRoute>
-                    <MoodFlowSimple />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/statistics'
-                element={
-                  <ProtectedRoute>
-                    <Statistics />
-                  </ProtectedRoute>
-                }
-              />
-            <Route
-              path='/chat'
-              element={
-                <ProtectedRoute>
-                  <ChatSelection />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/chat/dr-sofia'
-              element={
-                <ProtectedRoute>
-                  <AIChat />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/chat/dr-carlos'
-              element={
-                <ProtectedRoute>
-                  <AIChat />
-                </ProtectedRoute>
-              }
-            />
-              <Route
-                path='/chat/ai/:doctorType'
-                element={
-                  <ProtectedRoute>
-                    <AIChat />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/chat/psychologist'
-                element={
-                  <ProtectedRoute>
-                    <PsychologistSelection />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/chat/psychologist/:psychologistId'
-                element={
-                  <ProtectedRoute>
-                    <Chat />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/settings'
-                element={
-                  <ProtectedRouteBoth>
-                    <Settings />
-                  </ProtectedRouteBoth>
-                }
-              />
-              <Route
-                path='/edit-profile'
-                element={
-                  <ProtectedRouteEditProfile>
-                    <EditProfile />
-                  </ProtectedRouteEditProfile>
-                }
-              />
-              <Route
-                path='/journal'
-                element={
-                  <ProtectedRoute>
-                    <Journal />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/reports'
-                element={
-                  <ProtectedRoute>
-                    <AdvancedReports />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected routes */}
+                <Route
+                  path='/dashboard'
+                  element={
+                    <ProtectedRoute>
+                      <DashboardSimple />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/dashboard-psychologist'
+                  element={
+                    <ProtectedRoutePsychologist>
+                      <DashboardPsychologist />
+                    </ProtectedRoutePsychologist>
+                  }
+                />
+                <Route
+                  path='/psychologist-chat'
+                  element={
+                    <ProtectedRoutePsychologist>
+                      <PsychologistChat />
+                    </ProtectedRoutePsychologist>
+                  }
+                />
+                <Route
+                  path='/medical-history'
+                  element={
+                    <ProtectedRoutePsychologist>
+                      <MedicalHistory />
+                    </ProtectedRoutePsychologist>
+                  }
+                />
+                <Route
+                  path='/user-chat'
+                  element={
+                    <ProtectedRoute>
+                      <UserChat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/mood-flow'
+                  element={
+                    <ProtectedRoute>
+                      <MoodFlowSimple />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/statistics'
+                  element={
+                    <ProtectedRoute>
+                      <Statistics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/chat'
+                  element={
+                    <ProtectedRoute>
+                      <ChatSelection />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/chat/dr-sofia'
+                  element={
+                    <ProtectedRoute>
+                      <AIChat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/chat/dr-carlos'
+                  element={
+                    <ProtectedRoute>
+                      <AIChat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/chat/ai/:doctorType'
+                  element={
+                    <ProtectedRoute>
+                      <AIChat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/chat/psychologist'
+                  element={
+                    <ProtectedRoute>
+                      <PsychologistSelection />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/chat/psychologist/:psychologistId'
+                  element={
+                    <ProtectedRoute>
+                      <Chat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/settings'
+                  element={
+                    <ProtectedRouteBoth>
+                      <Settings />
+                    </ProtectedRouteBoth>
+                  }
+                />
+                <Route
+                  path='/edit-profile'
+                  element={
+                    <ProtectedRouteEditProfile>
+                      <EditProfile />
+                    </ProtectedRouteEditProfile>
+                  }
+                />
+                <Route
+                  path='/journal'
+                  element={
+                    <ProtectedRoute>
+                      <Journal />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/reports'
+                  element={
+                    <ProtectedRoute>
+                      <AdvancedReports />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Catch all route */}
-              <Route
-                path='*'
-                element={
-                  <div className='min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center'>
-                    <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
-                      <div className='text-6xl mb-4'>🔍</div>
-                      <h1 className='text-2xl font-bold text-white mb-4'>Página no encontrada</h1>
-                      <p className='text-white/80 mb-6'>La página que buscas no existe</p>
-                      <a
-                        href='/'
-                        className='bg-white text-purple-600 font-semibold py-3 px-6 rounded-xl hover:bg-white/90 transition-all duration-200'
-                      >
-                        Volver al inicio
-                      </a>
+                {/* Catch all route */}
+                <Route
+                  path='*'
+                  element={
+                    <div className='min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center'>
+                      <div className='bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 text-center'>
+                        <div className='text-6xl mb-4'>🔍</div>
+                        <h1 className='text-2xl font-bold text-white mb-4'>Página no encontrada</h1>
+                        <p className='text-white/80 mb-6'>La página que buscas no existe</p>
+                        <a
+                          href='/'
+                          className='bg-white text-purple-600 font-semibold py-3 px-6 rounded-xl hover:bg-white/90 transition-all duration-200'
+                        >
+                          Volver al inicio
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                }
-              />
-            </Routes>
-            
-            {/* Burbuja flotante de chat IA - Solo en rutas protegidas */}
-            <FloatingChatBubble isDarkMode={isDarkMode} />
-          </div>
-        </Router>
-      </AuthProvider>
+                  }
+                />
+              </Routes>
+
+              {/* Burbuja flotante de chat IA - Solo en rutas protegidas */}
+              <FloatingChatBubble />
+            </div>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

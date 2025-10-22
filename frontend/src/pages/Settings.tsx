@@ -12,12 +12,13 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { auth, db } from '../services/firebase';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [userRole, setUserRole] = useState<'user' | 'psychologist'>('user');
   const [loading, setLoading] = useState(false);
@@ -101,74 +102,9 @@ const Settings: React.FC = () => {
       }
     };
 
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      setSettings((prev) => ({ ...prev, darkMode: true }));
-    }
-
-    // Escuchar cambios en el tema desde otros componentes
-    const handleThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme');
-      const newDarkMode = currentTheme === 'dark';
-      setIsDarkMode(newDarkMode);
-      setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
-    };
-
-    // Agregar listener para cambios de tema
-    window.addEventListener('storage', handleThemeChange);
-    
-    // También escuchar cambios en el mismo tab
-    const interval = setInterval(() => {
-      const currentTheme = localStorage.getItem('theme');
-      const newDarkMode = currentTheme === 'dark';
-      if (newDarkMode !== isDarkMode) {
-        setIsDarkMode(newDarkMode);
-        setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
-        
-        // Aplicar clases CSS inmediatamente
-        if (newDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        
-        // Forzar re-render del componente
-        setTimeout(() => {
-          window.dispatchEvent(new Event('storage'));
-        }, 100);
-      }
-    }, 50); // Reducir intervalo para respuesta más rápida
-
     loadUserData();
     setIsLoaded(true);
-
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-      clearInterval(interval);
-    };
   }, [user]);
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
-
-    if (newDarkMode) {
-      localStorage.setItem('theme', 'dark');
-      document.documentElement.classList.add('dark');
-    } else {
-      localStorage.setItem('theme', 'light');
-      document.documentElement.classList.remove('dark');
-    }
-
-    // Forzar re-render del componente y sincronización
-    setTimeout(() => {
-      window.dispatchEvent(new Event('storage'));
-      // También forzar actualización del estado
-      setIsDarkMode(newDarkMode);
-    }, 100);
-  };
 
   const handleSettingsChange = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));

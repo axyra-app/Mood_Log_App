@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserAppointments } from '../hooks/useUserAppointments';
-import CreateAppointmentModal from './CreateAppointmentModal';
+import AppointmentModal from './AppointmentModal';
 import PsychologistCreateAppointmentModal from './PsychologistCreateAppointmentModal';
 
 interface Appointment {
@@ -286,16 +286,10 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ isDarkMod
       </div>
 
       {/* Modal de Crear Cita */}
-      {showCreateModal && (
-        <CreateAppointmentModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onAppointmentCreated={() => {
-            // Cita creada exitosamente
-            setShowCreateModal(false);
-          }}
-        />
-      )}
+      <AppointmentModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
     </div>
   );
 };
