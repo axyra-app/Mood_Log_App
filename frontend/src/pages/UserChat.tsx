@@ -33,7 +33,37 @@ const UserChat: React.FC = () => {
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
     }
-  }, []);
+
+    // Escuchar cambios en el tema desde otros componentes
+    const handleThemeChange = () => {
+      const currentTheme = localStorage.getItem('theme');
+      setIsDarkMode(currentTheme === 'dark');
+    };
+
+    // Agregar listener para cambios de tema
+    window.addEventListener('storage', handleThemeChange);
+    
+    // También escuchar cambios en el mismo tab
+    const interval = setInterval(() => {
+      const currentTheme = localStorage.getItem('theme');
+      const newDarkMode = currentTheme === 'dark';
+      if (newDarkMode !== isDarkMode) {
+        setIsDarkMode(newDarkMode);
+        
+        // Aplicar clases CSS inmediatamente
+        if (newDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    }, 50); // Reducir intervalo para respuesta más rápida
+
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      clearInterval(interval);
+    };
+  }, [isDarkMode]);
 
   // Monitorear estado de conexión de psicólogos
   useEffect(() => {
