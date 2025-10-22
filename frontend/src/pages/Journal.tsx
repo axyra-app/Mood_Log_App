@@ -1,7 +1,7 @@
 import { Edit, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import JournalEditor from '../components/JournalEditor';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +11,7 @@ import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 const Journal: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } =
     useJournal(user?.uid || '');
 
@@ -23,6 +24,33 @@ const Journal: React.FC = () => {
   const [showPrompts, setShowPrompts] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Manejar estado de ánimo seleccionado desde el historial
+  const selectedMoodLog = location.state?.selectedMoodLog;
+  const editMode = location.state?.editMode;
+
+  // Efecto para manejar la selección de estado de ánimo desde el historial
+  useEffect(() => {
+    if (selectedMoodLog && editMode) {
+      // Crear una entrada de diario basada en el estado de ánimo seleccionado
+      const moodEntry: JournalEntry = {
+        id: `mood-${selectedMoodLog.id}`,
+        title: `Estado de ánimo - ${selectedMoodLog.mood}/10`,
+        content: `Estado de ánimo: ${selectedMoodLog.mood}/10${selectedMoodLog.notes ? `\n\nNotas: ${selectedMoodLog.notes}` : ''}${selectedMoodLog.energy ? `\nEnergía: ${selectedMoodLog.energy}/10` : ''}${selectedMoodLog.stress ? `\nEstrés: ${selectedMoodLog.stress}/10` : ''}${selectedMoodLog.sleep ? `\nSueño: ${selectedMoodLog.sleep}/10` : ''}`,
+        date: selectedMoodLog.date || selectedMoodLog.createdAt,
+        tags: ['estado-ánimo', 'mood-log'],
+        aiAnalysis: null,
+        createdAt: selectedMoodLog.createdAt,
+        updatedAt: selectedMoodLog.createdAt
+      };
+      
+      setEditingEntry(moodEntry);
+      setShowEditor(true);
+      
+      // Limpiar el estado de navegación
+      navigate('/journal', { replace: true });
+    }
+  }, [selectedMoodLog, editMode, navigate]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
