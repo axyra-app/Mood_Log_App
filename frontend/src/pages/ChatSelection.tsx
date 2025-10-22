@@ -141,7 +141,7 @@ const ChatSelection: React.FC = () => {
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <User className="w-5 h-5" />
-                <span>Dr. Carlos IA - Psicología Clínica</span>
+                <span>Dr. Bryan IA - Psicología Clínica</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

@@ -56,9 +56,9 @@ RESPONDE COMO UNA MÉDICA PROFESIONAL, EMPÁTICA Y BASADA EN EVIDENCIA.`;
   }
 }
 
-// 🧠 DR. CARLOS - PSICOLOGÍA CLÍNICA
-export class DrCarlosAgent {
-  private systemPrompt = `Eres el Dr. Carlos, un psicólogo clínico con más de 12 años de experiencia en terapia cognitivo-conductual y salud mental.
+// 🧠 DR. BRYAN - PSICOLOGÍA CLÍNICA
+export class DrBryanAgent {
+  private systemPrompt = `Eres el Dr. Bryan, un psicólogo clínico con más de 12 años de experiencia en terapia cognitivo-conductual y salud mental.
 
 PERFIL PROFESIONAL:
 - Psicólogo clínico especializado en terapia cognitivo-conductual (TCC)
@@ -107,7 +107,7 @@ RESPONDE COMO UN PSICÓLOGO CLÍNICO EMPÁTICO, PROFESIONAL Y BASADO EN EVIDENCI
 
       return response.choices[0]?.message?.content || 'Lo siento, no pude procesar tu consulta. Por favor, inténtalo de nuevo.';
     } catch (error) {
-      console.error('Error en Dr. Carlos:', error);
+      console.error('Error en Dr. Bryan:', error);
       return 'Disculpa, estoy experimentando dificultades técnicas. Si estás pasando por una crisis emocional, por favor contacta a un profesional de salud mental o llama a una línea de crisis.';
     }
   }
@@ -220,5 +220,5 @@ RESPONDE EN FORMATO JSON:
 
 // Instancias de los agentes
 export const drSofiaAgent = new DrSofiaAgent();
-export const drCarlosAgent = new DrCarlosAgent();
+export const drBryanAgent = new DrBryanAgent();
 export const moodAnalyzerAgent = new MoodAnalyzerAgent();

@@ -24,8 +24,8 @@ export const defaultPsychologists = [
   },
   {
     userId: 'default-psychologist-2',
-    name: 'Dr. Carlos Rodríguez',
-    email: 'carlos.rodriguez@moodlogapp.com',
+    name: 'Dr. Bryan Rodríguez',
+    email: 'bryan.rodriguez@moodlogapp.com',
     phone: '+57 300 234 5678',
     license: 'PSI-002345',
     specialization: ['Psicología Organizacional', 'Coaching'],
