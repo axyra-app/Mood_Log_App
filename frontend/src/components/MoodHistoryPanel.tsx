@@ -18,13 +18,24 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
 
   // Ordenar logs por fecha (más recientes primero)
   const sortedMoodLogs = [...moodLogs].sort((a, b) => {
-    const dateA = a.createdAt && typeof a.createdAt.toDate === 'function' 
-      ? a.createdAt.toDate() 
-      : new Date(a.createdAt);
-    const dateB = b.createdAt && typeof b.createdAt.toDate === 'function' 
-      ? b.createdAt.toDate() 
-      : new Date(b.createdAt);
-    return dateB.getTime() - dateA.getTime();
+    try {
+      const dateA = a.createdAt && typeof a.createdAt.toDate === 'function' 
+        ? a.createdAt.toDate() 
+        : new Date(a.createdAt);
+      const dateB = b.createdAt && typeof b.createdAt.toDate === 'function' 
+        ? b.createdAt.toDate() 
+        : new Date(b.createdAt);
+      
+      // Verificar que las fechas son válidas
+      if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+        return 0;
+      }
+      
+      return dateB.getTime() - dateA.getTime();
+    } catch (error) {
+      console.error('Error sorting mood logs:', error);
+      return 0;
+    }
   });
 
   // Mostrar solo los primeros 6 o todos según el estado

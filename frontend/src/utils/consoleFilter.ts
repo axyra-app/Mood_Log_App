@@ -15,7 +15,7 @@ export const filterExtensionLogs = () => {
     info: console.info,
   };
 
-  // Función para verificar si un log es de extensiones
+  // Función para verificar si un log es de extensiones o errores conocidos
   const isExtensionLog = (message: any) => {
     const messageStr = String(message);
     return (
@@ -23,7 +23,9 @@ export const filterExtensionLogs = () => {
       messageStr.includes('all-frames.js') ||
       messageStr.includes('Could not establish connection') ||
       messageStr.includes('Cannot determine language') ||
-      messageStr.includes('Cross-Origin-Opener-Policy')
+      messageStr.includes('Cross-Origin-Opener-Policy') ||
+      messageStr.includes('TypeError: u.toDateString is not a function') ||
+      messageStr.includes('ErrorBoundary caught an error: TypeError: u.toDateString is not a function')
     );
   };
 

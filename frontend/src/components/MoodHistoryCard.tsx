@@ -45,27 +45,51 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
   };
 
   const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    try {
+      // Asegurar que tenemos una fecha válida
+      const validDate = date instanceof Date ? date : new Date(date);
+      
+      if (isNaN(validDate.getTime())) {
+        return 'Fecha inválida';
+      }
 
-    if (date.toDateString() === today.toDateString()) {
-      return 'Hoy';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Ayer';
-    } else {
-      return date.toLocaleDateString('es-ES', {
-        day: 'numeric',
-        month: 'short',
-      });
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (validDate.toDateString() === today.toDateString()) {
+        return 'Hoy';
+      } else if (validDate.toDateString() === yesterday.toDateString()) {
+        return 'Ayer';
+      } else {
+        return validDate.toLocaleDateString('es-ES', {
+          day: 'numeric',
+          month: 'short',
+        });
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Fecha inválida';
     }
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    try {
+      // Asegurar que tenemos una fecha válida
+      const validDate = date instanceof Date ? date : new Date(date);
+      
+      if (isNaN(validDate.getTime())) {
+        return 'Hora inválida';
+      }
+
+      return validDate.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'Hora inválida';
+    }
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
