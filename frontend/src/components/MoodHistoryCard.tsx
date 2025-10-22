@@ -1,6 +1,5 @@
 import { Calendar, Edit, Heart, Smile, TrendingUp } from 'lucide-react';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface MoodLog {
   id: string;
@@ -16,10 +15,10 @@ interface MoodLog {
 interface MoodHistoryCardProps {
   moodLog: MoodLog;
   isDarkMode?: boolean;
+  onEdit?: (moodLog: MoodLog) => void;
 }
 
-const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode = false }) => {
-  const navigate = useNavigate();
+const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode = false, onEdit }) => {
 
   const getMoodEmoji = (mood: number) => {
     if (mood >= 9) return '😊';
@@ -69,22 +68,18 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
     });
   };
 
-  const handleCardClick = () => {
-    // Navegar al diario con el estado de ánimo seleccionado
-    navigate('/journal', { 
-      state: { 
-        selectedMoodLog: moodLog,
-        editMode: true 
-      } 
-    });
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(moodLog);
+    }
   };
 
   return (
     <div
-      className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${
+      className={`p-4 rounded-lg border hover:shadow-md transition-all duration-200 ${
         isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-200 hover:bg-gray-50'
       }`}
-      onClick={handleCardClick}
     >
       {/* Header con fecha y hora */}
       <div className="flex items-center justify-between mb-3">
@@ -98,10 +93,7 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
           </span>
         </div>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCardClick();
-          }}
+          onClick={handleEditClick}
           className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
             isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
           }`}
@@ -180,7 +172,7 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
         <div className="flex items-center space-x-1">
           <TrendingUp className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
           <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Haz clic para editar
+            Haz clic en el botón editar
           </span>
         </div>
         <Smile className={`w-4 h-4 ${getMoodColor(moodLog.mood)}`} />

@@ -2,6 +2,7 @@ import { Calendar, Heart, Plus, TrendingUp } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMood } from '../hooks/useMood';
+import MoodEditModal from './MoodEditModal';
 import MoodHistoryCard from './MoodHistoryCard';
 
 interface MoodHistoryPanelProps {
@@ -10,8 +11,10 @@ interface MoodHistoryPanelProps {
 
 const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false }) => {
   const navigate = useNavigate();
-  const { moodLogs, loading } = useMood();
+  const { moodLogs, loading, updateMoodLog } = useMood();
   const [showAll, setShowAll] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedMoodLog, setSelectedMoodLog] = useState<any>(null);
 
   // Ordenar logs por fecha (más recientes primero)
   const sortedMoodLogs = [...moodLogs].sort((a, b) => {
@@ -33,6 +36,26 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
 
   const handleViewAll = () => {
     navigate('/statistics');
+  };
+
+  const handleEditMood = (moodLog: any) => {
+    setSelectedMoodLog(moodLog);
+    setShowEditModal(true);
+  };
+
+  const handleSaveMood = async (updatedMoodLog: any) => {
+    try {
+      await updateMoodLog(updatedMoodLog);
+      setShowEditModal(false);
+      setSelectedMoodLog(null);
+    } catch (error) {
+      console.error('Error updating mood log:', error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    setSelectedMoodLog(null);
   };
 
   if (loading) {
@@ -147,6 +170,7 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
             key={moodLog.id}
             moodLog={moodLog}
             isDarkMode={isDarkMode}
+            onEdit={handleEditMood}
           />
         ))}
       </div>
@@ -167,6 +191,15 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
           </button>
         </div>
       )}
+
+      {/* Modal de edición */}
+      <MoodEditModal
+        isOpen={showEditModal}
+        onClose={handleCloseModal}
+        moodLog={selectedMoodLog}
+        onSave={handleSaveMood}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };
