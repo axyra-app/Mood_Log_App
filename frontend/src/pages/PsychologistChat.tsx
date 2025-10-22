@@ -61,7 +61,8 @@ const PsychologistChat: React.FC = () => {
     };
   }, [isDarkMode]);
 
-    // Función async para manejar la selección/creación de sesión
+  // Función async para manejar la selección/creación de sesión
+  useEffect(() => {
     const handlePatientSession = async () => {
       // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
       if (location.state?.patientId && sessions.length >= 0) {
