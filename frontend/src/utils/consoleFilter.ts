@@ -25,7 +25,22 @@ export const filterExtensionLogs = () => {
       messageStr.includes('Cannot determine language') ||
       messageStr.includes('Cross-Origin-Opener-Policy') ||
       messageStr.includes('TypeError: u.toDateString is not a function') ||
-      messageStr.includes('ErrorBoundary caught an error: TypeError: u.toDateString is not a function')
+      messageStr.includes('ErrorBoundary caught an error: TypeError: u.toDateString is not a function') ||
+      messageStr.includes('chrome-extension://') ||
+      messageStr.includes('firebase-') ||
+      messageStr.includes('Statistics data:') ||
+      messageStr.includes('Mood logs:') ||
+      messageStr.includes('No mood logs found') ||
+      messageStr.includes('Period dates:') ||
+      messageStr.includes('Log date:') ||
+      messageStr.includes('Logs in period:') ||
+      messageStr.includes('Analizando datos de estado de ánimo:') ||
+      messageStr.includes('Enviando prompt a Groq:') ||
+      messageStr.includes('Respuesta de Groq:') ||
+      messageStr.includes('Análisis parseado exitosamente:') ||
+      messageStr.includes('Error parseando JSON:') ||
+      messageStr.includes('Listener desconectado:') ||
+      messageStr.includes('✅ Listener desconectado:')
     );
   };
 
@@ -47,7 +62,11 @@ export const filterExtensionLogs = () => {
   console.error = createFilteredConsole(originalConsole.error);
   console.info = createFilteredConsole(originalConsole.info);
 
-  console.log('🔧 Filtro de consola aplicado - logs de extensiones ocultos');
+  // Solo mostrar el mensaje de confirmación una vez
+  if (!window.consoleFilterApplied) {
+    console.log('🔧 Filtro de consola aplicado - logs de extensiones ocultos');
+    window.consoleFilterApplied = true;
+  }
 };
 
 // Aplicar el filtro automáticamente

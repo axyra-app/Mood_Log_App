@@ -192,13 +192,6 @@ export const createChatNotification = async (
   sessionId?: string
 ) => {
   try {
-    console.log('🔔 Creando notificación de chat:', {
-      psychologistId,
-      senderId,
-      senderName,
-      messageLength: message.length,
-      sessionId
-    });
 
     const notificationData: any = {
       userId: psychologistId, // El psicólogo recibe la notificación
@@ -218,7 +211,6 @@ export const createChatNotification = async (
     }
     
     const docRef = await addDoc(collection(db, 'notifications'), notificationData);
-    console.log('✅ Notificación creada con ID:', docRef.id);
     
     return docRef.id;
   } catch (error) {

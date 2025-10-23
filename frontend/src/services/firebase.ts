@@ -42,12 +42,6 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
   
   while (retryCount < maxRetries) {
     try {
-      console.log(`📤 Upload attempt ${retryCount + 1}/${maxRetries}:`, { 
-        fileName: file.name, 
-        path, 
-        size: file.size,
-        type: file.type 
-      });
       
       const storageRef = ref(storage, path);
       

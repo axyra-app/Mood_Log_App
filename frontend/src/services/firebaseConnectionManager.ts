@@ -15,7 +15,6 @@ class FirebaseConnectionManager {
   registerListener(key: string, unsubscribe: () => void): void {
     // Si ya existe un listener con esta clave, lo desconectamos primero
     if (this.activeListeners.has(key)) {
-      console.log(`🔄 Reemplazando listener existente: ${key}`);
       this.activeListeners.get(key)?.();
     }
     
@@ -32,7 +31,6 @@ class FirebaseConnectionManager {
       unsubscribe();
       this.activeListeners.delete(key);
       this.connectionRetryCount.delete(key);
-      console.log(`✅ Listener desconectado: ${key}`);
     }
   }
 
@@ -40,10 +38,8 @@ class FirebaseConnectionManager {
    * Desconecta todos los listeners activos
    */
   disconnectAll(): void {
-    console.log(`🔌 Desconectando ${this.activeListeners.size} listeners activos`);
     this.activeListeners.forEach((unsubscribe, key) => {
       unsubscribe();
-      console.log(`✅ Listener desconectado: ${key}`);
     });
     this.activeListeners.clear();
     this.connectionRetryCount.clear();
@@ -62,7 +58,6 @@ class FirebaseConnectionManager {
       
       // Esperar antes del siguiente intento
       setTimeout(() => {
-        console.log(`🔄 Reintentando conexión para ${key}...`);
         retryCallback();
       }, this.RETRY_DELAY * (retryCount + 1));
     } else {

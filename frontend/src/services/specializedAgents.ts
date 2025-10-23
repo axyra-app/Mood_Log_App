@@ -177,10 +177,7 @@ RESPONDE EN FORMATO JSON:
 
   async analyzeMood(moodData: any): Promise<any> {
     try {
-      console.log('Analizando datos de estado de ánimo:', moodData);
-      
       if (!moodData.moodLogs || moodData.moodLogs.length === 0) {
-        console.log('No hay datos de estado de ánimo para analizar');
         return {
           summary: 'No hay suficientes datos de estado de ánimo para realizar un análisis completo. Se recomienda registrar más estados de ánimo para obtener insights más precisos.',
           patterns: ['Patrón: Datos insuficientes para identificar patrones específicos'],
@@ -243,8 +240,6 @@ RESPONDE EN FORMATO JSON:
         }
       `;
 
-      console.log('Enviando prompt a Groq:', prompt);
-
       const response = await groq.chat.completions.create({
         messages: [
           { role: 'system', content: this.systemPrompt },
@@ -256,7 +251,6 @@ RESPONDE EN FORMATO JSON:
       });
 
       const content = response.choices[0]?.message?.content;
-      console.log('Respuesta de Groq:', content);
       
       if (!content) {
         throw new Error('No se recibió respuesta del modelo de IA');
@@ -265,10 +259,8 @@ RESPONDE EN FORMATO JSON:
       // Intentar parsear JSON
       try {
         const parsed = JSON.parse(content);
-        console.log('Análisis parseado exitosamente:', parsed);
         return parsed;
       } catch (parseError) {
-        console.error('Error parseando JSON:', parseError);
         // Si falla el parseo, crear análisis básico pero personalizado
         return this.createFallbackAnalysis(moodData);
       }

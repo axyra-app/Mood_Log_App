@@ -64,7 +64,6 @@ const FloatingChatBubble: React.FC = () => {
       };
 
       setMessages((prev) => {
-        console.log('Adding user message:', userMsg);
         return [...prev, userMsg];
       });
 
@@ -79,7 +78,6 @@ const FloatingChatBubble: React.FC = () => {
         };
 
         setMessages((prev) => {
-          console.log('Adding AI message:', aiMsg);
           return [...prev, aiMsg];
         });
         setIsLoading(false);
