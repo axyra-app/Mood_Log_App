@@ -29,14 +29,19 @@ const MoodFlowSimple: React.FC = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const navigate = useNavigate();
 
-  const moodEmojis = ['😢', '😕', '😐', '🙂', '😊'];
-  const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
+  const moodEmojis = ['😢', '😔', '😐', '🙂', '😊', '😄', '🤩', '🥰', '😍', '🌟'];
+  const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Muy bien', 'Excelente', 'Fantástico', 'Increíble', 'Perfecto', 'Épico'];
   const moodColors = [
-    'from-red-500 to-red-600',
-    'from-orange-500 to-orange-600',
-    'from-yellow-500 to-yellow-600',
-    'from-green-500 to-green-600',
-    'from-blue-500 to-blue-600',
+    'from-red-500 to-red-600',     // 1
+    'from-red-400 to-red-500',     // 2
+    'from-orange-500 to-orange-600', // 3
+    'from-orange-400 to-orange-500', // 4
+    'from-yellow-500 to-yellow-600', // 5
+    'from-yellow-400 to-yellow-500', // 6
+    'from-green-500 to-green-600',   // 7
+    'from-green-400 to-green-500',   // 8
+    'from-blue-500 to-blue-600',     // 9
+    'from-purple-500 to-purple-600', // 10
   ];
 
   const activityOptions = [
@@ -135,9 +140,9 @@ const MoodFlowSimple: React.FC = () => {
         const fallbackAnalysis = {
           summary: 'Análisis básico basado en tus datos',
           insights: [
-            `Estado de ánimo: ${currentMood <= 2 ? 'Bajo' : currentMood >= 4 ? 'Alto' : 'Moderado'}`,
-            `Energía: ${energy < 5 ? 'Baja' : energy > 7 ? 'Alta' : 'Moderada'}`,
-            `Estrés: ${stress > 6 ? 'Alto' : stress < 4 ? 'Bajo' : 'Moderado'}`
+            `Estado de ánimo: ${currentMood <= 3 ? 'Bajo' : currentMood >= 8 ? 'Alto' : 'Moderado'}`,
+            `Energía: ${energy < 4 ? 'Baja' : energy > 7 ? 'Alta' : 'Moderada'}`,
+            `Estrés: ${stress > 7 ? 'Alto' : stress < 4 ? 'Bajo' : 'Moderado'}`
           ],
           recommendations: [
             {
@@ -290,7 +295,7 @@ const MoodFlowSimple: React.FC = () => {
             <h2 className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-8`}>
               ¿Cómo te sientes hoy?
             </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-5 gap-4'>
+            <div className='grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-4'>
               {moodEmojis.map((emoji, index) => (
                 <button
                   key={index}
