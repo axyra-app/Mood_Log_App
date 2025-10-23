@@ -1,5 +1,5 @@
 import { Calendar, Heart, Plus, TrendingUp } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMood } from '../hooks/useMood';
 import MoodEditModal from './MoodEditModal';
@@ -15,6 +15,15 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
   const [showAll, setShowAll] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedMoodLog, setSelectedMoodLog] = useState<any>(null);
+
+  // Aplicar modo oscuro al contenedor principal
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Ordenar logs por fecha (más recientes primero)
   const sortedMoodLogs = [...moodLogs].sort((a, b) => {
