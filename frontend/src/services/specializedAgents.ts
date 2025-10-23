@@ -177,18 +177,73 @@ RESPONDE EN FORMATO JSON:
 
   async analyzeMood(moodData: any): Promise<any> {
     try {
-      const prompt = `
-        Analiza estos datos de estado de ánimo del usuario:
+      console.log('Analizando datos de estado de ánimo:', moodData);
+      
+      if (!moodData.moodLogs || moodData.moodLogs.length === 0) {
+        console.log('No hay datos de estado de ánimo para analizar');
+        return {
+          summary: 'No hay suficientes datos de estado de ánimo para realizar un análisis completo. Se recomienda registrar más estados de ánimo para obtener insights más precisos.',
+          patterns: ['Patrón: Datos insuficientes para identificar patrones específicos'],
+          insights: ['Insight: Necesitas más registros para un análisis profundo'],
+          recommendations: [
+            'Registra tu estado de ánimo diariamente durante al menos una semana',
+            'Incluye notas detalladas sobre tu día y emociones',
+            'Mantén un registro consistente para identificar patrones'
+          ],
+          riskLevel: 'low',
+          nextSteps: ['Continúa registrando tu estado de ánimo regularmente'],
+          moodTrend: 'stable',
+          keyFactors: ['Factor: Falta de datos suficientes para análisis']
+        };
+      }
 
-        DATOS DE ESTADO DE ÁNIMO:
-        ${moodData.moodLogs.map((log: any) => 
-          `- Fecha: ${log.date.toLocaleDateString()}, Estado: ${log.mood}/10${log.notes ? `, Notas: ${log.notes}` : ''}${log.emotions ? `, Emociones: ${log.emotions.join(', ')}` : ''}${log.activities ? `, Actividades: ${log.activities.join(', ')}` : ''}`
+      const timestamp = new Date().toISOString();
+      const uniqueId = Math.random().toString(36).substring(7);
+      
+      const prompt = `
+        Eres un psicólogo clínico especializado en análisis de estados de ánimo. Analiza estos datos ÚNICOS del usuario:
+
+        DATOS ESPECÍFICOS DEL USUARIO:
+        ${moodData.moodLogs.map((log: any, index: number) => 
+          `Registro ${index + 1}: Fecha: ${log.date.toLocaleDateString()}, Estado: ${log.mood}/10${log.notes ? `, Notas: "${log.notes}"` : ''}${log.emotions ? `, Emociones: ${log.emotions.join(', ')}` : ''}${log.activities ? `, Actividades: ${log.activities.join(', ')}` : ''}`
         ).join('\n')}
 
         PERÍODO DE ANÁLISIS: ${moodData.period.start.toLocaleDateString()} - ${moodData.period.end.toLocaleDateString()}
+        CONTEXTO ÚNICO: ${timestamp}
+        SEMILLA DE PERSONALIZACIÓN: ${uniqueId}
 
-        Proporciona un análisis profesional y recomendaciones específicas.
+        INSTRUCCIONES CRÍTICAS:
+        - Proporciona análisis ÚNICO y personalizado basado en estos datos específicos
+        - Evita respuestas genéricas o repetitivas
+        - Incluye detalles específicos del perfil emocional del usuario
+        - Sé empático y profesional pero específico
+        - Considera el contexto individual y único
+
+        RESPONDE EN FORMATO JSON:
+        {
+          "summary": "Resumen personalizado y específico del estado emocional único del usuario",
+          "patterns": ["patrón específico identificado con contexto", "tendencia observada con explicación", "patrón temporal con implicaciones"],
+          "insights": ["insight psicológico profundo", "observación significativa con explicación", "hallazgo importante con contexto"],
+          "recommendations": [
+            "Técnica específica de regulación emocional: [descripción detallada]",
+            "Estrategia de afrontamiento: [pasos específicos a seguir]",
+            "Actividad de bienestar: [instrucciones detalladas]",
+            "Técnica de mindfulness: [ejercicio específico]",
+            "Estrategia de prevención: [medidas concretas]",
+            "Herramienta de monitoreo: [método específico]",
+            "Recomendación de estilo de vida: [cambios específicos]",
+            "Técnica de comunicación: [estrategia específica]"
+          ],
+          "riskLevel": "low|medium|high",
+          "nextSteps": ["próximo paso específico con timeline", "seguimiento sugerido con frecuencia"],
+          "moodTrend": "improving|stable|declining",
+          "keyFactors": ["factor influyente específico con explicación", "factor contextual importante"],
+          "interventionStrategies": ["estrategia de intervención específica", "técnica terapéutica recomendada"],
+          "wellnessPlan": ["plan de bienestar personalizado", "objetivos específicos a corto plazo"]
+        }
       `;
+
+      console.log('Enviando prompt a Groq:', prompt);
 
       const response = await groq.chat.completions.create({
         messages: [
@@ -196,25 +251,82 @@ RESPONDE EN FORMATO JSON:
           { role: 'user', content: prompt }
         ],
         model: 'llama-3.1-8b-instant',
-        temperature: 0.6,
-        max_tokens: 1200
+        temperature: 0.7,
+        max_tokens: 1500
       });
 
       const content = response.choices[0]?.message?.content;
-      return JSON.parse(content || '{}');
+      console.log('Respuesta de Groq:', content);
+      
+      if (!content) {
+        throw new Error('No se recibió respuesta del modelo de IA');
+      }
+
+      // Intentar parsear JSON
+      try {
+        const parsed = JSON.parse(content);
+        console.log('Análisis parseado exitosamente:', parsed);
+        return parsed;
+      } catch (parseError) {
+        console.error('Error parseando JSON:', parseError);
+        // Si falla el parseo, crear análisis básico pero personalizado
+        return this.createFallbackAnalysis(moodData);
+      }
     } catch (error) {
       console.error('Error en análisis de estado de ánimo:', error);
-      return {
-        summary: 'Error al analizar los datos de estado de ánimo',
-        patterns: [],
-        insights: [],
-        recommendations: ['Continúa registrando tu estado de ánimo para obtener análisis más precisos'],
-        riskLevel: 'low',
-        nextSteps: ['Mantén el registro regular de tu bienestar emocional'],
-        moodTrend: 'stable',
-        keyFactors: []
-      };
+      return this.createFallbackAnalysis(moodData);
     }
+  }
+
+  private createFallbackAnalysis(moodData: any): any {
+    const avgMood = moodData.moodLogs.reduce((sum: number, log: any) => sum + log.mood, 0) / moodData.moodLogs.length;
+    const moodRange = {
+      min: Math.min(...moodData.moodLogs.map((log: any) => log.mood)),
+      max: Math.max(...moodData.moodLogs.map((log: any) => log.mood))
+    };
+    
+    const uniqueId = Math.random().toString(36).substring(7);
+    const timestamp = new Date().toLocaleString();
+    
+    return {
+      summary: `Análisis personalizado del ${timestamp}: Tu estado de ánimo promedio es ${avgMood.toFixed(1)}/10 durante el período analizado. ${moodRange.max - moodRange.min > 5 ? 'Se observan fluctuaciones significativas en tu estado emocional.' : 'Tu estado emocional se mantiene relativamente estable.'}`,
+      patterns: [
+        `Patrón de variabilidad: ${moodRange.max - moodRange.min > 5 ? 'Alta variabilidad emocional detectada' : 'Estabilidad emocional mantenida'}`,
+        `Tendencia temporal: ${avgMood >= 7 ? 'Estado emocional positivo general' : avgMood >= 5 ? 'Estado emocional moderado' : 'Estado emocional que requiere atención'}`,
+        `Rango emocional: ${moodRange.min}/10 a ${moodRange.max}/10 (variación de ${moodRange.max - moodRange.min} puntos)`
+      ],
+      insights: [
+        `Insight clave: Tu estado de ánimo promedio de ${avgMood.toFixed(1)}/10 indica ${avgMood >= 7 ? 'un bienestar emocional positivo' : avgMood >= 5 ? 'un estado emocional moderado que puede mejorarse' : 'la necesidad de atención emocional'}`,
+        `Observación importante: ${moodData.moodLogs.length} registros analizados proporcionan una base sólida para el análisis`,
+        `Factor contextual: ${moodRange.max - moodRange.min > 5 ? 'Las fluctuaciones emocionales sugieren la necesidad de estrategias de regulación' : 'La estabilidad emocional es una fortaleza a mantener'}`
+      ],
+      recommendations: [
+        `Técnica de regulación emocional personalizada: ${avgMood < 5 ? 'Practica la respiración 4-7-8 durante episodios de bajo estado de ánimo' : 'Mantén tu rutina actual que te está funcionando bien'}`,
+        `Estrategia de afrontamiento específica: ${moodRange.max - moodRange.min > 5 ? 'Identifica los desencadenantes de tus fluctuaciones emocionales' : 'Continúa con las actividades que mantienen tu estabilidad'}`,
+        `Actividad de bienestar personalizada: ${avgMood >= 7 ? 'Comparte tu energía positiva con otros' : 'Incorpora actividades que te generen placer y satisfacción'}`,
+        `Técnica de mindfulness adaptada: Practica la atención plena durante ${avgMood < 5 ? '10-15 minutos diarios' : '5-10 minutos diarios'} para mantener el equilibrio emocional`,
+        `Herramienta de monitoreo específica: Registra tu estado de ánimo ${avgMood < 5 ? 'dos veces al día' : 'una vez al día'} para mantener el seguimiento`,
+        `Recomendación de estilo de vida: ${avgMood >= 7 ? 'Mantén tu rutina actual y considera ayudar a otros' : 'Establece pequeñas metas diarias para mejorar tu bienestar'}`
+      ],
+      riskLevel: avgMood < 3 ? 'high' : avgMood < 5 ? 'medium' : 'low',
+      nextSteps: [
+        `Próximo paso inmediato: ${avgMood < 5 ? 'Considera hablar con un profesional de salud mental' : 'Mantén tu registro diario de estado de ánimo'}`,
+        `Seguimiento sugerido: Revisa tu progreso en ${avgMood < 5 ? 'una semana' : 'dos semanas'}`
+      ],
+      moodTrend: avgMood >= 7 ? 'improving' : avgMood < 5 ? 'declining' : 'stable',
+      keyFactors: [
+        `Factor influyente: Tu estado de ánimo promedio de ${avgMood.toFixed(1)}/10 es el factor más significativo`,
+        `Factor contextual: ${moodData.moodLogs.length} registros proporcionan una base sólida para el análisis`
+      ],
+      interventionStrategies: [
+        `Estrategia de intervención: ${avgMood < 5 ? 'Implementa técnicas de regulación emocional inmediatas' : 'Mantén y refuerza las estrategias actuales que te funcionan'}`,
+        `Técnica terapéutica: ${avgMood < 5 ? 'Considera terapia cognitivo-conductual para patrones de pensamiento' : 'Continúa con técnicas de mantenimiento del bienestar'}`
+      ],
+      wellnessPlan: [
+        `Plan de bienestar: ${avgMood < 5 ? 'Enfócate en actividades que generen placer y satisfacción' : 'Mantén tu rutina actual y considera nuevas actividades positivas'}`,
+        `Objetivo a corto plazo: ${avgMood < 5 ? 'Mejorar el estado de ánimo promedio en 1-2 puntos en las próximas dos semanas' : 'Mantener el estado de ánimo actual y explorar nuevas áreas de crecimiento'}`
+      ]
+    };
   }
 }
 

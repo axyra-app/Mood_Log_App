@@ -107,6 +107,103 @@ export class PDFReportGenerator {
     this.currentY += 10;
   }
 
+  private analyzeDayOfWeekPatterns(moodLogs: any[]): any {
+    const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const dayMoods: { [key: string]: number[] } = {};
+    
+    // Agrupar por día de la semana
+    moodLogs.forEach(log => {
+      const dayOfWeek = daysOfWeek[log.date.getDay()];
+      if (!dayMoods[dayOfWeek]) {
+        dayMoods[dayOfWeek] = [];
+      }
+      dayMoods[dayOfWeek].push(log.mood);
+    });
+    
+    // Calcular promedios por día
+    const dayAverages: { [key: string]: number } = {};
+    Object.keys(dayMoods).forEach(day => {
+      dayAverages[day] = dayMoods[day].reduce((sum, mood) => sum + mood, 0) / dayMoods[day].length;
+    });
+    
+    // Encontrar mejor y peor día
+    const sortedDays = Object.entries(dayAverages).sort((a, b) => b[1] - a[1]);
+    const bestDay = sortedDays[0][0];
+    const worstDay = sortedDays[sortedDays.length - 1][0];
+    const bestDayAvg = sortedDays[0][1];
+    const worstDayAvg = sortedDays[sortedDays.length - 1][1];
+    
+    // Calcular variabilidad
+    const allAverages = Object.values(dayAverages);
+    const avgOfAverages = allAverages.reduce((sum, avg) => sum + avg, 0) / allAverages.length;
+    const variance = allAverages.reduce((sum, avg) => sum + Math.pow(avg - avgOfAverages, 2), 0) / allAverages.length;
+    const variability = Math.sqrt(variance) < 1 ? 'Baja variabilidad entre días' : 
+                       Math.sqrt(variance) < 2 ? 'Moderada variabilidad entre días' : 
+                       'Alta variabilidad entre días';
+    
+    return {
+      bestDay,
+      worstDay,
+      bestDayAvg,
+      worstDayAvg,
+      variability
+    };
+  }
+
+  private analyzeActivitiesAndEmotions(moodLogs: any[]): any {
+    const activityCount: { [key: string]: number } = {};
+    const emotionCount: { [key: string]: number } = {};
+    const activityMoodCorrelation: { [key: string]: number[] } = {};
+    
+    moodLogs.forEach(log => {
+      // Contar actividades
+      if (log.activities) {
+        log.activities.forEach((activity: string) => {
+          activityCount[activity] = (activityCount[activity] || 0) + 1;
+          if (!activityMoodCorrelation[activity]) {
+            activityMoodCorrelation[activity] = [];
+          }
+          activityMoodCorrelation[activity].push(log.mood);
+        });
+      }
+      
+      // Contar emociones
+      if (log.emotions) {
+        log.emotions.forEach((emotion: string) => {
+          emotionCount[emotion] = (emotionCount[emotion] || 0) + 1;
+        });
+      }
+    });
+    
+    // Obtener actividades y emociones más frecuentes
+    const topActivities = Object.entries(activityCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([activity]) => activity);
+    
+    const topEmotions = Object.entries(emotionCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([emotion]) => emotion);
+    
+    // Calcular correlación actividad-estado de ánimo
+    const correlations = Object.entries(activityMoodCorrelation).map(([activity, moods]) => {
+      const avgMood = moods.reduce((sum, mood) => sum + mood, 0) / moods.length;
+      return { activity, avgMood, frequency: moods.length };
+    });
+    
+    const bestActivity = correlations.sort((a, b) => b.avgMood - a.avgMood)[0];
+    const correlation = bestActivity ? 
+      `La actividad "${bestActivity.activity}" se correlaciona con un estado de ánimo promedio de ${bestActivity.avgMood.toFixed(1)}/10` :
+      'No hay suficientes datos para calcular correlaciones';
+    
+    return {
+      activities: topActivities,
+      emotions: topEmotions,
+      correlation
+    };
+  }
+
   private addFooter() {
     const pageCount = this.doc.getNumberOfPages();
     
@@ -148,18 +245,37 @@ export class PDFReportGenerator {
       // Resumen ejecutivo
       this.addSection('Resumen Ejecutivo', [analysis.summary]);
 
-      // Estadísticas básicas
+      // Estadísticas detalladas
       const avgMood = moodData.moodLogs.reduce((sum, log) => sum + log.mood, 0) / moodData.moodLogs.length;
       const minMood = Math.min(...moodData.moodLogs.map(log => log.mood));
       const maxMood = Math.max(...moodData.moodLogs.map(log => log.mood));
+      const moodVariance = moodData.moodLogs.reduce((sum, log) => sum + Math.pow(log.mood - avgMood, 2), 0) / moodData.moodLogs.length;
+      const moodStdDev = Math.sqrt(moodVariance);
+      
+      // Análisis de tendencias
+      const firstHalf = moodData.moodLogs.slice(0, Math.ceil(moodData.moodLogs.length / 2));
+      const secondHalf = moodData.moodLogs.slice(Math.ceil(moodData.moodLogs.length / 2));
+      const firstHalfAvg = firstHalf.reduce((sum, log) => sum + log.mood, 0) / firstHalf.length;
+      const secondHalfAvg = secondHalf.reduce((sum, log) => sum + log.mood, 0) / secondHalf.length;
+      const trendDirection = secondHalfAvg > firstHalfAvg ? 'Mejorando' : secondHalfAvg < firstHalfAvg ? 'Declinando' : 'Estable';
 
       this.addSection('Estadísticas del Período', [
         `Total de registros: ${moodData.moodLogs.length}`,
         `Estado de ánimo promedio: ${avgMood.toFixed(1)}/10`,
         `Estado de ánimo mínimo: ${minMood}/10`,
         `Estado de ánimo máximo: ${maxMood}/10`,
-        `Tendencia: ${analysis.moodTrend === 'improving' ? 'Mejorando' : 
-                    analysis.moodTrend === 'declining' ? 'Declinando' : 'Estable'}`
+        `Rango emocional: ${maxMood - minMood} puntos`,
+        `Variabilidad emocional: ${moodStdDev.toFixed(2)} (desviación estándar)`,
+        `Tendencia temporal: ${trendDirection}`,
+        `Análisis de estabilidad: ${moodStdDev < 1.5 ? 'Muy estable' : moodStdDev < 2.5 ? 'Moderadamente estable' : 'Variable'}`
+      ]);
+
+      // Análisis de patrones temporales
+      const dayOfWeekAnalysis = this.analyzeDayOfWeekPatterns(moodData.moodLogs);
+      this.addSection('Análisis de Patrones Temporales', [
+        `Día de la semana con mejor estado de ánimo: ${dayOfWeekAnalysis.bestDay} (promedio: ${dayOfWeekAnalysis.bestDayAvg.toFixed(1)}/10)`,
+        `Día de la semana con peor estado de ánimo: ${dayOfWeekAnalysis.worstDay} (promedio: ${dayOfWeekAnalysis.worstDayAvg.toFixed(1)}/10)`,
+        `Variabilidad por día: ${dayOfWeekAnalysis.variability}`
       ]);
 
       // Patrones identificados
@@ -177,14 +293,34 @@ export class PDFReportGenerator {
         this.addSection('Factores Clave', analysis.keyFactors);
       }
 
-      // Recomendaciones
+      // Recomendaciones detalladas
       if (analysis.recommendations.length > 0) {
-        this.addSection('Recomendaciones', analysis.recommendations);
+        this.addSection('Recomendaciones Personalizadas', analysis.recommendations);
+      }
+
+      // Estrategias de intervención
+      if (analysis.interventionStrategies && analysis.interventionStrategies.length > 0) {
+        this.addSection('Estrategias de Intervención', analysis.interventionStrategies);
+      }
+
+      // Plan de bienestar
+      if (analysis.wellnessPlan && analysis.wellnessPlan.length > 0) {
+        this.addSection('Plan de Bienestar Personalizado', analysis.wellnessPlan);
       }
 
       // Próximos pasos
       if (analysis.nextSteps.length > 0) {
-        this.addSection('Próximos Pasos', analysis.nextSteps);
+        this.addSection('Próximos Pasos Específicos', analysis.nextSteps);
+      }
+
+      // Análisis de actividades y emociones
+      const activityAnalysis = this.analyzeActivitiesAndEmotions(moodData.moodLogs);
+      if (activityAnalysis.activities.length > 0 || activityAnalysis.emotions.length > 0) {
+        this.addSection('Análisis de Actividades y Emociones', [
+          `Actividades más frecuentes: ${activityAnalysis.activities.join(', ')}`,
+          `Emociones más reportadas: ${activityAnalysis.emotions.join(', ')}`,
+          `Correlación actividad-estado de ánimo: ${activityAnalysis.correlation}`
+        ]);
       }
 
       // Evaluación de riesgo
