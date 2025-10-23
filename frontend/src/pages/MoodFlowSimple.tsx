@@ -291,32 +291,53 @@ const MoodFlowSimple: React.FC = () => {
       <main className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Step 1: Mood Selection */}
         {step === 1 && (
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-8`}>
-            <h2 className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-8`}>
-              ¿Cómo te sientes hoy?
-            </h2>
-            <div className='grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-4'>
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-xl p-8 border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="text-center mb-8">
+              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-purple-600' : 'bg-purple-100'}`}>
+                <span className="text-2xl">😊</span>
+              </div>
+              <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                ¿Cómo te sientes hoy?
+              </h2>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Selecciona tu estado de ánimo actual
+              </p>
+            </div>
+            
+            <div className='grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-3 mb-8'>
               {moodEmojis.map((emoji, index) => (
                 <button
                   key={index}
                   onClick={() => handleMoodSelect(index + 1)}
-                  className={`p-6 rounded-xl border-2 transition-all hover:scale-105 ${
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                     currentMood === index + 1
-                      ? 'border-purple-500 bg-purple-50'
+                      ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-purple-100 shadow-lg scale-105'
                       : isDarkMode
-                      ? 'border-gray-600 hover:border-gray-500 hover:bg-gray-700'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700 hover:shadow-md'
+                      : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50 hover:shadow-md'
                   }`}
                 >
-                  <div className='text-center'>
-                    <div className='text-6xl mb-4'>{emoji}</div>
-                    <div className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {moodLabels[index]}
-                    </div>
+                  <div className='text-3xl mb-2'>{emoji}</div>
+                  <div className={`text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {moodLabels[index]}
+                  </div>
+                  <div className={`text-xs font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                    {index + 1}/10
                   </div>
                 </button>
               ))}
             </div>
+            
+            {currentMood && (
+              <div className={`text-center p-4 rounded-lg ${isDarkMode ? 'bg-purple-900/30 border border-purple-700' : 'bg-purple-50 border border-purple-200'}`}>
+                <p className={`text-lg font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                  Seleccionaste: {moodLabels[currentMood - 1]} ({currentMood}/10)
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                  ¡Perfecto! Ahora vamos a conocer más detalles
+                </p>
+              </div>
+            )}
           </div>
         )}
 

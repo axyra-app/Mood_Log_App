@@ -90,36 +90,42 @@ class AIService {
   }
 
   private buildAnalysisPrompt(moodData: MoodAnalysis): string {
+    const timestamp = new Date().toISOString();
+    const randomSeed = Math.random().toString(36).substring(7);
+    
     return `
-Analiza el siguiente estado de ánimo y proporciona recomendaciones profesionales:
+Eres un psicólogo clínico especializado en análisis de estados de ánimo. Analiza estos datos ÚNICOS del usuario:
 
-DATOS DEL USUARIO:
-- Estado de ánimo general: ${moodData.overallMood}/5
+DATOS ESPECÍFICOS DEL USUARIO:
+- Estado de ánimo general: ${moodData.overallMood}/10
 - Energía: ${moodData.energy}/10
 - Estrés: ${moodData.stress}/10
 - Calidad del sueño: ${moodData.sleep}/10
-- Actividades realizadas: ${moodData.activities.join(', ')}
-- Emociones identificadas: ${moodData.emotions.join(', ')}
-- Descripción de sentimientos: "${moodData.feelings}"
+- Actividades realizadas: ${moodData.activities.join(', ') || 'No especificadas'}
+- Emociones identificadas: ${moodData.emotions.join(', ') || 'No especificadas'}
+- Descripción personal: "${moodData.feelings}"
 
-Por favor proporciona:
-1. Un resumen general del estado emocional
-2. 3-5 insights clave sobre patrones observados
-3. 4-6 recomendaciones específicas y accionables
-4. Evaluación de tendencia (mejorando/estable/empeorando)
-5. Nivel de riesgo (bajo/medio/alto)
+CONTEXTO ÚNICO: ${timestamp}
+SEMILLA DE PERSONALIZACIÓN: ${randomSeed}
+
+INSTRUCCIONES CRÍTICAS:
+- Proporciona análisis ÚNICO y personalizado basado en estos datos específicos
+- Evita respuestas genéricas o repetitivas
+- Incluye detalles específicos del perfil emocional del usuario
+- Sé empático y profesional pero específico
+- Considera el contexto individual y único
 
 Formato de respuesta en JSON:
 {
-  "summary": "resumen del estado emocional",
-  "insights": ["insight 1", "insight 2", "insight 3"],
+  "summary": "Resumen personalizado y específico del estado emocional único del usuario",
+  "insights": ["Insight específico basado en sus datos únicos", "Patrón identificado personalizado", "Observación clínica relevante"],
   "recommendations": [
     {
       "type": "energy|stress|sleep|mood|general",
       "priority": "high|medium|low",
-      "title": "Título de la recomendación",
-      "description": "Descripción detallada",
-      "actionable": "Acción específica a tomar",
+      "title": "Título específico de la recomendación",
+      "description": "Descripción detallada y personalizada",
+      "actionable": "Pasos específicos adaptados al usuario",
       "category": "Categoría de la recomendación"
     }
   ],

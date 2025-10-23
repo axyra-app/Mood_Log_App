@@ -224,14 +224,26 @@ const Statistics: React.FC = () => {
   // Estadísticas del período
   const periodStats = {
     totalMoodLogs: (() => {
-      if (!statistics?.moodLogs) return 0;
+      // Debug: verificar si hay datos
+      console.log('Statistics data:', statistics);
+      console.log('Mood logs:', statistics?.moodLogs);
+      
+      if (!statistics?.moodLogs || statistics.moodLogs.length === 0) {
+        console.log('No mood logs found, returning 0');
+        return 0;
+      }
       
       const { startDate, endDate } = getPeriodData();
+      console.log('Period dates:', { startDate, endDate });
+      
       const logsInPeriod = statistics.moodLogs.filter((log) => {
         const logDate = new Date(log.createdAt);
-        return logDate >= startDate && logDate <= endDate;
+        const isInPeriod = logDate >= startDate && logDate <= endDate;
+        console.log('Log date:', logDate, 'In period:', isInPeriod);
+        return isInPeriod;
       });
       
+      console.log('Logs in period:', logsInPeriod.length);
       return logsInPeriod.length;
     })(),
     averageMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
