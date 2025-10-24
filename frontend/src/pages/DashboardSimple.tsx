@@ -184,9 +184,9 @@ const DashboardSimple: React.FC = () => {
                 </p>
                 <button
                   onClick={() => navigate('/journal')}
-                  className='mt-4 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:scale-105 transition-transform duration-200'
+                  className='mt-4 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl'
                 >
-                  Escribir en el Diario
+                  ✍️ Escribir en el Diario
                 </button>
               </div>
             ) : (

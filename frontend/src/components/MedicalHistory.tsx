@@ -75,21 +75,28 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
         return;
       }
 
-      // TODO: Implementar creación real de reporte médico
-      // const reportData = {
-      //   userId: selectedPatient,
-      //   psychologistId: user?.uid,
-      //   sessionDate: newReport.sessionDate,
-      //   sessionType: newReport.sessionType,
-      //   diagnosis: newReport.diagnosis,
-      //   treatment: newReport.treatment,
-      //   notes: newReport.notes,
-      //   recommendations: newReport.recommendations,
-      //   createdAt: new Date(),
-      // };
+      // Crear reporte médico real
+      const reportData = {
+        userId: selectedPatient,
+        psychologistId: user?.uid,
+        sessionDate: newReport.sessionDate || new Date().toISOString().split('T')[0],
+        sessionType: newReport.sessionType,
+        diagnosis: newReport.diagnosis,
+        treatment: newReport.treatment,
+        notes: newReport.notes,
+        recommendations: newReport.recommendations,
+        createdAt: new Date(),
+      };
 
-      // Simular creación de reporte
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Guardar en Firestore
+      const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../services/firebase');
+      
+      await addDoc(collection(db, 'medicalReports'), {
+        ...reportData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
       toast.success('Reporte médico creado exitosamente');
       setShowNewReport(false);

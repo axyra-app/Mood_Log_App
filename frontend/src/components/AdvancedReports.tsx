@@ -35,6 +35,7 @@ const AdvancedReports: React.FC = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [lastReportDate, setLastReportDate] = useState<string | null>(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -76,8 +77,22 @@ const AdvancedReports: React.FC = () => {
   useEffect(() => {
     if (user) {
       loadReports();
+      // Cargar la fecha del último reporte
+      const lastReport = localStorage.getItem(`lastReportDate_${user.uid}`);
+      setLastReportDate(lastReport);
     }
   }, [user]);
+
+  const canGenerateReport = () => {
+    if (!lastReportDate) return true;
+    
+    const lastReport = new Date(lastReportDate);
+    const today = new Date();
+    const diffTime = today.getTime() - lastReport.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays >= 1; // Al menos 1 día entre reportes
+  };
 
   const loadReports = async () => {
     if (!user) return;
@@ -117,6 +132,11 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateMoodReport = async () => {
+    if (!canGenerateReport()) {
+      toast.error('Solo puedes generar un reporte por día. Intenta mañana.');
+      return;
+    }
+
     setLoading(true);
     try {
       if (!user?.uid) {
@@ -165,6 +185,12 @@ const AdvancedReports: React.FC = () => {
 
       // Simular guardado
       setReports((prev) => [report, ...prev]);
+      
+      // Actualizar fecha del último reporte
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem(`lastReportDate_${user.uid}`, today);
+      setLastReportDate(today);
+      
       toast.success(`Reporte generado exitosamente con ${realMoodData.moodLogs.length} registros reales`);
     } catch (error) {
       console.error('Error generating mood report:', error);
@@ -378,7 +404,7 @@ const AdvancedReports: React.FC = () => {
           <div className='flex flex-col sm:flex-row gap-4 mt-6'>
             <button
               onClick={generateMoodReport}
-              disabled={loading}
+              disabled={loading || !canGenerateReport()}
               className='flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base'
             >
               <TrendingUp className='w-4 h-4 sm:w-5 sm:h-5' />

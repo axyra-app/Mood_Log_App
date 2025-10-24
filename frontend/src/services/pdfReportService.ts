@@ -100,8 +100,19 @@ export class PDFReportGenerator {
         this.currentY = this.margin;
       }
       
-      this.doc.text(`• ${item}`, this.margin + 5, this.currentY);
-      this.currentY += 6;
+      // Dividir texto largo en líneas
+      const maxWidth = 170; // Ancho máximo del texto
+      const lines = this.doc.splitTextToSize(`• ${item}`, maxWidth);
+      
+      lines.forEach((line: string) => {
+        if (this.currentY > this.pageHeight - 20) {
+          this.doc.addPage();
+          this.currentY = this.margin;
+        }
+        
+        this.doc.text(line, this.margin + 5, this.currentY);
+        this.currentY += 6;
+      });
     });
 
     this.currentY += 10;

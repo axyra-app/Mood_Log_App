@@ -303,10 +303,6 @@ const DashboardPsychologist: React.FC = () => {
 
         {/* Main Content */}
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-          {/* Notifications */}
-          {/* Notifications Panel */}
-          <PsychologistNotifications isDarkMode={isDarkMode} />
-
           {/* Chat */}
           <div
             className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${

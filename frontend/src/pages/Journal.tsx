@@ -120,8 +120,18 @@ const Journal: React.FC = () => {
       return normalized;
     };
 
-    const matchesDate =
-      !selectedDate || normalizeDate(entryDate).getTime() === normalizeDate(new Date(selectedDate)).getTime();
+    const matchesDate = !selectedDate || (() => {
+      try {
+        const selectedDateObj = new Date(selectedDate);
+        const entryDateNormalized = normalizeDate(entryDate);
+        const selectedDateNormalized = normalizeDate(selectedDateObj);
+        
+        return entryDateNormalized.getTime() === selectedDateNormalized.getTime();
+      } catch (error) {
+        console.error('Error comparing dates:', error);
+        return false;
+      }
+    })();
     return matchesSearch && matchesDate;
   });
 

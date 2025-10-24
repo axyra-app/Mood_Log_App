@@ -67,8 +67,13 @@ const PatientStatsPanel: React.FC<PatientStatsPanelProps> = ({ psychologistId, i
       }));
     });
 
-    // Escuchar cambios en mood logs de pacientes
-    const moodLogsQuery = query(collection(db, 'moodLogs'), orderBy('createdAt', 'desc'), limit(100));
+    // Escuchar cambios en mood logs de pacientes del psicólogo
+    const moodLogsQuery = query(
+      collection(db, 'moodLogs'), 
+      where('psychologistId', '==', psychologistId),
+      orderBy('createdAt', 'desc'), 
+      limit(100)
+    );
 
     const moodLogsUnsubscribe = onSnapshot(moodLogsQuery, (querySnapshot) => {
       const moodLogs = querySnapshot.docs.map((doc) => ({

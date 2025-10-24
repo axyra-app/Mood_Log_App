@@ -20,6 +20,7 @@ const UserChat: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
   const [psychologistOnlineStatus, setPsychologistOnlineStatus] = useState<{[key: string]: boolean}>({});
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   const { sessions, loading: sessionsLoading, markAsRead, createSession } = useUserChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage, deleteMessage } = useUserChatMessages(selectedSession);
@@ -139,9 +140,10 @@ const UserChat: React.FC = () => {
   };
 
   const startChatWithPsychologist = async (psychologistId: string) => {
-    if (!user) return;
+    if (!user || isCreatingChat) return;
 
     try {
+      setIsCreatingChat(true);
       const sessionId = await createSession(user.uid, psychologistId);
       setSelectedSession(sessionId);
       setShowChatOnMobile(true);
@@ -149,6 +151,8 @@ const UserChat: React.FC = () => {
     } catch (error) {
       console.error('Error starting chat:', error);
       toast.error('Error al iniciar la conversación');
+    } finally {
+      setIsCreatingChat(false);
     }
   };
 
@@ -278,22 +282,22 @@ const UserChat: React.FC = () => {
                   {/* Botón para iniciar nueva conversación */}
                   <button
                     onClick={() => {
-                      if (availablePsychs.length > 0) {
+                      if (availablePsychs.length > 0 && !isCreatingChat) {
                         startChatWithPsychologist(availablePsychs[0].userId);
-                      } else {
+                      } else if (!isCreatingChat) {
                         toast.error('No hay psicólogos disponibles en este momento');
                       }
                     }}
-                    disabled={psychologistsLoading || availablePsychs.length === 0}
+                    disabled={psychologistsLoading || availablePsychs.length === 0 || isCreatingChat}
                     className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors duration-300 ${
-                      psychologistsLoading || availablePsychs.length === 0
+                      psychologistsLoading || availablePsychs.length === 0 || isCreatingChat
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : isDarkMode
                         ? 'bg-purple-600 text-white hover:bg-purple-700'
                         : 'bg-purple-500 text-white hover:bg-purple-600'
                     }`}
                   >
-                    {psychologistsLoading ? 'Cargando...' : `Nuevo Chat (${availablePsychs.length})`}
+                    {psychologistsLoading ? 'Cargando...' : isCreatingChat ? 'Creando...' : `Nuevo Chat`}
                   </button>
                 </div>
               </div>

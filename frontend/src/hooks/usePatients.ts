@@ -175,7 +175,8 @@ export const usePatients = (psychologistId: string) => {
         }
       }
 
-      // Calcular estado de ánimo promedio
+      // Calcular estado de ánimo promedio para cada paciente
+      let patientMoodAvg = 0;
       if (patient.moodLogs && patient.moodLogs.length > 0) {
         const recentMoods = patient.moodLogs.filter(log => {
           const logDate = log.createdAt?.toDate ? log.createdAt.toDate() : new Date(log.createdAt);
@@ -184,7 +185,7 @@ export const usePatients = (psychologistId: string) => {
 
         if (recentMoods.length > 0) {
           const patientMoodSum = recentMoods.reduce((sum, log) => sum + (log.mood || 0), 0);
-          const patientMoodAvg = patientMoodSum / recentMoods.length;
+          patientMoodAvg = patientMoodSum / recentMoods.length;
           
           totalMoodSum += patientMoodAvg;
           moodCount++;
@@ -203,6 +204,9 @@ export const usePatients = (psychologistId: string) => {
           }
         }
       }
+
+      // Actualizar el paciente con su promedio de estado de ánimo
+      patient.averageMood = patientMoodAvg;
     });
 
     return {

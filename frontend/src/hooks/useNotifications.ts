@@ -192,6 +192,10 @@ export const createChatNotification = async (
   sessionId?: string
 ) => {
   try {
+    // No crear notificación si el remitente es el mismo psicólogo
+    if (senderId === psychologistId) {
+      return;
+    }
 
     const notificationData: any = {
       userId: psychologistId, // El psicólogo recibe la notificación
