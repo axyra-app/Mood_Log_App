@@ -18,10 +18,8 @@ const Journal: React.FC = () => {
   const [showEditor, setShowEditor] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
-  const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [showPrompts, setShowPrompts] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -122,11 +120,23 @@ const Journal: React.FC = () => {
 
     const matchesDate = !selectedDate || (() => {
       try {
+        // Convertir la fecha seleccionada a formato YYYY-MM-DD
         const selectedDateObj = new Date(selectedDate);
         const entryDateNormalized = normalizeDate(entryDate);
         const selectedDateNormalized = normalizeDate(selectedDateObj);
         
-        return entryDateNormalized.getTime() === selectedDateNormalized.getTime();
+        // Comparar solo año, mes y día
+        const entryYear = entryDateNormalized.getFullYear();
+        const entryMonth = entryDateNormalized.getMonth();
+        const entryDay = entryDateNormalized.getDate();
+        
+        const selectedYear = selectedDateNormalized.getFullYear();
+        const selectedMonth = selectedDateNormalized.getMonth();
+        const selectedDay = selectedDateNormalized.getDate();
+        
+        return entryYear === selectedYear && 
+               entryMonth === selectedMonth && 
+               entryDay === selectedDay;
       } catch (error) {
         console.error('Error comparing dates:', error);
         return false;
@@ -138,18 +148,14 @@ const Journal: React.FC = () => {
   const handleCreateEntry = () => {
     setEditingEntry(undefined);
     setSelectedTemplate(undefined);
-    setSelectedPrompt(undefined);
     setShowEditor(true);
-    setShowPrompts(false);
     setShowTemplates(false);
   };
 
   const handleEditEntry = (entry: JournalEntry) => {
     setEditingEntry(entry);
     setSelectedTemplate(undefined);
-    setSelectedPrompt(undefined);
     setShowEditor(true);
-    setShowPrompts(false);
     setShowTemplates(false);
   };
 
@@ -167,19 +173,9 @@ const Journal: React.FC = () => {
 
   const handleTemplateSelect = (template: JournalTemplate) => {
     setSelectedTemplate(template);
-    setSelectedPrompt(undefined);
     setEditingEntry(undefined);
     setShowEditor(true);
-    setShowPrompts(false);
     setShowTemplates(false);
-  };
-
-  const handlePromptSelect = (prompt: JournalPrompt) => {
-    setSelectedPrompt(prompt);
-    setSelectedTemplate(undefined);
-    setEditingEntry(undefined);
-    setShowEditor(true);
-    setShowPrompts(false);
   };
 
   const formatDate = (date: Date) => {
@@ -248,17 +244,6 @@ const Journal: React.FC = () => {
                 <span className='text-sm sm:text-base'>Plantillas</span>
               </button>
 
-              <button
-                onClick={() => setShowPrompts(!showPrompts)}
-                className={`flex items-center justify-center space-x-2 px-4 py-2 ${
-                  isDarkMode
-                    ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                } border rounded-lg transition-colors w-full sm:w-auto`}
-              >
-                <Sparkles className='w-4 h-4' />
-                <span className='text-sm sm:text-base'>Prompts</span>
-              </button>
             </div>
 
             {/* Filtros - Responsive */}
@@ -324,34 +309,6 @@ const Journal: React.FC = () => {
             </div>
           )}
 
-          {/* Prompts */}
-          {showPrompts && (
-            <div
-              className={`mt-4 p-4 ${
-                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-              } rounded-lg border shadow-sm`}
-            >
-              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                Prompts de Escritura
-              </h3>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
-                {prompts.map((prompt) => (
-                  <button
-                    key={prompt.id}
-                    onClick={() => handlePromptSelect(prompt)}
-                    className={`p-3 text-left border ${
-                      isDarkMode
-                        ? 'border-gray-600 hover:border-purple-400 hover:bg-gray-700'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                    } rounded-lg transition-colors`}
-                  >
-                    <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{prompt.title}</h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>{prompt.prompt}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Lista de entradas */}

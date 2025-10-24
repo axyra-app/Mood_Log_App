@@ -527,6 +527,131 @@ export const getDefaultTemplates = (): JournalTemplate[] => [
     createdBy: 'system',
     createdAt: new Date(),
   },
+  {
+    id: 'mood-template',
+    title: 'Análisis de Estado de Ánimo',
+    description: 'Profundiza en tus emociones',
+    content: `# Análisis de Estado de Ánimo
+
+## Estado emocional actual
+[Describe cómo te sientes en este momento]
+
+## Factores que influyen en mi estado de ánimo
+[¿Qué situaciones, personas o eventos están afectando cómo te sientes?]
+
+## Emociones que estoy experimentando
+[Enumera las emociones principales que sientes]
+
+## ¿Qué necesito ahora?
+[Reflexiona sobre lo que necesitas para sentirte mejor]
+
+## Estrategias de autocuidado
+[¿Qué puedes hacer para cuidar tu bienestar emocional?]
+
+## Mensaje para mí mismo/a
+[Escribe algo que te gustaría recordar]`,
+    tags: ['emociones', 'autocuidado', 'bienestar'],
+    category: 'mood',
+    isDefault: true,
+    createdBy: 'system',
+    createdAt: new Date(),
+  },
+  {
+    id: 'stress-template',
+    title: 'Manejo del Estrés',
+    description: 'Identifica y gestiona el estrés',
+    content: `# Manejo del Estrés
+
+## Fuentes de estrés actuales
+[Identifica qué te está causando estrés]
+
+## Nivel de estrés (1-10)
+[Evalúa tu nivel de estrés actual]
+
+## Síntomas físicos
+[¿Cómo se manifiesta el estrés en tu cuerpo?]
+
+## Síntomas emocionales
+[¿Qué emociones estás experimentando?]
+
+## Estrategias de afrontamiento
+[¿Qué puedes hacer para manejar el estrés?]
+
+## Recursos de apoyo
+[¿A quién puedes acudir por ayuda?]
+
+## Plan de acción
+[Establece pasos específicos para reducir el estrés]`,
+    tags: ['estrés', 'bienestar', 'autocuidado'],
+    category: 'stress',
+    isDefault: true,
+    createdBy: 'system',
+    createdAt: new Date(),
+  },
+  {
+    id: 'goals-template',
+    title: 'Metas y Objetivos',
+    description: 'Planifica y revisa tus metas',
+    content: `# Metas y Objetivos
+
+## Metas a corto plazo (1-3 meses)
+[Establece objetivos alcanzables en el corto plazo]
+
+## Metas a largo plazo (6-12 meses)
+[Define tus aspiraciones a futuro]
+
+## Progreso actual
+[¿Cómo vas con tus metas actuales?]
+
+## Obstáculos identificados
+[¿Qué dificultades estás enfrentando?]
+
+## Recursos necesarios
+[¿Qué necesitas para alcanzar tus metas?]
+
+## Plan de acción
+[Establece pasos específicos para cada meta]
+
+## Celebración de logros
+[¿Qué has logrado recientemente?]`,
+    tags: ['metas', 'objetivos', 'planificación'],
+    category: 'goals',
+    isDefault: true,
+    createdBy: 'system',
+    createdAt: new Date(),
+  },
+  {
+    id: 'relationships-template',
+    title: 'Relaciones Interpersonales',
+    description: 'Reflexiona sobre tus relaciones',
+    content: `# Relaciones Interpersonales
+
+## Relaciones importantes en mi vida
+[Identifica las personas más significativas]
+
+## Cómo me siento en mis relaciones
+[Reflexiona sobre la calidad de tus conexiones]
+
+## Comunicación
+[¿Cómo te comunicas con los demás?]
+
+## Conflictos o tensiones
+[¿Hay alguna relación que necesite atención?]
+
+## Apoyo que recibo
+[¿De quién recibes apoyo emocional?]
+
+## Apoyo que ofrezco
+[¿Cómo apoyas a otros?]
+
+## Mejoras en las relaciones
+[¿Qué puedes hacer para fortalecer tus relaciones?]`,
+    tags: ['relaciones', 'comunicación', 'apoyo'],
+    category: 'relationships',
+    isDefault: true,
+    createdBy: 'system',
+    createdAt: new Date(),
+  },
 ];
 
 // Default Journal Prompts
