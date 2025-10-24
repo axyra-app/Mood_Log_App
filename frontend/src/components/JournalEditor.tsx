@@ -136,8 +136,8 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
   };
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-1 sm:p-4'>
-      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[99vh] sm:max-h-[90vh] overflow-hidden'>
+    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0 sm:p-4'>
+      <div className='bg-white rounded-none sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-4xl sm:max-h-[90vh] sm:h-auto overflow-hidden'>
         {/* Header - Responsive */}
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 gap-3 sm:gap-0'>
           <div className='flex items-center space-x-3'>
@@ -170,7 +170,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
         </div>
 
         {/* Content - Responsive */}
-        <div className='flex flex-col lg:flex-row h-[calc(100vh-120px)] sm:h-[calc(95vh-100px)] max-h-[800px]'>
+        <div className='flex flex-col lg:flex-row h-[calc(100vh-140px)] sm:h-[calc(95vh-100px)] max-h-[800px]'>
           {/* Main Editor */}
           <div className='flex-1 p-4 sm:p-6 overflow-y-auto min-h-0'>
             {/* Title */}
@@ -208,7 +208,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder='Escribe aquí tu entrada del diario... (Ctrl+Enter para guardar, Ctrl+Espacio para IA)'
-              className='w-full min-h-[200px] sm:min-h-[300px] text-base sm:text-lg leading-relaxed border-none outline-none resize-none placeholder-gray-400'
+              className='w-full min-h-[150px] sm:min-h-[300px] text-sm sm:text-lg leading-relaxed border-none outline-none resize-none placeholder-gray-400'
               onKeyDown={handleKeyPress}
             />
 
@@ -279,11 +279,11 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
           </div>
 
           {/* Sidebar - Responsive */}
-          <div className='w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 p-3 sm:p-6 overflow-y-auto bg-gray-50 max-h-[45vh] lg:max-h-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
+          <div className='w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 p-2 sm:p-6 overflow-y-auto bg-gray-50 max-h-[55vh] lg:max-h-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
             {/* Mood & Metrics - Responsive */}
-            <div className='mb-3 sm:mb-6'>
-              <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Estado de Ánimo</h3>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3'>
+            <div className='mb-2 sm:mb-6'>
+              <h3 className='font-semibold text-gray-900 mb-1 sm:mb-3 text-xs sm:text-base'>Estado de Ánimo</h3>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1 sm:gap-3'>
                 <div>
                   <label className='block text-xs sm:text-sm text-gray-600 mb-1'>
                     Estado de Ánimo (1=Muy mal, 10=Excelente)
@@ -294,7 +294,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                     max='10'
                     value={mood || ''}
                     onChange={(e) => setMood(e.target.value ? Number(e.target.value) : undefined)}
-                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm'
+                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs sm:text-sm'
                   />
                 </div>
                 <div>
@@ -307,7 +307,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                     max='10'
                     value={energy || ''}
                     onChange={(e) => setEnergy(e.target.value ? Number(e.target.value) : undefined)}
-                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm'
+                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs sm:text-sm'
                   />
                 </div>
                 <div>
@@ -320,7 +320,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                     max='10'
                     value={stress || ''}
                     onChange={(e) => setStress(e.target.value ? Number(e.target.value) : undefined)}
-                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm'
+                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs sm:text-sm'
                   />
                 </div>
                 <div>
@@ -333,20 +333,20 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                     max='10'
                     value={sleep || ''}
                     onChange={(e) => setSleep(e.target.value ? Number(e.target.value) : undefined)}
-                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm'
+                    className='w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs sm:text-sm'
                   />
                 </div>
               </div>
             </div>
 
             {/* Tags */}
-            <div className='mb-3 sm:mb-6'>
-              <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Etiquetas</h3>
-              <div className='flex flex-wrap gap-2 mb-2'>
+            <div className='mb-2 sm:mb-6'>
+              <h3 className='font-semibold text-gray-900 mb-1 sm:mb-3 text-xs sm:text-base'>Etiquetas</h3>
+              <div className='flex flex-wrap gap-1 sm:gap-2 mb-1 sm:mb-2'>
                 {tags.map((tag, index) => (
                   <span
                     key={index}
-                    className='flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm'
+                    className='flex items-center space-x-1 px-1 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-full text-xs sm:text-sm'
                   >
                     <span>{tag}</span>
                     <button onClick={() => removeTag(tag)} className='text-purple-400 hover:text-purple-600'>
@@ -355,33 +355,33 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   </span>
                 ))}
               </div>
-              <div className='flex space-x-2'>
+              <div className='flex space-x-1 sm:space-x-2'>
                 <input
                   type='text'
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   placeholder='Nueva etiqueta'
-                  className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-sm'
+                  className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-xs sm:text-sm'
                   onKeyPress={(e) => e.key === 'Enter' && addTag()}
                 />
                 <button
                   onClick={addTag}
-                  className='px-2 sm:px-3 py-1 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex-shrink-0 text-sm'
+                  className='px-2 sm:px-3 py-1 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex-shrink-0 text-xs sm:text-sm'
                   title='Agregar etiqueta'
                 >
-                  <Plus className='w-4 h-4' />
+                  <Plus className='w-3 h-3 sm:w-4 sm:h-4' />
                 </button>
               </div>
             </div>
 
             {/* Activities */}
-            <div className='mb-3 sm:mb-6'>
-              <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Actividades</h3>
-              <div className='space-y-2 mb-2'>
+            <div className='mb-2 sm:mb-6'>
+              <h3 className='font-semibold text-gray-900 mb-1 sm:mb-3 text-xs sm:text-base'>Actividades</h3>
+              <div className='space-y-1 sm:space-y-2 mb-1 sm:mb-2'>
                 {activities.map((activity, index) => (
                   <div
                     key={index}
-                    className='flex items-center justify-between px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm'
+                    className='flex items-center justify-between px-2 sm:px-3 py-1 sm:py-2 bg-green-50 text-green-700 rounded-lg text-xs sm:text-sm'
                   >
                     <span>{activity}</span>
                     <button onClick={() => removeActivity(activity)} className='text-green-400 hover:text-green-600'>
@@ -390,33 +390,33 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   </div>
                 ))}
               </div>
-              <div className='flex space-x-2'>
+              <div className='flex space-x-1 sm:space-x-2'>
                 <input
                   type='text'
                   value={newActivity}
                   onChange={(e) => setNewActivity(e.target.value)}
                   placeholder='Nueva actividad'
-                  className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-sm'
+                  className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-xs sm:text-sm'
                   onKeyPress={(e) => e.key === 'Enter' && addActivity()}
                 />
                 <button
                   onClick={addActivity}
-                  className='px-2 sm:px-3 py-1 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex-shrink-0 text-sm'
+                  className='px-2 sm:px-3 py-1 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex-shrink-0 text-xs sm:text-sm'
                   title='Agregar actividad'
                 >
-                  <Plus className='w-4 h-4' />
+                  <Plus className='w-3 h-3 sm:w-4 sm:h-4' />
                 </button>
               </div>
             </div>
 
             {/* Emotions */}
-            <div className='mb-3 sm:mb-6'>
-              <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Emociones</h3>
-              <div className='space-y-2 mb-2'>
+            <div className='mb-2 sm:mb-6'>
+              <h3 className='font-semibold text-gray-900 mb-1 sm:mb-3 text-xs sm:text-base'>Emociones</h3>
+              <div className='space-y-1 sm:space-y-2 mb-1 sm:mb-2'>
                 {emotions.map((emotion, index) => (
                   <div
                     key={index}
-                    className='flex items-center justify-between px-3 py-2 bg-pink-50 text-pink-700 rounded-lg text-sm'
+                    className='flex items-center justify-between px-2 sm:px-3 py-1 sm:py-2 bg-pink-50 text-pink-700 rounded-lg text-xs sm:text-sm'
                   >
                     <span>{emotion}</span>
                     <button onClick={() => removeEmotion(emotion)} className='text-pink-400 hover:text-pink-600'>
@@ -425,21 +425,21 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   </div>
                 ))}
               </div>
-              <div className='flex space-x-2'>
+              <div className='flex space-x-1 sm:space-x-2'>
                 <input
                   type='text'
                   value={newEmotion}
                   onChange={(e) => setNewEmotion(e.target.value)}
                   placeholder='Nueva emoción'
-                  className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-sm'
+                  className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-xs sm:text-sm'
                   onKeyPress={(e) => e.key === 'Enter' && addEmotion()}
                 />
                 <button
                   onClick={addEmotion}
-                  className='px-2 sm:px-3 py-1 sm:py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 flex-shrink-0 text-sm'
+                  className='px-2 sm:px-3 py-1 sm:py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 flex-shrink-0 text-xs sm:text-sm'
                   title='Agregar emoción'
                 >
-                  <Plus className='w-4 h-4' />
+                  <Plus className='w-3 h-3 sm:w-4 sm:h-4' />
                 </button>
               </div>
             </div>
