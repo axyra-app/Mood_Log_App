@@ -40,7 +40,10 @@ export const filterExtensionLogs = () => {
       messageStr.includes('Análisis parseado exitosamente:') ||
       messageStr.includes('Error parseando JSON:') ||
       messageStr.includes('Listener desconectado:') ||
-      messageStr.includes('✅ Listener desconectado:')
+      messageStr.includes('✅ Listener desconectado:') ||
+      messageStr.includes('ERR_HTTP2_PING_FAILED') ||
+      messageStr.includes('firestore.googleapis.com') ||
+      messageStr.includes('net::ERR_HTTP2_PING_FAILED')
     );
   };
 

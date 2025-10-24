@@ -36,6 +36,7 @@ const AdvancedReports: React.FC = () => {
   const [customEndDate, setCustomEndDate] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [lastReportDate, setLastReportDate] = useState<string | null>(null);
+  const [timeUntilNext, setTimeUntilNext] = useState<{hours: number, minutes: number} | null>(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -74,6 +75,19 @@ const AdvancedReports: React.FC = () => {
     };
   }, [isDarkMode]);
 
+  // Actualizar contador de tiempo cada minuto
+  useEffect(() => {
+    const updateTimer = () => {
+      const timeLeft = getTimeUntilNextReport();
+      setTimeUntilNext(timeLeft);
+    };
+
+    updateTimer(); // Actualizar inmediatamente
+    const interval = setInterval(updateTimer, 60000); // Actualizar cada minuto
+
+    return () => clearInterval(interval);
+  }, [lastReportDate]);
+
   useEffect(() => {
     if (user) {
       loadReports();
@@ -87,11 +101,28 @@ const AdvancedReports: React.FC = () => {
     if (!lastReportDate) return true;
     
     const lastReport = new Date(lastReportDate);
-    const today = new Date();
-    const diffTime = today.getTime() - lastReport.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const diffTime = now.getTime() - lastReport.getTime();
+    const diffHours = diffTime / (1000 * 60 * 60);
     
-    return diffDays >= 1; // Al menos 1 día entre reportes
+    return diffHours >= 24; // Al menos 24 horas entre reportes
+  };
+
+  const getTimeUntilNextReport = () => {
+    if (!lastReportDate) return null;
+    
+    const lastReport = new Date(lastReportDate);
+    const now = new Date();
+    const diffTime = now.getTime() - lastReport.getTime();
+    const diffHours = diffTime / (1000 * 60 * 60);
+    
+    if (diffHours >= 24) return null;
+    
+    const remainingHours = 24 - diffHours;
+    const hours = Math.floor(remainingHours);
+    const minutes = Math.floor((remainingHours - hours) * 60);
+    
+    return { hours, minutes };
   };
 
   const loadReports = async () => {
@@ -133,7 +164,12 @@ const AdvancedReports: React.FC = () => {
 
   const generateMoodReport = async () => {
     if (!canGenerateReport()) {
-      toast.error('Solo puedes generar un reporte por día. Intenta mañana.');
+      const timeLeft = getTimeUntilNextReport();
+      if (timeLeft) {
+        toast.error(`Debes esperar ${timeLeft.hours}h ${timeLeft.minutes}m para generar otro reporte.`);
+      } else {
+        toast.error('Solo puedes generar un reporte cada 24 horas.');
+      }
       return;
     }
 
@@ -203,6 +239,16 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateDiaryReport = async () => {
+    if (!canGenerateReport()) {
+      const timeLeft = getTimeUntilNextReport();
+      if (timeLeft) {
+        toast.error(`Debes esperar ${timeLeft.hours}h ${timeLeft.minutes}m para generar otro reporte.`);
+      } else {
+        toast.error('Solo puedes generar un reporte cada 24 horas.');
+      }
+      return;
+    }
+
     setLoading(true);
     try {
       if (!user?.uid) {
@@ -351,10 +397,10 @@ const AdvancedReports: React.FC = () => {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
 
         {/* Controls */}
-        <div className={`p-6 rounded-lg shadow-lg mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Generar Nuevo Reporte</h2>
+        <div className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 sm:mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Generar Nuevo Reporte</h2>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
             {/* Period Selection */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Período de Análisis</label>
@@ -401,32 +447,48 @@ const AdvancedReports: React.FC = () => {
           </div>
 
           {/* Generate Buttons */}
-          <div className='flex flex-col sm:flex-row gap-4 mt-6'>
+          <div className='flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4 sm:mt-6'>
             <button
               onClick={generateMoodReport}
               disabled={loading || !canGenerateReport()}
-              className='flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base'
+              className='flex items-center justify-center space-x-2 px-3 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm'
             >
-              <TrendingUp className='w-4 h-4 sm:w-5 sm:h-5' />
-              <span className='hidden sm:inline'>Generar Reporte de Estado de Ánimo</span>
-              <span className='sm:hidden'>Reporte de Ánimo</span>
+              <TrendingUp className='w-3 h-3 sm:w-4 sm:h-4' />
+              {timeUntilNext ? (
+                <span className='text-xs sm:text-sm'>
+                  Esperar {timeUntilNext.hours}h {timeUntilNext.minutes}m
+                </span>
+              ) : (
+                <>
+                  <span className='hidden sm:inline'>Generar Reporte de Estado de Ánimo</span>
+                  <span className='sm:hidden'>Reporte de Ánimo</span>
+                </>
+              )}
             </button>
 
             <button
               onClick={generateDiaryReport}
-              disabled={loading}
-              className='flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base'
+              disabled={loading || !canGenerateReport()}
+              className='flex items-center justify-center space-x-2 px-3 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm'
             >
               <FileText className='w-4 h-4 sm:w-5 sm:h-5' />
-              <span className='hidden sm:inline'>Generar Reporte de Diario</span>
-              <span className='sm:hidden'>Reporte de Diario</span>
+              {timeUntilNext ? (
+                <span className='text-xs sm:text-sm'>
+                  Esperar {timeUntilNext.hours}h {timeUntilNext.minutes}m
+                </span>
+              ) : (
+                <>
+                  <span className='hidden sm:inline'>Generar Reporte de Diario</span>
+                  <span className='sm:hidden'>Reporte de Diario</span>
+                </>
+              )}
             </button>
           </div>
         </div>
 
         {/* Reports List */}
-        <div className={`p-6 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Reportes Generados</h2>
+        <div className={`p-4 sm:p-6 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Reportes Generados</h2>
 
           {reports.length === 0 ? (
             <div className='text-center py-12'>
@@ -435,18 +497,18 @@ const AdvancedReports: React.FC = () => {
               <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>Genera tu primer reporte usando los controles de arriba</p>
             </div>
           ) : (
-            <div className='space-y-4'>
+            <div className='space-y-3 sm:space-y-4'>
               {reports.map((report) => (
                 <div
                   key={report.id}
-                  className={`p-4 border rounded-lg ${
+                  className={`p-3 sm:p-4 border rounded-lg ${
                     isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
                   }`}
                 >
-                  <div className='flex items-start justify-between'>
+                  <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3'>
                     <div className='flex-1'>
-                      <div className='flex items-center space-x-3 mb-2'>
-                        <h3 className='text-lg font-semibold'>{report.title}</h3>
+                      <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2'>
+                        <h3 className='text-base sm:text-lg font-semibold'>{report.title}</h3>
                         <span
                           className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(
                             report.riskLevel

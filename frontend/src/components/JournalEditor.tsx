@@ -142,7 +142,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 gap-3 sm:gap-0'>
           <div className='flex items-center space-x-3'>
             <BookOpen className='w-5 h-5 sm:w-6 sm:h-6 text-purple-600' />
-            <h2 className='text-lg sm:text-xl font-bold text-gray-900'>{entry ? 'Editar Entrada' : 'Nueva Entrada del Diario'}</h2>
+            <h2 className='text-lg sm:text-xl font-bold text-gray-900'>
+              {entry ? 'Editar Entrada' : 'Nueva Entrada del Diario'}
+            </h2>
           </div>
           <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto'>
             <button
@@ -283,7 +285,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
               <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Estado de Ánimo</h3>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3'>
                 <div>
-                  <label className='block text-xs sm:text-sm text-gray-600 mb-1'>Estado de Ánimo (1=Muy mal, 10=Excelente)</label>
+                  <label className='block text-xs sm:text-sm text-gray-600 mb-1'>
+                    Estado de Ánimo (1=Muy mal, 10=Excelente)
+                  </label>
                   <input
                     type='number'
                     min='1'
@@ -294,7 +298,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   />
                 </div>
                 <div>
-                  <label className='block text-xs sm:text-sm text-gray-600 mb-1'>Nivel de Energía (1=Muy bajo, 10=Muy alto)</label>
+                  <label className='block text-xs sm:text-sm text-gray-600 mb-1'>
+                    Nivel de Energía (1=Muy bajo, 10=Muy alto)
+                  </label>
                   <input
                     type='number'
                     min='1'
@@ -305,7 +311,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   />
                 </div>
                 <div>
-                  <label className='block text-xs sm:text-sm text-gray-600 mb-1'>Nivel de Estrés (1=Muy bajo, 10=Muy alto)</label>
+                  <label className='block text-xs sm:text-sm text-gray-600 mb-1'>
+                    Nivel de Estrés (1=Muy bajo, 10=Muy alto)
+                  </label>
                   <input
                     type='number'
                     min='1'
@@ -356,8 +364,8 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-sm'
                   onKeyPress={(e) => e.key === 'Enter' && addTag()}
                 />
-                <button 
-                  onClick={addTag} 
+                <button
+                  onClick={addTag}
                   className='px-2 sm:px-3 py-1 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex-shrink-0 text-sm'
                   title='Agregar etiqueta'
                 >
@@ -426,8 +434,8 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
                   className='flex-1 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-0 text-sm'
                   onKeyPress={(e) => e.key === 'Enter' && addEmotion()}
                 />
-                <button 
-                  onClick={addEmotion} 
+                <button
+                  onClick={addEmotion}
                   className='px-2 sm:px-3 py-1 sm:py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 flex-shrink-0 text-sm'
                   title='Agregar emoción'
                 >
