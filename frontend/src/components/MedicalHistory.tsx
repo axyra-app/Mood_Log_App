@@ -68,8 +68,8 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
         return;
       }
 
-      if (!newReport.sessionDate || !newReport.diagnosis || !newReport.treatment) {
-        toast.error('Por favor completa todos los campos requeridos');
+      if (!newReport.diagnosis || !newReport.treatment) {
+        toast.error('Por favor completa el diagnóstico y tratamiento');
         return;
       }
 
@@ -388,7 +388,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
                     <label
                       className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
                     >
-                      Fecha de Sesión
+                      Fecha de Sesión (Opcional)
                     </label>
                     <input
                       type='date'
@@ -400,6 +400,9 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
                           : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-purple-500'
                       }`}
                     />
+                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Deja vacío para usar la fecha de la cita del paciente
+                    </p>
                   </div>
 
                   <div>
@@ -509,7 +512,7 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
               </button>
               <button
                 onClick={handleCreateReport}
-                disabled={loading || !newReport.patientId || !newReport.sessionDate}
+                disabled={loading || !newReport.patientId || !newReport.diagnosis || !newReport.treatment}
                 className='px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors duration-300 disabled:opacity-50'
               >
                 {loading ? 'Creando...' : 'Crear Reporte'}
