@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -280,10 +281,20 @@ export const useUserChatMessages = (sessionId: string | null) => {
     }
   };
 
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await deleteDoc(doc(db, 'chatMessages', messageId));
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      throw error;
+    }
+  };
+
   return {
     messages,
     loading,
     error,
     sendMessage,
+    deleteMessage,
   };
 };

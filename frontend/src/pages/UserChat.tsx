@@ -22,7 +22,7 @@ const UserChat: React.FC = () => {
   const [psychologistOnlineStatus, setPsychologistOnlineStatus] = useState<{[key: string]: boolean}>({});
 
   const { sessions, loading: sessionsLoading, markAsRead, createSession } = useUserChatSessions(user?.uid || '');
-  const { messages, loading: messagesLoading, sendMessage } = useUserChatMessages(selectedSession);
+  const { messages, loading: messagesLoading, sendMessage, deleteMessage } = useUserChatMessages(selectedSession);
   const { psychologists: availablePsychs, loading: psychologistsLoading } = useAvailablePsychologists();
 
   // Filtrar sesiones donde el usuario actual es el usuario
@@ -125,6 +125,16 @@ const UserChat: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      await deleteMessage(messageId);
+      toast.success('Mensaje eliminado');
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Error al eliminar mensaje');
     }
   };
 
@@ -576,29 +586,42 @@ const UserChat: React.FC = () => {
                           key={message.id}
                           className={`flex ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.senderId === user?.uid
-                                ? isDarkMode
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-purple-500 text-white'
-                                : isDarkMode
-                                ? 'bg-gray-700 text-white'
-                                : 'bg-gray-200 text-gray-900'
-                            }`}
-                          >
-                            <p className='text-sm'>{message.content}</p>
-                            <p
-                              className={`text-xs mt-1 ${
+                          <div className="relative group">
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                                 message.senderId === user?.uid
-                                  ? 'text-purple-100'
+                                  ? isDarkMode
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-purple-500 text-white'
                                   : isDarkMode
-                                  ? 'text-gray-400'
-                                  : 'text-gray-500'
+                                  ? 'bg-gray-700 text-white'
+                                  : 'bg-gray-200 text-gray-900'
                               }`}
                             >
-                              {formatTime(message.timestamp)}
-                            </p>
+                              <p className='text-sm'>{message.content}</p>
+                              <p
+                                className={`text-xs mt-1 ${
+                                  message.senderId === user?.uid
+                                    ? 'text-purple-100'
+                                    : isDarkMode
+                                    ? 'text-gray-400'
+                                    : 'text-gray-500'
+                                }`}
+                              >
+                                {formatTime(message.timestamp)}
+                              </p>
+                            </div>
+                            
+                            {/* Botón de eliminar para mensajes del usuario */}
+                            {message.senderId === user?.uid && (
+                              <button
+                                onClick={() => handleDeleteMessage(message.id)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                                title="Eliminar mensaje"
+                              >
+                                ×
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))

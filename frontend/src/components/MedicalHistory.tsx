@@ -31,9 +31,11 @@ const MedicalHistory: React.FC<MedicalHistoryProps> = ({ isDarkMode }) => {
     getStatistics,
   } = usePsychologistAppointments(user?.uid || '');
 
-  // Obtener pacientes únicos de las citas aceptadas
-  const acceptedAppointments = appointments.filter((app) => app.status === 'accepted');
-  const uniquePatients = acceptedAppointments.reduce((acc: any[], appointment) => {
+  // Obtener pacientes únicos de las citas (aceptadas, pendientes, completadas)
+  const activeAppointments = appointments.filter((app) => 
+    app.status === 'accepted' || app.status === 'pending' || app.status === 'completed'
+  );
+  const uniquePatients = activeAppointments.reduce((acc: any[], appointment) => {
     const existingPatient = acc.find((p) => p.userId === appointment.userId);
     if (!existingPatient) {
       acc.push({

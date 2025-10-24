@@ -74,7 +74,7 @@ export const useUserAppointments = (userId: string) => {
               userEmail: data.userEmail || '',
               psychologistId: data.psychologistId,
               psychologistName,
-              appointmentDate: data.appointmentDate?.toDate ? data.appointmentDate.toDate() : (data.appointmentDate ? new Date(data.appointmentDate) : new Date()),
+              appointmentDate: data.appointmentDate?.toDate ? data.appointmentDate.toDate() : (data.appointmentDate ? new Date(data.appointmentDate) : (data.date ? new Date(data.date) : new Date())),
               appointmentTime: data.appointmentTime || '',
               duration: data.duration || 60,
               type: data.type || 'consultation',
