@@ -279,7 +279,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ onClose, entry, template,
           </div>
 
           {/* Sidebar - Responsive */}
-          <div className='w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 p-2 sm:p-6 overflow-y-auto bg-gray-50 max-h-[55vh] lg:max-h-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
+          <div className='w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 p-2 sm:p-6 overflow-y-auto bg-gray-50 h-full scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
             {/* Mood & Metrics - Responsive */}
             <div className='mb-2 sm:mb-6'>
               <h3 className='font-semibold text-gray-900 mb-1 sm:mb-3 text-xs sm:text-base'>Estado de Ánimo</h3>

@@ -20,7 +20,6 @@ const Journal: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
   const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
   const [showTemplates, setShowTemplates] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -97,53 +96,10 @@ const Journal: React.FC = () => {
   const filteredEntries = entries.filter((entry) => {
     const matchesSearch =
       entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.content.toLowerCase().includes(searchTerm.toLowerCase());
+      entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    // Arreglar filtro por fecha - manejar tanto Date como Timestamp de Firebase
-    let entryDate: Date;
-    if (entry.date && typeof entry.date === 'object' && 'toDate' in entry.date) {
-      // Es un Timestamp de Firebase
-      entryDate = entry.date.toDate();
-    } else if (entry.date instanceof Date) {
-      // Es un Date nativo
-      entryDate = entry.date;
-    } else {
-      // Fallback
-      entryDate = new Date(entry.date);
-    }
-
-    // Normalizar fechas para comparación (solo año, mes, día)
-    const normalizeDate = (date: Date) => {
-      const normalized = new Date(date);
-      normalized.setHours(0, 0, 0, 0);
-      return normalized;
-    };
-
-    const matchesDate = !selectedDate || (() => {
-      try {
-        // Convertir la fecha seleccionada a formato YYYY-MM-DD
-        const selectedDateObj = new Date(selectedDate);
-        const entryDateNormalized = normalizeDate(entryDate);
-        const selectedDateNormalized = normalizeDate(selectedDateObj);
-        
-        // Comparar solo año, mes y día
-        const entryYear = entryDateNormalized.getFullYear();
-        const entryMonth = entryDateNormalized.getMonth();
-        const entryDay = entryDateNormalized.getDate();
-        
-        const selectedYear = selectedDateNormalized.getFullYear();
-        const selectedMonth = selectedDateNormalized.getMonth();
-        const selectedDay = selectedDateNormalized.getDate();
-        
-        return entryYear === selectedYear && 
-               entryMonth === selectedMonth && 
-               entryDay === selectedDay;
-      } catch (error) {
-        console.error('Error comparing dates:', error);
-        return false;
-      }
-    })();
-    return matchesSearch && matchesDate;
+    return matchesSearch;
   });
 
   const handleCreateEntry = () => {
@@ -278,14 +234,6 @@ const Journal: React.FC = () => {
                 />
               </div>
 
-              <input
-                type='date'
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className={`px-4 py-2 border ${
-                  isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'
-                } rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-auto`}
-              />
             </div>
           </div>
 
@@ -327,14 +275,14 @@ const Journal: React.FC = () => {
           <div className='text-center py-12'>
             <div className='text-6xl mb-4'>📝</div>
             <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              {searchTerm || selectedDate ? 'No se encontraron entradas' : 'Tu diario está vacío'}
+              {searchTerm ? 'No se encontraron entradas' : 'Tu diario está vacío'}
             </h3>
             <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
-              {searchTerm || selectedDate
-                ? 'Intenta con otros términos de búsqueda o filtros'
+              {searchTerm
+                ? 'Intenta con otros términos de búsqueda'
                 : 'Comienza escribiendo tu primera entrada para reflexionar sobre tu día'}
             </p>
-            {!searchTerm && !selectedDate && (
+            {!searchTerm && (
               <button
                 onClick={handleCreateEntry}
                 className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200'
