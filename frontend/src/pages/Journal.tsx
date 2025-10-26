@@ -18,6 +18,7 @@ const Journal: React.FC = () => {
   const [showEditor, setShowEditor] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
+  const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [showTemplates, setShowTemplates] = useState(false);
@@ -155,6 +156,7 @@ const Journal: React.FC = () => {
   const handleEditEntry = (entry: JournalEntry) => {
     setEditingEntry(entry);
     setSelectedTemplate(undefined);
+    setSelectedPrompt(undefined);
     setShowEditor(true);
     setShowTemplates(false);
   };
@@ -173,6 +175,15 @@ const Journal: React.FC = () => {
 
   const handleTemplateSelect = (template: JournalTemplate) => {
     setSelectedTemplate(template);
+    setSelectedPrompt(undefined);
+    setEditingEntry(undefined);
+    setShowEditor(true);
+    setShowTemplates(false);
+  };
+
+  const handlePromptSelect = (prompt: JournalPrompt) => {
+    setSelectedPrompt(prompt);
+    setSelectedTemplate(undefined);
     setEditingEntry(undefined);
     setShowEditor(true);
     setShowTemplates(false);
