@@ -92,9 +92,20 @@ class AIService {
   private buildAnalysisPrompt(moodData: MoodAnalysis): string {
     const timestamp = new Date().toISOString();
     const randomSeed = Math.random().toString(36).substring(7);
+    const sessionId = Math.random().toString(36).substring(2, 15);
+    
+    const randomPerspective = [
+      'perspectiva cognitivo-conductual', 'enfoque humanista', 'abordaje sistémico', 'perspectiva mindfulness',
+      'enfoque psicodinámico', 'abordaje centrado en soluciones', 'perspectiva positiva', 'enfoque integrativo'
+    ];
+    
+    const randomStyle = [
+      'análisis reflexivo', 'evaluación empática', 'revisión comprensiva', 'análisis detallado',
+      'evaluación personalizada', 'análisis profundo', 'revisión cuidadosa', 'evaluación holística'
+    ];
     
     return `
-Eres un psicólogo clínico especializado en análisis de estados de ánimo. Analiza estos datos ÚNICOS del usuario:
+Eres un psicólogo clínico especializado en análisis de estados de ánimo. Realiza un ${randomStyle[Math.floor(Math.random() * randomStyle.length)]} desde una ${randomPerspective[Math.floor(Math.random() * randomPerspective.length)]}.
 
 DATOS ESPECÍFICOS DEL USUARIO:
 - Estado de ánimo general: ${moodData.overallMood}/10
@@ -107,13 +118,16 @@ DATOS ESPECÍFICOS DEL USUARIO:
 
 CONTEXTO ÚNICO: ${timestamp}
 SEMILLA DE PERSONALIZACIÓN: ${randomSeed}
+IDENTIFICADOR DE SESIÓN: ${sessionId}
 
 INSTRUCCIONES CRÍTICAS:
 - Proporciona análisis ÚNICO y personalizado basado en estos datos específicos
-- Evita respuestas genéricas o repetitivas
+- Evita respuestas genéricas o repetitivas - cada análisis debe ser diferente
 - Incluye detalles específicos del perfil emocional del usuario
 - Sé empático y profesional pero específico
 - Considera el contexto individual y único
+- Varía tu estilo de comunicación y enfoque terapéutico
+- Incluye observaciones únicas basadas en los patrones específicos
 
 Formato de respuesta en JSON:
 {

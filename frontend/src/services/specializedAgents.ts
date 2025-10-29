@@ -6,9 +6,9 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true
 });
 
-// 🤖 DR. SOFIA - MEDICINA GENERAL
-export class DrSofiaAgent {
-  private systemPrompt = `Eres la Dra. Sofia, una médica general con más de 15 años de experiencia en atención primaria y medicina preventiva.
+// 🤖 DR. MIA - MEDICINA GENERAL
+export class DrMiaAgent {
+  private systemPrompt = `Eres la Dra. Mia, una médica general con más de 15 años de experiencia en atención primaria y medicina preventiva.
 
 PERFIL PROFESIONAL:
 - Especialista en medicina general y medicina preventiva
@@ -50,7 +50,7 @@ RESPONDE COMO UNA MÉDICA PROFESIONAL, EMPÁTICA Y BASADA EN EVIDENCIA.`;
 
       return response.choices[0]?.message?.content || 'Lo siento, no pude procesar tu consulta. Por favor, inténtalo de nuevo.';
     } catch (error) {
-      console.error('Error en Dr. Sofia:', error);
+      console.error('Error en Dr. Mia:', error);
       return 'Disculpa, estoy experimentando dificultades técnicas. Por favor, consulta con un médico en persona si tienes síntomas preocupantes.';
     }
   }
@@ -197,8 +197,18 @@ RESPONDE EN FORMATO JSON:
       const timestamp = new Date().toISOString();
       const uniqueId = Math.random().toString(36).substring(7);
       
+      const randomContext = [
+        'análisis matutino', 'evaluación vespertina', 'revisión nocturna', 'sesión de reflexión',
+        'momento de introspección', 'evaluación personal', 'análisis emocional', 'revisión de bienestar'
+      ];
+      
+      const randomApproach = [
+        'enfoque cognitivo-conductual', 'perspectiva humanista', 'abordaje sistémico', 'enfoque integrativo',
+        'perspectiva psicodinámica', 'abordaje centrado en soluciones', 'enfoque mindfulness', 'perspectiva positiva'
+      ];
+
       const prompt = `
-        Eres un psicólogo clínico especializado en análisis de estados de ánimo. Analiza estos datos ÚNICOS del usuario:
+        Eres un psicólogo clínico especializado en análisis de estados de ánimo. Realiza un ${randomContext[Math.floor(Math.random() * randomContext.length)]} con ${randomApproach[Math.floor(Math.random() * randomApproach.length)]}.
 
         DATOS ESPECÍFICOS DEL USUARIO:
         ${moodData.moodLogs.map((log: any, index: number) => 
@@ -208,13 +218,16 @@ RESPONDE EN FORMATO JSON:
         PERÍODO DE ANÁLISIS: ${moodData.period.start.toLocaleDateString()} - ${moodData.period.end.toLocaleDateString()}
         CONTEXTO ÚNICO: ${timestamp}
         SEMILLA DE PERSONALIZACIÓN: ${uniqueId}
+        IDENTIFICADOR DE SESIÓN: ${Math.random().toString(36).substring(2, 15)}
 
         INSTRUCCIONES CRÍTICAS:
         - Proporciona análisis ÚNICO y personalizado basado en estos datos específicos
-        - Evita respuestas genéricas o repetitivas
+        - Evita respuestas genéricas o repetitivas - cada análisis debe ser diferente
         - Incluye detalles específicos del perfil emocional del usuario
         - Sé empático y profesional pero específico
         - Considera el contexto individual y único
+        - Varía tu estilo de comunicación y enfoque terapéutico
+        - Incluye observaciones únicas basadas en los patrones específicos
 
         RESPONDE EN FORMATO JSON:
         {
@@ -246,8 +259,11 @@ RESPONDE EN FORMATO JSON:
           { role: 'user', content: prompt }
         ],
         model: 'llama-3.1-8b-instant',
-        temperature: 0.7,
-        max_tokens: 1500
+        temperature: 0.9,
+        max_tokens: 2000,
+        top_p: 0.95,
+        frequency_penalty: 0.3,
+        presence_penalty: 0.3
       });
 
       const content = response.choices[0]?.message?.content;
@@ -323,6 +339,6 @@ RESPONDE EN FORMATO JSON:
 }
 
 // Instancias de los agentes
-export const drSofiaAgent = new DrSofiaAgent();
+export const drMiaAgent = new DrMiaAgent();
 export const drBryanAgent = new DrBryanAgent();
 export const moodAnalyzerAgent = new MoodAnalyzerAgent();

@@ -65,7 +65,7 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
 
   const handleSaveMood = async (updatedMoodLog: any) => {
     try {
-      await updateMoodLog(updatedMoodLog);
+      await updateMoodLog(updatedMoodLog.id, updatedMoodLog);
       setShowEditModal(false);
       setSelectedMoodLog(null);
     } catch (error) {

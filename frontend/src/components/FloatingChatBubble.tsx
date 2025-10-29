@@ -170,7 +170,7 @@ const FloatingChatBubble: React.FC = () => {
               </div>
               <div>
                 <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Dra. Sofia IA
+                  Dra. Mia IA
                 </h3>
                 <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Asistente de Bienestar</p>
               </div>
@@ -284,7 +284,7 @@ const FloatingChatBubble: React.FC = () => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder='Escribe tu consulta para Dra. Sofia...'
+                    placeholder='Escribe tu consulta para Dra. Mia...'
                     className={`flex-1 mobile-button rounded-lg mobile-text border focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                       isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'

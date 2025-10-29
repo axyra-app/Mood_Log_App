@@ -2,7 +2,7 @@ import { ArrowLeft, Send, Bot, User, Clock, Shield, Star } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { drSofiaAgent, drBryanAgent } from '../services/specializedAgents';
+import { drMiaAgent, drBryanAgent } from '../services/specializedAgents';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Message {
@@ -38,8 +38,8 @@ const AIChat: React.FC = () => {
 
   // Perfiles de los doctores
   const doctorProfiles: Record<string, DoctorProfile> = {
-    'dr-sofia': {
-      name: 'Dra. Sofia',
+    'dr-mia': {
+      name: 'Dra. Mia',
       specialty: 'Medicina General',
       icon: '🩺',
       color: 'from-blue-500 to-cyan-500',
@@ -50,7 +50,7 @@ const AIChat: React.FC = () => {
         { icon: <Star className="w-4 h-4" />, text: 'Basado en evidencia médica', color: 'text-yellow-600' }
       ]
     },
-    'dr-carlos': {
+    'dr-bryan': {
       name: 'Dr. Bryan',
       specialty: 'Psicología Clínica',
       icon: '🧠',
@@ -66,14 +66,14 @@ const AIChat: React.FC = () => {
 
   useEffect(() => {
     // Determinar qué doctor está seleccionado
-    const doctorType = location.pathname.includes('dr-sofia') ? 'dr-sofia' : 'dr-carlos';
+    const doctorType = location.pathname.includes('dr-mia') ? 'dr-mia' : 'dr-bryan';
     setDoctor(doctorProfiles[doctorType]);
 
     // Mensaje de bienvenida inicial
     const welcomeMessage: Message = {
       id: 'welcome',
-      content: doctorType === 'dr-sofia' 
-        ? '¡Hola! Soy la Dra. Sofia, tu asistente médico virtual. Estoy aquí para ayudarte con consultas médicas generales, información sobre síntomas y consejos de salud. ¿En qué puedo ayudarte hoy?'
+      content: doctorType === 'dr-mia' 
+        ? '¡Hola! Soy la Dra. Mia, tu asistente médico virtual. Estoy aquí para ayudarte con consultas médicas generales, información sobre síntomas y consejos de salud. ¿En qué puedo ayudarte hoy?'
         : '¡Hola! Soy el Dr. Bryan, tu psicólogo virtual. Estoy aquí para brindarte apoyo emocional, técnicas de manejo del estrés y orientación psicológica. ¿Cómo te sientes hoy?',
       sender: 'ai',
       timestamp: new Date()
@@ -106,8 +106,8 @@ const AIChat: React.FC = () => {
 
     try {
       // Determinar qué agente usar
-      const doctorType = location.pathname.includes('dr-sofia') ? 'dr-sofia' : 'dr-carlos';
-      const agent = doctorType === 'dr-sofia' ? drSofiaAgent : drBryanAgent;
+      const doctorType = location.pathname.includes('dr-mia') ? 'dr-mia' : 'dr-bryan';
+      const agent = doctorType === 'dr-mia' ? drMiaAgent : drBryanAgent;
 
       // Obtener contexto del usuario si está disponible
       const context = user ? {
