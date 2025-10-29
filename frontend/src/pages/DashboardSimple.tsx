@@ -69,9 +69,9 @@ const DashboardSimple: React.FC = () => {
       <header
         className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg border-b ${
           isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        } sticky top-0 z-40`}
+        } sticky top-0 z-40 safe-area-top`}
       >
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='max-w-7xl mx-auto mobile-padding'>
           <div className='flex justify-between items-center py-3 sm:py-4'>
             <div className='flex items-center space-x-2 sm:space-x-3'>
               <Logo size='sm' showText={false} />
@@ -87,7 +87,7 @@ const DashboardSimple: React.FC = () => {
               {/* Botón del menú */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 rounded-lg transition-colors shadow-md ${
+                className={`touch-target p-2 rounded-lg transition-colors shadow-md ${
                   isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
@@ -99,7 +99,7 @@ const DashboardSimple: React.FC = () => {
 
               <button
                 onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`touch-target p-2 rounded-lg transition-colors ${
                   isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
@@ -110,7 +110,7 @@ const DashboardSimple: React.FC = () => {
 
               <button
                 onClick={handleLogout}
-                className='flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base shadow-md'
+                className='touch-target flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base shadow-md'
               >
                 <LogOut className='w-3 h-3 sm:w-4 sm:h-4' />
                 <span className='hidden sm:inline'>Cerrar Sesión</span>
@@ -127,13 +127,13 @@ const DashboardSimple: React.FC = () => {
       {/* Menú desktop (solo visible en pantallas grandes) - REMOVIDO */}
 
       {/* Main Content */}
-      <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
+      <main className='max-w-7xl mx-auto mobile-padding py-4 sm:py-6 lg:py-8'>
         {/* Welcome Section */}
         <div className='mb-6 sm:mb-8'>
-          <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h2 className={`mobile-heading font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             ¡Hola, {user?.displayName || user?.email?.split('@')[0] || 'Usuario'}! 👋
           </h2>
-          <p className={`text-base sm:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className={`mobile-text ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             ¿Cómo te sientes hoy? Reflexiona sobre tu día y mantén un seguimiento de tu bienestar emocional.
           </p>
         </div>
@@ -144,7 +144,7 @@ const DashboardSimple: React.FC = () => {
             isDarkMode ? 'border-gray-700' : 'border-gray-200'
           } mb-8`}
         >
-          <div className='p-6 border-b border-gray-200 dark:border-gray-700'>
+          <div className='mobile-card border-b border-gray-200 dark:border-gray-700'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center space-x-3'>
                 <div className='w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center'>
@@ -161,7 +161,7 @@ const DashboardSimple: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/journal')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`mobile-button rounded-lg font-medium transition-colors ${
                   isDarkMode
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                     : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
@@ -172,7 +172,7 @@ const DashboardSimple: React.FC = () => {
             </div>
           </div>
 
-          <div className='p-6'>
+          <div className='mobile-card'>
             {journalEntries.length === 0 ? (
               <div className='text-center py-8'>
                 <div className='text-6xl mb-4'>📝</div>
@@ -184,13 +184,13 @@ const DashboardSimple: React.FC = () => {
                 </p>
                 <button
                   onClick={() => navigate('/journal')}
-                  className='mt-4 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl'
+                  className='touch-target mt-4 px-6 py-4 sm:px-8 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl'
                 >
                   ✍️ Escribir en el Diario
                 </button>
               </div>
             ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+              <div className='mobile-grid'>
                 {journalEntries.slice(0, 6).map((entry, index) => (
                   <div
                     key={entry.id || index}
@@ -260,9 +260,9 @@ const DashboardSimple: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8'>
+        <div className='mobile-grid mb-8'>
           <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg border ${
+            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} mobile-card rounded-xl shadow-lg border ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}
           >
@@ -280,7 +280,7 @@ const DashboardSimple: React.FC = () => {
           </div>
 
           <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg border ${
+            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} mobile-card rounded-xl shadow-lg border ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}
           >
@@ -306,7 +306,7 @@ const DashboardSimple: React.FC = () => {
           </div>
 
           <div
-            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg border ${
+            className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} mobile-card rounded-xl shadow-lg border ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}
           >

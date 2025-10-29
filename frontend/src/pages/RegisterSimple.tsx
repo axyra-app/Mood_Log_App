@@ -225,14 +225,18 @@ const RegisterSimple: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+    <div
+      className={`min-h-screen transition-colors duration-500 ${
+        isDarkMode ? 'bg-gray-900' : 'bg-white'
+      } safe-area-top safe-area-bottom`}
+    >
       {/* Header */}
       <header
         className={`sticky top-0 z-50 transition-all duration-500 ${
           isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
         } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
       >
-        <div className='max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4'>
+        <div className='max-w-7xl mx-auto flex items-center justify-between mobile-padding py-4'>
           <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
             <Logo size='lg' />
           </Link>
@@ -262,24 +266,26 @@ const RegisterSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className='min-h-screen flex items-center justify-center p-4'>
+      <div className='min-h-screen flex items-center justify-center mobile-padding'>
         <div className='w-full max-w-2xl'>
           <div
             className={`backdrop-blur-lg rounded-2xl shadow-2xl border transition-all duration-500 ${
               isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
             }`}
           >
-            <div className='p-8'>
+            <div className='mobile-card'>
               <div className='text-center mb-8'>
                 <h1
-                  className={`text-3xl font-bold mb-2 transition-colors duration-500 ${
+                  className={`mobile-heading font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
                   Crear Cuenta
                 </h1>
                 <p
-                  className={`text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                  className={`mobile-text transition-colors duration-500 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}
                 >
                   Únete a nuestra comunidad de bienestar
                 </p>

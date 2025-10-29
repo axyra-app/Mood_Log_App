@@ -134,15 +134,15 @@ const FloatingChatBubble: React.FC = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${
+          className={`touch-target fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${
             isDarkMode
               ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
               : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
           }`}
         >
-          <MessageCircle className='w-6 h-6 text-white mx-auto' />
+          <MessageCircle className='w-5 h-5 sm:w-6 sm:h-6 text-white mx-auto' />
           {messages.filter((msg) => msg.sender === 'ai' && msg.id !== 'welcome').length > 0 && !isOpen && (
-            <div className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
+            <div className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center'>
               {messages.filter((msg) => msg.sender === 'ai' && msg.id !== 'welcome').length > 9
                 ? '9+'
                 : messages.filter((msg) => msg.sender === 'ai' && msg.id !== 'welcome').length}
@@ -154,7 +154,7 @@ const FloatingChatBubble: React.FC = () => {
       {/* Ventana de chat */}
       {isOpen && (
         <div
-          className={`fixed bottom-6 right-6 z-50 w-80 h-96 rounded-xl shadow-2xl transition-all duration-300 ${
+          className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-72 sm:w-80 h-80 sm:h-96 rounded-xl shadow-2xl transition-all duration-300 ${
             isMinimized ? 'h-12' : ''
           } ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
@@ -179,7 +179,7 @@ const FloatingChatBubble: React.FC = () => {
             <div className='flex items-center space-x-1'>
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
-                className={`p-1 rounded hover:bg-gray-600 transition-colors ${
+                className={`touch-target p-1 rounded hover:bg-gray-600 transition-colors ${
                   isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -187,7 +187,7 @@ const FloatingChatBubble: React.FC = () => {
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className={`p-1 rounded hover:bg-gray-600 transition-colors ${
+                className={`touch-target p-1 rounded hover:bg-gray-600 transition-colors ${
                   isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -199,7 +199,7 @@ const FloatingChatBubble: React.FC = () => {
           {!isMinimized && (
             <>
               {/* Mensajes */}
-              <div className='flex-1 overflow-y-auto p-4 space-y-3 h-64'>
+              <div className='flex-1 overflow-y-auto mobile-padding space-y-3 h-56 sm:h-64'>
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div
@@ -277,7 +277,7 @@ const FloatingChatBubble: React.FC = () => {
               </div>
 
               {/* Input */}
-              <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className={`mobile-padding border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                 <div className='flex items-center space-x-2'>
                   <input
                     type='text'
@@ -285,7 +285,7 @@ const FloatingChatBubble: React.FC = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder='Escribe tu consulta para Dra. Sofia...'
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                    className={`flex-1 mobile-button rounded-lg mobile-text border focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                       isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -294,7 +294,7 @@ const FloatingChatBubble: React.FC = () => {
                   <button
                     onClick={handleSendMessage}
                     disabled={!message.trim() || isLoading}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`touch-target p-2 rounded-lg transition-colors ${
                       message.trim() && !isLoading
                         ? 'bg-purple-500 hover:bg-purple-600 text-white'
                         : isDarkMode

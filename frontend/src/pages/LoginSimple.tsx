@@ -1,7 +1,7 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import Logo from '../components/Logo';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginSimple: React.FC = () => {
   const { signIn, signInWithGoogle, user, logout } = useAuth();
@@ -33,15 +33,13 @@ const LoginSimple: React.FC = () => {
 
       // Verificar si el usuario necesita completar su perfil
       const isGoogleUser = user.email && user.username === user.email.split('@')[0];
-      
+
       // Lógica mejorada: Solo necesita completar perfil si:
       // 1. Es usuario de Google (username = email sin dominio)
       // 2. Y tiene role 'user' (rol por defecto)
       // 3. Y NO tiene displayName personalizado (solo el del email)
-      const needsProfileCompletion = isGoogleUser && 
-                                   user.role === 'user' && 
-                                   user.displayName === user.email?.split('@')[0];
-
+      const needsProfileCompletion =
+        isGoogleUser && user.role === 'user' && user.displayName === user.email?.split('@')[0];
 
       if (needsProfileCompletion) {
         // Redirigir a completar perfil
@@ -113,16 +111,20 @@ const LoginSimple: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+    <div
+      className={`min-h-screen transition-colors duration-500 ${
+        isDarkMode ? 'bg-gray-900' : 'bg-white'
+      } safe-area-top safe-area-bottom`}
+    >
       {/* Header */}
       <header
-        className={`py-4 sm:py-6 px-4 sm:px-6 transition-colors duration-500 ${
+        className={`py-4 sm:py-6 mobile-padding transition-colors duration-500 ${
           isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
         } backdrop-blur-lg border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
       >
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
           <Link to='/' className='flex items-center space-x-2 sm:space-x-3 group'>
-            <Logo size="lg" />
+            <Logo size='lg' />
           </Link>
 
           <button
@@ -141,17 +143,21 @@ const LoginSimple: React.FC = () => {
       {/* Main Content */}
       <div className='flex min-h-[calc(100vh-80px)]'>
         {/* Centered Form */}
-        <div className='flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8'>
-          <div className='w-full max-w-md'>
+        <div className='flex-1 flex items-center justify-center mobile-padding'>
+          <div className='w-full max-w-md sm:max-w-lg md:max-w-xl'>
             <div className='text-center mb-6 sm:mb-8'>
               <h1
-                className={`text-2xl sm:text-3xl lg:text-4xl font-black mb-3 sm:mb-4 transition-colors duration-500 ${
+                className={`mobile-heading sm:text-3xl lg:text-4xl font-black mb-3 sm:mb-4 transition-colors duration-500 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}
               >
                 INICIAR SESIÓN
               </h1>
-              <p className={`text-base sm:text-lg transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p
+                className={`mobile-text transition-colors duration-500 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}
+              >
                 Accede a tu cuenta y comienza tu transformación
               </p>
 
@@ -211,7 +217,7 @@ const LoginSimple: React.FC = () => {
                   type='email'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 text-sm sm:text-base ${
+                  className={`w-full mobile-button rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 mobile-text ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                       : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
@@ -234,7 +240,7 @@ const LoginSimple: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full px-3 py-3 sm:px-4 sm:py-4 pr-10 sm:pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 text-sm sm:text-base ${
+                    className={`w-full mobile-button pr-10 sm:pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 mobile-text ${
                       isDarkMode
                         ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                         : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
@@ -273,7 +279,7 @@ const LoginSimple: React.FC = () => {
               <button
                 type='submit'
                 disabled={loading}
-                className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-black text-base sm:text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`touch-target w-full mobile-button rounded-xl font-black uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDarkMode
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-2xl hover:shadow-purple-500/50'
                     : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-2xl hover:shadow-purple-500/50'
@@ -287,7 +293,7 @@ const LoginSimple: React.FC = () => {
                 type='button'
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
+                className={`touch-target w-full mobile-button rounded-xl font-bold uppercase tracking-wider transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
                   isDarkMode
                     ? 'border-gray-600 text-white hover:bg-gray-800'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -295,23 +301,20 @@ const LoginSimple: React.FC = () => {
               >
                 {loading ? '🔄 Conectando...' : '🔗 CONTINUAR CON GOOGLE'}
               </button>
-              
+
               {/* Google Error */}
               {googleError && (
-                <div className={`mt-4 p-4 rounded-xl border-2 ${
-                  isDarkMode 
-                    ? 'bg-red-900/30 border-red-500 text-red-200' 
-                    : 'bg-red-50 border-red-300 text-red-800'
-                }`}>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">⚠️</span>
+                <div
+                  className={`mt-4 p-4 rounded-xl border-2 ${
+                    isDarkMode ? 'bg-red-900/30 border-red-500 text-red-200' : 'bg-red-50 border-red-300 text-red-800'
+                  }`}
+                >
+                  <div className='flex items-center space-x-2'>
+                    <span className='text-xl'>⚠️</span>
                     <div>
-                      <p className="font-semibold">Error con Google</p>
-                      <p className="text-sm">{googleError}</p>
-                      <button
-                        onClick={() => setGoogleError('')}
-                        className="mt-2 text-sm underline hover:no-underline"
-                      >
+                      <p className='font-semibold'>Error con Google</p>
+                      <p className='text-sm'>{googleError}</p>
+                      <button onClick={() => setGoogleError('')} className='mt-2 text-sm underline hover:no-underline'>
                         Cerrar
                       </button>
                     </div>
@@ -330,7 +333,11 @@ const LoginSimple: React.FC = () => {
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-              <p className={`text-xs sm:text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p
+                className={`text-xs sm:text-sm transition-colors duration-500 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}
+              >
                 ¿No tienes cuenta?{' '}
                 <Link
                   to='/register'
