@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import CrisisAlert from '../components/CrisisAlert';
 import LogoutModal from '../components/LogoutModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useMood } from '../hooks/useMood';
 import { aiService, MoodAnalysisResult } from '../services/aiService';
 import Logo from '../components/Logo';
 
 const MoodFlowSimple: React.FC = () => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const { createMoodLog, loading: moodLoading, error: moodError } = useMood();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
   const [feelings, setFeelings] = useState('');
@@ -83,10 +84,6 @@ const MoodFlowSimple: React.FC = () => {
   useEffect(() => {
     setIsLoaded(true);
   }, []);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const handleMoodSelect = (mood: number) => {
     setCurrentMood(mood);

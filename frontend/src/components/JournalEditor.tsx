@@ -231,7 +231,61 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">{aiAnalysis}</p>
+                  <div className="text-gray-700">
+                    {typeof aiAnalysis === 'string' ? (
+                      <p className="whitespace-pre-wrap">{aiAnalysis}</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-purple-700 mb-1">Resumen:</h4>
+                          <p>{aiAnalysis.summary}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-purple-700 mb-1">Sentimiento:</h4>
+                          <span className={`px-2 py-1 rounded-full text-sm ${
+                            aiAnalysis.sentiment === 'positive' ? 'bg-green-100 text-green-800' :
+                            aiAnalysis.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {aiAnalysis.sentiment === 'positive' ? 'Positivo' :
+                             aiAnalysis.sentiment === 'negative' ? 'Negativo' : 'Neutral'}
+                          </span>
+                        </div>
+                        {aiAnalysis.themes && aiAnalysis.themes.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-purple-700 mb-1">Temas:</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {aiAnalysis.themes.map((theme: string, index: number) => (
+                                <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                                  {theme}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {aiAnalysis.insights && aiAnalysis.insights.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-purple-700 mb-1">Insights:</h4>
+                            <ul className="list-disc list-inside space-y-1">
+                              {aiAnalysis.insights.map((insight: string, index: number) => (
+                                <li key={index}>{insight}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-purple-700 mb-1">Recomendaciones:</h4>
+                            <ul className="list-disc list-inside space-y-1">
+                              {aiAnalysis.recommendations.map((recommendation: string, index: number) => (
+                                <li key={index}>{recommendation}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

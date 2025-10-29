@@ -5,11 +5,13 @@ import CountrySelector from '../components/CountrySelector';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useValidation } from '../hooks/useValidation';
 import { uploadFile } from '../services/firebase';
 
 const RegisterSimple: React.FC = () => {
   const { signUp, signUpWithGoogle, user } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const { validate, hasError, getError, clearErrors } = useValidation();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,10 +27,10 @@ const RegisterSimple: React.FC = () => {
     licenseNumber: '',
     phone: '',
     cvFile: null as File | null,
+    psychologistCode: '', // Nuevo campo obligatorio
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState({
@@ -60,10 +62,6 @@ const RegisterSimple: React.FC = () => {
       }
     }
   }, [user, navigate]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -144,6 +142,13 @@ const RegisterSimple: React.FC = () => {
       }
       if (!formData.yearsOfExperience) {
         validate('yearsOfExperience', 'Los años de experiencia son requeridos');
+        isValid = false;
+      }
+      if (!formData.psychologistCode.trim()) {
+        validate('psychologistCode', 'El código de psicólogo es obligatorio');
+        isValid = false;
+      } else if (formData.psychologistCode.trim() !== 'PSY2024') {
+        validate('psychologistCode', 'Código de psicólogo inválido');
         isValid = false;
       }
     }
@@ -332,9 +337,45 @@ const RegisterSimple: React.FC = () => {
                     >
                       <div className='text-2xl mb-2'>🧠</div>
                       <div className='font-bold text-sm'>PSICÓLOGO</div>
-                    </button>
                   </div>
                 </div>
+
+                {/* Campo de código de psicólogo - Solo visible cuando se selecciona psicólogo */}
+                {formData.role === 'psychologist' && (
+                  <div>
+                    <label
+                      className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}
+                    >
+                      CÓDIGO DE PSICÓLOGO *
+                    </label>
+                    <input
+                      type='text'
+                      name='psychologistCode'
+                      value={formData.psychologistCode}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
+                        hasError('psychologistCode')
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : isDarkMode
+                          ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
+                      }`}
+                      placeholder='Ingresa el código proporcionado'
+                    />
+                    {hasError('psychologistCode') && (
+                      <p className='text-red-500 text-sm mt-1'>{getError('psychologistCode')}</p>
+                    )}
+                    <p
+                      className={`text-sm mt-1 transition-colors duration-500 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}
+                    >
+                      💡 Este código se proporciona durante el proceso de entrevista y aprobación
+                    </p>
+                  </div>
+                )}
 
                 <div className='grid grid-cols-2 gap-4'>
                   <div>

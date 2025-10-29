@@ -123,7 +123,7 @@ function App() {
                   }
                 />
                 <Route
-                  path='/chat/dr-sofia'
+                  path='/chat/dr-mia'
                   element={
                     <ProtectedRoute>
                       <AIChat />
@@ -131,7 +131,7 @@ function App() {
                   }
                 />
                 <Route
-                  path='/chat/dr-carlos'
+                  path='/chat/dr-bryan'
                   element={
                     <ProtectedRoute>
                       <AIChat />
