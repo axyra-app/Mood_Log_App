@@ -6,13 +6,14 @@ import MedicalHistory from '../components/MedicalHistory';
 import NotificationsPanel from '../components/NotificationsPanel';
 import PsychologistNotifications from '../components/PsychologistNotifications';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { usePatients } from '../hooks/usePatients';
 import { createPatientRelationsFromAppointments } from '../utils/createPatientRelations';
 
 const DashboardPsychologist: React.FC = () => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Hook para obtener datos reales de pacientes
@@ -32,10 +33,6 @@ const DashboardPsychologist: React.FC = () => {
   const patientsNeedingAttention = getPatientsNeedingAttention();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
     setIsLoaded(true);
 
     // Actualizar sesiones de chat existentes (deshabilitado temporalmente)
@@ -78,11 +75,6 @@ const DashboardPsychologist: React.FC = () => {
     });
   };
 
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-  };
 
   const handleLogout = async () => {
     try {
@@ -187,26 +179,26 @@ const DashboardPsychologist: React.FC = () => {
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Stats Cards */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8'>
           <div
-            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+            className={`p-4 sm:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             } border`}
           >
             <div className='flex items-center'>
-              <div className='p-3 bg-blue-100 rounded-lg'>
-                <span className='text-blue-600 text-xl'>👥</span>
+              <div className='p-2 sm:p-3 bg-blue-100 rounded-lg'>
+                <span className='text-blue-600 text-lg sm:text-xl'>👥</span>
               </div>
-              <div className='ml-4'>
+              <div className='ml-3 sm:ml-4'>
                 <p
-                  className={`text-sm font-medium transition-colors duration-500 ${
+                  className={`text-xs sm:text-sm font-medium transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
                   }`}
                 >
                   Total Pacientes
                 </p>
                 <p
-                  className={`text-2xl font-bold transition-colors duration-500 ${
+                  className={`text-xl sm:text-2xl font-bold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
@@ -217,24 +209,24 @@ const DashboardPsychologist: React.FC = () => {
           </div>
 
           <div
-            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+            className={`p-4 sm:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             } border`}
           >
             <div className='flex items-center'>
-              <div className='p-3 bg-green-100 rounded-lg'>
-                <span className='text-green-600 text-xl'>📈</span>
+              <div className='p-2 sm:p-3 bg-green-100 rounded-lg'>
+                <span className='text-green-600 text-lg sm:text-xl'>📈</span>
               </div>
-              <div className='ml-4'>
+              <div className='ml-3 sm:ml-4'>
                 <p
-                  className={`text-sm font-medium transition-colors duration-500 ${
+                  className={`text-xs sm:text-sm font-medium transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
                   }`}
                 >
                   Pacientes Activos
                 </p>
                 <p
-                  className={`text-2xl font-bold transition-colors duration-500 ${
+                  className={`text-xl sm:text-2xl font-bold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
@@ -245,24 +237,24 @@ const DashboardPsychologist: React.FC = () => {
           </div>
 
           <div
-            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+            className={`p-4 sm:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             } border`}
           >
             <div className='flex items-center'>
-              <div className='p-3 bg-yellow-100 rounded-lg'>
-                <span className='text-yellow-600 text-xl'>⚠️</span>
+              <div className='p-2 sm:p-3 bg-yellow-100 rounded-lg'>
+                <span className='text-yellow-600 text-lg sm:text-xl'>⚠️</span>
               </div>
-              <div className='ml-4'>
+              <div className='ml-3 sm:ml-4'>
                 <p
-                  className={`text-sm font-medium transition-colors duration-500 ${
+                  className={`text-xs sm:text-sm font-medium transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
                   }`}
                 >
                   En Riesgo
                 </p>
                 <p
-                  className={`text-2xl font-bold transition-colors duration-500 ${
+                  className={`text-xl sm:text-2xl font-bold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
@@ -273,24 +265,24 @@ const DashboardPsychologist: React.FC = () => {
           </div>
 
           <div
-            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+            className={`p-4 sm:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             } border`}
           >
             <div className='flex items-center'>
-              <div className='p-3 bg-purple-100 rounded-lg'>
-                <span className='text-purple-600 text-xl'>😊</span>
+              <div className='p-2 sm:p-3 bg-purple-100 rounded-lg'>
+                <span className='text-purple-600 text-lg sm:text-xl'>😊</span>
               </div>
-              <div className='ml-4'>
+              <div className='ml-3 sm:ml-4'>
                 <p
-                  className={`text-sm font-medium transition-colors duration-500 ${
+                  className={`text-xs sm:text-sm font-medium transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
                   }`}
                 >
                   Estado Promedio
                 </p>
                 <p
-                  className={`text-2xl font-bold transition-colors duration-500 ${
+                  className={`text-xl sm:text-2xl font-bold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
@@ -302,20 +294,20 @@ const DashboardPsychologist: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+        <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6'>
           {/* Chat */}
           <div
-            className={`p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+            className={`p-4 sm:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
               isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
             } border`}
           >
-            <div className='flex items-center justify-between mb-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0'>
               <div className='flex items-center space-x-3'>
-                <div className='w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
-                  <span className='text-white text-lg'>💬</span>
+                <div className='w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
+                  <span className='text-white text-sm sm:text-lg'>💬</span>
                 </div>
                 <h3
-                  className={`text-xl font-semibold transition-colors duration-500 ${
+                  className={`text-lg sm:text-xl font-semibold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}
                 >
@@ -324,12 +316,12 @@ const DashboardPsychologist: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/psychologist-chat')}
-                className='px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300'
+                className='w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 text-sm sm:text-base'
               >
                 Abrir Chat
               </button>
             </div>
-            <p className={`transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-sm sm:text-base transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Sistema de chat en tiempo real con tus pacientes
             </p>
           </div>
@@ -343,25 +335,25 @@ const DashboardPsychologist: React.FC = () => {
         </div>
 
         <div
-          className={`mt-8 p-4 lg:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
+          className={`mt-6 sm:mt-8 p-4 sm:p-6 rounded-xl shadow-sm transition-colors duration-500 ${
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
           } border`}
         >
-          <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0'>
             <div className='flex items-center space-x-3'>
-              <div className='w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center'>
-                <span className='text-white text-lg'>👥</span>
+              <div className='w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center'>
+                <span className='text-white text-sm sm:text-lg'>👥</span>
               </div>
               <div>
                 <h2
-                  className={`text-lg lg:text-xl font-semibold transition-colors duration-500 ${
+                  className={`text-base sm:text-lg lg:text-xl font-semibold transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
                   Mis Pacientes
                 </h2>
                 <p
-                  className={`text-xs lg:text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                  className={`text-xs sm:text-sm transition-colors duration-500 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
                 >
                   Gestiona el historial y comunicación con tus pacientes
                 </p>
@@ -369,7 +361,7 @@ const DashboardPsychologist: React.FC = () => {
             </div>
             <div className='flex items-center space-x-2'>
               <span
-                className={`text-sm px-3 py-1 rounded-full ${
+                className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full ${
                   isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
                 }`}
               >
@@ -406,11 +398,11 @@ const DashboardPsychologist: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4'>
               {patients.map((patient) => (
                 <div
                   key={patient.uid}
-                  className={`p-4 rounded-lg border transition-colors duration-500 hover:shadow-md ${
+                  className={`p-3 sm:p-4 rounded-lg border transition-colors duration-500 hover:shadow-md ${
                     isDarkMode
                       ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
                       : 'bg-gray-50 border-gray-200 hover:bg-white'
@@ -504,10 +496,10 @@ const DashboardPsychologist: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
+                  <div className='flex flex-col space-y-2'>
                     <button
                       onClick={() => handlePatientChat(patient)}
-                      className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
+                      className={`w-full px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
                         isDarkMode
                           ? 'bg-purple-600 text-white hover:bg-purple-700'
                           : 'bg-purple-500 text-white hover:bg-purple-600'
@@ -517,7 +509,7 @@ const DashboardPsychologist: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handlePatientReport(patient)}
-                      className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
+                      className={`w-full px-3 py-2 text-xs rounded-lg font-medium transition-colors duration-300 ${
                         isDarkMode
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'bg-blue-500 text-white hover:bg-blue-600'

@@ -147,7 +147,7 @@ const RegisterSimple: React.FC = () => {
       if (!formData.psychologistCode.trim()) {
         validate('psychologistCode', 'El código de psicólogo es obligatorio');
         isValid = false;
-      } else if (formData.psychologistCode.trim() !== 'PSY2024') {
+      } else if (formData.psychologistCode.trim() !== 'PSY2025') {
         validate('psychologistCode', 'Código de psicólogo inválido');
         isValid = false;
       }

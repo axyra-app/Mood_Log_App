@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { usePsychologistAppointments } from '../hooks/usePsychologistAppointments';
 
 const MedicalHistory: React.FC = () => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportData, setReportData] = useState({
@@ -41,22 +42,11 @@ const MedicalHistory: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
-
     // Si viene desde el dashboard con un paciente específico, seleccionarlo automáticamente
     if (location.state?.selectedPatient) {
       setSelectedPatient(location.state.selectedPatient);
     }
   }, [location.state]);
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-  };
 
   const formatDate = (date: any) => {
     if (!date) return 'N/A';

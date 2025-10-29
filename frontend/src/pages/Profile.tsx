@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { ArrowLeft, User, Mail, Phone, MapPin, Calendar, Edit, Save, X } from 'lucide-react';
@@ -9,8 +10,8 @@ import Header from '../components/Header';
 
 const Profile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,43 +48,8 @@ const Profile: React.FC = () => {
       setIsLoaded(true);
     };
 
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
-
-    // Escuchar cambios en el tema desde otros componentes
-    const handleThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme');
-      setIsDarkMode(currentTheme === 'dark');
-    };
-
-    // Agregar listener para cambios de tema
-    window.addEventListener('storage', handleThemeChange);
-    
-    // También escuchar cambios en el mismo tab
-    const interval = setInterval(() => {
-      const currentTheme = localStorage.getItem('theme');
-      const newDarkMode = currentTheme === 'dark';
-      if (newDarkMode !== isDarkMode) {
-        setIsDarkMode(newDarkMode);
-        
-        // Aplicar clases CSS inmediatamente
-        if (newDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
-    }, 50);
-
     loadUserData();
-
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-      clearInterval(interval);
-    };
-  }, [user, isDarkMode]);
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

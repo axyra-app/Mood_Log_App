@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { generateAndDownloadReport } from '../services/pdfReportService';
 import { getRealMoodData } from '../services/realDataService';
 import { moodAnalyzerAgent } from '../services/specializedAgents';
@@ -28,52 +29,16 @@ interface AdvancedReport {
 
 const AdvancedReports: React.FC = () => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const [reports, setReports] = useState<AdvancedReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [lastReportDate, setLastReportDate] = useState<string | null>(null);
   const [timeUntilNext, setTimeUntilNext] = useState<{hours: number, minutes: number} | null>(null);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
-
-    // Escuchar cambios en el tema desde otros componentes
-    const handleThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme');
-      setIsDarkMode(currentTheme === 'dark');
-    };
-
-    // Agregar listener para cambios de tema
-    window.addEventListener('storage', handleThemeChange);
-    
-    // También escuchar cambios en el mismo tab
-    const interval = setInterval(() => {
-      const currentTheme = localStorage.getItem('theme');
-      const newDarkMode = currentTheme === 'dark';
-      if (newDarkMode !== isDarkMode) {
-        setIsDarkMode(newDarkMode);
-        
-        // Aplicar clases CSS inmediatamente
-        if (newDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
-    }, 50); // Reducir intervalo para respuesta más rápida
-
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-      clearInterval(interval);
-    };
-  }, [isDarkMode]);
 
   // Actualizar contador de tiempo cada minuto
   useEffect(() => {

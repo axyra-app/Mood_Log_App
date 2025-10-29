@@ -5,11 +5,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import JournalEditor from '../components/JournalEditor';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useJournal } from '../hooks/useJournal';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } =
@@ -50,42 +52,6 @@ const Journal: React.FC = () => {
     }
   }, [selectedMoodLog, editMode, navigate]);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
-
-    // Escuchar cambios en el tema desde otros componentes
-    const handleThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme');
-      setIsDarkMode(currentTheme === 'dark');
-    };
-
-    // Agregar listener para cambios de tema
-    window.addEventListener('storage', handleThemeChange);
-
-    // También escuchar cambios en el mismo tab
-    const interval = setInterval(() => {
-      const currentTheme = localStorage.getItem('theme');
-      const newDarkMode = currentTheme === 'dark';
-      if (newDarkMode !== isDarkMode) {
-        setIsDarkMode(newDarkMode);
-
-        // Aplicar clases CSS inmediatamente
-        if (newDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
-    }, 50); // Reducir intervalo para respuesta más rápida
-
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-      clearInterval(interval);
-    };
-  }, [isDarkMode]);
 
   useEffect(() => {
     if (error) {
