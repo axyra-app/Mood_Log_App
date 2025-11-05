@@ -48,9 +48,15 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
       return;
     }
 
+    if (!user?.uid) {
+      toast.error('Debes iniciar sesión para guardar en tu diario');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const entryData = {
+        userId: user.uid,
         title: title.trim(),
         content: content.trim(),
         mood,
@@ -65,7 +71,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
       };
 
       if (entry) {
-        await updateEntry(entry.id, entryData);
+        // En actualización no debe cambiar el userId
+        const { userId, ...updates } = entryData;
+        await updateEntry(entry.id, updates);
         toast.success('Entrada actualizada exitosamente');
       } else {
         await createEntry(entryData);
@@ -143,10 +151,10 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-none sm:rounded-lg w-full max-w-6xl h-full sm:h-auto sm:max-h-[95vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <BookOpen className="w-6 h-6 text-purple-600" />
@@ -182,8 +190,8 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Main Editor - Takes 2 columns */}
             <div className="lg:col-span-2 space-y-6">
               {/* Title */}
@@ -196,7 +204,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Escribe un título para tu entrada..."
-                  className="w-full px-4 py-3 text-lg font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-3 text-base sm:text-lg font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   onKeyDown={handleKeyPress}
                 />
               </div>
@@ -211,7 +219,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Escribe aquí tu entrada del diario... (Ctrl+Enter para guardar, Ctrl+Espacio para IA)"
-                  className="w-full min-h-[400px] px-4 py-3 text-base leading-relaxed border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full min-h-[300px] sm:min-h-[400px] px-3 sm:px-4 py-3 text-base leading-relaxed border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   onKeyDown={handleKeyPress}
                 />
               </div>
@@ -291,11 +299,11 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
             </div>
 
             {/* Sidebar - Takes 1 column */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Mood & Metrics */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-4">Estado de Ánimo</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Estado de Ánimo (1-10)</label>
                     <input
@@ -344,7 +352,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
               </div>
 
               {/* Tags */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-4">Etiquetas</h3>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {tags.map((tag, index) => (
@@ -378,7 +386,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
               </div>
 
               {/* Activities */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-4">Actividades</h3>
                 <div className="space-y-2 mb-3">
                   {activities.map((activity, index) => (
@@ -412,7 +420,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
               </div>
 
               {/* Emotions */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-4">Emociones</h3>
                 <div className="space-y-2 mb-3">
                   {emotions.map((emotion, index) => (
