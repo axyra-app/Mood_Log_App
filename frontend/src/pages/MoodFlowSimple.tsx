@@ -618,65 +618,152 @@ const MoodFlowSimple: React.FC = () => {
                 </div>
               </div>
 
-              <div
-                className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
-                  isDarkMode ? 'border-blue-800' : 'border-blue-200'
-                }`}
-              >
-                <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>💡 Recomendaciones</h4>
-                <div className='mt-2 space-y-1'>
-                  {analyzing ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Generando recomendaciones personalizadas...
-                      </p>
+              {/* Análisis 1: Estrategias de Regulación Emocional */}
+              {aiAnalysis?.emotionalRegulation && (
+                <div
+                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-purple-900/20' : 'bg-purple-50'} border ${
+                    isDarkMode ? 'border-purple-800' : 'border-purple-200'
+                  }`}
+                >
+                  <h4 className={`font-semibold text-base mb-2 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+                    🧘 {aiAnalysis.emotionalRegulation.title}
+                  </h4>
+                  <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {aiAnalysis.emotionalRegulation.description}
+                  </p>
+                  <div className="space-y-2">
+                    {aiAnalysis.emotionalRegulation.strategies.map((strategy, index) => (
+                      <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-white'} border-l-2 border-purple-400`}>
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {index + 1}. {strategy}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Análisis 2: Estrategia de Mantenimiento del Bienestar */}
+              {aiAnalysis?.wellBeingMaintenance && (
+                <div
+                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-green-900/20' : 'bg-green-50'} border ${
+                    isDarkMode ? 'border-green-800' : 'border-green-200'
+                  }`}
+                >
+                  <h4 className={`font-semibold text-base mb-2 ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>
+                    💚 {aiAnalysis.wellBeingMaintenance.title}
+                  </h4>
+                  <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {aiAnalysis.wellBeingMaintenance.description}
+                  </p>
+                  <div className="space-y-2">
+                    {aiAnalysis.wellBeingMaintenance.strategies.map((strategy, index) => (
+                      <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-white'} border-l-2 border-green-400`}>
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {index + 1}. {strategy}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Análisis 3: Análisis de Reflexión Personal (Texto) */}
+              {aiAnalysis?.textualAnalysis && (
+                <div
+                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
+                    isDarkMode ? 'border-blue-800' : 'border-blue-200'
+                  }`}
+                >
+                  <h4 className={`font-semibold text-base mb-2 ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                    📝 {aiAnalysis.textualAnalysis.title}
+                  </h4>
+                  <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {aiAnalysis.textualAnalysis.description}
+                  </p>
+                  
+                  {/* Insights */}
+                  {aiAnalysis.textualAnalysis.insights.length > 0 && (
+                    <div className="mb-3">
+                      <h5 className={`font-medium text-sm mb-2 ${isDarkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                        Insights:
+                      </h5>
+                      <div className="space-y-1">
+                        {aiAnalysis.textualAnalysis.insights.map((insight, index) => (
+                          <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-white'} border-l-2 border-blue-400`}>
+                            <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              💡 {insight}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ) : aiAnalysis ? (
-                    <div className="space-y-2">
-                      {aiAnalysis.recommendations.map((rec, index) => (
-                        <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border-l-4 ${
-                          rec.priority === 'high' ? 'border-red-500' : 
-                          rec.priority === 'medium' ? 'border-yellow-500' : 'border-green-500'
-                        }`}>
-                          <h5 className={`font-medium text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {rec.title}
-                          </h5>
-                          <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
-                            {rec.description}
-                          </p>
-                          <p className={`text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'} mt-1`}>
-                            💡 {rec.actionable}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {currentMood! >= 4 && (
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          ✨ ¡Excelente estado de ánimo! Mantén las actividades que te hacen sentir bien.
-                        </p>
-                      )}
-                      {energy < 5 && (
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          🔋 Considera hacer ejercicio ligero o tomar una caminata para aumentar tu energía.
-                        </p>
-                      )}
-                      {stress > 6 && (
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          🧘 Practica técnicas de relajación como respiración profunda o meditación.
-                        </p>
-                      )}
-                      {sleep < 5 && (
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          😴 Intenta establecer una rutina de sueño más consistente.
-                        </p>
-                      )}
+                  )}
+
+                  {/* Recomendaciones */}
+                  {aiAnalysis.textualAnalysis.recommendations.length > 0 && (
+                    <div>
+                      <h5 className={`font-medium text-sm mb-2 ${isDarkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                        Recomendaciones:
+                      </h5>
+                      <div className="space-y-1">
+                        {aiAnalysis.textualAnalysis.recommendations.map((recommendation, index) => (
+                          <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-white'} border-l-2 border-blue-400`}>
+                            <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              → {recommendation}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {/* Recomendaciones generales (si no hay análisis específicos) */}
+              {analyzing && (
+                <div
+                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
+                    isDarkMode ? 'border-blue-800' : 'border-blue-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Generando análisis personalizados...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Fallback si no hay análisis pero hay recomendaciones generales */}
+              {!analyzing && aiAnalysis && !aiAnalysis.emotionalRegulation && !aiAnalysis.wellBeingMaintenance && !aiAnalysis.textualAnalysis && aiAnalysis.recommendations && (
+                <div
+                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
+                    isDarkMode ? 'border-blue-800' : 'border-blue-200'
+                  }`}
+                >
+                  <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>💡 Recomendaciones Generales</h4>
+                  <div className="mt-2 space-y-2">
+                    {aiAnalysis.recommendations.map((rec, index) => (
+                      <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border-l-4 ${
+                        rec.priority === 'high' ? 'border-red-500' : 
+                        rec.priority === 'medium' ? 'border-yellow-500' : 'border-green-500'
+                      }`}>
+                        <h5 className={`font-medium text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {rec.title}
+                        </h5>
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
+                          {rec.description}
+                        </p>
+                        <p className={`text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'} mt-1 whitespace-pre-line`}>
+                          💡 {rec.actionable}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className='flex justify-center pt-4'>
                 <button

@@ -24,6 +24,23 @@ export interface MoodAnalysisResult {
   recommendations: AIRecommendation[];
   moodTrend: 'improving' | 'stable' | 'declining';
   riskLevel: 'low' | 'medium' | 'high';
+  // Nuevos análisis separados
+  emotionalRegulation?: {
+    title: string;
+    description: string;
+    strategies: string[];
+  };
+  wellBeingMaintenance?: {
+    title: string;
+    description: string;
+    strategies: string[];
+  };
+  textualAnalysis?: {
+    title: string;
+    description: string;
+    insights: string[];
+    recommendations: string[];
+  };
 }
 
 class AIService {
@@ -304,12 +321,208 @@ Formato de respuesta en JSON:
       insights.push(`Actividades realizadas: ${moodData.activities.join(', ')}`);
     }
 
+    // Generar análisis de regulación emocional
+    const emotionalRegulation = this.generateEmotionalRegulationAnalysis(moodData);
+    
+    // Generar análisis de mantenimiento del bienestar
+    const wellBeingMaintenance = this.generateWellBeingMaintenanceAnalysis(moodData);
+    
+    // Generar análisis textual basado en el texto ingresado
+    const textualAnalysis = this.generateTextualAnalysis(moodData);
+
     return {
       summary: `Análisis personalizado basado en tu estado de ánimo (${moodData.overallMood.toFixed(1)}/5), energía (${moodData.energy.toFixed(1)}/10), estrés (${moodData.stress.toFixed(1)}/10) y sueño (${moodData.sleep.toFixed(1)}/10). ${moodData.feelings ? `Tus sentimientos: "${moodData.feelings}"` : ''}`,
       insights,
       recommendations: finalRecommendations,
       moodTrend: moodData.overallMood >= 4 ? 'improving' : moodData.overallMood <= 2 ? 'declining' : 'stable',
       riskLevel: moodData.overallMood <= 2 && moodData.stress > 7 ? 'high' : moodData.overallMood <= 3 ? 'medium' : 'low',
+      emotionalRegulation,
+      wellBeingMaintenance,
+      textualAnalysis,
+    };
+  }
+
+  private generateEmotionalRegulationAnalysis(moodData: MoodAnalysis): {
+    title: string;
+    description: string;
+    strategies: string[];
+  } {
+    const negativeEmotions = moodData.emotions.filter(emotion => 
+      ['Tristeza', 'Ansiedad', 'Enojo', 'Miedo', 'Frustración', 'Desesperación', 'Vergüenza'].includes(emotion)
+    );
+
+    if (negativeEmotions.length === 0) {
+      return {
+        title: 'Estrategias de Regulación Emocional',
+        description: 'No se identificaron emociones desafiantes en este momento. Estas estrategias te ayudarán a mantener el equilibrio emocional.',
+        strategies: [
+          'Validación emocional: Reconoce que todas las emociones son válidas y temporales',
+          'Técnica STOP: Para, respira profundamente, observa tus pensamientos sin juzgar, procede con calma',
+          'Escritura terapéutica: Escribe sobre tus emociones sin autocensura',
+          'Distracción saludable: Actividades que requieran concentración (puzzles, música, lectura)',
+          'Apoyo social: Habla con alguien de confianza sobre tus sentimientos',
+          'Técnicas de grounding: 5-4-3-2-1 (5 cosas que ves, 4 que tocas, 3 que oyes, 2 que hueles, 1 que saboreas)'
+        ]
+      };
+    }
+
+    return {
+      title: 'Estrategias de Regulación Emocional',
+      description: `Identificaste emociones desafiantes: ${negativeEmotions.join(', ')}. Estas emociones son válidas y normales, pero necesitan manejo adecuado.`,
+      strategies: [
+        'Validación emocional: Reconoce que tus emociones son válidas y temporales',
+        'Técnica STOP: Para, respira, observa tus pensamientos, procede con calma',
+        'Escritura terapéutica: Escribe sobre tus emociones sin juzgarlas',
+        'Distracción saludable: Actividades que requieran concentración (puzzles, música)',
+        'Apoyo social: Habla con alguien de confianza sobre tus sentimientos',
+        'Técnicas de grounding: 5-4-3-2-1 (5 cosas que ves, 4 que tocas, etc.)'
+      ]
+    };
+  }
+
+  private generateWellBeingMaintenanceAnalysis(moodData: MoodAnalysis): {
+    title: string;
+    description: string;
+    strategies: string[];
+  } {
+    const moodLabel = moodData.overallMood <= 2 ? 'Muy mal' : 
+                     moodData.overallMood <= 4 ? 'Regular' : 
+                     moodData.overallMood <= 6 ? 'Bien' : 
+                     moodData.overallMood <= 8 ? 'Muy bien' : 'Excelente';
+
+    if (moodData.overallMood >= 4) {
+      return {
+        title: 'Estrategia de Mantenimiento del Bienestar',
+        description: `Excelente estado de ánimo (${moodLabel}, ${moodData.overallMood}/5). Es crucial mantener estos niveles positivos mediante estrategias preventivas y de consolidación.`,
+        strategies: [
+          'Mantén tu rutina actual que te está funcionando bien',
+          'Practica gratitud diaria escribiendo 3 cosas positivas cada mañana',
+          'Ayuda a otros: el altruismo refuerza el bienestar personal',
+          'Establece metas pequeñas y alcanzables para mantener la motivación',
+          'Comparte tu experiencia positiva con otros que puedan beneficiarse'
+        ]
+      };
+    }
+
+    return {
+      title: 'Estrategia de Mantenimiento del Bienestar',
+      description: `Tu estado de ánimo actual (${moodLabel}, ${moodData.overallMood}/5) puede mejorarse con estrategias de bienestar preventivas.`,
+      strategies: [
+        'Establece una rutina diaria que incluya actividades placenteras',
+        'Practica gratitud diaria identificando al menos una cosa positiva',
+        'Mantén conexiones sociales regulares con personas importantes',
+        'Realiza actividad física ligera para mejorar el estado de ánimo',
+        'Establece pequeñas metas diarias que te den sensación de logro'
+      ]
+    };
+  }
+
+  private generateTextualAnalysis(moodData: MoodAnalysis): {
+    title: string;
+    description: string;
+    insights: string[];
+    recommendations: string[];
+  } {
+    if (!moodData.feelings || moodData.feelings.trim().length === 0) {
+      return {
+        title: 'Análisis de tu Reflexión Personal',
+        description: 'No proporcionaste una descripción textual de tus sentimientos. Compartir tus pensamientos ayuda a generar análisis más personalizados.',
+        insights: [
+          'Considera escribir sobre tus sentimientos para obtener insights más específicos',
+          'La escritura expresiva puede ser una herramienta terapéutica poderosa'
+        ],
+        recommendations: [
+          'Próxima vez, intenta escribir al menos unas líneas sobre cómo te sientes',
+          'La escritura libre sin autocensura puede revelar patrones emocionales importantes'
+        ]
+      };
+    }
+
+    const feelingsLower = moodData.feelings.toLowerCase();
+    const emotionsText = moodData.emotions.join(', ').toLowerCase();
+    const moodValue = moodData.overallMood;
+
+    // Análisis de sentimientos positivos
+    const positiveWords = ['feliz', 'contento', 'bien', 'genial', 'excelente', 'mejor', 'alegre', 'satisfecho', 'gratitud', 'agradecido'];
+    const hasPositive = positiveWords.some(word => feelingsLower.includes(word));
+
+    // Análisis de sentimientos negativos
+    const negativeWords = ['triste', 'mal', 'preocupado', 'ansioso', 'estresado', 'difícil', 'problema', 'malo', 'malestar', 'dolor'];
+    const hasNegative = negativeWords.some(word => feelingsLower.includes(word));
+
+    // Análisis de preocupaciones
+    const worryWords = ['preocupación', 'miedo', 'ansiedad', 'nervioso', 'angustiado', 'tensión'];
+    const hasWorry = worryWords.some(word => feelingsLower.includes(word));
+
+    // Análisis de gratitud
+    const gratitudeWords = ['gratitud', 'agradecido', 'bendecido', 'afortunado', 'suerte'];
+    const hasGratitude = gratitudeWords.some(word => feelingsLower.includes(word));
+
+    const insights: string[] = [];
+    const recommendations: string[] = [];
+
+    // Insights basados en el texto
+    if (hasPositive && moodValue >= 4) {
+      insights.push('Tu descripción refleja un estado emocional positivo que coincide con tu evaluación numérica del estado de ánimo');
+      recommendations.push('Continúa cultivando estos momentos positivos y documenta qué te ayuda a mantener este bienestar');
+    }
+
+    if (hasNegative && moodValue <= 3) {
+      insights.push('Tu descripción textual coincide con un estado de ánimo bajo, lo que indica autoconciencia emocional');
+      recommendations.push('Considera técnicas de reestructuración cognitiva para cambiar patrones de pensamiento negativos');
+    }
+
+    if (hasWorry) {
+      insights.push(`Identificaste preocupaciones en tu descripción. Las emociones de ${emotionsText} pueden estar relacionadas con estas preocupaciones`);
+      recommendations.push('Practica técnicas de mindfulness para observar tus preocupaciones sin quedarte atrapado en ellas');
+    }
+
+    if (hasGratitude) {
+      insights.push('El reconocimiento de gratitud en tu descripción es una fortaleza emocional importante');
+      recommendations.push('Amplía esta práctica de gratitud escribiendo un diario de gratitud diario');
+    }
+
+    // Análisis de coherencia entre texto y emociones
+    if (moodData.emotions.length > 0) {
+      const emotionsInText = moodData.emotions.some(emotion => 
+        feelingsLower.includes(emotion.toLowerCase())
+      );
+      
+      if (emotionsInText) {
+        insights.push('Hay coherencia entre las emociones que seleccionaste y lo que describes en tu texto');
+      } else {
+        insights.push('Tu descripción textual puede revelar emociones adicionales a las que seleccionaste');
+      }
+    }
+
+    // Análisis de longitud y profundidad
+    if (moodData.feelings.length > 100) {
+      insights.push('Tu descripción detallada muestra una buena capacidad de introspección y autoconocimiento');
+      recommendations.push('Considera usar esta capacidad de reflexión para identificar patrones a lo largo del tiempo');
+    }
+
+    // Recomendaciones generales basadas en el texto
+    if (insights.length === 0) {
+      insights.push('Tu descripción personal proporciona contexto valioso sobre tu estado emocional actual');
+      insights.push(`Basado en tu estado de ánimo (${moodValue}/5) y tus emociones (${emotionsText}), hay espacio para crecimiento personal`);
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push('Continúa escribiendo sobre tus sentimientos para desarrollar mayor autoconciencia emocional');
+      recommendations.push('Considera revisar tus descripciones anteriores para identificar patrones y cambios a lo largo del tiempo');
+    }
+
+    return {
+      title: 'Análisis de tu Reflexión Personal',
+      description: `Basado en lo que escribiste sobre cómo te sientes, junto con tu estado de ánimo (${moodValue}/5) y las emociones que identificaste (${emotionsText}), aquí tienes insights personalizados:`,
+      insights: insights.length > 0 ? insights : [
+        'Tu reflexión personal muestra autoconciencia emocional',
+        'La conexión entre tus pensamientos y emociones es importante para tu bienestar'
+      ],
+      recommendations: recommendations.length > 0 ? recommendations : [
+        'Continúa explorando tus sentimientos a través de la escritura',
+        'Considera mantener un registro de cómo tus pensamientos influyen en tus emociones'
+      ]
     };
   }
 }
