@@ -337,6 +337,7 @@ const RegisterSimple: React.FC = () => {
                     >
                       <div className='text-2xl mb-2'>🧠</div>
                       <div className='font-bold text-sm'>PSICÓLOGO</div>
+                    </button>
                   </div>
                 </div>
 
