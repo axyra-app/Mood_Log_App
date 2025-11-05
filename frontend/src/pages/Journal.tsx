@@ -23,7 +23,6 @@ const Journal: React.FC = () => {
   const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Manejar estado de ánimo seleccionado desde el historial
   const selectedMoodLog = location.state?.selectedMoodLog;
