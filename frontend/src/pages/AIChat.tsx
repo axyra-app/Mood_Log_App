@@ -1,6 +1,6 @@
 import { ArrowLeft, Send, Bot, User, Clock, Shield, Star } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { drMiaAgent, drBryanAgent } from '../services/specializedAgents';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +29,7 @@ interface DoctorProfile {
 const AIChat: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -66,7 +67,28 @@ const AIChat: React.FC = () => {
 
   useEffect(() => {
     // Determinar qué doctor está seleccionado
-    const doctorType = location.pathname.includes('dr-mia') ? 'dr-mia' : 'dr-bryan';
+    // Primero intentar obtener del parámetro de la ruta, luego del pathname
+    let doctorType: 'dr-mia' | 'dr-bryan' = 'dr-mia';
+    
+    if (params.doctorType) {
+      // Si viene de la ruta /chat/ai/:doctorType
+      doctorType = params.doctorType === 'dr-mia' ? 'dr-mia' : 'dr-bryan';
+    } else if (location.pathname.includes('dr-mia')) {
+      doctorType = 'dr-mia';
+    } else if (location.pathname.includes('dr-bryan')) {
+      doctorType = 'dr-bryan';
+    } else {
+      // Si no se puede determinar, usar dr-mia por defecto
+      doctorType = 'dr-mia';
+    }
+
+    // Validar que el doctorType existe en los perfiles
+    if (!doctorProfiles[doctorType]) {
+      console.error('Tipo de doctor no válido:', doctorType);
+      navigate('/chat');
+      return;
+    }
+
     setDoctor(doctorProfiles[doctorType]);
 
     // Mensaje de bienvenida inicial
@@ -80,7 +102,7 @@ const AIChat: React.FC = () => {
     };
 
     setMessages([welcomeMessage]);
-  }, [location.pathname]);
+  }, [location.pathname, params.doctorType, navigate]);
 
   useEffect(() => {
     scrollToBottom();
@@ -106,7 +128,16 @@ const AIChat: React.FC = () => {
 
     try {
       // Determinar qué agente usar
-      const doctorType = location.pathname.includes('dr-mia') ? 'dr-mia' : 'dr-bryan';
+      let doctorType: 'dr-mia' | 'dr-bryan' = 'dr-mia';
+      
+      if (params.doctorType) {
+        doctorType = params.doctorType === 'dr-mia' ? 'dr-mia' : 'dr-bryan';
+      } else if (location.pathname.includes('dr-mia')) {
+        doctorType = 'dr-mia';
+      } else if (location.pathname.includes('dr-bryan')) {
+        doctorType = 'dr-bryan';
+      }
+      
       const agent = doctorType === 'dr-mia' ? drMiaAgent : drBryanAgent;
 
       // Obtener contexto del usuario si está disponible

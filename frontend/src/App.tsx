@@ -114,14 +114,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path='/chat'
-                  element={
-                    <ProtectedRoute>
-                      <ChatSelection />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Rutas específicas de chat de IA - deben estar ANTES de /chat para evitar conflictos */}
                 <Route
                   path='/chat/dr-mia'
                   element={
@@ -138,6 +131,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                {/* Ruta alternativa para chat de IA con parámetro dinámico */}
                 <Route
                   path='/chat/ai/:doctorType'
                   element={
@@ -146,6 +140,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                {/* Rutas de chat con psicólogos */}
                 <Route
                   path='/chat/psychologist'
                   element={
@@ -159,6 +154,15 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Chat />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Ruta base de chat - debe estar después de las rutas específicas */}
+                <Route
+                  path='/chat'
+                  element={
+                    <ProtectedRoute>
+                      <ChatSelection />
                     </ProtectedRoute>
                   }
                 />
