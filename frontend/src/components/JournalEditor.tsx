@@ -25,7 +25,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
   const [tags, setTags] = useState<string[]>(entry?.tags || []);
   const [activities, setActivities] = useState<string[]>(entry?.activities || []);
   const [emotions, setEmotions] = useState<string[]>(entry?.emotions || []);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(entry?.aiAnalysis || null);
+  const [aiAnalysis, setAiAnalysis] = useState<any>(entry?.aiAnalysis || null);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -246,51 +246,72 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                       <div className="space-y-3">
                         <div>
                           <h4 className="font-semibold text-purple-700 mb-1">Resumen:</h4>
-                          <p>{aiAnalysis.summary}</p>
+                          <p>{aiAnalysis?.summary || 'Análisis generado'}</p>
                         </div>
                         <div>
                           <h4 className="font-semibold text-purple-700 mb-1">Sentimiento:</h4>
                           <span className={`px-2 py-1 rounded-full text-sm ${
-                            aiAnalysis.sentiment === 'positive' ? 'bg-green-100 text-green-800' :
-                            aiAnalysis.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
+                            (aiAnalysis?.sentiment || 'neutral') === 'positive' ? 'bg-green-100 text-green-800' :
+                            (aiAnalysis?.sentiment || 'neutral') === 'negative' ? 'bg-red-100 text-red-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
-                            {aiAnalysis.sentiment === 'positive' ? 'Positivo' :
-                             aiAnalysis.sentiment === 'negative' ? 'Negativo' : 'Neutral'}
+                            {(aiAnalysis?.sentiment || 'neutral') === 'positive' ? 'Positivo' :
+                             (aiAnalysis?.sentiment || 'neutral') === 'negative' ? 'Negativo' : 'Neutral'}
                           </span>
                         </div>
-                        {aiAnalysis.themes && aiAnalysis.themes.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold text-purple-700 mb-1">Temas:</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {aiAnalysis.themes.map((theme: string, index: number) => (
-                                <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
-                                  {theme}
-                                </span>
-                              ))}
+                        {(() => {
+                          const themes = Array.isArray(aiAnalysis?.themes)
+                            ? aiAnalysis.themes
+                            : aiAnalysis?.themes
+                            ? [String(aiAnalysis.themes)]
+                            : [];
+                          return themes.length > 0 ? (
+                            <div>
+                              <h4 className="font-semibold text-purple-700 mb-1">Temas:</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {themes.map((theme: string, index: number) => (
+                                  <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                                    {theme}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {aiAnalysis.insights && aiAnalysis.insights.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold text-purple-700 mb-1">Insights:</h4>
-                            <ul className="list-disc list-inside space-y-1">
-                              {aiAnalysis.insights.map((insight: string, index: number) => (
-                                <li key={index}>{insight}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold text-purple-700 mb-1">Recomendaciones:</h4>
-                            <ul className="list-disc list-inside space-y-1">
-                              {aiAnalysis.recommendations.map((recommendation: string, index: number) => (
-                                <li key={index}>{recommendation}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                          ) : null;
+                        })()}
+                        {(() => {
+                          const insights = Array.isArray(aiAnalysis?.insights)
+                            ? aiAnalysis.insights
+                            : aiAnalysis?.insights
+                            ? [String(aiAnalysis.insights)]
+                            : [];
+                          return insights.length > 0 ? (
+                            <div>
+                              <h4 className="font-semibold text-purple-700 mb-1">Insights:</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {insights.map((insight: string, index: number) => (
+                                  <li key={index}>{insight}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null;
+                        })()}
+                        {(() => {
+                          const recommendations = Array.isArray(aiAnalysis?.recommendations)
+                            ? aiAnalysis.recommendations
+                            : aiAnalysis?.recommendations
+                            ? [String(aiAnalysis.recommendations)]
+                            : [];
+                          return recommendations.length > 0 ? (
+                            <div>
+                              <h4 className="font-semibold text-purple-700 mb-1">Recomendaciones:</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {recommendations.map((recommendation: string, index: number) => (
+                                  <li key={index}>{recommendation}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                     )}
                   </div>

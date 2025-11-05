@@ -15,10 +15,11 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Cargar tema inicial desde localStorage
+  // Cargar tema inicial desde localStorage o preferencia del sistema
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
-    const initialDarkMode = savedTheme === 'dark';
+    const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialDarkMode = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
     setIsDarkMode(initialDarkMode);
 
     // Aplicar tema inicial
@@ -27,6 +28,22 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Escuchar cambios de preferencia del sistema si el usuario no ha fijado uno manual
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = (e: MediaQueryListEvent) => {
+      const userSet = localStorage.getItem('theme');
+      if (!userSet) {
+        setIsDarkMode(e.matches);
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+    media.addEventListener?.('change', onChange);
+    return () => media.removeEventListener?.('change', onChange);
   }, []);
 
   // Función para cambiar el modo oscuro
