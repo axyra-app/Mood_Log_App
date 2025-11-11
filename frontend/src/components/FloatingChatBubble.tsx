@@ -199,40 +199,49 @@ const FloatingChatBubble: React.FC = () => {
           {!isMinimized && (
             <>
               {/* Mensajes */}
-              <div className='flex-1 overflow-y-auto mobile-padding space-y-3 h-56 sm:h-64'>
+              <div className='flex-1 overflow-y-auto mobile-padding space-y-4 h-56 sm:h-64 py-4'>
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`flex items-start space-x-2 max-w-[80%] ${
-                        msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                      className={`flex items-end gap-2 max-w-[85%] ${
+                        msg.sender === 'user' ? 'flex-row-reverse' : ''
                       }`}
                     >
+                      {/* Avatar */}
                       <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          msg.sender === 'user' ? 'bg-purple-500' : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
+                          msg.sender === 'user' 
+                            ? 'bg-purple-500' 
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
                         }`}
                       >
                         {msg.sender === 'user' ? (
-                          <User className='w-3 h-3 text-white' />
+                          <User className='w-4 h-4 text-white' />
                         ) : (
-                          <Bot className='w-3 h-3 text-white' />
+                          <Bot className='w-4 h-4 text-white' />
                         )}
                       </div>
-                      <div
-                        className={`px-3 py-2 rounded-lg ${
-                          msg.sender === 'user'
-                            ? isDarkMode
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-purple-500 text-white'
-                            : isDarkMode
-                            ? 'bg-gray-700 text-gray-100'
-                            : 'bg-gray-100 text-gray-900'
-                        }`}
-                      >
-                        <p className='text-sm whitespace-pre-wrap'>{msg.message}</p>
+                      
+                      {/* Burbuja de mensaje */}
+                      <div className='flex flex-col'>
+                        <div
+                          className={`px-4 py-2.5 rounded-2xl shadow-sm ${
+                            msg.sender === 'user'
+                              ? isDarkMode
+                                ? 'bg-purple-600 text-white rounded-br-sm'
+                                : 'bg-purple-500 text-white rounded-br-sm'
+                              : isDarkMode
+                              ? 'bg-gray-700 text-gray-100 rounded-bl-sm'
+                              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
+                          }`}
+                        >
+                          <p className='text-sm leading-relaxed whitespace-pre-wrap break-words'>{msg.message}</p>
+                        </div>
                         <p
-                          className={`text-xs mt-1 ${
-                            msg.sender === 'user' ? 'text-purple-100' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                          className={`text-[10px] mt-1 px-1 ${
+                            msg.sender === 'user' 
+                              ? 'text-right text-gray-400' 
+                              : 'text-left text-gray-400'
                           }`}
                         >
                           {msg.timestamp.toLocaleTimeString('es-CO', {
@@ -248,23 +257,29 @@ const FloatingChatBubble: React.FC = () => {
                 {/* Indicador de carga */}
                 {isLoading && (
                   <div className='flex justify-start'>
-                    <div className='flex items-start space-x-2 max-w-[80%]'>
-                      <div className='w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center'>
-                        <Bot className='w-3 h-3 text-white' />
+                    <div className='flex items-end gap-2 max-w-[85%]'>
+                      <div className='w-7 h-7 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-sm'>
+                        <Bot className='w-4 h-4 text-white' />
                       </div>
                       <div
-                        className={`px-3 py-2 rounded-lg ${
-                          isDarkMode ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-900'
+                        className={`px-4 py-2.5 rounded-2xl rounded-bl-sm shadow-sm ${
+                          isDarkMode ? 'bg-gray-700' : 'bg-white border border-gray-200'
                         }`}
                       >
-                        <div className='flex space-x-1'>
-                          <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce'></div>
+                        <div className='flex space-x-1.5'>
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${
+                            isDarkMode ? 'bg-gray-400' : 'bg-gray-400'
+                          }`}></div>
                           <div
-                            className='w-2 h-2 bg-gray-400 rounded-full animate-bounce'
+                            className={`w-2 h-2 rounded-full animate-bounce ${
+                              isDarkMode ? 'bg-gray-400' : 'bg-gray-400'
+                            }`}
                             style={{ animationDelay: '0.1s' }}
                           ></div>
                           <div
-                            className='w-2 h-2 bg-gray-400 rounded-full animate-bounce'
+                            className={`w-2 h-2 rounded-full animate-bounce ${
+                              isDarkMode ? 'bg-gray-400' : 'bg-gray-400'
+                            }`}
                             style={{ animationDelay: '0.2s' }}
                           ></div>
                         </div>
