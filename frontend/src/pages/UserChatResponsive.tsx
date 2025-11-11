@@ -1,4 +1,4 @@
-import { ArrowLeft, Menu, MessageCircle, Send, User, X } from 'lucide-react';
+import { ArrowLeft, Circle, Menu, MessageCircle, Send, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ const UserChat: React.FC = () => {
   const [availablePsychologists, setAvailablePsychologists] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
+  const [showPsychologistModal, setShowPsychologistModal] = useState(false);
 
   const { sessions, loading: sessionsLoading, markAsRead, createSession } = useUserChatSessions(user?.uid || '');
   const { messages, loading: messagesLoading, sendMessage } = useUserChatMessages(selectedSession);
@@ -89,10 +90,24 @@ const UserChat: React.FC = () => {
     if (!user) return;
 
     try {
+      // Verificar si ya existe una sesión con este psicólogo
+      const existingSession = mySessions.find(
+        (session) => session.psychologistId === psychologistId
+      );
+
+      if (existingSession) {
+        setSelectedSession(existingSession.id);
+        setShowChatOnMobile(true);
+        toast.success('Conversación existente abierta');
+        setShowPsychologistModal(false);
+        return;
+      }
+
       const sessionId = await createSession(user.uid, psychologistId);
       setSelectedSession(sessionId);
       setShowChatOnMobile(true);
       toast.success('Conversación iniciada');
+      setShowPsychologistModal(false);
     } catch (error) {
       console.error('Error starting chat:', error);
       toast.error('Error al iniciar la conversación');
@@ -189,7 +204,7 @@ const UserChat: React.FC = () => {
         <div
           className={`rounded-xl shadow-sm border transition-colors duration-500 ${
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          }`}
+          } overflow-hidden`}
         >
           <div className='flex h-[600px]'>
             {/* Sessions List - Responsive */}
@@ -223,11 +238,7 @@ const UserChat: React.FC = () => {
 
                   {/* Botón para iniciar nueva conversación */}
                   <button
-                    onClick={() => {
-                      if (availablePsychologists.length > 0) {
-                        startChatWithPsychologist(availablePsychologists[0].id);
-                      }
-                    }}
+                    onClick={() => setShowPsychologistModal(true)}
                     className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors duration-300 ${
                       isDarkMode
                         ? 'bg-purple-600 text-white hover:bg-purple-700'
@@ -538,6 +549,112 @@ const UserChat: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Selección de Psicólogo */}
+      {showPsychologistModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
+          <div
+            className={`rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto ${
+              isDarkMode ? 'bg-gray-800' : 'bg-white'
+            }`}
+          >
+            <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className='flex items-center justify-between'>
+                <h2
+                  className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                >
+                  Seleccionar Psicólogo
+                </h2>
+                <button
+                  onClick={() => setShowPsychologistModal(false)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <X className='w-5 h-5' />
+                </button>
+              </div>
+            </div>
+
+            <div className='p-6'>
+              {availablePsychologists.length === 0 ? (
+                <div className='text-center py-8'>
+                  <MessageCircle
+                    className={`w-12 h-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}
+                  />
+                  <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                    No hay psicólogos disponibles en este momento
+                  </p>
+                </div>
+              ) : (
+                <div className='space-y-3'>
+                  {availablePsychologists.map((psychologist) => {
+                    const existingSession = mySessions.find(
+                      (session) => session.psychologistId === psychologist.id
+                    );
+                    const isOnline = psychologist.isOnline || false;
+
+                    return (
+                      <button
+                        key={psychologist.id}
+                        onClick={() => startChatWithPsychologist(psychologist.id)}
+                        className={`w-full p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                          existingSession
+                            ? isDarkMode
+                              ? 'border-purple-500 bg-purple-900/20 hover:bg-purple-900/30'
+                              : 'border-purple-500 bg-purple-50 hover:bg-purple-100'
+                            : isDarkMode
+                            ? 'border-gray-700 bg-gray-700/50 hover:border-purple-500 hover:bg-gray-700'
+                            : 'border-gray-200 bg-gray-50 hover:border-purple-500 hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center space-x-3 flex-1'>
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+                              }`}
+                            >
+                              <User className={`w-6 h-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                            </div>
+                            <div className='flex-1 min-w-0'>
+                              <div className='flex items-center space-x-2'>
+                                <h3
+                                  className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                                >
+                                  {psychologist.displayName || psychologist.name || 'Psicólogo'}
+                                </h3>
+                                {isOnline && (
+                                  <div className='flex items-center space-x-1'>
+                                    <Circle className='w-2 h-2 fill-green-500 text-green-500' />
+                                    <span className='text-xs text-green-500'>En línea</span>
+                                  </div>
+                                )}
+                              </div>
+                              {psychologist.specialization && (
+                                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {Array.isArray(psychologist.specialization)
+                                    ? psychologist.specialization.join(', ')
+                                    : psychologist.specialization}
+                                </p>
+                              )}
+                              {existingSession && (
+                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>
+                                  Tienes una conversación existente
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, FileText, Heart, MessageCircle, Settings, X } from 'lucide-react';
+import { BarChart3, BookOpen, FileText, Heart, MessageCircle, X } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from './Logo';
@@ -14,18 +14,18 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
 
   const menuItems = [
     {
+      icon: BookOpen,
+      label: 'Mi Diario',
+      path: '/journal',
+      description: 'Reflexiona sobre tu día',
+      color: 'bg-gradient-to-r from-teal-500 to-blue-500',
+    },
+    {
       icon: Heart,
       label: 'Registrar Estado de Ánimo',
       path: '/mood-flow',
       description: 'Cómo te sientes hoy',
       color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-    },
-    {
-      icon: BarChart3,
-      label: 'Ver Estadísticas',
-      path: '/statistics',
-      description: 'Tu progreso emocional',
-      color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
     },
     {
       icon: MessageCircle,
@@ -35,25 +35,18 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
       color: 'bg-gradient-to-r from-green-500 to-emerald-500',
     },
     {
+      icon: BarChart3,
+      label: 'Ver Estadísticas',
+      path: '/statistics',
+      description: 'Tu progreso emocional',
+      color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
+    },
+    {
       icon: FileText,
       label: 'Reportes Avanzados',
       path: '/reports',
       description: 'Análisis detallados',
       color: 'bg-gradient-to-r from-orange-500 to-amber-500',
-    },
-    {
-      icon: Settings,
-      label: 'Configuración',
-      path: '/settings',
-      description: 'Personaliza tu experiencia',
-      color: 'bg-gradient-to-r from-orange-500 to-red-500',
-    },
-    {
-      icon: BookOpen,
-      label: 'Mi Diario',
-      path: '/journal',
-      description: 'Reflexiona sobre tu día',
-      color: 'bg-gradient-to-r from-teal-500 to-blue-500',
     },
   ];
 
@@ -66,7 +59,7 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
       <div
         className={`fixed top-0 left-0 h-full bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } w-72 sm:w-64 flex flex-col safe-area-left`}
+        } w-72 sm:w-80 md:w-96 flex flex-col safe-area-left`}
       >
         {/* Header */}
         <div className='flex items-center justify-between mobile-card border-b border-gray-700 flex-shrink-0'>
@@ -95,11 +88,11 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
                       navigate(item.path);
                       onClose();
                     }}
-                    className={`${item.color} w-full mobile-card rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left touch-target`}
+                    className={`${item.color} w-full mobile-card rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left touch-target p-4`}
                   >
                     <div className='flex items-center space-x-3 mb-2'>
-                      <IconComponent className='w-5 h-5' />
-                      <h4 className='font-semibold mobile-text'>{item.label}</h4>
+                      <IconComponent className='w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0' />
+                      <h4 className='font-semibold mobile-text text-base sm:text-lg'>{item.label}</h4>
                     </div>
                     <p className='text-xs sm:text-sm opacity-90'>{item.description}</p>
                   </button>

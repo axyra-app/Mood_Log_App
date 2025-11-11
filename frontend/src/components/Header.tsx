@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, LogOut, Moon, Sun, X } from 'lucide-react';
+import { ArrowLeft, Bell, Home, LogOut, Moon, Sun, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -61,6 +61,14 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleBackClick = () => {
+    // Mantener el modo oscuro al navegar
+    const currentTheme = localStorage.getItem('theme');
+    if (currentTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
     if (backTo) {
       navigate(backTo);
     } else {
@@ -76,6 +84,23 @@ const Header: React.FC<HeaderProps> = ({
           <div className='flex items-center space-x-4'>
             {/* Logo */}
             <Logo size='sm' showText={false} />
+
+            {/* Botón Home */}
+            <button
+              onClick={() => {
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+                navigate('/dashboard');
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+              title='Ir al Dashboard'
+            >
+              <Home className='w-5 h-5' />
+            </button>
 
             {shouldShowBackButton && (
               <button
