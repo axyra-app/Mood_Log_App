@@ -1,69 +1,76 @@
-# ❓ Solución de Problemas y Preguntas Frecuentes (FAQ & Troubleshooting)
+# Solución de problemas y preguntas frecuentes
 
----
+## Desarrollo local
 
-## 💡 Preguntas Frecuentes de Producto y Negocio
+### `npm run dev`: no encuentra `vite`
 
-### 1. ¿Por qué se retiró el módulo de psicólogos y citas médicas?
-El proyecto nació originalmente como una plataforma universitaria para conectar estudiantes con psicólogos institucionales. Sin embargo, para escalar a una **aplicación de consumo masivo (B2C) estilo Strava**, el modelo de citas y expedientes médicos generaba:
-- Alta fricción burocrática y regulatoria (leyes sanitarias, licencias médicas por país, HIPAA/GDPR médico).
-- Dependencia de profesionales en línea en lugar de un uso diario autónomo.
-- Riesgos de privacidad innecesarios.
+Instala primero las dependencias en el directorio que contiene `package.json`:
 
-El nuevo modelo se enfoca en el **auto-cuidado diario, hábitos consistentes, confidente con IA 24/7 y biomarcadores pasivos**. El código previo está respaldado intacto en la rama `backup-version-universitaria`.
+```sh
+cd frontend
+npm ci
+npm run dev
+```
 
-### 2. ¿Pueden otras personas ver lo que escribo en mi diario?
-**No.** La arquitectura actual implementa aislamiento estricto por usuario:
-- A nivel de base de datos, las reglas de Firestore deniegan cualquier lectura o búsqueda que no pertenezca exactamente al `UID` del usuario que inició sesión.
-- En la siguiente fase se implementará además **cifrado en el dispositivo**, de modo que ni los administradores de la base de datos puedan leer los textos del diario.
+### `npm run typecheck` o `npm run build`: no encuentra `tsc`/`vite`
 
-### 3. ¿La aplicación funciona si no tengo conexión a internet?
-Sí, en modo básico. La aplicación es una **Progressive Web App (PWA)**:
-- La interfaz y los gráficos se cargan desde la memoria caché del navegador (Service Worker).
-- Si no hay conexión, los datos leídos previamente se mantienen en pantalla.
+Comprueba que estás en `frontend/` y que `npm ci` terminó correctamente. No instales dependencias globales como sustituto de las versiones fijadas en el lockfile.
 
-### 4. ¿Cómo se calculan las rachas (Streaks)?
-Cada vez que registras tu estado de ánimo en `MoodFlow`, el sistema evalúa la fecha del último registro:
-- Si registraste ayer o es tu primer registro del día de hoy, la racha aumenta en +1.
-- Si pasaron más de 48 horas sin registrar, la racha se reinicia de forma amigable sin penalizaciones destructivas.
+### Build correcto, pero problemas de tipos
 
----
+Vite transpila TypeScript, pero el build no sustituye el chequeo completo de tipos. Ejecuta:
 
-## 🛠️ Solución de Problemas Técnicos (Troubleshooting)
+```sh
+npm run typecheck
+```
 
-### 1. Error: `FirebaseError: Missing or insufficient permissions`
-- **Causa:** Las reglas de seguridad de Firestore bloquearon la consulta porque no estás autenticado o intentaste acceder a un documento cuyo `userId` no coincide con tu `auth.uid`.
-- **Solución:**
-  1. Verifica que la sesión siga activa (`auth.currentUser` no es nulo).
-  2. Asegúrate de que las consultas incluyan la cláusula de usuario:
-     ```typescript
-     query(collection(db, 'moodLogs'), where('userId', '==', user.uid))
-     ```
-  3. Despliega las reglas actualizadas con `firebase deploy --only firestore:rules`.
+Corrige los errores que reporte y vuelve a ejecutar tanto typecheck como build. El CI actual ejecuta build, no typecheck.
 
-### 2. Error 404 al recargar páginas secundarias en Vercel (ej. `/dashboard`, `/journal`)
-- **Causa:** Vercel está buscando una carpeta física `/dashboard/index.html` en vez de dirigir el tráfico al enrutador de React.
-- **Solución:** Asegúrate de que existe el archivo `frontend/vercel.json` con la regla de reescritura:
-  ```json
-  {
-    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-  }
-  ```
+## Firebase
 
-### 3. Error en TypeScript: `error TS6133: 'xyz' is declared but its value is never read`
-- **Causa:** El compilador tiene activadas las opciones estrictas `noUnusedLocals` y `noUnusedParameters`.
-- **Solución:**
-  - Si es una importación o variable que no necesitas, elimínala.
-  - Si es un parámetro obligatorio en un callback, añade un guion bajo al inicio: `(_event) => ...`.
+### `FirebaseError: Missing or insufficient permissions`
 
-### 4. La PWA no refleja cambios recién desplegados
-- **Causa:** El Service Worker de Workbox mantiene en caché la versión anterior para carga instantánea.
-- **Solución:**
-  - En el navegador, abre DevTools (`F12`), ve a la pestaña **Application > Service Workers** y presiona **Update** o **Unregister**.
-  - O realiza una recarga forzada sin caché con `Ctrl + Shift + R` (Windows) o `Cmd + Shift + R` (Mac).
+La escritura/consulta no coincide con las reglas locales o remotas, el usuario no está autenticado o el documento no pertenece al UID actual. Verifica:
 
-### 5. Error en Google OAuth: `auth/popup-closed-by-user` o dominio no autorizado
-- **Causa:** El dominio actual (ej. `localhost` o tu URL de Vercel `mood-log-app.vercel.app`) no está registrado en la lista de dominios autorizados de Firebase.
-- **Solución:**
-  1. Ve a **Firebase Console > Authentication > Settings > Authorized domains**.
-  2. Agrega tu dominio de Vercel y `localhost`.
+1. `auth.currentUser` y el UID usado en la operación.
+2. La colección exacta: el servicio `chatService` usa `chats`/`messages`, que las reglas locales no autorizan; el hook `useChat` usa `chatSessions`/`chatMessages`.
+3. Que los documentos consultados tengan el campo de propietario requerido por la regla.
+4. Que las reglas estén desplegadas en el proyecto esperado; el archivo local no confirma las reglas remotas.
+
+No relajes reglas para silenciar el error. Reproduce primero en Emulator Suite o en un proyecto de desarrollo.
+
+### Lectura de plantillas funciona, pero inicializarlas falla
+
+Las reglas locales permiten lectura autenticada de `journalTemplates` y `journalPrompts`, pero no escritura. El servicio que intenta insertar datos predeterminados desde el cliente necesita una inicialización autorizada/protegida o datos cargados por un proceso confiable.
+
+### Consulta Firestore requiere un índice
+
+Comprueba los filtros y ordenamiento de la consulta, y usa el enlace generado por Firebase para identificar los campos del índice. Añade el índice a `firestore.indexes.json`, prueba en desarrollo y despliega índices solo al proyecto confirmado.
+
+### No sé a qué Firebase se conecta el entorno local
+
+La configuración del cliente se encuentra escrita en `frontend/src/services/firebase.ts`; las variables `VITE_FIREBASE_*` listadas en otro helper no reemplazan automáticamente esa configuración. Confirma el destino antes de crear o modificar datos. No uses datos personales para comprobar la conexión.
+
+## Hosting y PWA
+
+### Recargar una ruta interna devuelve 404
+
+Comprueba que el proveedor sirve la SPA con la reescritura hacia `/index.html`. Vercel tiene esa reescritura en `frontend/vercel.json`; confirma también el directorio raíz y el output configurados en el proyecto de hosting.
+
+### Se muestra una versión anterior
+
+La PWA configura un service worker con actualización automática. Prueba recarga forzada; si persiste, inspecciona el service worker y cachés desde las herramientas del navegador. Evita borrar todos los datos del navegador si hay información local que necesites conservar.
+
+## Preguntas de privacidad
+
+### ¿El diario está cifrado de extremo a extremo?
+
+No. El servicio guarda el contenido en texto legible en Firestore. El cifrado local descrito en el roadmap es una propuesta futura, no una función implementada.
+
+### ¿La app funciona completamente sin conexión?
+
+No está documentado ni implementado un flujo completo offline con cola de escritura y sincronización. El plugin PWA cachea recursos de la aplicación, pero esto no garantiza disponibilidad offline de datos de Firebase.
+
+### ¿Puedo poner una clave de IA en `.env.local`?
+
+No si se usa un prefijo `VITE_` y se pretende mantenerla privada: Vite publica esas variables en el cliente. El flujo de Groq actual se inicializa desde el navegador. Hace falta un backend con secreto de servidor antes de usar una clave privada o enviar información íntima.

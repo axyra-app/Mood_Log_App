@@ -1,68 +1,66 @@
-# 🌐 Guía Interna de Despliegue en Producción (Vercel & Firebase)
+# Despliegue y operación
 
-> **USO INTERNO DEL EQUIPO FUNDADOR**  
-> El pipeline de despliegue continuo (CI/CD) está vinculado de forma directa entre el repositorio privado de GitHub, el proyecto en Vercel y el backend en Firebase (`mood-log-app-01`).
+## Alcance
 
----
+Esta guía describe la configuración versionada. No se verificó acceso a los paneles de Vercel/Firebase, los dominios, las ramas de producción ni el estado remoto; confirma cada valor en la cuenta del equipo antes de desplegar.
 
-## 1. Despliegue en Vercel
+## Frontend
 
-La configuración del frontend está en `frontend/vercel.json`. El workflow de GitHub Actions llamado deploy compila el proyecto, pero su paso final indica que Vercel gestiona el despliegue; ese workflow por sí solo **no demuestra** qué integración de GitHub está configurada ni qué ramas despliegan producción. Confirma en el panel de Vercel la conexión al repositorio, la rama de producción, previews y los permisos de despliegue antes de depender del despliegue automático.
+`frontend/vercel.json` declara:
 
-### 1.1 Configuración Activa en Vercel
+- Build: `npm run build`
+- Directorio de salida: `dist`
+- Reescritura de rutas SPA hacia `/index.html`
 
-| Parámetro | Valor Configurado |
-|---|---|
-| **Proyecto Vercel** | `moodlogapp` (o el nombre asignado en su cuenta de equipo) |
-| **Framework Preset** | `Vite` |
-| **Root Directory** | `frontend` |
-| **Build Command** | `npm run build` |
-| **Output Directory** | `dist` |
-| **Enrutamiento SPA** | Gestionado por `frontend/vercel.json` (reescritura hacia `index.html`) |
+El proyecto debe instalar dependencias desde `frontend/` y usar esa carpeta como raíz de aplicación si Vercel no está configurado ya para hacerlo. El archivo no prueba la configuración activa del panel ni que el sitio sea privado.
 
-### 1.2 Variables de entorno y claves
+`.github/workflows/ci.yml` instala dependencias con Node.js 18 y ejecuta build. `.github/workflows/deploy.yml` se denomina Deploy to Production, pero su trabajo ejecuta build y termina indicando que Vercel realiza el despliegue; **no contiene un paso de despliegue a Vercel**. Confirma la integración GitHub–Vercel, rama de producción, previews y controles de acceso en el panel.
 
-No configures claves privadas de proveedores de IA como variables `VITE_*` esperando que se mantengan secretas. Vite incorpora esas variables en el bundle del navegador; quien pueda cargar el sitio puede inspeccionarlas. Guardar una clave `VITE_*` en el panel de Vercel no cambia esta propiedad.
+## Variables y claves
 
-Las claves privadas de servidor deben vivir solo en un backend o función server-side y estar disponibles allí con variables sin prefijo `VITE_`. En el estado del frontend inspeccionado, `VITE_GROQ_API_KEY` se consume directamente desde código cliente; antes de producción debe migrarse a un backend/proxy protegido o deshabilitarse. La inicialización Firebase actual está escrita en `frontend/src/services/firebase.ts`; agregar variables Firebase al panel no cambia la configuración hasta que el código las consuma.
+No guardes secretos de servidor en `VITE_*`: se incluyen en el código del navegador. El frontend actual consume `VITE_GROQ_API_KEY` desde servicios de cliente; no habilites claves privadas allí. Migra llamadas de IA a un backend/función con secreto de servidor antes de procesar datos sensibles.
 
-El uso del panel **Vercel Dashboard > Project Settings > Environment Variables** debe limitarse a variables realmente necesarias y configurar por entorno (`Development`, `Preview`, `Production`) según el propósito. No documentar un valor como secreto si termina en el navegador.
+La configuración Firebase del cliente está escrita en `frontend/src/services/firebase.ts`; las variables de Firebase declaradas en workflows no cambian esa configuración hasta que el código las consuma. La configuración de Firebase en cliente no sustituye las reglas de autorización.
 
-### 1.3 Restringir el acceso al sitio
+## Firebase
 
-El repositorio privado no vuelve privado automáticamente el dominio, las URLs de preview ni los recursos Firebase. Si el producto no debe estar disponible al público, configura controles de acceso a deployments en Vercel para los planes/entornos disponibles, restringe miembros del equipo y revisa previews. Además, exige autenticación en la aplicación y valida permisos con reglas Firebase. Comprueba el resultado desde una sesión de navegador no autenticada y desde una cuenta que no pertenezca al equipo. La configuración y disponibilidad exactas de Deployment Protection deben confirmarse en el panel de la cuenta.
+El archivo `firebase.json` apunta a:
 
----
+- Hosting estático en `frontend/dist`
+- Reglas Firestore en `firestore.rules`
+- Índices en `firestore.indexes.json`
+- Reglas Storage en `storage.rules`
 
-## 2. Despliegue de Reglas de Seguridad en Firebase
+Antes de desplegar:
 
-Las reglas de seguridad de Firestore (`firestore.rules`) y Cloud Storage (`storage.rules`) residen en la raíz del repositorio. Para sincronizar cualquier cambio con la consola oficial de Firebase:
+1. Confirma el proyecto activo y la cuenta autorizada. No dependas del contexto de una terminal compartida.
+2. Revisa y prueba reglas en Firebase Emulator Suite o proyecto de desarrollo. El repositorio no confirma que los emuladores estén configurados.
+3. Comprueba que los servicios y colecciones utilizadas por el frontend tengan reglas compatibles; hay discrepancias descritas en [database-schema.md](../architecture/database-schema.md).
+4. Obtén revisión del cambio y confirma plan de reversión.
 
-1. Inicia sesión con la cuenta de Google vinculada al proyecto:
-   ```bash
-   firebase login
-   ```
+Comandos de Firebase CLI, solo después de verificar el destino:
 
-2. Selecciona el proyecto del equipo:
-   ```bash
-   firebase use mood-log-app-01
-   ```
+```sh
+firebase projects:list
+firebase use <project-id-de-desarrollo>
+firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes
+firebase deploy --only storage
+```
 
-3. Despliega las reglas de Firestore y Storage en la nube:
-   ```bash
-   firebase deploy --only firestore:rules,storage
-   ```
+No copies un ID de proyecto de un ejemplo. Despliega en producción únicamente después de validación y aprobación explícita del responsable. Verifica las reglas efectivas en Firebase Console tras el despliegue.
 
-Antes de desplegar, valida reglas y operaciones en Firebase Emulator Suite o en un proyecto de desarrollo separado. El repositorio apunta actualmente a un proyecto compartido mediante `.firebaserc` y la configuración cliente de Firebase; no ejecutes pruebas destructivas ni uses datos personales reales desde el entorno local sin confirmar qué backend se está utilizando. Verifica que el proyecto seleccionado sea el esperado con `firebase use` y contrasta reglas activas en Firebase Console.
+## Acceso privado
 
-4. Despliega índices compuestos si se agregaron nuevas consultas complejas:
-   ```bash
-   firebase deploy --only firestore:indexes
-   ```
+Repositorio privado no significa sitio privado. Configura por separado:
 
----
+- Miembros y protección de ramas del repositorio.
+- Acceso a proyectos y dominios de Vercel, incluidos deployments de preview.
+- Firebase IAM, dominios autorizados de Authentication, reglas y restricciones de API.
+- Autenticación y permisos en la propia aplicación.
 
-## 3. Comportamiento PWA y Actualización Automática
+Comprueba la visibilidad desde una sesión no autenticada y una cuenta sin autorización. Las rutas públicas de la SPA pueden seguir siendo visibles aunque las operaciones de datos estén protegidas.
 
-- Al completarse un nuevo despliegue en Vercel, el plugin `vite-plugin-pwa` genera automáticamente nuevos hashes para los bundles (`dist/assets/`).
-- Los navegadores y dispositivos móviles de los usuarios que tengan la PWA instalada detectan la nueva versión a través del Service Worker y aplican la actualización en segundo plano sin interrumpir la experiencia.
+## PWA
+
+El build genera recursos PWA mediante `vite-plugin-pwa`. Valida la instalación y actualización del service worker después de publicar. La configuración actual no equivale a sincronización offline de datos ni define retención segura de información íntima en el dispositivo.

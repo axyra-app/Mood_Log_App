@@ -1,78 +1,59 @@
-# 🧠 Mood Log App — "El Strava del Bienestar Emocional"
+# Mood Log App
 
-> Una plataforma moderna, personal y confidencial para el seguimiento emocional diario, cuantificación del bienestar mental y compañía reflexiva asistida por IA.
-> 
-> 🔒 **Proyecto Privado y Propietario:** Acceso, configuración y despliegue exclusivos para el equipo fundador. No disponible para modificación pública.
+Mood Log App es un proyecto web para registrar estados de ánimo, escribir reflexiones personales y explorar patrones de bienestar. Su dirección de producto es una experiencia individual, accesible y centrada en la privacidad. El repositorio está en transición: conviven flujos actuales con componentes y modelos heredados que aún deben consolidarse.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-4.5-646cff.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.3-38b2ac.svg)](https://tailwindcss.com/)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Storage-orange.svg)](https://firebase.google.com/)
+> **Estado y uso responsable:** este repositorio no demuestra que el producto esté listo para producción ni que sus controles remotos estén verificados. No uses datos reales de salud emocional hasta revisar las limitaciones de privacidad, reglas y servicios de IA descritas en la documentación técnica.
 
----
+## Documentación
 
-## 📖 Documentación Completa del Proyecto
+Empieza por el [índice de documentación](docs/README.md). Las guías cubren:
 
-Toda la documentación técnica, de producto y de arquitectura se encuentra en el directorio [`docs/`](docs/):
+- [Visión de producto y hoja de ruta](docs/product/vision-and-roadmap.md)
+- [Especificación de mejora: contexto biométrico](docs/features/biometric-context/README.md)
+- [Guía de pantallas y estado funcional](docs/product/user-guide.md)
+- [Flujos de usuario](docs/product/user-flows.md)
+- [Seguridad y privacidad](docs/architecture/security-and-privacy.md)
+- [Arquitectura](docs/architecture/overview.md)
+- [Modelo de datos Firestore](docs/architecture/database-schema.md)
+- [Despliegue y operación](docs/development/deployment-guide.md)
+- [Protocolo de seguridad ante crisis](docs/product/crisis-protocol.md)
 
-- 📚 **[Índice de Documentación](docs/README.md)**
-- 🎯 **[Visión de Producto y Hoja de Ruta](docs/product/vision-and-roadmap.md)**
-- 📱 **[Manual Funcional Pantalla a Pantalla](docs/product/user-guide.md)**
-- 🔄 **[Flujos de Usuario y Diagramas de Secuencia](docs/product/user-flows.md)**
-- 📖 **[Glosario de Términos para no Expertos](docs/product/glossary.md)**
-- 💓 **[Integración Biométrica y Wearables](docs/product/wearables-and-biometrics.md)**
-- 🚨 **[Protocolo de Contención de Crisis](docs/product/crisis-protocol.md)**
-- 🏗️ **[Visión General de Arquitectura](docs/architecture/overview.md)**
-- 🗄️ **[Esquema de Base de Datos Firestore](docs/architecture/database-schema.md)**
-- 🔐 **[Seguridad, Privacidad y Cifrado](docs/architecture/security-and-privacy.md)**
-- 🚀 **[Guía de Inicio Rápido (Getting Started)](docs/development/getting-started.md)**
-- 🌐 **[Guía de Despliegue en Producción](docs/development/deployment-guide.md)**
-- ❓ **[Preguntas Frecuentes y Solución de Problemas](docs/development/troubleshooting-and-faq.md)**
-- 📱 **[Estrategia Móvil y Navegación Inferior](docs/mobile/mobile-strategy.md)**
+## Estado del proyecto
 
----
+La aplicación tiene rutas y pantallas para autenticación, dashboard, registro de ánimo, diario, estadísticas, reportes, chat, perfil y ajustes. Que exista una pantalla no garantiza que su flujo de datos esté completo o listo para producción.
 
-## ✨ Características Principales
+Estado conocido a partir del código del repositorio:
 
-1. **Registro Rápido de Ánimo (Fricción Cero):** Registra tu estado emocional en 5 segundos con una escala intuitiva de 1 a 10, selección de emociones y detonantes clave.
-2. **Cuantificación y Rachas (Estilo Strava):** Visualiza tu constancia diaria, promedios móviles semanales y correlación de ánimo con hábitos.
-3. **Diario Íntimo y Confidente IA:** Espacio seguro para desahogarte con un agente conversacional empático que escucha y valida sin juzgar.
-4. **Privacidad Estricta y Rol Único:** Cada usuario tiene aislamiento total de sus registros; nadie más tiene acceso a tus reflexiones personales.
-5. **Protocolo Responsable de Crisis:** Detección de patrones de alto riesgo y enlace directo a líneas de emergencia nacionales (988, 024, etc.).
-6. **PWA Instalable:** Acceso instantáneo en pantalla de inicio de iOS y Android.
+- Frontend React 18, TypeScript y Vite; conexión cliente a Firebase Authentication, Firestore y Storage.
+- La configuración de PWA genera service worker y manifiesto; no implementa por sí sola sincronización offline de registros.
+- Los modelos de datos, especialmente chat y escala de ánimo, todavía requieren consolidación.
+- Algunas rutas de IA consumen claves `VITE_*` desde el navegador. Estas variables no son secretos.
+- El diario se almacena como texto legible; el cifrado de extremo a extremo descrito en ideas de producto no está implementado.
+- CI ejecuta build, pero no typecheck ni pruebas automatizadas. Consulta la guía de desarrollo para el estado y los comandos.
+- Las reglas y configuración versionadas no confirman qué está desplegado en Firebase o en el proveedor de hosting.
 
----
+Consulta [ANALISIS_PROYECTO.md](ANALISIS_PROYECTO.md) para el análisis técnico y la priorización de trabajo.
 
-## 🛠️ Tecnologías
+## Tecnología
 
-- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Lucide React
-- **Backend Serverless:** Firebase (Authentication, Cloud Firestore, Cloud Storage)
-- **Visualización:** Recharts, Chart.js
-- **Exportación:** jsPDF, html2canvas
-- **PWA:** Vite Plugin PWA (Workbox)
+- **Interfaz:** React 18, TypeScript, Vite, Tailwind CSS
+- **Navegación:** React Router
+- **Servicios de datos:** Firebase Authentication, Cloud Firestore y Cloud Storage
+- **Gráficos:** Recharts
+- **Exportación:** jsPDF y html2canvas
+- **PWA:** vite-plugin-pwa / Workbox
+- **IA:** SDK de Groq en algunos flujos cliente; revisar [seguridad y privacidad](docs/architecture/security-and-privacy.md) antes de habilitarlo
 
----
+## Acceso y desarrollo
 
-## 🚀 Inicio Rápido
+Este repositorio documenta un proyecto privado. Las instrucciones de instalación, configuración de entornos y ejecución no se publican en este README; se gestionan por los canales internos del proyecto. La documentación técnica restante describe el estado versionado y no concede acceso a servicios, datos ni entornos desplegados.
 
-```bash
-# 1. Ingresar a la carpeta frontend
-cd frontend
+## Privacidad y seguridad
 
-# 2. Instalar dependencias
-npm install
+El repositorio contiene reglas locales para Firestore y Storage, pero algunos servicios usan colecciones no incluidas en esas reglas. No se ha confirmado el estado remoto ni se deben inferir garantías de privacidad solo a partir de la existencia de una pantalla de login o de un repositorio privado.
 
-# 3. Comprobar TypeScript
-npm run typecheck
+No pongas secretos de servidor en variables `VITE_*`, no despliegues reglas sin revisar el proyecto destino y no envíes contenido íntimo a proveedores externos sin consentimiento y controles adecuados. Ver [Seguridad y privacidad](docs/architecture/security-and-privacy.md).
 
-# 4. Iniciar entorno de desarrollo
-npm run dev
-```
+## Historial del producto
 
----
-
-## 📌 Nota sobre Versiones Anteriores
-
-La versión anterior del proyecto, desarrollada con módulos universitarios de telepsicología, expedientes médicos y citas, está completamente preservada en la rama de Git:
-👉 `backup-version-universitaria`
+La rama `backup-version-universitaria` se menciona como referencia de la etapa anterior. Confirma su existencia y estado en GitHub antes de depender de ella como respaldo.

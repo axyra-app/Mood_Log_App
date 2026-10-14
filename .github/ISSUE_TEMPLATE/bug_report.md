@@ -1,37 +1,44 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: '[BUG] '
+name: Informe de error
+about: Reporta un comportamiento inesperado para que podamos investigarlo
+title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
-**Describe el bug**
-Una descripción clara y concisa de cuál es el bug.
+## Descripción
 
-**Para reproducir**
-Pasos para reproducir el comportamiento:
+Describe de forma clara y breve qué ocurrió.
 
-1. Ve a '...'
-2. Haz clic en '....'
-3. Desplázate hacia abajo hasta '....'
-4. Ve el error
+## Pasos para reproducir
 
-**Comportamiento esperado**
-Una descripción clara y concisa de lo que esperabas que pasara.
+1. Abre …
+2. Selecciona …
+3. Observa …
 
-**Capturas de pantalla**
-Si es aplicable, añade capturas de pantalla para ayudar a explicar tu problema.
+## Resultado esperado
 
-**Información del entorno:**
+¿Qué comportamiento esperabas?
 
-- OS: [e.g. Windows, macOS, Linux]
-- Navegador [e.g. Chrome, Firefox, Safari]
-- Versión [e.g. 22]
-- Versión de Node.js [e.g. 18.17.0]
+## Resultado observado
 
-**Información adicional**
-Añade cualquier otro contexto sobre el problema aquí.
+¿Qué ocurrió realmente? Incluye mensajes de error sin datos personales.
 
-**Logs de consola**
-Si hay errores en la consola, por favor compártelos aquí.
+## Entorno
+
+- Sistema operativo y versión:
+- Navegador y versión:
+- Versión de Node.js (si aplica):
+- Rama o commit:
+
+## Evidencia
+
+Adjunta capturas o logs relevantes, si corresponde.
+
+> **Privacidad:** no incluyas contraseñas, tokens, claves, datos de cuenta, contenido de diarios, conversaciones ni información personal o de salud. Sustituye cualquier dato identificable por valores ficticios.
+
+## Impacto
+
+- Alcance: [una persona / varias personas / entorno local / producción]
+- ¿Afecta datos, seguridad o privacidad?: [sí / no / no sé]
+- ¿Hay una forma temporal de evitarlo?: [sí / no]

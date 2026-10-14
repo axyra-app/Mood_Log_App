@@ -1,122 +1,68 @@
-# 🏗️ Visión General de la Arquitectura
+# Arquitectura de Mood Log App
 
-## 1. Diagrama de la Arquitectura del Sistema
+## Alcance y estado
 
-**Mood Log App** está diseñada sobre una arquitectura Serverless y Jamstack moderna, maximizando la velocidad de respuesta, la disponibilidad global y el mínimo coste operativo.
+Este documento describe la implementación que se encuentra en el repositorio, no una arquitectura futura ni una garantía sobre el entorno desplegado. La aplicación está en transición hacia un producto personal B2C; todavía permanecen módulos, tipos y servicios heredados del producto anterior. Revisa [database-schema.md](./database-schema.md) y [security-and-privacy.md](./security-and-privacy.md) antes de cambiar servicios o reglas.
+
+## Vista general
+
+El frontend es una SPA construida con React, TypeScript y Vite. Se sirve como contenido estático y se conecta directamente desde el navegador con Firebase. En el código inspeccionado no se encontró un backend propio que medie las operaciones de Firestore ni las llamadas a proveedores de IA.
 
 ```mermaid
-flowchart TB
-    subgraph Cliente [Frontend PWA - Navegador / Móvil]
-        UI[React 18 + Tailwind CSS + Lucide Icons]
-        Router[React Router v6]
-        Context[Contextos de Estado: Auth, Theme, etc.]
-        PWA[Service Worker + Cache PWA]
-        StorageLocal[IndexedDB / LocalStorage]
-    end
+flowchart LR
+    Browser["Navegador / PWA<br/>React + TypeScript"]
+    Hosting["Hosting estático<br/>Vercel o Firebase Hosting"]
+    Auth["Firebase Authentication"]
+    Store[("Cloud Firestore")]
+    Files[("Cloud Storage")]
+    AI["Proveedor de IA<br/>llamadas iniciadas por cliente"]
 
-    subgraph CDN & Hosting
-        Vercel[Vercel Global Edge CDN]
-    end
-
-    subgraph Firebase Backend Serverless
-        Auth[Firebase Authentication]
-        Firestore[(Cloud Firestore - Base de Datos NoSQL)]
-        CloudStorage[Firebase Cloud Storage]
-    end
-
-    subgraph Inteligencia Artificial
-        AI[Servicio de IA / Confidente Empático]
-        CrisisDet[Motor de Detección de Crisis]
-    end
-
-    Vercel --> UI
-    UI --> Router
-    Router --> Context
-    Context --> PWA
-    PWA --> StorageLocal
-
-    Context --> Auth
-    Context --> Firestore
-    Context --> CloudStorage
-    Context --> AI
-    AI --> CrisisDet
+    Browser --> Hosting
+    Browser --> Auth
+    Browser --> Store
+    Browser --> Files
+    Browser --> AI
 ```
 
----
+La presencia de configuración para un proveedor de hosting no confirma dónde está publicada la aplicación ni qué configuración se encuentra activa. Tampoco se verificaron los proyectos o las reglas actualmente desplegados en Firebase o Vercel.
 
-## 2. Stack Tecnológico
+## Componentes
 
-| Capa | Tecnología | Propósito |
+| Componente | Ubicación | Responsabilidad |
 |---|---|---|
-| **Lenguaje** | TypeScript 5.0+ | Tipado estático estricto en toda la aplicación |
-| **Framework UI** | React 18 | Librería de interfaz reactiva y basada en componentes |
-| **Empaquetador** | Vite 4.5 | Compilación ultrarrápida, HMR y optimización de chunks |
-| **Estilos** | Tailwind CSS | Diseño utilitario, responsive y soporte nativo para Modo Oscuro |
-| **Enrutamiento** | React Router DOM 6 | Navegación del lado del cliente (SPA) |
-| **PWA** | Vite Plugin PWA (Workbox) | Manifiesto de app web, instalación en pantalla de inicio y service worker |
-| **Autenticación** | Firebase Auth | Inicio de sesión con Email/Contraseña y Google OAuth |
-| **Base de Datos** | Cloud Firestore | Base de datos NoSQL documental en tiempo real |
-| **Almacenamiento** | Firebase Storage | Fotos de perfil y recursos multimedia de usuario |
-| **Visualización** | Recharts / Chart.js / Canvas | Gráficos de tendencias emocionales y variabilidad |
-| **Exportación** | jsPDF + html2canvas | Generación y descarga de resúmenes personales en PDF |
+| Enrutamiento y composición | `frontend/src/App.tsx` | Configura React Router, proveedores de contexto y rutas públicas/protegidas. |
+| Autenticación | `frontend/src/contexts/AuthContext.tsx` | Gestiona sesión de Firebase Auth y carga/actualización de perfiles en Firestore. |
+| Tema | `frontend/src/contexts/ThemeContext.tsx` | Preferencia visual y tema de la aplicación. |
+| Vistas | `frontend/src/pages/` | Landing, cuenta, dashboard, registro de ánimo, diario, estadísticas, chat y ajustes. |
+| Componentes | `frontend/src/components/` | Elementos visuales reutilizables, navegación, informes y mensajes. |
+| Hooks | `frontend/src/hooks/` | Estado y operaciones conectadas a las vistas; algunos conservan flujos del producto anterior. |
+| Servicios | `frontend/src/services/` | Firebase, acceso a datos, chat, análisis, notificaciones, crisis y exportación. |
+| Tipos | `frontend/src/types/` | Modelos TypeScript; contiene todavía tipos heredados que no necesariamente representan el esquema activo. |
+| Reglas e índices | `firestore.rules`, `storage.rules`, `firestore.indexes.json` | Configuración local declarativa para despliegue; no demuestra el estado remoto. |
 
----
+## Flujos de datos actuales
 
-## 3. Organización de Directorios (`frontend/src/`)
+1. **Sesión:** Firebase Auth notifica cambios a `AuthContext`; el contexto carga el documento `users/{uid}`.
+2. **Registro de ánimo:** `moodLogService` escribe y consulta `moodLogs`. El objeto guardado se deriva de los datos que le pasa el llamador; los tipos y pantallas aún no comparten una escala documentada como contrato único.
+3. **Diario:** `journalService` escribe en `journalEntries` y consulta plantillas/prompts. El servicio persiste contenido legible; no cifra el texto antes de enviarlo a Firestore.
+4. **Chat:** hay más de una implementación. `useChat` usa `chatSessions` y `chatMessages`; `chatService` usa `chats` y `messages`. Las reglas locales no autorizan estas últimas colecciones y no corresponden plenamente al modelo de participantes heredado.
+5. **IA:** algunos módulos de cliente inicializan el SDK de Groq con `VITE_GROQ_API_KEY`. Las variables `VITE_*` se incorporan al cliente y no son secretos. `aiService` contiene un análisis de fallback y la llamada real que aparece allí está comentada.
 
-```
-frontend/src/
-├── assets/             # Recursos estáticos (imágenes, logos, iconos)
-├── components/         # Componentes visuales reutilizables
-│   ├── ui/             # Botones, alertas, tarjetas, modales básicos
-│   ├── Header.tsx      # Barra superior de navegación y perfil
-│   ├── LateralSidebar.tsx # Menú lateral para escritorio
-│   ├── JournalEditor.tsx  # Editor de texto para reflexiones
-│   ├── MoodAnalysisDisplay.tsx # Visualizador de patrones de ánimo
-│   └── ...
-├── contexts/           # Proveedores de estado global
-│   ├── AuthContext.tsx # Estado de usuario autenticado, roles y sesión
-│   └── ThemeContext.tsx# Gestión de modo claro/oscuro
-├── hooks/              # Hooks personalizados de React
-│   ├── useMood.ts      # Lectura y registro de estados de ánimo
-│   ├── useJournal.ts   # Carga y guardado de entradas de diario
-│   ├── useChat.ts      # Manejo de mensajes del confidente IA
-│   └── useUserNotifications.ts # Alertas y recordatorios
-├── pages/              # Vistas principales de la aplicación
-│   ├── Home.tsx        # Landing informativa de bienvenida
-│   ├── DashboardSimple.tsx # Tablero principal (Strava Feed & Métricas)
-│   ├── MoodFlowSimple.tsx  # Flujo de registro emocional
-│   ├── Journal.tsx     # Diario personal y reflexiones
-│   ├── AIChat.tsx      # Chat íntimo con el Confidente IA
-│   ├── Statistics.tsx  # Métricas avanzadas, gráficas y PDF
-│   ├── Profile.tsx     # Edición de perfil de usuario
-│   ├── Settings.tsx    # Ajustes de privacidad, tema y seguridad
-│   └── LoginSimple.tsx / RegisterSimple.tsx # Autenticación
-├── services/           # Conectores con APIs externas y Firebase
-│   ├── firebase.ts     # Inicialización del SDK de Firebase
-│   ├── moodLogService.ts # Consultas Firestore de ánimo
-│   ├── journalService.ts # Consultas Firestore de diario
-│   ├── aiService.ts    # Agente de IA y análisis empático
-│   ├── crisisDetection.ts # Algoritmo de detección de riesgo
-│   └── pdfReportService.ts# Generador de reportes en PDF
-├── types/              # Definiciones e interfaces TypeScript
-│   └── index.ts        # Tipos universales (User, MoodLog, JournalEntry, etc.)
-└── utils/              # Funciones auxiliares puras y formato
-    ├── dateUtils.ts    # Manejo y parseo de fechas
-    ├── formatters.ts   # Formato de números y porcentajes
-    └── logger.ts       # Logging controlado para producción
+Los detalles e incompatibilidades conocidos se registran en [database-schema.md](./database-schema.md). No tratar ninguno de estos flujos como verificado en producción sin probarlo en un entorno Firebase de desarrollo.
+
+## PWA y ejecución sin conexión
+
+`frontend/vite.config.ts` configura `vite-plugin-pwa` y genera recursos de service worker en el build. Esto permite instalar la web app y aplicar caché de recursos estáticos; **no implementa por sí mismo** una cola offline, sincronización de registros ni resolución de conflictos. No guardar información íntima en cachés o almacenamiento local sin una decisión de privacidad y pruebas específicas.
+
+## Desarrollo local
+
+Los comandos del frontend se ejecutan desde `frontend/`:
+
+```sh
+npm ci
+npm run dev
+npm run typecheck
+npm run build
 ```
 
----
-
-## 4. Flujo de Datos del Usuario
-
-1. **Autenticación:** El usuario ingresa mediante Google o email/password. `AuthContext` escucha `onAuthStateChanged` y recupera el documento `/users/{uid}`.
-2. **Registro de Ánimo:**
-   - La pantalla `MoodFlowSimple` captura la emoción, la escala numérica (1-10) y detonantes.
-   - `moodLogService.createMoodLog()` crea el documento en Firestore asegurando que `userId == user.uid`.
-3. **Reflexión en Diario:**
-   - `Journal.tsx` envía la entrada a `journalService.createEntry()`.
-   - Se disparan heurísticas en segundo plano para clasificar el tono emocional sin almacenar diagnósticos.
-4. **Visualización de Progreso:**
-   - `DashboardSimple.tsx` y `Statistics.tsx` consumen los logs con consultas indexadas (`where('userId', '==', uid)` y `orderBy('createdAt', 'desc')`), calculando medias móviles, desviaciones y rachas.
+La guía completa está en [getting-started.md](../development/getting-started.md). El código de Firebase inicializa el cliente con configuración escrita directamente en `frontend/src/services/firebase.ts`; iniciar el frontend puede conectarlo a un proyecto compartido. Confirma el destino antes de hacer escrituras.

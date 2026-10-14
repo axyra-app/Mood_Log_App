@@ -1,41 +1,37 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: '[FEATURE] '
+name: Propuesta de mejora
+about: Propón una necesidad o mejora para Mood Log App
+title: "[PROPUESTA] "
 labels: enhancement
-assignees: ''
+assignees: ""
 ---
 
-**¿Tu solicitud de función está relacionada con un problema? Por favor describe.**
-Una descripción clara y concisa de cuál es el problema. Ej. Siempre me frustro cuando [...]
+## Necesidad
 
-**Describe la solución que te gustaría**
-Una descripción clara y concisa de lo que quieres que pase.
+¿Qué necesidad o dificultad quieres resolver? Describe quién la experimenta y en qué contexto.
 
-**Describe alternativas que has considerado**
-Una descripción clara y concisa de cualquier solución o característica alternativa que hayas considerado.
+## Resultado propuesto
 
-**Contexto adicional**
-Añade cualquier otro contexto o capturas de pantalla sobre la solicitud de función aquí.
+¿Qué debería poder hacer la persona usuaria? Evita prescribir una solución técnica si no es necesario.
 
-**¿Esta función afecta a la seguridad?**
+## Beneficio esperado
 
-- [ ] Sí
-- [ ] No
+¿Cómo sabremos que la mejora es útil?
 
-**¿Esta función afecta al rendimiento?**
+## Alternativas consideradas
 
-- [ ] Sí
-- [ ] No
+¿Qué opciones o soluciones temporales has considerado?
 
-**¿Esta función requiere cambios en la base de datos?**
+## Impacto y requisitos
 
-- [ ] Sí
-- [ ] No
+- ¿Afecta datos personales, emocionales o de salud?: [sí / no / no sé]
+- ¿Requiere nuevos datos, colecciones o cambios de reglas?: [sí / no / no sé]
+- ¿Usa IA o envía datos a un proveedor externo?: [sí / no / no sé]
+- ¿Afecta accesibilidad, móvil o rendimiento?: [sí / no / no sé]
+- Prioridad sugerida: [baja / media / alta]
 
-**Prioridad**
+## Contexto adicional
 
-- [ ] Baja
-- [ ] Media
-- [ ] Alta
-- [ ] Crítica
+Incluye ejemplos sintéticos o capturas sin datos personales.
+
+> No adjuntes diarios, conversaciones, credenciales, tokens ni datos reales de salud emocional.

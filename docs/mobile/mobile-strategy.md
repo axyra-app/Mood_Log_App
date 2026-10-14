@@ -1,64 +1,66 @@
-# 📱 Estrategia Móvil (Mobile-First)
+# Estrategia móvil
 
-## 1. La Experiencia Móvil de "El Strava del Bienestar"
+## Estado actual
 
-El 90% de las interacciones con una aplicación de registro de ánimo ocurren en momentos de pausa rápida: al despertar, en el transporte público, antes de entrar a una reunión o al acostarse.
+El frontend es una SPA responsive en React/Vite y configura `vite-plugin-pwa`. El build está preparado para generar recursos de PWA; no se encontró integración Capacitor ni una experiencia offline de lectura/escritura con sincronización. La configuración por sí sola no confirma instalación o funcionamiento en todos los dispositivos.
 
-Para que el usuario forme un hábito duradero, la aplicación debe sentirse como una app móvil nativa, ultrarrápida y libre de menús engorrosos de escritorio.
+## Objetivo de experiencia
 
----
+Facilitar consultas breves y voluntarias en teléfonos sin ocultar controles de privacidad ni forzar notificaciones o rachas. Las prioridades de diseño son:
 
-## 2. Barra de Navegación Inferior (Bottom Navigation Bar)
+- Formularios sencillos y legibles.
+- Navegación predecible, con foco visible y soporte de teclado/lector de pantalla.
+- Áreas táctiles adecuadas y contenido que se adapte a distintos tamaños.
+- Estados explícitos de conexión, carga, error y guardado.
+- Compatibilidad con safe areas y preferencias de movimiento/contraste.
+- Sin divulgación de contenido íntimo en notificaciones, widgets o pantalla bloqueada.
 
-La navegación táctil se rediseña alrededor de 5 puntos accesibles con el pulgar:
+## Navegación propuesta
 
-```
-┌────────────────────────────────────────────────────────┐
-│                                                        │
-│                    Área de Contenido                   │
-│                                                        │
-├─────────┬─────────┬──────────────┬──────────┬──────────┤
-│    🏠   │    📖   │      ➕      │    📊    │    ⚙️    │
-│  Inicio │  Diario │  Registrar   │ Métricas │  Ajustes │
-└─────────┴─────────┴──────────────┴──────────┴──────────┘
-```
+Una barra inferior puede evaluarse como alternativa móvil después de consolidar las rutas actuales:
 
-| Elemento | Destino | Propósito |
+| Destino propuesto | Ruta existente | Observación |
 |---|---|---|
-| **🏠 Inicio** | `/dashboard` | Resumen del día, racha activa en llamas, promedios y últimas entradas |
-| **📖 Diario** | `/journal` | Espacio de escritura reflexiva y acceso al Confidente IA |
-| **➕ Registrar (Central)** | `/mood-flow` | **Acción primaria:** Botón flotante destacado para calificar el ánimo en 5 segundos |
-| **📊 Métricas** | `/statistics` | Gráficos de evolución semanal, mapa de calor y detonantes |
-| **⚙️ Ajustes** | `/settings` | Perfil, modo oscuro, seguridad y preferencias |
+| Inicio | `/dashboard` | Dashboard actual. |
+| Registrar | `/mood-flow` | Acción principal; su escala debe alinearse con el modelo de datos. |
+| Diario | `/journal` | Contiene texto personal; evitar exponerlo en previews o notificaciones. |
+| Estadísticas | `/statistics` | Resúmenes descriptivos. |
+| Perfil/ajustes | `/profile`, `/settings` | Consolidar navegación según el alcance del MVP. |
 
----
+La barra no está documentada como implementada; validar navegación, safe area y accesibilidad antes de adoptarla.
 
-## 3. Hoja de Ruta Móvil: De PWA a Tiendas Nativas (Capacitor)
+## PWA y modo sin conexión
 
-```mermaid
-flowchart LR
-    A[Fase Actual: PWA Progresiva] --> B[Fase Intermedia: Empaquetado Capacitor] --> C[Fase Nativa: App Stores iOS & Android]
-    
-    A -.-> A1[Instalable desde navegador]
-    A -.-> A2[Caché offline básica]
-    
-    B -.-> B1[Acceso a Plugins Nativos]
-    B -.-> B2[Notificaciones Push Nativas]
-    B -.-> B3[Biometría FaceID/Huella]
-    
-    C -.-> C1[Google Play Store]
-    C -.-> C2[Apple App Store]
-```
+El service worker puede cachear recursos de aplicación. Esto no implica que Firebase funcione offline ni que los registros pendientes se sincronicen correctamente.
 
-### ¿Por qué Capacitor sobre React Native o Flutter?
-1. **Reutilización del 100% del código:** Toda la base actual de React 18, Vite y Tailwind CSS funciona directamente dentro de un contenedor WebView nativo de ultra-alto rendimiento.
-2. **Despliegues unificados:** Una sola base de código para Web, iOS y Android.
-3. **Acceso a hardware nativo:** Sensores de pulso, almacenamiento cifrado seguro en Keychain/Keystore y notificaciones push sin reescribir la UI.
+Antes de implementar offline se debe definir:
 
----
+1. Qué datos pueden guardarse localmente y por cuánto tiempo.
+2. Cifrado local y bloqueo en dispositivos compartidos.
+3. Cola, reintentos, idempotencia y conflictos de edición/eliminación.
+4. Indicadores de “pendiente”, “guardado” y error de sincronización.
+5. Limpieza tras cerrar sesión, revocar consentimiento o borrar cuenta.
+6. Pruebas sin red, cambio de cuenta, almacenamiento lleno y actualización de service worker.
 
-## 4. Diseño Táctil y Ergonomía
+No anunciar soporte offline de diarios ni datos emocionales hasta que se pruebe ese flujo completo.
 
-1. **Áreas de toque mínimas de 44x44px:** Para botones e iconos, garantizando accesibilidad según las guías de Apple (Human Interface Guidelines) y Google (Material Design).
-2. **Safe Area Insets:** Compatibilidad con la barra de inicio y el "notch" de iPhone usando `padding-bottom: env(safe-area-inset-bottom)`.
-3. **Vibración háptica (Haptic Feedback):** Respuesta física sutil al deslizar el selector de ánimo de 1 a 10.
+## Aplicación nativa
+
+Capacitor podría ser una opción posterior para empaquetar la experiencia web, pero aún no está integrado. Antes de decidir:
+
+- Evaluar mantenimiento, plugins y requisitos de Apple App Store y Google Play.
+- Revisar permisos, privacidad, autenticación, enlaces profundos y almacenamiento seguro.
+- Probar compatibilidad y accesibilidad en dispositivos físicos.
+- Definir actualización, soporte y distribución.
+- Evaluar por separado el acceso a APIs de salud; un wrapper nativo no concede permisos automáticamente.
+
+No asumir reutilización del 100% de código ni publicación automática en tiendas.
+
+## Criterios de aceptación móvil
+
+- Recorridos principales probados en tamaños y sistemas acordados.
+- Formularios accesibles, sin desplazamiento horizontal y con foco visible.
+- Navegación por teclado y lector de pantalla verificada.
+- Estados de error y pérdida de conexión comprensibles.
+- La instalación y actualización PWA comprobadas en cada navegador soportado.
+- Ningún contenido personal se filtra en notificaciones o cachés sin decisión de privacidad.

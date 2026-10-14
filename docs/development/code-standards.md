@@ -1,55 +1,47 @@
-# 📏 Estándares de Código y Buenas Prácticas
+# Estándares de desarrollo
 
-## 1. Convenciones de TypeScript
+## TypeScript
 
-El proyecto tiene activadas las reglas de rigor máximo en `tsconfig.json`:
-- `"strict": true`
-- `"noUnusedLocals": true`
-- `"noUnusedParameters": true`
+`frontend/tsconfig.json` habilita `strict`, `noUnusedLocals`, `noUnusedParameters` y `noFallthroughCasesInSwitch`.
 
-### Reglas Esenciales:
-1. **Sin variables ni imports sin usar:** El compilador de TypeScript fallará de inmediato si se deja una variable o importación no referenciada.
-2. **Tipado explícito en callbacks y colecciones:** Evitar `any` siempre que sea posible. Utilizar las interfaces definidas en `src/types/index.ts`.
-3. **Parámetros intencionalmente ignorados:** Si una función de interfaz o callback requiere un parámetro que no vas a utilizar en el cuerpo, prefíjalo con un guion bajo (ej. `_index`, `_error`).
+- Mantén tipos de parámetros, retornos y estructuras de datos explícitos cuando aclaren el contrato.
+- Prefiere los tipos compartidos de `src/types/`, pero comprueba que describan realmente el modelo activo: aún existen tipos heredados que discrepan con servicios y pantallas.
+- Evita `any` y aserciones innecesarias; valida los datos procedentes de Firestore antes de tratarlos como tipos internos.
+- Elimina imports y variables que no uses. Si un callback exige un parámetro que no se utiliza, omítelo si la firma lo permite o prefija el identificador con `_`.
 
-```typescript
-// ❌ Incorrecto:
-const result = items.map((item, index) => item.score); // 'index' provocará TS6133
+Los datos de Firestore son schemaless: una interfaz TypeScript no valida ni protege escrituras en tiempo de ejecución. Cambios de modelo deben considerar también reglas, consultas, índices y datos existentes.
 
-// ✅ Correcto:
-const result = items.map((item) => item.score);
-// O si es requerido por firma:
-const result = items.map((item, _index) => item.score);
-```
+## React y estado
 
----
+- Mantén la interfaz en componentes y separa las operaciones de datos en hooks/servicios siguiendo los patrones existentes.
+- Representa explícitamente estados de carga, error, vacío y éxito.
+- Evita ocultar fallos de Firebase o IA con respuestas que parezcan exitosas; registra errores sin incluir contenido sensible del usuario.
+- No dupliques modelos de chat o estado de ánimo: consulta [database-schema.md](../architecture/database-schema.md) y acuerda un contrato antes de ampliar un flujo.
 
-## 2. Estructura de Componentes React
+## Estilos y accesibilidad
 
-- Usar componentes funcionales con sintaxis moderna `React.FC<Props>` o función tipada directa.
-- Mantener los componentes desacoplados de la lógica de datos mediante hooks personalizados (`useMood`, `useJournal`, `useAuth`).
-- Manejar siempre estados de carga (`loading`) y error (`error`) para evitar pantallas en blanco o "flickering".
+El proyecto usa Tailwind CSS y un contexto de tema. Conserva el estilo existente, contempla tema claro/oscuro donde el componente lo requiera y valida estados de foco, contraste, teclado y pantallas móviles.
 
----
+## Seguridad y privacidad
 
-## 3. Estilos con Tailwind CSS y Modo Oscuro
+- No confíes roles, propietarios ni permisos enviados por el cliente.
+- En Firestore, deriva el `userId` de la sesión autenticada y manténlo inmutable.
+- No incluyas notas, mensajes, datos de salud, secretos o tokens en logs, analytics o errores visibles.
+- No uses variables `VITE_*` para secretos de servidor.
+- Prueba las reglas para propietario, otro usuario y usuario anónimo antes de cambiar operaciones de datos.
 
-- Todas las clases visuales deben utilizar utilidades de Tailwind CSS.
-- **Soporte de Modo Oscuro obligatorio:** Cada elemento visible debe contemplar su variante nocturna con el prefijo `dark:`.
+## Validación
 
-```tsx
-<div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-  <h3 className="font-semibold text-lg">Mi Registro</h3>
-</div>
-```
+Desde `frontend/` ejecuta `npm run typecheck` y `npm run build`. Los workflows actuales no ejecutan typecheck ni hay scripts de test/lint definidos en `package.json`; agrega validaciones automatizadas como parte del trabajo que las introduzca y no reportes resultados que no hayas ejecutado.
 
----
+## Commits
 
-## 4. Convención de Mensajes de Commit (Conventional Commits)
+Se recomienda Conventional Commits:
 
-Utilizar el estándar semántico en los commits:
-- `feat:` Nueva funcionalidad para el usuario final (ej. `feat(mobile): add bottom navigation bar`)
-- `fix:` Corrección de un error en código existente (ej. `fix(auth): handle null displayName`)
-- `refactor:` Limpieza o reestructuración de código sin alterar el comportamiento
-- `docs:` Cambios o adiciones a la documentación en `docs/`
-- `chore:` Tareas rutinarias, dependencias o configuración de build
+- `feat:` funcionalidad nueva
+- `fix:` corrección
+- `refactor:` reestructuración sin cambio funcional intencionado
+- `docs:` documentación
+- `chore:` dependencias o configuración
+
+Ejemplos: `feat(mood): add weekly trend filter`, `fix(auth): handle missing profile`, `docs(architecture): clarify Firestore access`.

@@ -1,57 +1,57 @@
-# 🚨 Protocolo de Contención de Crisis y Asistencia de Emergencia
+# Seguridad ante situaciones de crisis
 
-## 1. Declaración Ética y Límites de la Aplicación
+## Estado y alcance
 
-> [!CAUTION]
-> **Mood Log App NO es un servicio de urgencias médicas ni un psicólogo clínico colegiado.**  
-> La aplicación no emite diagnósticos psiquiátricos, no prescribe medicación ni sustituye la atención profesional presencial. Su función es la auto-observación, la gestión del hábito de bienestar y el desahogo personal asistido por IA empática.
+Este documento define principios y requisitos para cualquier futura función de apoyo. **No describe un servicio actualmente operativo.** El repositorio contiene reglas heurísticas en `frontend/src/services/crisisDetection.ts`, pero no se encontró su integración con los recorridos de check-in, diario o chat. Tampoco se encontró un sistema de atención humana, monitoreo continuo o escalamiento a emergencias.
 
-Ante situaciones donde un usuario exprese ideación suicida, autolesiones inminentes o episodios psicóticos agudos, la plataforma activa de inmediato el **Protocolo de Contención de Crisis**.
+No presentar Mood Log como detector fiable de suicidio/autolesión, servicio de urgencias, línea de crisis ni sustituto de atención profesional.
 
----
+## Mensaje para las personas usuarias
 
-## 2. Flujo de Detección y Respuesta
+Si se habilita una experiencia de IA o bienestar, debe comunicar claramente que:
 
-```mermaid
-flowchart TD
-    A[Entrada de texto del usuario o Diario / Chat IA] --> B{Motor de Análisis de Crisis}
-    B -- Nivel Bajo / Normal --> C[Flujo conversacional normal con el Confidente IA]
-    B -- Nivel Alto o Crítico --> D[Suspensión temporal del diálogo casual]
-    D --> E[Despliegue de Modal de Emergencia]
-    E --> F[Línea de Vida y Recursos Nacionales]
-    E --> G[Herramientas de Estabilización Inmediata]
-    E --> H[Contacto de Confianza Preconfigurado]
-```
+- Mood Log es una herramienta de autoobservación, no un servicio clínico o de emergencia.
+- Una respuesta automatizada puede no reconocer una situación de riesgo y puede equivocarse.
+- La aplicación no garantiza monitoreo continuo ni una respuesta humana.
+- En una emergencia inmediata, la persona debe contactar a los servicios locales de emergencia o a una persona de confianza.
 
----
+La información debe mostrarse antes de que la persona comparta texto sensible y estar disponible desde el flujo de conversación.
 
-## 3. Criterios de Detección
+## Límites del detector heurístico actual
 
-El servicio `src/services/crisisDetection.ts` evalúa patrones semánticos y lingüísticos:
-1. **Intención autolítica explícita:** Frases relacionadas con terminar la vida, suicidio, despedidas terminales o métodos de daño físico.
-2. **Puntuación de ánimo extrema sostenida:** Reportes consecutivos de ánimo 1/10 acompañados de términos de desesperanza total o falta de salida.
-3. **Pérdida de contacto con la realidad:** Expresiones de angustia delirante o terror extremo.
+El servicio existente contiene listas de términos y reglas para asignar niveles de señal. Este enfoque puede:
 
----
+- No detectar expresiones indirectas, idioma, contexto, negación, ironía o errores ortográficos.
+- Marcar contenido no relacionado con una emergencia.
+- Producir niveles de riesgo sin validación clínica.
+- Depender de datos de un esquema anterior, como notificaciones a psicólogos.
+- Intentar persistir en colecciones no habilitadas por las reglas locales.
 
-## 4. Recursos de Apoyo y Líneas de Emergencia por País
+No se deben usar sus niveles, confianza o puntuación para afirmar una evaluación válida. No se deben guardar ni transmitir estos análisis sin una decisión de privacidad, finalidad y retención.
 
-Cuando se detecta una crisis, la aplicación presenta una tarjeta destacada con botones de marcación telefónica directa:
+## Requisitos antes de considerar una función de crisis
 
-| Región / País | Servicio / Entidad | Teléfono / Marcación | Modalidad |
-|---|---|---|---|
-| **Internacional / EE. UU.** | Suicide & Crisis Lifeline | **988** | Llamada o SMS gratuita 24/7 |
-| **España** | Línea de Atención a la Conducta Suicida | **024** | Gratuita, confidencial 24/7 |
-| **México** | Línea de la Vida | **800 911 2000** | Gratuita 24/7 |
-| **Colombia** | Línea 106 / Línea Calma (Bogotá) | **106** / **01 8000 423 614** | Gratuita |
-| **Argentina** | Centro de Asistencia al Suicida | **135** (CABA) o **(011) 5275-1135** | Gratuita |
-| **Chile** | Fono Salud Responde | ***4141** | Gratuito desde celular |
+1. **Definir el propósito:** prevención de daño, acceso a recursos o simple información; evitar prometer detección automática.
+2. **Revisión de especialistas:** seguridad clínica, accesibilidad, idioma y diversidad cultural deben revisarse por profesionales pertinentes.
+3. **Diseñar respuesta y límites:** explicar claramente si hay o no monitoreo humano; no insinuar que alguien recibirá una alerta si no existe un proceso atendido.
+4. **Recursos locales verificables:** mantener recursos oficiales por jurisdicción, comprobar cobertura, horarios, idioma y costo; mostrar fecha de verificación y alternativa de emergencia local. No reutilizar números sin confirmar su vigencia en fuentes oficiales.
+5. **Pruebas de escenarios:** falsos positivos, falsos negativos, texto ambiguo, idioma, negación, indisponibilidad de red, errores y menores de edad cuando corresponda.
+6. **Privacidad y seguridad:** minimizar datos, establecer consentimiento, acceso, retención y eliminación; probar reglas y cualquier sistema de notificación.
+7. **Lenguaje no coercitivo:** ofrecer opciones, no culpabilizar, no bloquear acceso a la cuenta o a los datos y no sustituir la decisión de la persona.
+8. **Plan operativo:** responsable, horarios, jurisdicciones, incidentes, soporte y procedimiento de actualización de recursos.
 
----
+## Diseño futuro posible
 
-## 5. Herramientas de Estabilización en App
+Una experiencia futura podría ofrecer acceso visible a recursos locales y herramientas voluntarias de grounding o respiración. Debe describirse como información o ejercicio de bienestar, sin prometer que detendrá una crisis ni que active atención profesional. La persona debe poder descartarlo y acceder a ayuda externa.
 
-En paralelo al número de emergencia, la aplicación ofrece micro-intervenciones para desacelerar el pánico fisiológico:
-1. **Respiración Guiada Cuadrada (Box Breathing / 4-7-8):** Animación visual para sincronizar la respiración pulmonar y activar el nervio vago.
-2. **Técnica de Aterrizaje 5-4-3-2-1:** Ejercicio guiado para reenfocar la mente en estímulos sensoriales del entorno inmediato.
-3. **Botón de Contacto Seguro:** Botón para enviar un mensaje rápido a un amigo, pareja o familiar previamente registrado en la configuración del usuario.
+## Revisión antes de lanzamiento
+
+- [ ] La función no se presenta como diagnóstico o detector fiable.
+- [ ] Se ha probado en cada idioma y jurisdicción de lanzamiento.
+- [ ] Los recursos se verificaron en fuentes oficiales y tienen fecha de revisión.
+- [ ] La interfaz deja claro si existe monitoreo humano y quién lo realiza.
+- [ ] Las rutas de emergencia no dependen de una conexión o llamada que la app no pueda garantizar.
+- [ ] El flujo se probó en dispositivos y con lectores de pantalla.
+- [ ] Las prácticas de datos y textos legales corresponden con el comportamiento real.
+
+Hasta completar esta revisión, el protocolo debe considerarse una especificación pendiente, no una funcionalidad de Mood Log.

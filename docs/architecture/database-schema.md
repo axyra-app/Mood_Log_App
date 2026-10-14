@@ -1,142 +1,65 @@
-# 🗄️ Esquema de Base de Datos (Cloud Firestore)
+# Datos y Firestore
 
-## 1. Principios del Modelo de Datos
+## Estado del modelo
 
-1. **Aislamiento por Usuario (Tenant Isolation):** Todo documento almacena un campo `userId` que coincide exactamente con el `UID` de Firebase Auth.
-2. **Consultas Indexadas Eficientes:** Cada consulta compuesta (ej. filtrar por usuario y ordenar por fecha) cuenta con índices precalculados en Firestore para garantizar respuestas sub-segundo.
-3. **Desnormalización Controlada:** Los datos de agregación (rachas, último registro) se guardan en el perfil del usuario para evitar lecturas masivas innecesarias.
+Firestore es schemaless. Los modelos TypeScript, servicios, reglas e índices del repositorio **no forman todavía un contrato único**: hay esquemas B2C y heredados, así como servicios que escriben campos distintos. Esta página cataloga lo observado para orientar la consolidación; no garantiza qué documentos existen en Firebase ni que todas las operaciones funcionen.
 
----
+No agregues colecciones o campos a partir de esta lista sin revisar los llamadores, reglas, consultas e índices relacionados. Las reglas remotas deben confirmarse en Firebase Console o en un proyecto/emulador de desarrollo.
 
-## 2. Colecciones Activas
+## Colecciones declaradas por las reglas locales
 
-### 2.1 `users/{userId}`
-Contiene el perfil y estado de gamificación/rachas del usuario.
+| Colección | Campos de propiedad que usan las reglas | Acceso local observado | Consideraciones |
+|---|---|---|---|
+| `users/{userId}` | El ID del documento debe coincidir con `request.auth.uid`. | Lectura y escritura del dueño. | No hay lista de campos permitidos; un usuario puede editar también campos sensibles como `role`. |
+| `moodLogs/{logId}` | `userId` | Crear si el nuevo documento tiene el UID propio; leer y borrar si el documento existente pertenece al usuario; actualizar si dueño existente y nuevo `userId` propio. | El servicio conserva campos de `MoodLog`; su tipo aún describe `mood` como 1–5, mientras la interfaz y algunos documentos hablan de 1–10. |
+| `journalEntries/{entryId}` | `userId` | Propiedad comprobada al crear, leer, actualizar y borrar. | El servicio persiste texto en claro, fecha, etiquetas, estado de ánimo y datos opcionales de análisis. No existe cifrado cliente. |
+| `chatSessions/{sessionId}` | `userId` | Crear si `userId` es el UID; leer/borrar si el documento pertenece al usuario; actualizar si el documento existente pertenece al usuario. | La regla de actualización no exige que el nuevo documento conserve el mismo `userId`. No concede acceso a un psicólogo/participante distinto. |
+| `chatMessages/{messageId}` | `userId` | Igual que `chatSessions`. | El hook `useChat` crea mensajes con `sessionId`, `senderId`, `senderName`, `content`, `timestamp`, `isRead` y `messageType`; verificar si envía también `userId`, requerido por la regla de creación. |
+| `notifications/{notificationId}` | `userId` | Crear con `userId` propio; operaciones sobre documento existente si pertenece al usuario. | Otros servicios pueden producir campos/esquemas diferentes; confirmar cada llamador. |
+| `advancedReports/{reportId}` | `userId` | Crear propio; acceso al dueño del documento existente. | Verificar si el flujo activo persiste estos documentos. |
+| `statistics/{statId}` | `userId` | Lectura/escritura si el documento existente pertenece al usuario. | No hay permiso `create` separado: las nuevas escrituras pueden ser denegadas porque no existe `resource.data` antes de crear. |
+| `reminders/{reminderId}` | `userId` | Crear propio; acceso al dueño existente. | No asumir que el flujo está disponible sin probar las reglas. |
+| `journalTemplates/{templateId}`, `journalPrompts/{promptId}` | Sin propiedad | Lectura para cualquier usuario autenticado; no se permite escritura. | `journalService` incluye inicialización de datos por defecto desde el cliente; las reglas actuales no autorizan esa escritura. |
+| Otras colecciones | — | Denegadas por la regla catch-all. | Incluye nombres usados por otros servicios, por ejemplo `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts`, hasta que se definan reglas explícitas. |
 
-| Campo | Tipo | Requerido | Descripción |
-|---|---|:---:|---|
-| `uid` | `string` | ✅ | UID de Firebase Authentication (coincide con el Document ID) |
-| `email` | `string` | ✅ | Correo electrónico principal |
-| `displayName` | `string` | ❌ | Nombre o apodo visible |
-| `photoURL` | `string` | ❌ | URL del avatar en Cloud Storage o Google |
-| `role` | `'user'` | ✅ | Rol único del usuario final |
-| `streakDays` | `number` | ❌ | Contador de días consecutivos con registro activo |
-| `lastLogDate` | `Timestamp` | ❌ | Fecha y hora del último registro completado |
-| `createdAt` | `Timestamp` | ✅ | Fecha de registro en la plataforma |
-| `updatedAt` | `Timestamp` | ✅ | Última actualización del perfil |
+La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
 
----
+## Formas de datos observadas en el código
 
-### 2.2 `moodLogs/{logId}`
-Cada registro instantáneo del estado de ánimo del usuario (Core de Strava Emocional).
+### Perfil (`users/{uid}`)
 
-| Campo | Tipo | Requerido | Descripción |
-|---|---|:---:|---|
-| `id` | `string` | ✅ | ID único del documento |
-| `userId` | `string` | ✅ | UID del propietario |
-| `score` | `number` | ✅ | Valor numérico del ánimo (escala unificada 1 a 10) |
-| `mood` | `string` | ✅ | Emoción principal (ej. `'feliz'`, `'ansioso'`, `'calmado'`, `'triste'`) |
-| `note` | `string` | ❌ | Breve nota o contexto opcional (máx. 500 caracteres) |
-| `tags` | `string[]` | ❌ | Detonantes o categorías (ej. `['trabajo', 'sueño', 'ejercicio']`) |
-| `heartRate` | `number` | ❌ | Pulso en reposo al momento del registro (BPM, integración futura) |
-| `hrv` | `number` | ❌ | Variabilidad de frecuencia cardíaca (ms, integración futura) |
-| `createdAt` | `Timestamp` | ✅ | Momento exacto del registro |
+`AuthContext` lee y escribe propiedades como `email`, `displayName`, `username`, `role`, `createdAt`, `updatedAt`, nombre y teléfono. La interfaz de `User` en `frontend/src/types/index.ts` también declara campos heredados y `role: 'user' | 'psychologist'`, mientras el contexto de autenticación expone `role: 'user'`. No se debe tratar el rol del cliente como autorización confiable.
 
----
+### Registro de ánimo (`moodLogs`)
 
-### 2.3 `journalEntries/{entryId}`
-Reflexiones libres y pensamientos íntimos del usuario.
+`moodLogService` recibe un `MoodLog` y escribe el objeto recibido junto con `createdAt` y `updatedAt`. La interfaz actual `MoodLog` incluye `userId`, `mood`, `energy`, `stress`, `sleep`, `notes`, `activities`, `emotions` y `aiAnalysis`. El tipo comenta `mood` en escala 1–5; algunas pantallas/documentos describen otra escala. No asumir compatibilidad entre registros existentes: primero definir un modelo canónico y una estrategia de migración/visualización.
 
-| Campo | Tipo | Requerido | Descripción |
-|---|---|:---:|---|
-| `id` | `string` | ✅ | ID único del documento |
-| `userId` | `string` | ✅ | UID del propietario |
-| `title` | `string` | ❌ | Título de la entrada o prompt seleccionado |
-| `content` | `string` | ✅ | Texto de la reflexión (o payload encriptado en Fase 3) |
-| `isEncrypted` | `boolean` | ❌ | Bandera que indica si el contenido está cifrado con llave local |
-| `moodScore` | `number` | ❌ | Puntuación asociada a este momento |
-| `tags` | `string[]` | ❌ | Etiquetas temáticas personales |
-| `aiFeedback` | `string` | ❌ | Reflexión o pregunta de cierre generada por el Confidente IA |
-| `createdAt` | `Timestamp` | ✅ | Fecha de creación |
-| `updatedAt` | `Timestamp` | ✅ | Última modificación |
+### Entrada de diario (`journalEntries`)
 
----
+`journalService.createJournalEntry` guarda `userId`, `title`, `content`, `date`, `tags`, `mood`, `energy`, `stress`, `sleep`, `activities`, `emotions`, `aiSuggestions`, `aiAnalysis`, `isPrivate`, `createdAt` y `updatedAt`; elimina valores nulos antes de escribir. El contenido se guarda como texto legible.
 
-### 2.4 `chatSessions/{sessionId}` y Mensajes
-Conversaciones privadas entre el usuario y su Confidente IA.
+### Conversaciones y mensajes
 
-| Campo | Tipo | Requerido | Descripción |
-|---|---|:---:|---|
-| `id` | `string` | ✅ | ID único de la sesión |
-| `userId` | `string` | ✅ | UID del usuario |
-| `messages` | `Array<Message>` | ✅ | Array de mensajes intercambiados |
-| ↳ `role` | `'user' \| 'assistant'` | ✅ | Emisor del mensaje |
-| ↳ `content` | `string` | ✅ | Texto del mensaje |
-| ↳ `timestamp` | `Timestamp` | ✅ | Hora del mensaje |
-| `createdAt` | `Timestamp` | ✅ | Fecha de inicio de sesión |
-| `lastMessageAt` | `Timestamp` | ✅ | Última interacción |
+| Implementación | Colecciones | Modelo/campos principales |
+|---|---|---|
+| Hook `useChat` | `chatSessions`, `chatMessages` | Sesión con `userId`, `psychologistId`, participantes y metadatos; mensaje con `sessionId`, `senderId`, `content` y `timestamp`. Conserva un modelo profesional/legacy. |
+| Servicio `chatService` | `chats`, `messages` y `typing` | Conversación con `participants`, `chatType` y actividad; mensaje con `chatId`, emisor/destinatario y contenido. |
+| Reglas actuales | `chatSessions`, `chatMessages` | Cada documento exige `userId` para acceso. No hay reglas para `chats`, `messages` ni `typing`. |
 
----
+Estos contratos no son intercambiables. El producto debe escoger un único modelo y alinear el servicio, las reglas, las consultas y los índices antes de considerar chat operativo.
 
-### 2.5 `notifications/{notificationId}`
-Recordatorios suaves, alertas de racha o notificaciones del sistema.
+## Índices
 
-| Campo | Tipo | Requerido | Descripción |
-|---|---|:---:|---|
-| `userId` | `string` | ✅ | UID destinatario |
-| `title` | `string` | ✅ | Título de la alerta |
-| `message` | `string` | ✅ | Cuerpo del mensaje |
-| `type` | `'reminder' \| 'streak' \| 'system' \| 'crisis'` | ✅ | Clasificación |
-| `read` | `boolean` | ✅ | Estado de lectura |
-| `createdAt` | `Timestamp` | ✅ | Momento de emisión |
+`firestore.indexes.json` conserva índices para `appointments`, `notifications`, `chatSessions` y `chatMessages`, incluidos campos de la experiencia profesional anterior. No es un inventario de consultas garantizadas ni coincide necesariamente con los módulos B2C actuales. Firestore puede requerir índices adicionales según filtros/ordenamientos. Ante el enlace de error que devuelve Firebase:
 
----
+1. Confirma que la consulta y los campos son los esperados.
+2. Añade el índice mínimo necesario al archivo versionado.
+3. Prueba en el proyecto de desarrollo y despliega solo después de revisar el destino.
 
-## 3. Índices Compuestos Necesarios (`firestore.indexes.json`)
+## Reglas para evolucionar el modelo
 
-Para que las consultas con filtros y ordenamientos funcionen sin error en Firebase, se requieren los siguientes índices:
-
-```json
-{
-  "indexes": [
-    {
-      "collectionGroup": "moodLogs",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "journalEntries",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "notifications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "read", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## 4. Colecciones Eliminadas del Sistema Universitario
-
-Las siguientes colecciones fueron dadas de baja en el esquema como parte del pivot comercial a B2C:
-- ❌ `psychologists`
-- ❌ `appointments`
-- ❌ `medicalReports`
-- ❌ `patientHistory`
-- ❌ `patients`
-- ❌ `psychologistRatings`
-- ❌ `psychologist-cvs`
+- Mantener `userId` inmutable y derivarlo de la sesión autenticada, no de datos editables del formulario.
+- Definir para cada colección campos obligatorios, tipos, límites, propietario y operaciones permitidas.
+- Evitar guardar texto sensible redundante en informes, notificaciones, analytics o logs.
+- Actualizar conjuntamente los tipos, servicios, consultas, reglas, índices y pruebas.
+- No usar datos reales de salud emocional en desarrollo.

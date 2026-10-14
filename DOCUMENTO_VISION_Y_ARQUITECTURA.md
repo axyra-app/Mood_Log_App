@@ -1,130 +1,146 @@
-# 🧠 Documento de Visión, Arquitectura y Hoja de Ruta: Mood Log
+# Mood Log App: visión y dirección del producto
 
-**Versión del documento:** 2.0  
-**Fecha:** Octubre 2026  
-**Estado:** En transición hacia producto de consumo (B2C)  
-**Rama de respaldo con módulo universitario/psicólogos:** `backup-version-universitaria`
+**Versión:** 3.0
+**Fecha de revisión:** 14 de octubre de 2026
+**Estado:** definición de producto en evolución; implementación en transición
 
----
+Este documento reúne el propósito del producto y sus decisiones de alto nivel. La implementación observada y sus limitaciones se describen en [`docs/architecture/`](docs/architecture/overview.md). Una capacidad que aparece en la visión o en la hoja de ruta no debe considerarse disponible hasta que esté implementada, probada y documentada como tal.
 
-## 1. Visión del Producto
+## 1. Propósito
 
-### 1.1 El Concepto: "El Strava del Bienestar Emocional"
-Así como **Strava** revolucionó el deporte transformando los entrenamientos en métricas visuales, rachas consistentes, mapas de esfuerzo y seguimiento pasivo mediante sensores (pulsómetros, GPS), **Mood Log** nace para hacer exactamente lo mismo con el **bienestar mental y emocional**:
+Mood Log busca ayudar a una persona a observar su estado de ánimo a lo largo del tiempo mediante registros sencillos, reflexiones personales y visualizaciones comprensibles. La intención es facilitar la autoobservación y el reconocimiento de patrones, no medir la salud clínica ni sustituir atención profesional.
 
-1. **Fricción mínima en el registro:** Registrar cómo te sientes debe tomar 5 segundos, no 5 minutos.
-2. **Cuantificación emocional visual:** Rachas de días consecutivos, promedios móviles, patrones de fluctuación semanal/mensual e impacto de hábitos.
-3. **Monitoreo biométrico pasivo (Visión a futuro):** Correlacionar datos de pulso cardíaco y Variabilidad de la Frecuencia Cardíaca (VFC / HRV) provenientes de smartwatches/wearables con momentos de estrés o ansiedad.
+La metáfora de “Strava del bienestar emocional” expresa tres ideas de producto:
 
-### 1.2 El "Amigo y Confidente Personal" (IA Empática + Privacidad Total)
-Además de las métricas, la aplicación ofrece un **espacio seguro, confidencial y sin juicios**:
-- Un diario íntimo para desahogarse y reflexionar.
-- Un compañero conversacional impulsado por IA que escucha, valida emociones y ofrece preguntas reflexivas guiadas.
-- **Privacidad no negociable:** Los pensamientos íntimos del usuario deben estar estrictamente aislados y encriptados, inaccesibles para terceros.
+1. **Registro de baja fricción:** capturar un check-in emocional de forma simple y voluntaria.
+2. **Progreso personal visible:** mostrar historial y tendencias sin convertir la constancia en una obligación o fuente de culpa.
+3. **Reflexión contextual:** ayudar a relacionar experiencias y hábitos desde los datos que la persona elige registrar, sin afirmar causalidad.
 
----
+## 2. Personas usuarias y necesidad
 
-## 2. Pilares Fundamentales del Sistema
+La persona usuaria principal es alguien que quiere llevar un registro personal de su estado de ánimo y reflexionar sobre su experiencia cotidiana. El producto debe ser comprensible, accesible, discreto y explícito sobre qué datos guarda y qué límites tiene.
 
-```mermaid
-graph TD
-    A[Mood Log: Strava Emocional] --> B[1. Registro y Métricas]
-    A --> C[2. Diario Personal Encriptado]
-    A --> D[3. Confidente IA]
-    A --> E[4. Protocolo de Crisis y Seguridad]
-    A --> F[5. Ecosistema Móvil y Sensores]
+## 3. Principios de producto
 
-    B --> B1[Rachas diarias]
-    B --> B2[Promedios y tendencias]
-    B --> B3[Etiquetas y detonantes]
+### Autonomía y lenguaje no clínico
 
-    C --> C1[Desahogo sin fricción]
-    C --> C2[Aislamiento estricto de datos]
+La persona decide qué registrar, qué consultar y cuándo participar. Las métricas describen entradas registradas; no son diagnósticos ni evaluaciones clínicas.
 
-    D --> D1[Chat empático]
-    D --> D2[Reflexiones diarias guiadas]
+### Privacidad por diseño
 
-    E --> E1[Detección de riesgo grave]
-    E --> E2[Líneas de ayuda de emergencia]
+Los registros emocionales son sensibles. La recopilación debe ser mínima, con controles de acceso probados y decisiones transparentes sobre almacenamiento, proveedores externos, exportación y eliminación. El estado actual y las brechas están documentados en [Seguridad y privacidad](docs/architecture/security-and-privacy.md).
 
-    F --> F1[PWA Mobile-First]
-    F --> F2[Wearables / Pulso / HRV]
-```
+### Progreso sin culpa
 
-### Pilar 1: Registro Rápido y Métricas (Core Strava)
-- **Escala unificada:** Escala emocional clara y consistente (1 a 10) con descriptores visuales.
-- **Rachas y consistencia:** Contador de días consecutivos para incentivar el hábito diario sin castigar la culpa.
-- **Gráficas de progreso:** Tendencias semanales y mensuales para identificar qué días o actividades elevan o disminuyen el bienestar.
+Las rachas y recordatorios, si se ofrecen, deben ser opcionales y no presentar pausas como fracaso. El producto debe permitir desactivar estímulos que generen presión.
 
-### Pilar 2: Diario Personal Confidencial
-- Espacio libre de texto o notas rápidas.
-- Modelo de seguridad donde **solo el UID autenticado** puede leer y escribir.
+### Evidencia y límites
 
-### Pilar 3: Confidente Personal (IA)
-- Agente empático disponible 24/7.
-- No emite diagnósticos clínicos ni prescribe tratamientos médicos; actúa como un diario interactivo y de apoyo reflexivo.
+Una correlación en un historial personal no demuestra que una actividad cause un cambio de ánimo. Biometría, IA y ejercicios de bienestar requieren validación, consentimiento y mensajes prudentes antes de su lanzamiento.
 
-### Pilar 4: Protocolo Responsable de Contención de Crisis
-- Si se detecta un patrón o lenguaje de alto riesgo (autolesión o ideación suicida), la aplicación despliega inmediatamente recursos de apoyo:
-  - Botones de llamada rápida a líneas de emergencia gratuitas según el país (ej. 988 en EE.UU., 024 en España, líneas nacionales en Latinoamérica).
-  - Ejercicios guiados de respiración profunda (caja / 4-7-8) para estabilización inmediata.
-  - Opción de contactar a un amigo o familiar de confianza preconfigurado por el usuario.
+## 4. Alcance del producto
 
----
+### Núcleo previsto
 
-## 3. Hoja de Ruta Técnica (Roadmap)
+- Registro personal de ánimo y contexto elegido por la persona.
+- Diario privado para reflexiones.
+- Historial y visualizaciones descriptivas.
+- Herramientas de exportación, edición y eliminación claramente explicadas.
+- Interfaz web adaptable a dispositivos móviles.
 
-### Fase 1: Limpieza, Estabilidad y Blindaje (En curso)
-- **Eliminación del módulo de psicólogos:** Retiro de rutas, páginas de citas, historias médicas y selectores de terapeutas.
-- **Unificación a un solo rol:** Todos los usuarios son personas individuales gestionando su bienestar.
-- **Blindaje de Firestore y Storage:** Reglas 100% cerradas a nivel de usuario (`request.auth.uid == userId`).
-- **Reparación de TypeScript:** Resolución de errores de sintaxis en utilitarios y activación de `tsc --noEmit` en pipeline.
+### Funciones experimentales o dependientes de decisiones
 
-### Fase 2: Experiencia Móvil First-Class (PWA Nativa)
-- **Navegación inferior tipo app nativa (Bottom Navigation Bar):**
-  - Inicio / Dashboard (Rachas y métricas rápidas).
-  - Registrar Ánimo (Botón central flotante).
-  - Diario (Entradas y reflexiones).
-  - Confidente IA (Chat de apoyo).
-  - Perfil / Ajustes.
-- **Gestos táctiles y transiciones móviles fluidas.**
-- **Capacidad offline básica:** Posibilidad de guardar una entrada en local si no hay conexión y sincronizar al recuperar internet.
+- Respuestas reflexivas generadas por IA.
+- Recordatorios, rachas y notificaciones.
+- Recursos de apoyo para momentos de angustia.
+- Integración con plataformas de salud y dispositivos wearables.
+- Empaquetado nativo mediante Capacitor.
 
-### Fase 3: Transición a Tiendas de Apps (iOS / Android)
-- **Estrategia recomendada:** Integración con **Capacitor** sobre la base actual de Vite + React.
-  - Permite compilar a binarios nativos para Google Play Store y Apple App Store reutilizando el 95% del código.
-  - Proporciona acceso a APIs nativas de notificaciones push, almacenamiento seguro local y biometría (FaceID/huella).
+Estas funciones no deben anunciarse como servicios confiables o listos para producción sin pruebas funcionales, revisión de seguridad y aprobación de producto.
 
-### Fase 4: Integración Biométrica con Sensores (La Visión Strava)
-- **Conexión con datos de salud:**
-  - Integración con **Apple HealthKit** (iOS) y **Google Health Connect** (Android).
-- **Métricas fisiológicas a monitorizar:**
-  - **Frecuencia Cardíaca en Reposo (RHR):** Elevaciones repentinas en reposo como indicador de estrés.
-  - **Variabilidad de la Frecuencia Cardíaca (HRV/VFC):** Biomarcador clínico de estrés del sistema nervioso simpático/parasimpático.
-- **Disparadores inteligentes:**
-  - Cuando se detecta estrés fisiológico prolongado, enviar una notificación suave invitando a una pausa de respiración o a registrar qué está ocurriendo en el momento.
+## 5. Estado del producto
 
----
+El repositorio contiene rutas y pantallas para autenticación, dashboard, registro de ánimo, diario, estadísticas, informes, chat, perfil y ajustes. Sin embargo, la existencia de la interfaz no demuestra que todo su recorrido funcione. Persisten modelos y servicios de la antigua plataforma profesional; hay discrepancias entre contratos de datos y reglas Firebase.
 
-## 4. Esquema Simplificado de Firestore
+Algunos hechos importantes del estado actual:
 
-Al retirar el módulo de psicólogos, la base de datos se simplifica radicalmente:
+- El registro de ánimo dispone de una escala visual de 1 a 10; el tipo compartido `MoodLog` mantiene una escala comentada como 1 a 5. Debe definirse el contrato canónico.
+- El diario se guarda como texto legible; no hay cifrado de extremo a extremo implementado.
+- Las llamadas de algunos agentes IA se originan desde el navegador y usan configuración `VITE_*`; no se deben usar secretos de servidor en ese contexto.
+- El chat mantiene más de un modelo de almacenamiento y la pantalla revisada no persiste el historial de conversación.
+- El motor de detección de crisis no aparece conectado al flujo de check-in o chat en el frontend revisado.
+- La PWA cachea recursos estáticos; no hay sincronización offline completa demostrada.
+- La compilación, las reglas remotas y la configuración de hosting requieren validación independiente.
 
-| Colección | Propósito | Acceso / Regla de Seguridad |
-|---|---|---|
-| `users/{userId}` | Perfil básico del usuario (nombre, avatar, preferencias) | Solo el propio usuario (`request.auth.uid == userId`) |
-| `moodLogs/{logId}` | Registros de estado de ánimo, emociones y notas | Solo el propio usuario (`resource.data.userId == request.auth.uid`) |
-| `journalEntries/{entryId}` | Entradas del diario personal | Solo el propio usuario (`resource.data.userId == request.auth.uid`) |
-| `chatSessions/{sessionId}` | Historial de conversaciones con el Confidente IA | Solo el propio usuario (`resource.data.userId == request.auth.uid`) |
-| `userSettings/{settingsId}` | Configuraciones de tema, notificaciones y contacto de emergencia | Solo el propio usuario (`request.auth.uid == settingsId`) |
+El estado detallado está en [`ANALISIS_PROYECTO.md`](ANALISIS_PROYECTO.md) y en la documentación técnica.
 
-**Colecciones que se eliminan o deprecian:**
-`psychologists`, `appointments`, `medicalReports`, `patientHistory`, `patients`, `psychologistRatings`.
+## 6. Hoja de ruta propuesta
 
----
+Las fases son una propuesta de secuencia, no compromisos de fecha. Cada fase debe cerrar criterios verificables antes de declarar su finalización.
 
-## 5. Respaldo y Trazabilidad
+### Fase 0 — Alinear alcance y seguridad
 
-Todo el código previo correspondiente al sistema de telepsicología, gestión de agendas y expedientes clínicos universitarios se encuentra salvaguardado en:
-- **Rama Git:** `backup-version-universitaria`
-- **Commit hash base:** El último commit de `main` previo a la fase de limpieza.
+- Confirmar qué pantallas y flujos pertenecen al producto B2C.
+- Aislar desarrollo en Firebase Emulator Suite o un proyecto no productivo.
+- Acordar el modelo de propietario, escalas, colecciones y retención.
+- Quitar o deshabilitar llamadas de IA cliente con claves privadas.
+
+**Criterio de salida:** el equipo conoce qué datos guarda cada flujo, a dónde se envían y cómo se autorizan; las reglas pasan pruebas de acceso cruzado.
+
+### Fase 1 — MVP personal fiable
+
+- Completar registro, sesión y perfil básico.
+- Consolidar registro, consulta, edición y eliminación de registros de ánimo.
+- Completar el diario con controles de acceso probados.
+- Definir estadísticas descriptivas y su significado.
+- Incorporar typecheck y pruebas relevantes al CI.
+
+**Criterio de salida:** recorrido funcional probado en entorno aislado, sin errores de permisos ni discrepancias de contrato y con políticas coherentes.
+
+### Fase 2 — Experiencia móvil y accesibilidad
+
+- Revisar navegación, formularios y rendimiento en teléfonos.
+- Mejorar accesibilidad de teclado, lector de pantalla, contraste y áreas táctiles.
+- Verificar instalación y actualización PWA en navegadores objetivo.
+- Diseñar, si se aprueba, un flujo offline que especifique cifrado local, sincronización y conflictos.
+
+**Criterio de salida:** pruebas documentadas en dispositivos y navegadores acordados; no asumir soporte offline hasta validar lecturas y escrituras.
+
+### Fase 3 — IA reflexiva segura (opcional)
+
+- Definir consentimiento y minimización de datos.
+- Mover llamadas a un backend con secreto de servidor y límites de uso.
+- Revisar calidad, seguridad, límites y rutas de escalamiento humano.
+- Indicar claramente que la IA puede equivocarse y no reemplaza ayuda profesional.
+
+**Criterio de salida:** revisión técnica, de privacidad y de producto completada; no se envían datos antes del consentimiento requerido.
+
+### Fase 4 — Aplicación nativa y sensores (exploratoria)
+
+- Evaluar Capacitor solo tras estabilizar la web.
+- Investigar permisos, políticas de las tiendas, privacidad y calidad de sensores de salud.
+- Validar la utilidad con usuarios antes de proponer alertas biométricas.
+
+**Criterio de salida:** estudio de viabilidad y evaluación de privacidad; no inferir crisis, ansiedad o diagnósticos de datos fisiológicos.
+
+## 7. Medidas de éxito
+
+Las métricas de producto deben ser agregadas, minimizadas y compatibles con el consentimiento y la privacidad. Posibles indicadores, sujetos a revisión:
+
+- Finalización satisfactoria del registro de ánimo.
+- Porcentaje de errores de guardado y permisos.
+- Retención voluntaria y uso de controles de privacidad.
+- Accesibilidad y rendimiento en dispositivos objetivo.
+- Solicitudes de exportación/eliminación completadas.
+
+No usar la cantidad o continuidad de registros como medida individual de salud mental ni como sustituto de resultados clínicos.
+
+## 8. Documentos relacionados
+
+- [Índice de documentación](docs/README.md)
+- [Arquitectura implementada](docs/architecture/overview.md)
+- [Datos y Firestore](docs/architecture/database-schema.md)
+- [Seguridad y privacidad](docs/architecture/security-and-privacy.md)
+- [Guía de usuario y estado funcional](docs/product/user-guide.md)
+- [Roadmap detallado](docs/product/vision-and-roadmap.md)
+- [Especificación de contexto biométrico](docs/features/biometric-context/README.md)

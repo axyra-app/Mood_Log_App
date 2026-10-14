@@ -1,40 +1,47 @@
-## 📝 Descripción
+## Resumen
 
-Describe brevemente los cambios realizados en este PR.
+Describe qué cambia y por qué. Incluye el contexto necesario para revisar la solución.
 
-## 🔧 Tipo de cambio
+## Tipo de cambio
 
-- [ ] Bug fix (cambio que corrige un problema)
-- [ ] Nueva funcionalidad (cambio que añade funcionalidad)
-- [ ] Breaking change (cambio que causa que la funcionalidad existente no funcione como se esperaba)
-- [ ] Documentación (cambio que solo afecta a la documentación)
-- [ ] Refactoring (cambio que no corrige un bug ni añade funcionalidad)
-- [ ] Performance (cambio que mejora el rendimiento)
-- [ ] Test (añadir tests o corregir tests existentes)
+- [ ] Corrección de error
+- [ ] Funcionalidad
+- [ ] Cambio incompatible
+- [ ] Documentación
+- [ ] Refactorización
+- [ ] Rendimiento
+- [ ] Pruebas
+- [ ] Configuración o dependencias
 
-## ✅ Checklist
+## Validación
 
-- [ ] Mi código sigue las guías de estilo de este proyecto
-- [ ] He realizado una auto-revisión de mi código
-- [ ] He comentado mi código, especialmente en áreas difíciles de entender
-- [ ] He hecho los cambios correspondientes en la documentación
-- [ ] Mis cambios no generan nuevas advertencias
-- [ ] He añadido tests que prueban que mi fix es efectivo o que mi funcionalidad funciona
-- [ ] Los tests nuevos y existentes pasan localmente con mis cambios
-- [ ] Cualquier cambio dependiente ha sido mergeado y publicado
+Indica los comandos ejecutados y el resultado. Si una prueba no se pudo ejecutar, explica por qué.
 
-## 🧪 Testing
+- [ ] `cd frontend && npm run typecheck`
+- [ ] `cd frontend && npm run build`
+- [ ] Pruebas pertinentes (indica cuáles):
+- [ ] Pruebas de reglas Firebase, si el cambio afecta datos/permisos:
 
-Describe las pruebas que has realizado para verificar tus cambios. Proporciona instrucciones para que podamos reproducirlas.
+## Privacidad y seguridad
 
-## 📸 Screenshots (si aplica)
+- [ ] No se añadieron secretos, tokens ni datos personales.
+- [ ] Se revisaron permisos, reglas y minimización de datos cuando aplica.
+- [ ] Se documentaron proveedores externos y consentimiento si el cambio transmite datos.
+- [ ] No se describen funciones experimentales o futuras como disponibles.
+- [ ] No aplica; explica brevemente:
 
-Añade screenshots para ayudar a explicar tus cambios.
+## Revisión de la implementación
 
-## 🔗 Issues relacionados
+- [ ] Revisé el diff y los cambios asociados.
+- [ ] Actualicé documentación relacionada.
+- [ ] Añadí o actualicé pruebas cuando corresponde.
+- [ ] Revisé estados de carga, error, vacío y éxito cuando corresponde.
+- [ ] Verifiqué accesibilidad y comportamiento móvil cuando corresponde.
 
-- Closes #(issue number)
+## Capturas o evidencia
 
-## 📋 Información adicional
+Incluye imágenes o resultados de pruebas si ayudan a revisar el cambio. Usa datos ficticios.
 
-Añade cualquier información adicional que consideres relevante para los revisores.
+## Referencias
+
+Relaciona issues u otros documentos pertinentes, si aplica.

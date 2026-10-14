@@ -1,93 +1,51 @@
-# 💓 Integración Biométrica y Wearables (La Visión Strava)
+# Exploración: wearables y datos biométricos
 
-## 1. Justificación y Fundamento Científico
+## Estado
 
-El registro consciente del estado de ánimo (auto-reporte) tiene una limitación conocida: **el sesgo cognitivo retrospectivo** (a menudo nos damos cuenta de que estuvimos ansiosos o enojados horas después del suceso).
+Mood Log no tiene una integración de Apple HealthKit, Google Health Connect, HealthKit, Health Connect ni Bluetooth identificada en el código revisado. Este documento es una exploración de producto y arquitectura futura, no una guía de configuración ni una promesa de compatibilidad.
 
-Para lograr una verdadera plataforma predictiva y preventiva, **Mood Log** complementará el registro consciente con biomarcadores fisiológicos en tiempo real provenientes de smartwatches y bandas cardíacas:
+La especificación de producto y tecnología para combinar importaciones opt-in con registros de ánimo y diario está en [Contexto biométrico para ánimo y diario](../features/biometric-context/README.md).
 
-| Biomarcador | Definición | Relevancia en Salud Emocional |
+## Propósito posible
+
+En el futuro, la persona podría optar por importar datos fisiológicos desde un dispositivo compatible para verlos junto con sus propios registros. La utilidad, precisión y comprensión de estos datos deben validarse antes de definir una función.
+
+## Conceptos
+
+| Dato | Significado general | Límites |
 |---|---|---|
-| **Frecuencia Cardíaca en Reposo (RHR)** | Latidos por minuto en ausencia de actividad física | Picos de RHR sostenidos sin movimiento físico correlacionan fuertemente con estrés agudo o fatiga mental. |
-| **Variabilidad del Ritmo Cardíaco (HRV / VFC)** | Variación de tiempo en milisegundos entre latidos sucesivos (SDNN / RMSSD) | **El biomarcador por excelencia del sistema nervioso autónomo:** Alta HRV = sistema parasimpático activo (calma, recuperación). Baja HRV = sistema simpático activo (alerta, estrés, pánico). |
-| **Temperatura cutánea y respuesta galvánica** | Micro-cambios de conductancia en la piel | Respuestas simpáticas inmediatas ante estímulos de sobresalto o angustia. |
+| Frecuencia cardíaca | Latidos por minuto registrados por un sensor. | Cambia con movimiento, salud, medicamentos, sueño, dispositivo y método de medición. No mide directamente una emoción. |
+| HRV/VFC | Variación temporal entre latidos, expresada mediante métricas distintas, por ejemplo SDNN o RMSSD. | Métricas, ventanas y dispositivos no son intercambiables; una lectura aislada no diagnostica estrés ni enfermedad. |
+| Otros datos de salud | Por ejemplo, sueño o actividad física, según la fuente. | Requieren permiso separado, procedencia y contexto; no asumir que están disponibles o son comparables. |
 
----
+Evitar frases como “la HRV baja significa ansiedad” o “el pulso detectó un episodio de estrés”. No inferir causas, diagnósticos o crisis a partir de métricas biométricas.
 
-## 2. Arquitectura de Conexión con Dispositivos
+## Opciones técnicas a investigar
 
-```mermaid
-flowchart LR
-    subgraph Dispositivos Wearables
-        W1[Apple Watch]
-        W2[Wear OS / Galaxy Watch]
-        W3[Banda Cardíaca BLE Polar/Garmin]
-    end
+### Aplicación web
 
-    subgraph Hubs Nativos de Salud
-        H1[Apple HealthKit]
-        H2[Google Health Connect]
-        H3[Web Bluetooth API]
-    end
+Las APIs de navegador, incluido Web Bluetooth, tienen soporte limitado por dispositivo/navegador, requieren contexto seguro y permisos explícitos. No ofrecen acceso universal a los datos históricos de plataformas de salud. Cualquier experimento debe tener una matriz de compatibilidad y una alternativa para personas sin dispositivo.
 
-    subgraph Mood Log App Capacitor / Core
-        C1[Plugin de Sincronización Salud]
-        C2[Motor Local de Correlación]
-        C3[Notificador Inteligente de Check-In]
-    end
+### Aplicación móvil nativa
 
-    W1 --> H1 --> C1
-    W2 --> H2 --> C1
-    W3 --> H3 --> C1
+Una posible etapa posterior sería evaluar plugins nativos de Capacitor para APIs de salud de iOS y Android. Antes de seleccionar librerías, revisar mantenimiento, permisos, políticas de Apple/Google, revisiones de la tienda, requisitos de privacidad y manejo de datos. La selección aún no está hecha.
 
-    C1 --> C2 --> C3
-```
+## Requisitos de producto y privacidad
 
----
+- Opt-in explícito, granular y revocable; pedir solo los permisos necesarios.
+- Explicar qué campos se leen, con qué frecuencia, para qué se usan y si salen del dispositivo.
+- Mostrar procedencia, unidad, ventana de medición y limitaciones.
+- Permitir desconectar la fuente y borrar los datos importados.
+- No compartir datos de salud con publicidad, empleadores, aseguradoras o proveedores de IA sin una base y consentimiento revisados; la opción recomendada es no hacerlo.
+- Evitar notificaciones que diagnostiquen o alarmen. La persona controla frecuencia y contenido.
+- Evaluar normativa y revisión especializada en los territorios objetivo.
 
-## 3. Estrategia de Implementación por Entorno
+## Propuesta de fases
 
-### 3.1 Entorno Web / PWA: `Web Bluetooth API`
-Para usuarios que usan la versión web en navegadores compatibles (Chrome, Edge, Opera):
-- Conexión directa vía Bluetooth Low Energy (BLE) utilizando el servicio estándar `0x180D` (Heart Rate Service).
-- Lectura en tiempo real del pulso instantáneo y los intervalos RR (`Heart Rate Measurement: 0x2A37`).
-- Ideal para sesiones guiadas de meditación y respiración dentro del navegador.
+1. Investigación de necesidades y dispositivos objetivo.
+2. Prototipo con datos sintéticos, sin importación real.
+3. Evaluación de APIs, privacidad y permisos en cada plataforma.
+4. Piloto opt-in, claramente etiquetado como experimental y sin inferencias clínicas.
+5. Revisión de seguridad, accesibilidad, exactitud y soporte antes de ampliar.
 
-```typescript
-// Ejemplo de conexión BLE estándar en el navegador
-async function connectHeartRateMonitor(): Promise<BluetoothRemoteGATTCharacteristic> {
-  const device = await navigator.bluetooth.requestDevice({
-    filters: [{ services: ['heart_rate'] }]
-  });
-  const server = await device.gatt?.connect();
-  const service = await server?.getPrimaryService('heart_rate');
-  const characteristic = await service?.getCharacteristic('heart_rate_measurement');
-  return characteristic!;
-}
-```
-
-### 3.2 Entorno Móvil Nativo (Capacitor): HealthKit & Health Connect
-Al empacar la aplicación en iOS y Android:
-- **iOS:** Integración con `@capacitor-community/health` hacia Apple HealthKit (permiso de lectura para `HKQuantityTypeIdentifierHeartRate` y `HKQuantityTypeIdentifierHeartRateVariabilitySDNN`).
-- **Android:** Integración con Google Health Connect (lectura de registros `HeartRateRecord` y `HeartRateVariabilityRmssdRecord`).
-
----
-
-## 4. Algoritmo de Detección de Estrés y Disparadores
-
-1. **Línea base individual (Baseline):**
-   - La aplicación aprende la frecuencia cardíaca promedio en reposo del usuario y su rango normal de HRV durante 7 días.
-2. **Detección de anomalía:**
-   - Si se detecta un incremento sostenido de FC (> 25% sobre la línea base) por más de 10 minutos **sin detección de pasos o aceleración física**:
-   - Y la HRV cae por debajo del percentil 15 habitual.
-3. **Acción de apoyo suave (Micro-intervención):**
-   - Notificación no invasiva: *"Tu cuerpo parece estar acelerado. ¿Quieres tomarte 60 segundos para respirar o anotar qué está pasando?"*.
-   - Si el usuario pulsa la notificación, se abre directamente la pantalla de **Respiración 4-7-8** o el **Registro Rápido de Ánimo**.
-
----
-
-## 5. Privacidad y Ética de Datos de Salud
-
-- **Procesamiento en el dispositivo:** La correlación inicial de biometría se calcula localmente en el teléfono.
-- **Consentimiento explícito:** Los permisos de salud son estrictamente opcionales y pueden revocarse en cualquier momento.
-- **No comercialización:** Los datos biométricos jamás serán compartidos ni vendidos a brokers de datos, redes publicitarias ni aseguradoras.
+No implementar umbrales universales de frecuencia cardíaca o HRV para disparar avisos. La línea base individual, el contexto y la validación de la función requerirían investigación y aprobación específica.

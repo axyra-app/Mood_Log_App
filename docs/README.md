@@ -1,60 +1,52 @@
-# 📚 Centro de Documentación — Mood Log App
+# Documentación de Mood Log App
 
-> **"El Strava del Bienestar Emocional" + Diario Íntimo & Confidente IA**
+Este índice organiza la documentación del producto, su arquitectura y los procesos de desarrollo. Las guías técnicas describen el código y la configuración versionados; no confirman por sí solas el comportamiento de servicios desplegados. La documentación de producto separa explícitamente el estado observado de las ideas futuras.
 
-Bienvenido a la documentación oficial y actualizada de **Mood Log App**. Este repositorio alberga la plataforma de registro y análisis de bienestar mental, diseñada con un enfoque Mobile-First, privacidad estricta y visión de cuantificación biométrica.
+## Producto
 
----
+| Documento | Contenido |
+|---|---|
+| [Visión y hoja de ruta](product/vision-and-roadmap.md) | Propósito, principios, alcance recomendado, estado y etapas con criterios de salida. |
+| [Guía de pantallas](product/user-guide.md) | Rutas de la aplicación y capacidades observadas con sus limitaciones. |
+| [Flujos de usuario](product/user-flows.md) | Recorridos de ánimo, diario, chat, estadísticas y brechas conocidas. |
+| [Glosario](product/glossary.md) | Definiciones de términos emocionales y técnicos utilizados por el proyecto. |
+| [Seguridad ante crisis](product/crisis-protocol.md) | Límites actuales y requisitos para considerar una futura función de apoyo. |
+| [Wearables y biometría](product/wearables-and-biometrics.md) | Exploración futura; no hay integración implementada identificada. |
 
-## 🧭 Mapa de Documentación
+## Especificaciones de funcionalidades
 
-La documentación se organiza de forma integral en cuatro áreas clave:
+Las propuestas de mejora con requisitos, diseño técnico, privacidad y validación se documentan como paquetes independientes en `docs/features/`. Su presencia no significa que la funcionalidad esté aprobada o implementada.
 
-```
-docs/
-├── README.md                          # Este índice central
-├── product/                           # Visión de negocio, producto y experiencia de usuario
-│   ├── vision-and-roadmap.md          # Propuesta de valor, pilares y fases de evolución
-│   ├── user-guide.md                  # 📱 Manual funcional pantalla a pantalla (Product Tour)
-│   ├── user-flows.md                  # 🔄 Flujos de usuario y diagramas de secuencia
-│   ├── glossary.md                    # 📖 Glosario de términos para no expertos
-│   ├── wearables-and-biometrics.md    # Integración con sensores de pulso y HRV (Fase Strava)
-│   └── crisis-protocol.md             # Protocolo de contención responsable y recursos de ayuda
-├── architecture/                      # Arquitectura de software, datos y seguridad
-│   ├── overview.md                    # Diagrama del sistema, frontend PWA y Firebase
-│   ├── database-schema.md             # Esquema detallado de Firestore y modelos de datos
-│   └── security-and-privacy.md        # Reglas de seguridad, aislamiento y cifrado del diario
-├── development/                       # Guías para desarrolladores
-│   ├── getting-started.md             # Instalación, configuración local y variables de entorno
-│   ├── deployment-guide.md            # Despliegue en Vercel y Firebase
-│   ├── code-standards.md              # Estándares de TypeScript, estilos y convenciones
-│   └── troubleshooting-and-faq.md     # ❓ Preguntas frecuentes y solución de problemas
-└── mobile/                            # Estrategia móvil
-    └── mobile-strategy.md             # PWA, navegación inferior (Bottom Bar) y Capacitor
-```
+| Feature | Contenido |
+|---|---|
+| [Contexto biométrico para ánimo y diario](features/biometric-context/README.md) | Brief, requisitos, metodología analítica, diseño técnico, privacidad/seguridad, validación y decisiones abiertas para Apple Health/Health Connect. |
 
----
+## Arquitectura
 
-## 📌 Estado del proyecto (10 de octubre de 2026)
+| Documento | Contenido |
+|---|---|
+| [Visión general](architecture/overview.md) | Componentes actuales, flujos de datos y alcance de la PWA. |
+| [Datos y Firestore](architecture/database-schema.md) | Colecciones observadas, incompatibilidades, reglas e índices. |
+| [Seguridad y privacidad](architecture/security-and-privacy.md) | Controles locales, limitaciones, IA, datos sensibles y verificación previa a producción. |
 
-- **Dirección del producto**: la documentación de visión propone centrar el producto en seguimiento personal del ánimo, diario privado y confidente IA, retirando el módulo profesional. Revisa el código y los cambios locales antes de considerar completada esa transición.
-- **Rama histórica**: en el repositorio inspeccionado existe `backup-version-universitaria`; verifica que esté respaldada y actualizada antes de eliminar o reescribir historia.
-- **Estado de validación**: en el workspace revisado, `npm run build` falla por un import a `CountrySelector`, archivo que ya no está en el árbol. `npm run typecheck` también reporta errores. No afirmar que una compilación está limpia hasta volver a ejecutar ambos comandos y obtener éxito.
-- **Seguridad**: las reglas locales de Firestore y Storage son más restrictivas que las anteriores, pero falta verificar que las consultas/CRUD de la app coincidan con las reglas y probarlas con usuarios diferentes y Firebase Emulator Suite. Las reglas locales tampoco prueban qué está desplegado en Firebase Console.
-- **Acceso privado**: la confidencialidad del código, del sitio de Vercel y de los proyectos Firebase requiere permisos y controles configurados en cada proveedor; una declaración en documentación no los aplica automáticamente.
+## Desarrollo y operación
 
----
+| Documento | Contenido |
+|---|---|
+| [Inicio local](development/getting-started.md) | Requisitos, instalación, validación y conexión a Firebase. |
+| [Estándares de código](development/code-standards.md) | TypeScript, React, accesibilidad, privacidad y validación. |
+| [Despliegue](development/deployment-guide.md) | Configuración versionada, workflows, Firebase y controles de acceso. |
+| [Solución de problemas](development/troubleshooting-and-faq.md) | Fallos comunes de build, Firebase, hosting y privacidad. |
+| [Estrategia móvil](mobile/mobile-strategy.md) | Experiencia responsive, PWA actual y opciones móviles futuras. |
 
-## 🚀 Enlaces Rápidos Según tu Perfil
+## Estado técnico resumido
 
-### Si es tu primera vez aquí o no tienes perfil técnico:
-- Empieza por entender los conceptos básicos: 👉 [Glosario de Términos](product/glossary.md)
-- Descubre qué hace la app pantalla por pantalla: 👉 [Manual de Usuario y Pantallas](product/user-guide.md)
-- Conoce la visión y el concepto "Strava": 👉 [Visión de Producto y Roadmap](product/vision-and-roadmap.md)
-- Respuestas a preguntas comunes: 👉 [Preguntas Frecuentes (FAQ)](development/troubleshooting-and-faq.md)
+- El frontend es una SPA React/Vite que se conecta directamente a Firebase desde el navegador.
+- Conviven modelos B2C y código heredado; las colecciones de chat y la escala de ánimo requieren consolidación.
+- Las reglas locales no cubren todas las colecciones usadas por el frontend y no se ha confirmado su estado remoto.
+- El diario se almacena como texto legible. El cifrado local y la sincronización offline completa no están implementados.
+- Algunos flujos de IA se ejecutan en el cliente; una variable `VITE_*` no es un secreto.
+- CI ejecuta el build, pero no typecheck ni pruebas automatizadas. Consulta las guías para comandos y validaciones.
+- La existencia de un workflow de build no demuestra que Vercel despliegue automáticamente ni que el sitio sea privado.
 
-### Si eres Desarrollador o Diseñador:
-- Instalación local, acceso privado y variables: 👉 [Guía interna de instalación local y variables](development/getting-started.md)
-- Comprender la arquitectura y stack: 👉 [Visión General de Arquitectura](architecture/overview.md)
-- Estructura de Firestore e índices: 👉 [Esquema de Base de Datos](architecture/database-schema.md)
-- Despliegue en Vercel y reglas: 👉 [Guía de Despliegue](development/deployment-guide.md)
+Para una lectura ejecutiva, consulta [el análisis técnico](../ANALISIS_PROYECTO.md) y el [documento de visión](../DOCUMENTO_VISION_Y_ARQUITECTURA.md). Antes de utilizar información real, revisa [seguridad y privacidad](architecture/security-and-privacy.md) y verifica Firebase y hosting en sus paneles.

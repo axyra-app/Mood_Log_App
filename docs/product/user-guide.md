@@ -1,106 +1,89 @@
-# 📱 Guía Funcional y Manual de Usuario (Pantalla a Pantalla)
+# Guía de pantallas y estado funcional
 
-Esta guía explica en detalle cada pantalla y funcionalidad de **Mood Log App** para que cualquier usuario, diseñador, evaluador o nuevo desarrollador comprenda exactamente la experiencia de uso de la plataforma.
+## A quién va dirigida
 
----
+Esta guía explica las rutas visibles en el frontend actual. Es una referencia del código, no una garantía de que cada acción funcione con la configuración remota disponible. Las rutas y protecciones se definen en `frontend/src/App.tsx`; las operaciones sensibles dependen de Firebase y sus reglas.
 
-## 🗺️ Mapa de Pantallas de la Aplicación
+> **Nota de seguridad:** la aplicación está en transición y contiene funciones experimentales. No uses información personal real en pruebas. El chat puede enviar contenido a un proveedor externo; el diario se almacena en texto legible y la detección de crisis no está conectada al flujo de usuario revisado.
+
+## Mapa de navegación
 
 ```mermaid
 flowchart TD
-    Home[1. Landing / Inicio Público] --> Auth[2. Registro / Inicio de Sesión]
-    Auth --> Dashboard[3. Dashboard / Tablero Principal]
-    Dashboard --> MoodFlow[4. Registro de Ánimo 'Check-in']
-    Dashboard --> Journal[5. Diario Personal]
-    Dashboard --> AIChat[6. Confidente IA]
-    Dashboard --> Statistics[7. Métricas y Estadísticas]
-    Dashboard --> Settings[8. Ajustes y Perfil]
-
-    MoodFlow --> Dashboard
-    Journal --> AIChat
+    Home["/ Inicio"] --> Login["/login"]
+    Home --> Register["/register"]
+    Login --> Dashboard["/dashboard (protegida)"]
+    Register --> Dashboard
+    Dashboard --> Mood["/mood-flow (protegida)"]
+    Dashboard --> Journal["/journal (protegida)"]
+    Dashboard --> Statistics["/statistics (protegida)"]
+    Dashboard --> Reports["/reports (protegida)"]
+    Dashboard --> Chat["/chat (protegida)"]
+    Chat --> Mia["/chat/dr-mia"]
+    Chat --> Bryan["/chat/dr-bryan"]
+    Dashboard --> Profile["/profile (protegida)"]
+    Dashboard --> Settings["/settings (protegida)"]
 ```
 
----
+La app también define `/complete-profile`, `/forgot-password`, `/privacy` y `/terms`. Las rutas con protección requieren sesión según `ProtectedRoute`, con comportamiento de redirección a completar perfil cuando faltan ciertos campos.
 
-## 1. Landing de Bienvenida (`/`)
-- **Propósito:** Presentar la propuesta de valor a usuarios nuevos y permitir el acceso a usuarios recurrentes.
-- **Elementos clave:**
-  - Resumen visual de la plataforma (cuantificación emocional, privacidad total, confidente IA).
-  - Botón principal de llamada a la acción (*Comenzar ahora / Registrarse*).
-  - Acceso directo a inicio de sesión (*¿Ya tienes cuenta? Iniciar Sesión*).
-  - Enlaces al pie de página a las Políticas de Privacidad y Términos de Servicio.
+## Pantallas
 
----
+### Inicio (`/`)
 
-## 2. Registro e Inicio de Sesión (`/login`, `/register`)
-- **Propósito:** Autenticar al usuario de forma rápida y segura.
-- **Métodos disponibles:**
-  - **Google OAuth (Un clic):** Inicio instantáneo vinculando la cuenta de Google con un solo toque (recomendado en móvil).
-  - **Correo electrónico y contraseña:** Formulario tradicional con validación de contraseña segura.
-- **Seguridad:** Encriptación en tránsito con TLS/SSL y gestión de tokens a través de Firebase Authentication. Al iniciar sesión por primera vez, se genera automáticamente el perfil del usuario con rol `'user'` y racha inicial de 0 días.
+Landing pública que presenta la propuesta y ofrece accesos a cuenta. La visibilidad de esta página no convierte el sitio completo en privado.
 
----
+### Registro e inicio de sesión (`/register`, `/login`)
 
-## 3. Tablero Principal / Dashboard (`/dashboard`)
-- **Propósito:** El "Feed de Actividad" (núcleo del concepto Strava Emocional).
-- **Lo que ve el usuario:**
-  - **Tarjeta de Bienvenida:** Saludo personalizado según la hora del día y recordatorio de registrar el ánimo si aún no lo ha hecho hoy.
-  - **Medidor de Racha (🔥 Streak):** Contador visible de días consecutivos registrando emociones. Si el usuario registra hoy, el fuego se enciende.
-  - **Estado Actual:** Indicador del último ánimo registrado con su color e icono representativo.
-  - **Acceso Rápido Central (+):** Botón prominente para registrar cómo te sientes en este instante.
-  - **Historial Reciente:** Lista de los últimos registros con fecha, nivel del 1 al 10 y emociones asociadas.
+Formularios de cuenta conectados con Firebase Authentication. El código contempla correo/contraseña y Google. El comportamiento real depende de Authentication, los dominios autorizados y la configuración de Firebase.
 
----
+### Completar perfil (`/complete-profile`)
 
-## 4. Flujo de Registro de Ánimo (`/mood-flow`)
-- **Propósito:** Capturar la emoción en menos de 5 segundos con mínima fricción cognitiva.
-- **Paso a Paso:**
-  1. **Nivel de Bienestar (Slider 1 al 10):**
-     - 1-3: Rojo / Naranja (Muy mal, decaído, abrumado).
-     - 4-6: Amarillo / Neutro (Regular, cansado, normal).
-     - 7-8: Verde claro (Bien, tranquilo, motivado).
-     - 9-10: Verde esmeralda (Excelente, pleno, eufórico).
-  2. **Selección de Emociones:** Tarjetas seleccionables con emojis descriptivos (*Agradecido, Ansioso, Cansado, Enojado, Feliz, Inspirado, Solitario*).
-  3. **Detonantes o Contexto:** Etiquetas de un toque para identificar qué originó la emoción (*Trabajo, Familia, Pareja, Clima, Sueño, Ejercicio, Salud, Dinero*).
-  4. **Nota Opcional:** Campo de texto breve para añadir detalles antes de guardar.
-- **Resultado:** El registro se guarda en Firestore, actualiza la racha del usuario y redirige al dashboard.
+Formulario de perfil accesible mediante ruta propia. No trates los campos de perfil o el rol recibido desde el cliente como mecanismo de autorización. La persistencia y reglas deben probarse.
 
----
+### Dashboard (`/dashboard`)
 
-## 5. Diario Personal (`/journal`)
-- **Propósito:** Espacio íntimo de desahogo y reflexión escrita.
-- **Funcionalidades:**
-  - **Editor libre:** Área para escribir reflexiones largas o notas breves.
-  - **Prompts Guiados:** Sugerencias reflexivas para desbloquear la escritura (*"¿Qué es algo que hoy te quitó energía y cómo puedes soltarlo?", "¿Por qué cosas te sientes agradecido hoy?"*).
-  - **Historial cronológico:** Consulta de entradas anteriores organizadas por fecha.
-  - **Respuesta empática opcional:** Posibilidad de solicitar una devolución reflexiva generada por el Confidente IA sobre la entrada escrita.
+Vista protegida que muestra saludo, acceso al diario, registros recientes y métricas derivadas de los datos cargados. Los cálculos de promedio/racha se realizan en el frontend con los registros disponibles; no son indicadores clínicos. Comprueba errores y sincronización con Firestore.
 
----
+### Registro de ánimo (`/mood-flow`)
 
-## 6. Confidente Personal con IA (`/ai-chat`)
-- **Propósito:** Un compañero conversacional disponible 24/7 para escuchar y reflexionar sin juicios.
-- **Dinámica:**
-  - El usuario escribe lo que tiene en mente y el asistente responde con empatía, validación y preguntas orientadas al autodescubrimiento.
-  - **No es terapia clínica:** Si el usuario expresa angustia extrema o ideación autolesiva, el chat detiene la conversación casual y despliega inmediatamente el **Protocolo de Contención de Crisis** con botones de llamada a líneas de vida de emergencia gratuitas.
+Recorrido por pasos que pide una valoración visual de 1 a 10, una descripción de cómo se siente la persona y detalles opcionales de energía, estrés, sueño, actividades y emociones. Al guardar, intenta crear un documento en `moodLogs` y muestra una pantalla de análisis.
 
----
+El tipo compartido de Firestore aún describe otra escala en sus comentarios; unifica el contrato antes de interpretar tendencias antiguas o comparar puntuaciones. El análisis disponible en `aiService` usa un fallback local; no debe presentarse como evaluación profesional o diagnóstico.
 
-## 7. Estadísticas y Métricas (`/statistics`)
-- **Propósito:** Mostrar tendencias, patrones y evolución temporal del bienestar.
-- **Componentes:**
-  - **Gráfico de Evolución Temporal:** Curva de altibajos a lo largo de los últimos 7, 30 o 90 días.
-  - **Distribución de Emociones:** Gráfico circular mostrando qué porcentaje del tiempo la persona experimenta cada emoción.
-  - **Detonantes Más Frecuentes:** Identificación de qué factores se correlacionan con los días de menor y mayor puntuación.
-  - **Descarga de Reporte PDF:** Botón para generar un documento PDF descargable con el resumen del mes.
+### Diario (`/journal`)
 
----
+Permite consultar entradas y ofrece acciones para crear, editar, buscar o eliminar; también presenta plantillas/prompts. El contenido se guarda como texto legible en Firestore. El sistema puede intentar analizar el texto con IA según la configuración y el contenido; consulta [Seguridad y privacidad](../architecture/security-and-privacy.md) antes de usarlo con información íntima.
 
-## 8. Perfil y Ajustes (`/profile`, `/settings`)
-- **Propósito:** Configuración de la cuenta y preferencias personales.
-- **Opciones disponibles:**
-  - Actualización de nombre visible y fotografía de avatar.
-  - Alternador de **Modo Claro / Modo Oscuro**.
-  - Cambio seguro de contraseña o reautenticación con Google.
-  - Configuración de contactos de emergencia.
-  - Enlaces directos a las políticas de privacidad y términos de servicio.
-  - Botón de cierre de sesión seguro.
+### Estadísticas (`/statistics`)
+
+Presenta resúmenes y gráficos generados a partir de los registros disponibles, con selección de período y acción para exportar un PDF local. Los resultados son descriptivos del autorreporte; no identifican causas ni predicen condiciones clínicas. Verifica los límites temporales y valores exportados antes de depender del reporte.
+
+### Informes (`/reports`)
+
+Ruta protegida a informes avanzados. La persistencia y disponibilidad de esta funcionalidad deben confirmarse con las reglas y el servicio; su presencia en la ruta no garantiza que los informes se guarden en Firestore.
+
+### Selección y chat (`/chat`, `/chat/dr-mia`, `/chat/dr-bryan`, `/chat/ai/:doctorType`)
+
+La interfaz actual ofrece perfiles llamados Mia y Bryan con descripciones de apoyo. El componente puede enviar mensajes a agentes inicializados desde el navegador. El historial se mantiene en estado de la página y no se observó persistencia de la conversación en ese componente.
+
+Los nombres/textos visibles incluyen lenguaje médico/profesional que debe revisarse: el producto no debe representar a un agente como médico o psicólogo real. El detector de crisis del repositorio no está conectado a este chat. No introduzcas datos sensibles hasta que estén implementados controles, consentimiento y backend seguro.
+
+### Perfil y ajustes (`/profile`, `/settings`)
+
+Rutas protegidas para información personal y preferencias. Confirma en el código cada operación de cuenta, cambio de contraseña, borrado o contacto de emergencia antes de presentarla como disponible; la interfaz por sí sola no prueba que se complete correctamente.
+
+### Privacidad y términos (`/privacy`, `/terms`)
+
+Páginas públicas de información legal. Su redacción debe revisarse contra el comportamiento real, proveedores y jurisdicciones antes de usar la aplicación con público.
+
+## Capacidades futuras que no deben darse por disponibles
+
+- Cifrado de extremo a extremo del diario.
+- Sincronización completa sin conexión.
+- Respuesta humana o atención de emergencia desde la app.
+- Detección fiable de crisis.
+- Conexión a wearables o sensores.
+- Aplicación nativa distribuida en tiendas.
+
+Consulta el [roadmap](./vision-and-roadmap.md) para el estado y criterios de avance.

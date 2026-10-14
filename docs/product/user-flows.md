@@ -1,101 +1,109 @@
-# 🔄 Flujos de Usuario Principales (User Journeys)
+# Flujos principales de usuario
 
-Este documento detalla los 4 flujos principales de experiencia del usuario en **Mood Log App**, ilustrando el paso a paso tanto a nivel de interfaz como a nivel de datos.
+## Propósito y límites
 
----
+Los diagramas representan recorridos objetivo y puntos de integración del código revisado. No son pruebas de que la configuración de Firebase, IA o producción esté disponible. Las brechas actuales están señaladas para evitar confundir diseño con comportamiento probado.
 
-## Flujo 1: Registro Rápido Diario (Check-in Emocional)
-
-Este es el flujo nuclear de la aplicación (objetivo: completarse en menos de 5 segundos).
+## 1. Registro de ánimo
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor U as Usuario
-    participant UI as Pantalla MoodFlow
+    actor P as Persona usuaria
+    participant UI as MoodFlowSimple
     participant Hook as useMood
-    participant DB as Cloud Firestore
+    participant FS as Cloud Firestore
 
-    U->>UI: Toca el botón central "+" o "Registrar Ánimo"
-    UI->>U: Muestra selector del 1 al 10 con color dinámico
-    U->>UI: Desliza el puntaje (ej. 8/10)
-    U->>UI: Selecciona emoción (ej. "Motivado") y tag (ej. "Trabajo")
-    U->>UI: Toca "Guardar Registro"
-    UI->>Hook: createMoodLog({ score: 8, mood: 'Motivado', tags: ['Trabajo'] })
-    Hook->>DB: Guarda documento en colección moodLogs
-    Hook->>DB: Actualiza racha (+1) en users/{uid}
-    DB-->>UI: Confirmación exitosa
-    UI->>U: Muestra confeti / animación de racha y vuelve a Dashboard
+    P->>UI: Selecciona valoración visual y completa pasos
+    UI->>Hook: createMoodLog(datos del registro)
+    Hook->>FS: Escribe documento en moodLogs
+    FS-->>Hook: Resultado o error de reglas/conexión
+    Hook-->>UI: ID o error
+    UI->>UI: Solicita análisis de fallback local
+    UI-->>P: Muestra resultado o estado de error
 ```
 
----
+**Estado observado:** el formulario y servicio existen. `useMood` agrega el UID actual al registro. La escala del tipo compartido y algunos documentos no coincide con el selector visual; las reglas y el modelo deben probarse en desarrollo.
 
-## Flujo 2: Desahogo en el Diario con Respuesta Empática
+**No asumir:** actualización de una racha persistida, una puntuación clínica, guardado del resultado de IA mostrado o funcionamiento sin conexión.
 
-El usuario utiliza el diario para exteriorizar pensamientos profundos y recibir retroalimentación reflexiva.
+## 2. Diario
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor U as Usuario
-    participant J as Pantalla Journal
-    participant AI as aiService (Confidente)
-    participant DB as Cloud Firestore
+    actor P as Persona usuaria
+    participant UI as Journal / JournalEditor
+    participant Hook as useJournal
+    participant AI as Servicio de análisis (si está habilitado)
+    participant FS as Cloud Firestore
 
-    U->>J: Entra a "Diario Personal"
-    U->>J: Escribe su reflexión libre o elige un prompt guiado
-    U->>J: Presiona "Guardar y reflexionar con IA"
-    J->>DB: Guarda la entrada en journalEntries/{entryId}
-    J->>AI: Solicita análisis reflexivo respetuoso del texto
-    AI-->>J: Retorna pregunta socrática o validación empática
-    J->>DB: Actualiza la entrada con el campo aiFeedback
-    J->>U: Muestra la reflexión del confidente en una tarjeta suave
+    P->>UI: Crea o edita una entrada
+    UI->>Hook: Enviar contenido y metadatos
+    opt Análisis de texto configurado
+        Hook->>AI: Solicita análisis
+        AI-->>Hook: Resultado o error
+    end
+    Hook->>FS: Escribe journalEntries
+    FS-->>Hook: Confirmación o rechazo de reglas
+    Hook-->>UI: Actualiza estado y muestra resultado
 ```
 
----
+**Estado observado:** el hook/servicio permite operaciones de diario y suscripción a entradas. El contenido se guarda legible. La configuración actual de reglas y los accesos de IA requieren revisión; no describir el diario como cifrado.
 
-## Flujo 3: Activación del Protocolo de Contención de Crisis
-
-Si en cualquier momento la persona escribe palabras de autolesión o ideación autolítica, se activa la respuesta de protección inmediata.
+## 3. Chat de apoyo
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor U as Usuario
-    participant Chat as Chat / Diario
-    participant Det as crisisDetection
-    participant Modal as Modal de Crisis
+    actor P as Persona usuaria
+    participant UI as AIChat
+    participant Agent as Agente IA cliente
+    participant Provider as Proveedor externo (según configuración)
 
-    U->>Chat: Escribe texto con expresiones de riesgo severo
-    Chat->>Det: Analiza texto en tiempo real
-    Det-->>Chat: Resultado: RIESGO_CRITICO
-    Chat->>Chat: Bloquea respuestas casuales del modelo
-    Chat->>Modal: Despliega inmediatamente Modal de Emergencia
-    Modal->>U: Muestra botón telefónico directo a Línea de Vida (ej. 988 / 024)
-    Modal->>U: Ofrece ejercicio de Respiración Guiada 4-7-8
-    U->>Modal: Selecciona llamar o iniciar respiración
+    P->>UI: Escribe un mensaje
+    UI->>Agent: Envía texto y contexto básico
+    Agent->>Provider: Solicitud desde el navegador
+    Provider-->>Agent: Respuesta o error
+    Agent-->>UI: Texto de respuesta
+    UI-->>P: Muestra la conversación en la página
 ```
 
----
+**Estado observado:** los mensajes se mantienen en estado de la página; no se encontró persistencia en este componente. El servicio se ejecuta desde el cliente y puede requerir una clave `VITE_*`. El historial se pierde al desmontar/recargar la vista. El motor heurístico de crisis del repositorio no aparece conectado a este flujo.
 
-## Flujo 4: Consulta de Progreso y Descarga de PDF
+**Bloqueantes antes de habilitar con datos reales:** backend seguro, consentimiento y minimización, revisión de nombres/textos que sugieren atención profesional, política de retención y plan de errores/abuso.
 
-El usuario revisa su consistencia a lo largo del mes y genera un informe personal.
+## 4. Estadísticas y exportación
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor U as Usuario
-    participant Stats as Pantalla Statistics
-    participant PDF as pdfReportService
-    participant DB as Cloud Firestore
+    actor P as Persona usuaria
+    participant UI as Statistics
+    participant Hook as useMood / useJournal
+    participant FS as Cloud Firestore
+    participant PDF as jsPDF en navegador
 
-    U->>Stats: Navega a la pestaña "Estadísticas"
-    Stats->>DB: Consulta moodLogs ordenados por fecha de los últimos 30 días
-    DB-->>Stats: Retorna lista de registros del usuario
-    Stats->>Stats: Calcula media móvil, días con mejor ánimo y detonantes clave
-    Stats->>U: Renderiza gráficos de tendencia y mapa de emociones
-    U->>Stats: Pulsa botón "Descargar Resumen Mensual en PDF"
-    Stats->>PDF: Compila métricas y gráficos en documento PDF con jsPDF
-    PDF->>U: Descarga automática de 'mi_resumen_emocional.pdf' en el dispositivo
+    P->>UI: Selecciona período
+    UI->>Hook: Consulta registros y entradas disponibles
+    Hook->>FS: Lee documentos del usuario
+    FS-->>Hook: Datos o error
+    Hook-->>UI: Registros cargados
+    UI->>UI: Calcula y muestra resúmenes descriptivos
+    opt La persona solicita exportar
+        UI->>PDF: Compone el reporte en el cliente
+        PDF-->>P: Descarga archivo PDF
+    end
 ```
+
+La exportación se genera en el dispositivo según la implementación revisada. Antes de compartir un PDF, la persona debe poder revisar su contenido; los datos resumidos no prueban causalidad ni son una evaluación clínica.
+
+## 5. Crisis y ayuda inmediata: no es un flujo operativo
+
+El repositorio contiene lógica heurística de detección y menciona colecciones para evaluaciones, pero no se encontró una llamada a `detectCrisisSignals` desde las páginas de registro, diario o chat, ni un flujo integrado que garantice respuesta inmediata. Las reglas locales tampoco autorizan las colecciones de crisis mencionadas por ese servicio.
+
+Por lo tanto, no presentar actualmente esta secuencia como función disponible:
+
+```mermaid
+flowchart LR
+    A[Texto introducido] -.-> B[Heurística no conectada al recorrido]
+    B -.-> C[Respuesta y recursos por definir]
+```
+
+El [protocolo de crisis](./crisis-protocol.md) describe los requisitos que deben cumplirse antes de diseñar o anunciar una capacidad de apoyo de emergencia.
