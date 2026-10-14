@@ -6,10 +6,10 @@ import Logo from './Logo';
 interface LateralSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  isDarkMode: boolean;
+  isDarkMode?: boolean;
 }
 
-const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDarkMode }) => {
+const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
   const menuItems = [
@@ -29,9 +29,9 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose, isDark
     },
     {
       icon: MessageCircle,
-      label: 'Chat de Apoyo',
+      label: 'Confidente IA',
       path: '/chat',
-      description: 'IA o psicólogo real',
+      description: 'Tu espacio seguro y reflexivo',
       color: 'bg-gradient-to-r from-green-500 to-emerald-500',
     },
     {

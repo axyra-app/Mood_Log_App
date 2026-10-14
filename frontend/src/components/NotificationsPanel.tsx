@@ -1,9 +1,8 @@
-import { Bell, Calendar, Check, FileText, MessageCircle, X, AlertCircle } from 'lucide-react';
+import { Bell, Calendar, Check, FileText, MessageCircle, AlertCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserNotifications } from '../hooks/useUserNotifications';
-import { toast } from 'react-hot-toast';
 
 interface NotificationsPanelProps {
   isDarkMode: boolean;
@@ -69,66 +68,27 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     return `Hace ${diffInDays}d`;
   };
 
-  const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevenir que se active el click en la notificación
-    try {
-      // Función eliminada - no disponible en el nuevo hook
-      toast.success('Notificación eliminada');
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-      toast.error('Error al eliminar la notificación');
-    }
-  };
-
   const handleNotificationClick = (notification: any) => {
-    
-    
     // Cerrar el panel inmediatamente
     setIsOpen(false);
-    
-    // Manejar notificación de perfil incompleto
-    if (notification.type === 'profile_incomplete') {
-      // Redirigir a edit-profile en lugar de complete-profile
-      // porque el usuario ya tiene un perfil básico pero necesita completar información
-      navigate('/edit-profile');
-      return;
-    }
     
     // Marcar como leída
     markAsRead(notification.id);
     
     // Navegar según el tipo de notificación
     switch (notification.type) {
-      case 'chat_message':
-        if (user?.role === 'psychologist') {
-          navigate('/psychologist-chat');
-        } else {
-          navigate('/user-chat');
-        }
+      case 'profile_incomplete':
+        navigate('/profile');
         break;
-      case 'appointment_request':
-      case 'appointment_accepted':
-      case 'appointment_rejected':
-        if (user?.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
+      case 'chat_message':
+        navigate('/chat');
         break;
       case 'medical_report':
-        if (user?.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/reports');
         break;
       default:
-        // Navegar al dashboard por defecto
-        if (user?.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
+        break;
     }
   };
 

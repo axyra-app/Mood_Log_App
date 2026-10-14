@@ -44,8 +44,8 @@ export interface MoodAnalysisResult {
 }
 
 class AIService {
-  private apiKey: string;
-  private baseUrl: string;
+  public apiKey: string;
+  public baseUrl: string;
 
   constructor() {
     // Using OpenAI API for real AI analysis
@@ -106,7 +106,7 @@ class AIService {
     }
   }
 
-  private buildAnalysisPrompt(moodData: MoodAnalysis): string {
+  public buildAnalysisPrompt(moodData: MoodAnalysis): string {
     const timestamp = new Date().toISOString();
     const randomSeed = Math.random().toString(36).substring(7);
     const sessionId = Math.random().toString(36).substring(2, 15);
@@ -166,7 +166,7 @@ Formato de respuesta en JSON:
     `;
   }
 
-  private parseAIResponse(responseText: string, moodData: MoodAnalysis): MoodAnalysisResult {
+  public parseAIResponse(responseText: string, moodData: MoodAnalysis): MoodAnalysisResult {
     try {
       // Try to extract JSON from the response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);

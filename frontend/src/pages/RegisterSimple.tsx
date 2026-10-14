@@ -1,44 +1,26 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import CountrySelector from '../components/CountrySelector';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useValidation } from '../hooks/useValidation';
-import { uploadFile } from '../services/firebase';
 
 const RegisterSimple: React.FC = () => {
   const { signUp, signUpWithGoogle, user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { validate, hasError, getError, clearErrors } = useValidation();
+  const { setError, hasError, getError, clearError } = useValidation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user' as 'user' | 'psychologist',
-    professionalTitle: '',
-    specialization: '',
-    yearsOfExperience: '',
-    bio: '',
-    licenseNumber: '',
-    phone: '',
-    cvFile: null as File | null,
-    psychologistCode: '', // Nuevo campo obligatorio
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState({
-    code: 'CO',
-    name: 'Colombia',
-    phoneCode: '+57',
-    flag: '🇨🇴',
-  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,12 +36,7 @@ const RegisterSimple: React.FC = () => {
         return; // No redirigir si ya estamos en otra página
       }
 
-      // Redirigir según el rol del usuario
-      if (user.role === 'psychologist') {
-        navigate('/dashboard-psychologist');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -69,18 +46,7 @@ const RegisterSimple: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    clearErrors(name);
-  };
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('El archivo es demasiado grande. Máximo 5MB.');
-        return;
-      }
-      setFormData((prev) => ({ ...prev, cvFile: file }));
-    }
+    clearError(name);
   };
 
   const validateForm = () => {
@@ -88,69 +54,47 @@ const RegisterSimple: React.FC = () => {
 
     // Validar nombre sin números
     if (!formData.firstName.trim()) {
-      validate('firstName', 'El nombre es requerido');
+      setError('firstName', 'El nombre es requerido');
       isValid = false;
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.firstName)) {
-      validate('firstName', 'El nombre no debe contener números ni caracteres especiales');
+      setError('firstName', 'El nombre no debe contener números ni caracteres especiales');
       isValid = false;
     } else if (formData.firstName.trim().length < 2) {
-      validate('firstName', 'El nombre debe tener al menos 2 caracteres');
+      setError('firstName', 'El nombre debe tener al menos 2 caracteres');
       isValid = false;
     }
 
     // Validar apellido sin números
     if (!formData.lastName.trim()) {
-      validate('lastName', 'El apellido es requerido');
+      setError('lastName', 'El apellido es requerido');
       isValid = false;
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.lastName)) {
-      validate('lastName', 'El apellido no debe contener números ni caracteres especiales');
+      setError('lastName', 'El apellido no debe contener números ni caracteres especiales');
       isValid = false;
     } else if (formData.lastName.trim().length < 2) {
-      validate('lastName', 'El apellido debe tener al menos 2 caracteres');
+      setError('lastName', 'El apellido debe tener al menos 2 caracteres');
       isValid = false;
     }
 
     if (!formData.email.trim()) {
-      validate('email', 'El correo electrónico es requerido');
+      setError('email', 'El correo electrónico es requerido');
       isValid = false;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      validate('email', 'El correo electrónico no es válido');
+      setError('email', 'El correo electrónico no es válido');
       isValid = false;
     }
 
     if (!formData.password) {
-      validate('password', 'La contraseña es requerida');
+      setError('password', 'La contraseña es requerida');
       isValid = false;
     } else if (formData.password.length < 6) {
-      validate('password', 'La contraseña debe tener al menos 6 caracteres');
+      setError('password', 'La contraseña debe tener al menos 6 caracteres');
       isValid = false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      validate('confirmPassword', 'Las contraseñas no coinciden');
+      setError('confirmPassword', 'Las contraseñas no coinciden');
       isValid = false;
-    }
-
-    if (formData.role === 'psychologist') {
-      if (!formData.professionalTitle.trim()) {
-        validate('professionalTitle', 'El título profesional es requerido');
-        isValid = false;
-      }
-      if (!formData.specialization.trim()) {
-        validate('specialization', 'La especialización es requerida');
-        isValid = false;
-      }
-      if (!formData.yearsOfExperience) {
-        validate('yearsOfExperience', 'Los años de experiencia son requeridos');
-        isValid = false;
-      }
-      if (!formData.psychologistCode.trim()) {
-        validate('psychologistCode', 'El código de psicólogo es obligatorio');
-        isValid = false;
-      } else if (formData.psychologistCode.trim() !== 'PSY2025') {
-        validate('psychologistCode', 'Código de psicólogo inválido');
-        isValid = false;
-      }
     }
 
     if (!agreedToTerms) {
@@ -168,39 +112,8 @@ const RegisterSimple: React.FC = () => {
 
     try {
       setLoading(true);
-
-      let cvUrl = '';
-      if (formData.role === 'psychologist' && formData.cvFile) {
-        setUploadingFile(true);
-        try {
-          cvUrl = await uploadFile(formData.cvFile, `psychologists/${formData.email}/cv`);
-          toast.success('Archivo subido correctamente');
-        } catch (uploadError) {
-          console.error('Error uploading CV:', uploadError);
-          toast.error('Error al subir el archivo CV. Inténtalo de nuevo.');
-          return;
-        } finally {
-          setUploadingFile(false);
-        }
-      }
-
-      const professionalData =
-        formData.role === 'psychologist'
-          ? {
-              professionalTitle: formData.professionalTitle,
-              specialization: formData.specialization,
-              yearsOfExperience: formData.yearsOfExperience,
-              bio: formData.bio,
-              licenseNumber: formData.licenseNumber,
-              phone: `${selectedCountry.phoneCode} ${formData.phone}`,
-              cvUrl: cvUrl,
-            }
-          : undefined;
-
-      await signUp(formData.email, formData.password, formData.role, professionalData);
-
-      toast.success(`¡Cuenta creada! Bienvenido${formData.role === 'psychologist' ? ' psicólogo' : ''} a Mood Log`);
-
+      await signUp(formData.email, formData.password);
+      toast.success('¡Cuenta creada! Bienvenido a Mood Log');
       // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -297,86 +210,6 @@ const RegisterSimple: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className='space-y-6'>
-                <div>
-                  <label
-                    className={`block text-sm font-bold mb-3 transition-colors duration-500 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
-                    TIPO DE CUENTA
-                  </label>
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                    <button
-                      type='button'
-                      onClick={() => setFormData((prev) => ({ ...prev, role: 'user' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        formData.role === 'user'
-                          ? isDarkMode
-                            ? 'border-purple-500 bg-purple-500/20 text-purple-400'
-                            : 'border-purple-500 bg-purple-50 text-purple-600'
-                          : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-gray-400 hover:border-gray-500'
-                          : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
-                      <div className='text-2xl mb-2'>👤</div>
-                      <div className='font-bold text-sm'>USUARIO</div>
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => setFormData((prev) => ({ ...prev, role: 'psychologist' }))}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        formData.role === 'psychologist'
-                          ? isDarkMode
-                            ? 'border-purple-500 bg-purple-500/20 text-purple-400'
-                            : 'border-purple-500 bg-purple-50 text-purple-600'
-                          : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-gray-400 hover:border-gray-500'
-                          : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
-                      <div className='text-2xl mb-2'>🧠</div>
-                      <div className='font-bold text-sm'>PSICÓLOGO</div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Campo de código de psicólogo - Solo visible cuando se selecciona psicólogo */}
-                {formData.role === 'psychologist' && (
-                  <div>
-                    <label
-                      className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}
-                    >
-                      CÓDIGO DE PSICÓLOGO *
-                    </label>
-                    <input
-                      type='text'
-                      name='psychologistCode'
-                      value={formData.psychologistCode}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                        hasError('psychologistCode')
-                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                          : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                          : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                      }`}
-                      placeholder='Ingresa el código proporcionado'
-                    />
-                    {hasError('psychologistCode') && (
-                      <p className='text-red-500 text-sm mt-1'>{getError('psychologistCode')}</p>
-                    )}
-                    <p
-                      className={`text-sm mt-1 transition-colors duration-500 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      }`}
-                    >
-                      💡 Este código se proporciona durante el proceso de entrevista y aprobación
-                    </p>
-                  </div>
-                )}
 
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
@@ -508,233 +341,6 @@ const RegisterSimple: React.FC = () => {
                     )}
                   </div>
                 </div>
-
-                {formData.role === 'psychologist' && (
-                  <>
-                    <div className='border-t pt-6'>
-                      <h3
-                        className={`text-lg font-semibold mb-4 transition-colors duration-500 ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}
-                      >
-                        Información Profesional
-                      </h3>
-                    </div>
-
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                      <div>
-                        <label
-                          className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          TÍTULO PROFESIONAL *
-                        </label>
-                        <input
-                          type='text'
-                          name='professionalTitle'
-                          value={formData.professionalTitle}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                            hasError('professionalTitle')
-                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                              : isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                          }`}
-                          placeholder='Lic. en Psicología'
-                        />
-                        {hasError('professionalTitle') && (
-                          <p className='text-red-500 text-sm mt-1'>{getError('professionalTitle')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          ESPECIALIZACIÓN *
-                        </label>
-                        <input
-                          type='text'
-                          name='specialization'
-                          value={formData.specialization}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                            hasError('specialization')
-                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                              : isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                          }`}
-                          placeholder='Terapia cognitiva'
-                        />
-                        {hasError('specialization') && (
-                          <p className='text-red-500 text-sm mt-1'>{getError('specialization')}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                      <div>
-                        <label
-                          className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          AÑOS DE EXPERIENCIA *
-                        </label>
-                        <input
-                          type='number'
-                          name='yearsOfExperience'
-                          value={formData.yearsOfExperience}
-                          onChange={handleInputChange}
-                          min='0'
-                          max='50'
-                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                            hasError('yearsOfExperience')
-                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                              : isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                          }`}
-                          placeholder='5'
-                        />
-                        {hasError('yearsOfExperience') && (
-                          <p className='text-red-500 text-sm mt-1'>{getError('yearsOfExperience')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
-                          NÚMERO DE LICENCIA
-                        </label>
-                        <input
-                          type='text'
-                          name='licenseNumber'
-                          value={formData.licenseNumber}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                            isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                          }`}
-                          placeholder='PSI-123456'
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}
-                      >
-                        TELÉFONO
-                      </label>
-                      <div className='flex space-x-2'>
-                        <div className='w-32'>
-                          <CountrySelector
-                            selectedCountry={selectedCountry}
-                            onCountryChange={setSelectedCountry}
-                            isDarkMode={isDarkMode}
-                          />
-                        </div>
-                        <input
-                          type='tel'
-                          name='phone'
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className={`flex-1 px-4 py-3 rounded-lg border transition-all duration-300 ${
-                            isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                              : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                          }`}
-                          placeholder='300 123 4567'
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}
-                      >
-                        UBICACIÓN
-                      </label>
-                      <input
-                        type='text'
-                        name='location'
-                        value={selectedCountry.name}
-                        readOnly
-                        className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                          isDarkMode
-                            ? 'border-gray-600 bg-gray-800 text-gray-300'
-                            : 'border-gray-300 bg-gray-100 text-gray-600'
-                        }`}
-                        placeholder='Se selecciona automáticamente según el país'
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}
-                      >
-                        BIOGRAFÍA PROFESIONAL
-                      </label>
-                      <textarea
-                        name='bio'
-                        value={formData.bio}
-                        onChange={handleInputChange}
-                        rows={4}
-                        className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 resize-none ${
-                          isDarkMode
-                            ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                            : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                        }`}
-                        placeholder='Cuéntanos sobre tu experiencia y enfoque terapéutico...'
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}
-                      >
-                        HOJA DE VIDA (PDF) - OPCIONAL
-                      </label>
-                      <input
-                        type='file'
-                        name='cvFile'
-                        onChange={handleFileChange}
-                        accept='.pdf'
-                        className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
-                          isDarkMode
-                            ? 'border-gray-600 bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500'
-                            : 'border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-500'
-                        }`}
-                      />
-                      <p
-                        className={`text-sm mt-1 transition-colors duration-500 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}
-                      >
-                        Máximo 5MB. Formatos permitidos: PDF
-                      </p>
-                    </div>
-                  </>
-                )}
-
                 <div className='flex items-center space-x-3'>
                   <input
                     type='checkbox'
@@ -763,18 +369,13 @@ const RegisterSimple: React.FC = () => {
                 <div className='space-y-4'>
                   <button
                     type='submit'
-                    disabled={loading || uploadingFile || !agreedToTerms}
+                    disabled={loading || !agreedToTerms}
                     className='w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg'
                   >
                     {loading ? (
                       <div className='flex items-center justify-center'>
                         <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2'></div>
                         Creando cuenta...
-                      </div>
-                    ) : uploadingFile ? (
-                      <div className='flex items-center justify-center'>
-                        <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2'></div>
-                        Subiendo archivo...
                       </div>
                     ) : (
                       'CREAR CUENTA'

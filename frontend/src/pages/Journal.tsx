@@ -7,20 +7,19 @@ import JournalEditor from '../components/JournalEditor';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useJournal } from '../hooks/useJournal';
-import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
+import { JournalEntry, JournalTemplate } from '../types';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { entries, templates, prompts, loading, error, createEntry, updateEntry, deleteEntry, getJournalStats } =
+  const { entries, templates, loading, error, deleteEntry } =
     useJournal(user?.uid || '');
 
   const [showEditor, setShowEditor] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
-  const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
 
@@ -34,11 +33,15 @@ const Journal: React.FC = () => {
       // Crear una entrada de diario basada en el estado de ánimo seleccionado
       const moodEntry: JournalEntry = {
         id: `mood-${selectedMoodLog.id}`,
+        userId: user?.uid || '',
         title: `Estado de ánimo - ${selectedMoodLog.mood}/10`,
         content: `Estado de ánimo: ${selectedMoodLog.mood}/10${selectedMoodLog.notes ? `\n\nNotas: ${selectedMoodLog.notes}` : ''}${selectedMoodLog.energy ? `\nEnergía: ${selectedMoodLog.energy}/10` : ''}${selectedMoodLog.stress ? `\nEstrés: ${selectedMoodLog.stress}/10` : ''}${selectedMoodLog.sleep ? `\nSueño: ${selectedMoodLog.sleep}/10` : ''}`,
         date: selectedMoodLog.date || selectedMoodLog.createdAt,
         tags: ['estado-ánimo', 'mood-log'],
-        aiAnalysis: null,
+        activities: [],
+        emotions: [],
+        isPrivate: false,
+        aiAnalysis: undefined,
         createdAt: selectedMoodLog.createdAt,
         updatedAt: selectedMoodLog.createdAt
       };
@@ -49,7 +52,7 @@ const Journal: React.FC = () => {
       // Limpiar el estado de navegación
       navigate('/journal', { replace: true });
     }
-  }, [selectedMoodLog, editMode, navigate]);
+  }, [selectedMoodLog, editMode, navigate, user?.uid]);
 
 
   useEffect(() => {
@@ -77,7 +80,6 @@ const Journal: React.FC = () => {
   const handleEditEntry = (entry: JournalEntry) => {
     setEditingEntry(entry);
     setSelectedTemplate(undefined);
-    setSelectedPrompt(undefined);
     setShowEditor(true);
     setShowTemplates(false);
   };
@@ -96,15 +98,6 @@ const Journal: React.FC = () => {
 
   const handleTemplateSelect = (template: JournalTemplate) => {
     setSelectedTemplate(template);
-    setSelectedPrompt(undefined);
-    setEditingEntry(undefined);
-    setShowEditor(true);
-    setShowTemplates(false);
-  };
-
-  const handlePromptSelect = (prompt: JournalPrompt) => {
-    setSelectedPrompt(prompt);
-    setSelectedTemplate(undefined);
     setEditingEntry(undefined);
     setShowEditor(true);
     setShowTemplates(false);
@@ -223,7 +216,7 @@ const Journal: React.FC = () => {
                         : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
                     } rounded-lg transition-colors`}
                   >
-                    <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{template.name}</h4>
+                    <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{template.title}</h4>
                     <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
                       {template.description}
                     </p>
@@ -455,11 +448,9 @@ const Journal: React.FC = () => {
             setShowEditor(false);
             setEditingEntry(undefined);
             setSelectedTemplate(undefined);
-            setSelectedPrompt(undefined);
           }}
           entry={editingEntry}
           template={selectedTemplate}
-          prompt={selectedPrompt}
         />
       )}
     </div>

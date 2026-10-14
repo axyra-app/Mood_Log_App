@@ -1,7 +1,7 @@
 // Servicio para generar reportes PDF profesionales
 import jsPDF from 'jspdf';
 import { moodAnalyzerAgent } from './specializedAgents';
-import { getRealMoodData, getRealChatData } from './realDataService';
+import { getRealMoodData } from './realDataService';
 
 interface ReportData {
   title: string;

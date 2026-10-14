@@ -85,7 +85,7 @@ export const analyticsEvents = {
   },
 
   // Eventos de errores
-  errorOccurred: (errorType: string, errorMessage: string) => {
+  errorOccurred: (errorType: string, _errorMessage?: string) => {
     trackEvent('error_occurred', 'Error', errorType, 1);
   },
 };

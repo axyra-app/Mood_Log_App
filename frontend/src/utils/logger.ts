@@ -37,7 +37,7 @@ class Logger {
 
   debug(message: string, data?: any): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      );
+      console.debug(this.formatMessage('DEBUG', message, data));
     }
   }
 

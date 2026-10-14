@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, Bot, User, Clock, Shield, Star } from 'lucide-react';
+import { ArrowLeft, Send, Bot, Clock, Shield, Star } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';

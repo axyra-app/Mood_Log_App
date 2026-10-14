@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CrisisAlert from '../components/CrisisAlert';
 import LogoutModal from '../components/LogoutModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -9,9 +8,9 @@ import { aiService, MoodAnalysisResult } from '../services/aiService';
 import Logo from '../components/Logo';
 
 const MoodFlowSimple: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { createMoodLog, loading: moodLoading, error: moodError } = useMood();
+  const { createMoodLog } = useMood();
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMood, setCurrentMood] = useState<number | null>(null);
   const [feelings, setFeelings] = useState('');
@@ -32,18 +31,6 @@ const MoodFlowSimple: React.FC = () => {
 
   const moodEmojis = ['😢', '😔', '😐', '🙂', '😊', '😄', '🤩', '🥰', '😍', '🌟'];
   const moodLabels = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Muy bien', 'Excelente', 'Fantástico', 'Increíble', 'Perfecto', 'Épico'];
-  const moodColors = [
-    'from-red-500 to-red-600',     // 1
-    'from-red-400 to-red-500',     // 2
-    'from-orange-500 to-orange-600', // 3
-    'from-orange-400 to-orange-500', // 4
-    'from-yellow-500 to-yellow-600', // 5
-    'from-yellow-400 to-yellow-500', // 6
-    'from-green-500 to-green-600',   // 7
-    'from-green-400 to-green-500',   // 8
-    'from-blue-500 to-blue-600',     // 9
-    'from-purple-500 to-purple-600', // 10
-  ];
 
   const activityOptions = [
     'Ejercicio',
@@ -205,8 +192,6 @@ const MoodFlowSimple: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Crisis Alert */}
-      <CrisisAlert />
 
       {/* Header */}
       <header
@@ -773,7 +758,7 @@ const MoodFlowSimple: React.FC = () => {
 
               <div className='flex justify-center pt-4'>
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={handleBackToDashboard}
                   className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200 font-medium'
                 >
                   🏠 Ir al Dashboard
@@ -787,8 +772,9 @@ const MoodFlowSimple: React.FC = () => {
       {/* Logout Modal */}
       {showLogoutModal && (
         <LogoutModal
+          isOpen={showLogoutModal}
           onConfirm={handleLogout}
-          onCancel={() => setShowLogoutModal(false)}
+          onClose={() => setShowLogoutModal(false)}
           loading={logoutLoading}
           isDarkMode={isDarkMode}
         />

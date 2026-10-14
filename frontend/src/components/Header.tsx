@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const { notifications, unreadCount } = useNotifications(user?.uid || '', user?.role || 'user');
+  const { notifications, unreadCount } = useNotifications(user?.uid || '', 'user');
 
   // No mostrar en dashboard
   const isDashboard = location.pathname === '/dashboard';
@@ -257,7 +257,7 @@ const Header: React.FC<HeaderProps> = ({
                     {user?.displayName || 'Usuario'}
                   </p>
                   <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {user?.role === 'psychologist' ? 'Psicólogo' : 'Usuario'}
+                    Mi Cuenta
                   </p>
                 </div>
               </button>

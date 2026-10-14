@@ -66,9 +66,9 @@ export const filterExtensionLogs = () => {
   console.info = createFilteredConsole(originalConsole.info);
 
   // Solo mostrar el mensaje de confirmación una vez
-  if (!window.consoleFilterApplied) {
+  if (!(window as any).consoleFilterApplied) {
     console.log('🔧 Filtro de consola aplicado - logs de extensiones ocultos');
-    window.consoleFilterApplied = true;
+    (window as any).consoleFilterApplied = true;
   }
 };
 

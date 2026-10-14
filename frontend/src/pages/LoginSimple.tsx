@@ -45,12 +45,7 @@ const LoginSimple: React.FC = () => {
         // Redirigir a completar perfil
         navigate('/complete-profile');
       } else {
-        // Redirigir según el rol del usuario
-        if (user.role === 'psychologist') {
-          navigate('/dashboard-psychologist');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
       }
     } else {
       setShowAlreadyLoggedIn(false);
@@ -179,13 +174,7 @@ const LoginSimple: React.FC = () => {
                       </p>
                       <div className='mt-2 space-x-2'>
                         <button
-                          onClick={() => {
-                            if (user.role === 'psychologist') {
-                              navigate('/dashboard-psychologist');
-                            } else {
-                              navigate('/dashboard');
-                            }
-                          }}
+                          onClick={() => navigate('/dashboard')}
                           className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm'
                         >
                           Ir al Dashboard

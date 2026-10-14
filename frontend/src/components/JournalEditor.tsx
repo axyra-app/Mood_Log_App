@@ -1,4 +1,4 @@
-import { BookOpen, Clock, Lightbulb, Plus, Save, Sparkles, X } from 'lucide-react';
+import { BookOpen, Lightbulb, Plus, Save, Sparkles, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -67,6 +67,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
         activities,
         emotions,
         aiAnalysis,
+        isPrivate: entry?.isPrivate ?? true,
         date: entry?.date || new Date(),
       };
 

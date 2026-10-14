@@ -1,7 +1,6 @@
 import {
   Activity,
   AlertTriangle,
-  ArrowLeft,
   Award,
   CheckCircle,
   Clock,
@@ -15,19 +14,16 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
-import { useUserAppointments } from '../hooks/useUserAppointments';
 import { aiService } from '../services/aiService';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
   const { statistics, loading, getMoodTrend, getAverageMood, getMoodStreak } = useMood();
-  const { entries: journalEntries, getJournalStats } = useJournal(user?.uid || '');
-  const { appointments } = useUserAppointments(user?.uid || '');
+  const { entries: journalEntries } = useJournal(user?.uid || '');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -193,7 +189,7 @@ const Statistics: React.FC = () => {
       const { startDate, endDate } = getPeriodData();
 
       // Obtener datos de estado de ánimo del período
-      const moodLogs = statistics?.moodLogs?.filter((log) => {
+      const moodLogs: any[] = statistics?.moodLogs?.filter((log: any) => {
         const logDate = new Date(log.createdAt);
         return logDate >= startDate && logDate <= endDate;
       }) || [];
@@ -201,11 +197,11 @@ const Statistics: React.FC = () => {
       // Crear datos para el análisis de IA
       const moodData = {
         overallMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
-        energy: moodLogs.length > 0 ? moodLogs.reduce((sum, log) => sum + (log.energy || 5), 0) / moodLogs.length : 5,
-        stress: moodLogs.length > 0 ? moodLogs.reduce((sum, log) => sum + (log.stress || 5), 0) / moodLogs.length : 5,
-        sleep: moodLogs.length > 0 ? moodLogs.reduce((sum, log) => sum + (log.sleep || 5), 0) / moodLogs.length : 5,
-        emotions: moodLogs.flatMap(log => log.emotions || []),
-        activities: moodLogs.flatMap(log => log.activities || []),
+        energy: moodLogs.length > 0 ? moodLogs.reduce((sum: number, log: any) => sum + (log.energy || 5), 0) / moodLogs.length : 5,
+        stress: moodLogs.length > 0 ? moodLogs.reduce((sum: number, log: any) => sum + (log.stress || 5), 0) / moodLogs.length : 5,
+        sleep: moodLogs.length > 0 ? moodLogs.reduce((sum: number, log: any) => sum + (log.sleep || 5), 0) / moodLogs.length : 5,
+        emotions: moodLogs.flatMap((log: any) => log.emotions || []),
+        activities: moodLogs.flatMap((log: any) => log.activities || []),
         feelings: moodLogs.length > 0 ? moodLogs[moodLogs.length - 1]?.feelings || '' : '',
       };
 
@@ -230,7 +226,7 @@ const Statistics: React.FC = () => {
       
       const { startDate, endDate } = getPeriodData();
       
-      const logsInPeriod = statistics.moodLogs.filter((log) => {
+      const logsInPeriod = statistics.moodLogs.filter((log: any) => {
         const logDate = new Date(log.createdAt);
         return logDate >= startDate && logDate <= endDate;
       });
@@ -575,7 +571,7 @@ const Statistics: React.FC = () => {
 
             // Agregar registros de estado de ánimo
             if (statistics?.moodLogs) {
-              statistics.moodLogs.forEach((log) => {
+              statistics.moodLogs.forEach((log: any) => {
                 allActivities.push({
                   type: 'mood',
                   title: 'Estado de ánimo registrado',
@@ -596,18 +592,6 @@ const Statistics: React.FC = () => {
                 date: new Date(entry.date),
                 icon: '📝',
                 color: 'blue',
-              });
-            });
-
-            // Agregar citas
-            appointments.forEach((apt) => {
-              allActivities.push({
-                type: 'appointment',
-                title: 'Cita programada',
-                description: `Con ${apt.psychologistName || 'psicólogo'} - ${apt.status}`,
-                date: new Date(apt.appointmentDate),
-                icon: '📅',
-                color: 'green',
               });
             });
 

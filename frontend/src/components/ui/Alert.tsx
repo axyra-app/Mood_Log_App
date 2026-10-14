@@ -6,11 +6,11 @@ interface AlertProps {
   title?: string;
   message: string;
   onClose?: () => void;
-  isDarkMode: boolean;
+  isDarkMode?: boolean;
   className?: string;
 }
 
-const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, isDarkMode, className = '' }) => {
+const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, className = '' }) => {
   const getAlertStyles = () => {
     switch (type) {
       case 'success':

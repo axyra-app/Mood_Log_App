@@ -1,11 +1,9 @@
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
-  sendPasswordResetEmail,
-  updateEmail,
   updatePassword,
 } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Bell, Clock, Eye, EyeOff, Globe, Info, Lock, Mail, Save, Shield, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -17,11 +15,13 @@ import { auth, db } from '../services/firebase';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [userRole, setUserRole] = useState<'user' | 'psychologist'>('user');
   const [loading, setLoading] = useState(false);
+
+  const currentUser = auth.currentUser;
+  const isGoogleUser = currentUser?.providerData?.some((p) => p.providerId === 'google.com') ?? false;
 
   // Estados para configuración
   const [settings, setSettings] = useState({
@@ -31,15 +31,6 @@ const Settings: React.FC = () => {
     darkMode: false,
     language: 'es',
     timezone: 'America/Bogota',
-  });
-
-  // Estados para editar perfil
-  const [profileData, setProfileData] = useState({
-    displayName: '',
-    email: '',
-    phone: '',
-    bio: '',
-    location: '',
   });
 
   // Estados para cambiar contraseña
@@ -63,48 +54,8 @@ const Settings: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          // Intentar obtener datos del usuario
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserRole('user');
-            const userData = userDoc.data();
-
-            setProfileData({
-              displayName: userData.displayName || user.displayName || '',
-              email: userData.email || user.email || '',
-              phone: userData.phone || '',
-              bio: userData.bio || '',
-              location: userData.location || '',
-            });
-          } else {
-            // Si no existe en users, verificar si es psicólogo
-            const psychologistDoc = await getDoc(doc(db, 'psychologists', user.uid));
-            if (psychologistDoc.exists()) {
-              setUserRole('psychologist');
-              const psychologistData = psychologistDoc.data();
-
-              setProfileData({
-                displayName: psychologistData.name || user.displayName || '',
-                email: psychologistData.email || user.email || '',
-                phone: psychologistData.phone || '',
-                bio: psychologistData.bio || '',
-                location: psychologistData.location || '',
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error loading user data:', error);
-          setUserRole('user');
-        }
-      }
-    };
-
-    loadUserData();
     setIsLoaded(true);
-  }, [user]);
+  }, []);
 
   const handleSettingsChange = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -117,8 +68,7 @@ const Settings: React.FC = () => {
   const saveSettings = async () => {
     setLoading(true);
     try {
-      const collectionName = userRole === 'user' ? 'users' : 'psychologists';
-      await updateDoc(doc(db, collectionName, user?.uid || ''), {
+      await updateDoc(doc(db, 'users', user?.uid || ''), {
         settings: {
           ...settings,
           emailSettings,
@@ -129,54 +79,6 @@ const Settings: React.FC = () => {
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('Error al guardar la configuración');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveProfile = async () => {
-    setLoading(true);
-    try {
-      const collectionName = userRole === 'user' ? 'users' : 'psychologists';
-      await updateDoc(doc(db, collectionName, user?.uid || ''), {
-        ...profileData,
-        updatedAt: serverTimestamp(),
-      });
-
-      // Actualizar email en Firebase Auth si cambió
-      if (profileData.email !== user?.email) {
-        await updateEmail(user!, profileData.email);
-      }
-
-      toast.success('Perfil actualizado exitosamente');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Error al actualizar el perfil');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const requestPasswordReset = async () => {
-    if (!user?.email) {
-      toast.error('No se encontró un correo electrónico asociado');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Usar Firebase para enviar email de reset de contraseña
-      await sendPasswordResetEmail(auth, user.email);
-      toast.success('Se ha enviado un enlace de cambio de contraseña a tu correo electrónico');
-    } catch (error: any) {
-      console.error('Error requesting password reset:', error);
-      if (error.code === 'auth/user-not-found') {
-        toast.error('No se encontró una cuenta con este correo electrónico');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('El correo electrónico no es válido');
-      } else {
-        toast.error('Error al enviar el enlace de cambio de contraseña');
-      }
     } finally {
       setLoading(false);
     }
@@ -193,15 +95,14 @@ const Settings: React.FC = () => {
       return;
     }
 
+    if (!currentUser || !currentUser.email) {
+      toast.error('Usuario no autenticado');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Verificar si el usuario se registró con Google
-      const providerData = user?.providerData || [];
-      const isGoogleUser = providerData.some((provider) => provider.providerId === 'google.com');
-
       if (isGoogleUser) {
-        // Para usuarios de Google, no podemos cambiar la contraseña directamente
-        // porque Google maneja la autenticación
         toast.error(
           'No puedes cambiar la contraseña porque te registraste con Google. Tu contraseña se gestiona a través de tu cuenta de Google.'
         );
@@ -209,11 +110,11 @@ const Settings: React.FC = () => {
       }
 
       // Reautenticar usuario con email/contraseña
-      const credential = EmailAuthProvider.credential(user?.email || '', passwordData.currentPassword);
-      await reauthenticateWithCredential(user!, credential);
+      const credential = EmailAuthProvider.credential(currentUser.email, passwordData.currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
 
       // Cambiar contraseña
-      await updatePassword(user!, passwordData.newPassword);
+      await updatePassword(currentUser, passwordData.newPassword);
 
       toast.success('Contraseña cambiada exitosamente');
       setPasswordData({
@@ -483,7 +384,7 @@ const Settings: React.FC = () => {
             </div>
 
             {/* Información para usuarios de Google */}
-            {user?.providerData?.some((provider) => provider.providerId === 'google.com') && (
+            {isGoogleUser && (
               <div
                 className={`p-4 rounded-lg border-l-4 border-blue-500 ${
                   isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'
@@ -522,11 +423,11 @@ const Settings: React.FC = () => {
                     type={showPasswords.current ? 'text' : 'password'}
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                    disabled={user?.providerData?.some((provider) => provider.providerId === 'google.com')}
+                    disabled={isGoogleUser}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
                     } ${
-                      user?.providerData?.some((provider) => provider.providerId === 'google.com')
+                      isGoogleUser
                         ? 'opacity-50 cursor-not-allowed'
                         : ''
                     }`}
@@ -534,7 +435,7 @@ const Settings: React.FC = () => {
                   <button
                     type='button'
                     onClick={() => setShowPasswords((prev) => ({ ...prev, current: !prev.current }))}
-                    disabled={user?.providerData?.some((provider) => provider.providerId === 'google.com')}
+                    disabled={isGoogleUser}
                     className='absolute right-3 top-1/2 transform -translate-y-1/2'
                   >
                     {showPasswords.current ? (
@@ -555,11 +456,11 @@ const Settings: React.FC = () => {
                     type={showPasswords.new ? 'text' : 'password'}
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData((prev) => ({ ...prev, newPassword: e.target.value }))}
-                    disabled={user?.providerData?.some((provider) => provider.providerId === 'google.com')}
+                    disabled={isGoogleUser}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
                     } ${
-                      user?.providerData?.some((provider) => provider.providerId === 'google.com')
+                      isGoogleUser
                         ? 'opacity-50 cursor-not-allowed'
                         : ''
                     }`}
@@ -567,7 +468,7 @@ const Settings: React.FC = () => {
                   <button
                     type='button'
                     onClick={() => setShowPasswords((prev) => ({ ...prev, new: !prev.new }))}
-                    disabled={user?.providerData?.some((provider) => provider.providerId === 'google.com')}
+                    disabled={isGoogleUser}
                     className='absolute right-3 top-1/2 transform -translate-y-1/2'
                   >
                     {showPasswords.new ? (
@@ -588,11 +489,11 @@ const Settings: React.FC = () => {
                     type={showPasswords.confirm ? 'text' : 'password'}
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                    disabled={user?.providerData?.some((provider) => provider.providerId === 'google.com')}
+                    disabled={isGoogleUser}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
                     } ${
-                      user?.providerData?.some((provider) => provider.providerId === 'google.com')
+                      isGoogleUser
                         ? 'opacity-50 cursor-not-allowed'
                         : ''
                     }`}
@@ -600,7 +501,7 @@ const Settings: React.FC = () => {
                   <button
                     type='button'
                     onClick={() => setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))}
-                    disabled={user?.providerData?.some((provider) => provider.providerId === 'google.com')}
+                    disabled={isGoogleUser}
                     className='absolute right-3 top-1/2 transform -translate-y-1/2'
                   >
                     {showPasswords.confirm ? (
@@ -621,7 +522,7 @@ const Settings: React.FC = () => {
                   !passwordData.currentPassword ||
                   !passwordData.newPassword ||
                   !passwordData.confirmPassword ||
-                  user?.providerData?.some((provider) => provider.providerId === 'google.com')
+                  isGoogleUser
                 }
                 className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2'
               >
@@ -665,7 +566,7 @@ const Settings: React.FC = () => {
                 <div>
                   <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Rol</p>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {userRole === 'user' ? 'Usuario' : 'Psicólogo'}
+                    Usuario
                   </p>
                 </div>
               </div>

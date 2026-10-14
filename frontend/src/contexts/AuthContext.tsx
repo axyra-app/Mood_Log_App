@@ -2,11 +2,10 @@ import {
   User as FirebaseUser,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
@@ -19,20 +18,14 @@ interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
-  role: 'user' | 'psychologist';
+  role: 'user';
   username?: string;
   createdAt?: any;
   updatedAt?: any;
   firstName?: string;
   lastName?: string;
-  // Campos profesionales para psicólogos
-  professionalTitle?: string;
-  specialization?: string;
-  yearsOfExperience?: number;
-  bio?: string;
-  licenseNumber?: string;
   phone?: string;
-  cvUrl?: string;
+  photoURL?: string;
 }
 
 interface AuthContextType {
@@ -40,7 +33,7 @@ interface AuthContextType {
   loading: boolean;
   profileLoaded: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role?: 'user' | 'psychologist', professionalData?: any) => Promise<void>;
+  signUp: (email: string, password: string, role?: string, professionalData?: any) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signUpWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -97,19 +90,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const userDataWithAuth: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
-                displayName: userData.displayName || firebaseUser.displayName,
+                displayName: userData.displayName || firebaseUser.displayName || null,
                 username: userData.username,
-                role: userData.role,
+                role: 'user',
                 createdAt: userData.createdAt,
                 updatedAt: userData.updatedAt,
-                // Campos profesionales para psicólogos
-                professionalTitle: userData.professionalTitle,
-                specialization: userData.specialization,
-                yearsOfExperience: userData.yearsOfExperience,
-                bio: userData.bio,
-                licenseNumber: userData.licenseNumber,
                 phone: userData.phone,
-                cvUrl: userData.cvUrl,
+                firstName: userData.firstName,
+                lastName: userData.lastName,
               };
 
               // Verificar si necesita completar perfil
@@ -125,9 +113,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 const basicUserData: User = {
                   uid: firebaseUser.uid,
                   email: firebaseUser.email,
-                  displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+                  displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || null,
                   username: firebaseUser.email?.split('@')[0],
-                  role: userData.role || 'user',
+                  role: 'user',
                 };
                 if (isMounted) {
                   setUser(basicUserData);
@@ -161,7 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const userDataWithAuth: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
-                displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+                displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || null,
                 username: firebaseUser.email?.split('@')[0],
                 role: 'user',
               };
@@ -246,8 +234,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (
     email: string,
     password: string,
-    role: 'user' | 'psychologist' = 'user',
-    professionalData?: any
+    _role?: string,
+    _professionalData?: any
   ) => {
     try {
       setLoading(true);
@@ -258,52 +246,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: email,
         displayName: email.split('@')[0],
         username: email.split('@')[0],
-        role: role,
+        role: 'user',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        // Agregar datos profesionales si existen
-        ...(professionalData && {
-          professionalTitle: professionalData.professionalTitle,
-          specialization: professionalData.specialization,
-          yearsOfExperience: professionalData.yearsOfExperience ? parseInt(professionalData.yearsOfExperience) : 0,
-          bio: professionalData.bio,
-          licenseNumber: professionalData.licenseNumber,
-          phone: professionalData.phone,
-          cvUrl: professionalData.cvUrl,
-        }),
       };
 
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
       // Trackear registro exitoso
       analyticsEvents.userSignUp('email');
-
-      // Si es psicólogo, también crear en la colección de psicólogos
-      if (role === 'psychologist') {
-        try {
-          const psychologistData = {
-            uid: userCredential.user.uid,
-            email: email,
-            displayName: email.split('@')[0],
-            role: 'psychologist',
-            licenseNumber: professionalData?.licenseNumber || '',
-            specialization: professionalData?.specialization || '',
-            yearsOfExperience: professionalData?.yearsOfExperience ? parseInt(professionalData.yearsOfExperience) : 0,
-            bio: professionalData?.bio || '',
-            phone: professionalData?.phone || '',
-            cvUrl: professionalData?.cvUrl || '',
-            rating: 0,
-            patientsCount: 0,
-            isAvailable: true,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
-          await setDoc(doc(db, 'psychologists', userCredential.user.uid), psychologistData);
-        } catch (psychologistError) {
-          console.error('Error creando perfil de psicólogo:', psychologistError);
-          // No lanzar error aquí para no interrumpir el registro del usuario
-        }
-      }
 
       // El loading se manejará automáticamente por onAuthStateChanged
     } catch (error: any) {
@@ -329,7 +280,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       popup.close();
       
-      const result = await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, provider);
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
@@ -365,7 +316,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await signInWithPopup(auth, provider);
       
       // Verificar si es un usuario nuevo
-      const isNewUser = result.additionalUserInfo?.isNewUser;
+      const additionalInfo = getAdditionalUserInfo(result);
+      const isNewUser = additionalInfo?.isNewUser;
       
       if (isNewUser) {
         
@@ -455,34 +407,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
 
       // Si es psicólogo, también actualizar en la colección de psicólogos
-      if (updates.role === 'psychologist' || user.role === 'psychologist') {
-        try {
-          const psychologistData = {
-            uid: user.uid,
-            email: user.email,
-            displayName: updates.displayName || user.displayName,
-            role: 'psychologist',
-            professionalTitle: updates.professionalTitle || '',
-            specialization: updates.specialization || '',
-            yearsOfExperience: updates.yearsOfExperience || 0,
-            bio: updates.bio || '',
-            licenseNumber: updates.licenseNumber || '',
-            phone: updates.phone || '',
-            cvUrl: updates.cvUrl || '',
-            rating: 0,
-            patientsCount: 0,
-            isAvailable: true,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
-
-          await setDoc(doc(db, 'psychologists', user.uid), psychologistData);
-        } catch (psychologistError) {
-          console.error('Error actualizando perfil de psicólogo:', psychologistError);
-          // No lanzar error aquí para no interrumpir la actualización del usuario
-        }
-      }
-
       // Forzar una recarga del estado del usuario para actualizar las verificaciones
       await refreshUserState();
 
@@ -511,20 +435,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userDataWithAuth: User = {
           uid: auth.currentUser.uid,
           email: auth.currentUser.email,
-          displayName: userData.displayName || auth.currentUser.displayName,
-          role: userData.role || 'user',
+          displayName: userData.displayName || auth.currentUser.displayName || null,
+          role: 'user',
           username: userData.username,
           createdAt: userData.createdAt,
           updatedAt: userData.updatedAt,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          professionalTitle: userData.professionalTitle,
-          specialization: userData.specialization,
-          yearsOfExperience: userData.yearsOfExperience,
-          bio: userData.bio,
-          licenseNumber: userData.licenseNumber,
           phone: userData.phone,
-          cvUrl: userData.cvUrl,
         };
         
         

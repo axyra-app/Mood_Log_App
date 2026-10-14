@@ -64,6 +64,6 @@
     "indexes": "firestore.indexes.json"
   },
   "storage": {
-    "rules": "y"
+    "rules": "storage.rules"
   }
 }

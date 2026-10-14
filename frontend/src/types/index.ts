@@ -389,7 +389,7 @@ export interface JournalTemplate {
   description: string;
   content: string;
   tags: string[];
-  category: 'daily' | 'weekly' | 'monthly' | 'reflection' | 'gratitude' | 'goal-setting';
+  category: 'daily' | 'weekly' | 'monthly' | 'reflection' | 'gratitude' | 'goal-setting' | 'mood' | 'stress' | 'goals' | 'relationships';
   isDefault: boolean;
   createdBy: string; // userId or 'system'
   createdAt: Date;

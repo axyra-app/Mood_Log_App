@@ -1,16 +1,6 @@
-import { validateConfig } from '../config/production';
-
 // Validar variables de entorno al cargar la aplicación
 export const validateEnvironment = () => {
-  const isValid = validateConfig();
-
-  if (!isValid) {
-    console.error('❌ Configuración de entorno inválida');
-    return false;
-  }
-
-  // Configuración de entorno válida
-  return true;
+  return checkRequiredEnvVars();
 };
 
 // Función para obtener variables de entorno con valores por defecto
@@ -89,10 +79,6 @@ export const checkRequiredEnvVars = () => {
 // Función para mostrar información de la configuración (solo en desarrollo)
 export const logEnvironmentInfo = () => {
   if (isDevelopment()) {
-    
-     ? 'Desarrollo' : 'Producción');
-    );
-    );
-    );
+    console.log('Modo de entorno:', isDevelopment() ? 'Desarrollo' : 'Producción');
   }
 };

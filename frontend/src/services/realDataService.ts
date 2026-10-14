@@ -133,7 +133,7 @@ export const getRealChatData = async (
       return {
         content: data.content || '',
         timestamp: data.createdAt?.toDate() || new Date(),
-        sender: data.senderId === userId ? 'user' : 'psychologist',
+        sender: (data.senderId === userId ? 'user' : 'psychologist') as 'user' | 'psychologist',
         sessionId: data.sessionId || ''
       };
     });

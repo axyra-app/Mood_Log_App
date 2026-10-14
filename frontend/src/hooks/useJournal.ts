@@ -82,7 +82,7 @@ export const useJournal = (userId: string) => {
     try {
       setLoading(true);
       setError(null);
-      const journalTemplates = await getJournalTemplates();
+      await getJournalTemplates();
       
       // Always use default templates for now to avoid duplication
       const defaultTemplates = getDefaultTemplates();
@@ -103,7 +103,7 @@ export const useJournal = (userId: string) => {
     try {
       setLoading(true);
       setError(null);
-      const journalPrompts = await getJournalPrompts(category);
+      await getJournalPrompts(category);
       
       // Always use default prompts for now to avoid duplication
       const defaultPrompts = getDefaultPrompts();

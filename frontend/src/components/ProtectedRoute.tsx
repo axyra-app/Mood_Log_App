@@ -33,11 +33,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       return <Navigate to='/complete-profile' replace />;
     }
 
-    // Si es psicólogo, redirigir al dashboard de psicólogos
-    if (user.role === 'psychologist') {
-      return <Navigate to='/dashboard-psychologist' replace />;
-    }
-
     return <>{children}</>;
   }
 
@@ -63,11 +58,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   
   if (needsProfileCompletion) {
     return <Navigate to='/complete-profile' replace />;
-  }
-
-  // Si es psicólogo, redirigir al dashboard de psicólogos
-  if (user.role === 'psychologist') {
-    return <Navigate to='/dashboard-psychologist' replace />;
   }
 
   return <>{children}</>;

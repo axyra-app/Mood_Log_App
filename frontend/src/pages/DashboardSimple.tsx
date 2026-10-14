@@ -1,7 +1,6 @@
 import { BarChart3, BookOpen, Calendar, Menu, Moon, Settings, Sun, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AppointmentSection from '../components/AppointmentSection';
 import LateralSidebar from '../components/LateralSidebar';
 import Logo from '../components/Logo';
 import MoodHistoryPanel from '../components/MoodHistoryPanel';
@@ -12,10 +11,10 @@ import { useMood } from '../hooks/useMood';
 
 const DashboardSimple: React.FC = () => {
   // Dashboard con logo personalizado
-  const { user, logout } = useAuth();
-  const { moodLogs, loading: moodLoading, getMoodStreak, getAverageMood } = useMood();
-  const { entries: journalEntries, getJournalStats } = useJournal(user?.uid || '');
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const { moodLogs, loading: moodLoading, getMoodStreak, getAverageMood } = useMood();
+  const { entries: journalEntries } = useJournal(user?.uid || '');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,10 +23,10 @@ const DashboardSimple: React.FC = () => {
     setIsLoaded(true);
   }, []);
 
-  // Calcular estadísticas reales
   const weeklyLogs = moodLogs.filter((log) => {
+    const rawDate = log.createdAt as any;
     const logDate =
-      log.createdAt && typeof log.createdAt.toDate === 'function' ? log.createdAt.toDate() : new Date(log.createdAt);
+      rawDate && typeof rawDate.toDate === 'function' ? rawDate.toDate() : new Date(rawDate);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return logDate >= weekAgo;
@@ -39,17 +38,6 @@ const DashboardSimple: React.FC = () => {
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
-
-  // Removed secondaryModules array - now handled by sidebar
 
   if (!isLoaded) {
     return (
@@ -194,7 +182,7 @@ const DashboardSimple: React.FC = () => {
               </div>
             ) : (
               <div className='mobile-grid'>
-                {journalEntries.slice(0, 6).map((entry, index) => (
+                {journalEntries.slice(0, 6).map((entry: any, index: number) => (
                   <div
                     key={entry.id || index}
                     className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${
@@ -327,10 +315,6 @@ const DashboardSimple: React.FC = () => {
           </div>
         </div>
 
-        {/* Appointment Section */}
-        <div className='mb-8'>
-          <AppointmentSection isDarkMode={isDarkMode} />
-        </div>
 
         {/* Recent Mood Logs */}
         <div

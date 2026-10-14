@@ -289,7 +289,7 @@ function analyzeTextContent(notes: string): CrisisSignal[] {
 }
 
 // Análisis de patrones sociales
-function analyzeSocialPatterns(moodData: any, recentHistory?: any[]): CrisisSignal[] {
+function analyzeSocialPatterns(_moodData: any, recentHistory?: any[]): CrisisSignal[] {
   const signals: CrisisSignal[] = [];
 
   if (!recentHistory) return signals;
@@ -319,7 +319,7 @@ function analyzeSocialPatterns(moodData: any, recentHistory?: any[]): CrisisSign
 }
 
 // Análisis de patrones físicos
-function analyzePhysicalPatterns(moodData: any, recentHistory?: any[]): CrisisSignal[] {
+function analyzePhysicalPatterns(moodData: any, _recentHistory?: any[]): CrisisSignal[] {
   const signals: CrisisSignal[] = [];
 
   // Patrón de sueño deteriorado
@@ -355,7 +355,7 @@ function determineOverallRisk(score: number, signals: CrisisSignal[]): 'low' | '
 }
 
 // Generar recomendaciones
-function generateRecommendations(risk: string, signals: CrisisSignal[]): string[] {
+function generateRecommendations(risk: string, _signals: CrisisSignal[]): string[] {
   const recommendations: string[] = [];
 
   switch (risk) {
@@ -386,7 +386,7 @@ function generateRecommendations(risk: string, signals: CrisisSignal[]): string[
 }
 
 // Generar acciones inmediatas
-function generateImmediateActions(risk: string, signals: CrisisSignal[]): string[] {
+function generateImmediateActions(risk: string, _signals: CrisisSignal[]): string[] {
   const actions: string[] = [];
 
   switch (risk) {

@@ -9,34 +9,23 @@ import AdvancedReports from './components/AdvancedReports';
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingChatBubble from './components/FloatingChatBubble';
 import ProtectedRoute from './components/ProtectedRoute';
-import ProtectedRouteBoth from './components/ProtectedRouteBoth';
-import ProtectedRouteEditProfile from './components/ProtectedRouteEditProfile';
-import ProtectedRoutePsychologist from './components/ProtectedRoutePsychologist';
 
 // Pages
 import AIChat from './pages/AIChat';
-import Chat from './pages/Chat';
 import ChatSelection from './pages/ChatSelection';
 import CompleteProfile from './pages/CompleteProfile';
-import CreateAppointment from './pages/CreateAppointment';
-import DashboardPsychologist from './pages/DashboardPsychologist';
 import DashboardSimple from './pages/DashboardSimple';
-import EditProfile from './pages/EditProfile';
 import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
 import LoginSimple from './pages/LoginSimple';
-import MedicalHistory from './pages/MedicalHistory';
 import MoodFlowSimple from './pages/MoodFlowSimple';
 import PrivacySimple from './pages/PrivacySimple';
 import Profile from './pages/Profile';
-import PsychologistChat from './pages/PsychologistChat';
-import PsychologistSelection from './pages/PsychologistSelection';
 import RegisterSimple from './pages/RegisterSimple';
 import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
 import TermsSimple from './pages/TermsSimple';
-import UserChat from './pages/UserChat';
 
 function App() {
   return (
@@ -51,8 +40,6 @@ function App() {
                 <Route path='/login' element={<LoginSimple />} />
                 <Route path='/register' element={<RegisterSimple />} />
                 <Route path='/complete-profile' element={<CompleteProfile />} />
-                <Route path='/profile' element={<Profile />} />
-                <Route path='/create-appointment' element={<CreateAppointment />} />
                 <Route path='/forgot-password' element={<ForgotPassword />} />
                 <Route path='/terms' element={<TermsSimple />} />
                 <Route path='/privacy' element={<PrivacySimple />} />
@@ -67,42 +54,18 @@ function App() {
                   }
                 />
                 <Route
-                  path='/dashboard-psychologist'
-                  element={
-                    <ProtectedRoutePsychologist>
-                      <DashboardPsychologist />
-                    </ProtectedRoutePsychologist>
-                  }
-                />
-                <Route
-                  path='/psychologist-chat'
-                  element={
-                    <ProtectedRoutePsychologist>
-                      <PsychologistChat />
-                    </ProtectedRoutePsychologist>
-                  }
-                />
-                <Route
-                  path='/medical-history'
-                  element={
-                    <ProtectedRoutePsychologist>
-                      <MedicalHistory />
-                    </ProtectedRoutePsychologist>
-                  }
-                />
-                <Route
-                  path='/user-chat'
-                  element={
-                    <ProtectedRoute>
-                      <UserChat />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
                   path='/mood-flow'
                   element={
                     <ProtectedRoute>
                       <MoodFlowSimple />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/journal'
+                  element={
+                    <ProtectedRoute>
+                      <Journal />
                     </ProtectedRoute>
                   }
                 />
@@ -114,7 +77,16 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                {/* Rutas específicas de chat de IA - deben estar ANTES de /chat para evitar conflictos */}
+                <Route
+                  path='/reports'
+                  element={
+                    <ProtectedRoute>
+                      <AdvancedReports />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Rutas específicas de Confidente IA */}
                 <Route
                   path='/chat/dr-mia'
                   element={
@@ -131,7 +103,6 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                {/* Ruta alternativa para chat de IA con parámetro dinámico */}
                 <Route
                   path='/chat/ai/:doctorType'
                   element={
@@ -140,24 +111,6 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                {/* Rutas de chat con psicólogos */}
-                <Route
-                  path='/chat/psychologist'
-                  element={
-                    <ProtectedRoute>
-                      <PsychologistSelection />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path='/chat/psychologist/:psychologistId'
-                  element={
-                    <ProtectedRoute>
-                      <Chat />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Ruta base de chat - debe estar después de las rutas específicas */}
                 <Route
                   path='/chat'
                   element={
@@ -166,35 +119,21 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* Configuración y Perfil */}
                 <Route
-                  path='/settings'
-                  element={
-                    <ProtectedRouteBoth>
-                      <Settings />
-                    </ProtectedRouteBoth>
-                  }
-                />
-                <Route
-                  path='/edit-profile'
-                  element={
-                    <ProtectedRouteEditProfile>
-                      <EditProfile />
-                    </ProtectedRouteEditProfile>
-                  }
-                />
-                <Route
-                  path='/journal'
+                  path='/profile'
                   element={
                     <ProtectedRoute>
-                      <Journal />
+                      <Profile />
                     </ProtectedRoute>
                   }
                 />
                 <Route
-                  path='/reports'
+                  path='/settings'
                   element={
                     <ProtectedRoute>
-                      <AdvancedReports />
+                      <Settings />
                     </ProtectedRoute>
                   }
                 />
@@ -220,7 +159,7 @@ function App() {
                 />
               </Routes>
 
-              {/* Burbuja flotante de chat IA - Solo en rutas protegidas */}
+              {/* Burbuja flotante de chat IA */}
               <FloatingChatBubble />
             </div>
           </Router>

@@ -2,285 +2,100 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Función auxiliar para verificar si el usuario es el propietario
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
     // ========================================
-    // REGLAS PARA USUARIOS - SIMPLIFICADAS
+    // PERFIL DE USUARIO
     // ========================================
     match /users/{userId} {
-      // Solo el usuario puede leer/escribir su propio perfil
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Cualquier usuario autenticado puede leer usuarios con role: 'psychologist'
-      allow read: if request.auth != null && 
-        resource.data.role == 'psychologist';
+      allow read, write: if isOwner(userId);
     }
     
     // ========================================
-    // REGLAS PARA PSICÓLOGOS - SIMPLIFICADAS
-    // ========================================
-    match /psychologists/{psychologistId} {
-      // Cualquier usuario autenticado puede leer psicólogos disponibles
-      allow read: if request.auth != null;
-      
-      // Solo el psicólogo puede escribir su propio perfil
-      allow write: if request.auth != null && request.auth.uid == psychologistId;
-      
-      // Permitir creación de psicólogos por defecto
-      allow create: if request.auth != null && 
-        request.resource.data.userId.matches('default-psychologist-.*');
-    }
-    
-    // ========================================
-    // REGLAS PARA MOOD LOGS - ULTRA PERMISIVAS
+    // REGISTROS DE ESTADO DE ÁNIMO (MOOD LOGS)
     // ========================================
     match /moodLogs/{moodLogId} {
-      allow read, write, create, update, delete: if request.auth != null;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA CITAS - SIMPLIFICADAS
+    // ENTRADAS DEL DIARIO PERSONAL
     // ========================================
-    match /appointments/{appointmentId} {
-      // El usuario puede leer/escribir sus propias citas
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      // Los psicólogos pueden leer/escribir citas donde son asignados
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      // Permitir crear citas
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
+    match /journalEntries/{entryId} {
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA NOTIFICACIONES - SIMPLIFICADAS
-    // ========================================
-    match /notifications/{notificationId} {
-      // El usuario destinatario puede leer/escribir sus notificaciones
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      // Los psicólogos pueden leer/escribir notificaciones donde son mencionados
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      // Permitir crear notificaciones
-      allow create: if request.auth != null;
-    }
-    
-    // ========================================
-    // REGLAS PARA CHATS - ULTRA PERMISIVAS
+    // SESIONES Y MENSAJES DE CHAT (CONFIDENTE IA)
     // ========================================
     match /chatSessions/{sessionId} {
-      allow read, write, create, update, delete: if request.auth != null;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
     match /chatMessages/{messageId} {
-      allow read, write, create, update, delete: if request.auth != null;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA ENTRADAS DEL DIARIO - SIMPLIFICADAS
+    // NOTIFICACIONES
     // ========================================
-    match /journalEntries/{entryId} {
-      // El usuario puede leer/escribir sus propias entradas del diario
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      // Permitir crear entradas
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA CONFIGURACIONES DE USUARIO
+    // CONFIGURACIÓN DE USUARIO
     // ========================================
     match /userSettings/{settingsId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == settingsId;
+      allow read, write: if isOwner(settingsId);
     }
     
     // ========================================
-    // REGLAS PARA REPORTES AVANZADOS - SIMPLIFICADAS
+    // REPORTES AVANZADOS Y ESTADÍSTICAS
     // ========================================
     match /advancedReports/{reportId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
+      allow read, write, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
-    // ========================================
-    // REGLAS PARA ESTADÍSTICAS - SIMPLIFICADAS
-    // ========================================
     match /statistics/{statId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA RECORDATORIOS
+    // RECORDATORIOS
     // ========================================
     match /reminders/{reminderId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+      allow read, write, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
-    // REGLAS PARA PLANTILLAS DEL DIARIO - SOLO LECTURA
+    // PLANTILLAS Y PROMPTS DEL DIARIO (LECTURA PÚBLICA AUTENTICADA)
     // ========================================
     match /journalTemplates/{templateId} {
       allow read: if request.auth != null;
     }
     
-    // ========================================
-    // REGLAS PARA PROMPTS DEL DIARIO - SOLO LECTURA
-    // ========================================
     match /journalPrompts/{promptId} {
       allow read: if request.auth != null;
     }
-    
-    // ========================================
-    // REGLAS PARA INDICADORES DE TECLEO - SIMPLIFICADAS
-    // ========================================
-    match /typing/{typingId} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // ========================================
-    // REGLAS PARA CALIFICACIONES DE PSICÓLOGOS - SIMPLIFICADAS
-    // ========================================
-    match /psychologistRatings/{ratingId} {
-      allow read: if request.auth != null;
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-      
-      allow update: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA INFORMES MÉDICOS - SIMPLIFICADAS
-    // ========================================
-    match /medicalReports/{reportId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      allow create: if request.auth != null && 
-        exists(/databases/$(database)/documents/psychologists/$(request.auth.uid));
-    }
-    
-    // ========================================
-    // REGLAS PARA HISTORIAL DEL PACIENTE - SIMPLIFICADAS
-    // ========================================
-    match /patientHistory/{historyId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.psychologistId;
-    }
-    
-    // ========================================
-    // REGLAS PARA PACIENTES - SIMPLIFICADAS
-    // ========================================
-    match /patients/{patientId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.psychologistId;
-    }
-    
-    // ========================================
-    // REGLAS PARA REPORTES - SIMPLIFICADAS
-    // ========================================
-    match /reports/{reportId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA ANÁLISIS DE IA - SIMPLIFICADAS
-    // ========================================
-    match /aiAnalysis/{analysisId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA NOTAS DE SESIÓN - SIMPLIFICADAS
-    // ========================================
-    match /sessionNotes/{noteId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
-    }
-    
-    // ========================================
-    // REGLAS PARA PLANES DE TRATAMIENTO - SIMPLIFICADAS
-    // ========================================
-    match /treatmentPlans/{planId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
-    }
-    
-    // ========================================
-    // REGLAS PARA ALERTAS DE CRISIS - SIMPLIFICADAS
-    // ========================================
-    match /crisisAlerts/{alertId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.psychologistId;
-      
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.patientId;
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.psychologistId;
-    }
-    
-    // ========================================
-    // REGLAS PARA RECOMENDACIONES - SIMPLIFICADAS
-    // ========================================
-    match /recommendations/{recommendationId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA OBJETIVOS DE BIENESTAR - SIMPLIFICADAS
-    // ========================================
-    match /wellnessGoals/{goalId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-    }
-    
-    // ========================================
-    // REGLAS PARA AUDIT LOGS - SOLO LECTURA
-    // ========================================
-    match /auditLogs/{logId} {
-      allow read: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+
+    // Regla por defecto: Denegar cualquier otra colección no especificada
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

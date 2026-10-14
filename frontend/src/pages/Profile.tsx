@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, User, Mail, Phone, MapPin, Calendar, Edit, Save, X } from 'lucide-react';
+import { User, Edit, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 
 const Profile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { isDarkMode } = useTheme();
-  const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

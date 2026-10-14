@@ -24,7 +24,7 @@ export const createJournalEntry = async (
     const journalRef = collection(db, 'journalEntries');
     
     // Clean data to remove undefined values
-    const cleanData = {
+    const cleanData: Record<string, any> = {
       userId: entryData.userId,
       title: entryData.title,
       content: entryData.content,
@@ -71,7 +71,7 @@ export const updateJournalEntry = async (entryId: string, updates: Partial<Journ
     const entryRef = doc(db, 'journalEntries', entryId);
     
     // Clean data to remove undefined values
-    const cleanUpdates = { ...updates };
+    const cleanUpdates: Record<string, any> = { ...updates };
     
     // Remove undefined values to avoid Firebase errors
     Object.keys(cleanUpdates).forEach(key => {

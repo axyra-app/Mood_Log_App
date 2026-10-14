@@ -1,5 +1,3 @@
-import { db } from './firebase';
-
 /**
  * Gestor de conexiones Firebase para evitar errores 400 y problemas de conexión
  */
@@ -38,7 +36,7 @@ class FirebaseConnectionManager {
    * Desconecta todos los listeners activos
    */
   disconnectAll(): void {
-    this.activeListeners.forEach((unsubscribe, key) => {
+    this.activeListeners.forEach((unsubscribe) => {
       unsubscribe();
     });
     this.activeListeners.clear();

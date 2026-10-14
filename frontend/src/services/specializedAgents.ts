@@ -293,7 +293,6 @@ RESPONDE EN FORMATO JSON:
       max: Math.max(...moodData.moodLogs.map((log: any) => log.mood))
     };
     
-    const uniqueId = Math.random().toString(36).substring(7);
     const timestamp = new Date().toLocaleString();
     
     return {

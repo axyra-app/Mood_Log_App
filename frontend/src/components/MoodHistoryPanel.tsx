@@ -1,4 +1,4 @@
-import { Calendar, Heart, Plus, TrendingUp } from 'lucide-react';
+import { Heart, Plus, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMood } from '../hooks/useMood';
@@ -28,12 +28,10 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
   // Ordenar logs por fecha (más recientes primero)
   const sortedMoodLogs = [...moodLogs].sort((a, b) => {
     try {
-      const dateA = a.createdAt && typeof a.createdAt.toDate === 'function' 
-        ? a.createdAt.toDate() 
-        : new Date(a.createdAt);
-      const dateB = b.createdAt && typeof b.createdAt.toDate === 'function' 
-        ? b.createdAt.toDate() 
-        : new Date(b.createdAt);
+      const rawA = a.createdAt as any;
+      const dateA = rawA && typeof rawA.toDate === 'function' ? rawA.toDate() : new Date(rawA);
+      const rawB = b.createdAt as any;
+      const dateB = rawB && typeof rawB.toDate === 'function' ? rawB.toDate() : new Date(rawB);
       
       // Verificar que las fechas son válidas
       if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {

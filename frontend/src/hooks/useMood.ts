@@ -10,6 +10,12 @@ import {
 } from '../services/moodLogService';
 import { MoodLog } from '../types';
 
+const toJsDate = (d: any): Date => {
+  if (d && typeof d.toDate === 'function') return d.toDate();
+  if (d instanceof Date) return d;
+  return new Date(d || Date.now());
+};
+
 export const useMood = () => {
   const { user } = useAuth();
   const [moodLogs, setMoodLogs] = useState<MoodLog[]>([]);
@@ -47,7 +53,7 @@ export const useMood = () => {
 
   // Create mood log
   const createMoodLog = useCallback(
-    async (moodData: Omit<MoodLog, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    async (moodData: Omit<MoodLog, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'aiAnalysis'>) => {
       if (!user?.uid) throw new Error('User not authenticated');
 
       // Prevent duplicate submissions
@@ -127,9 +133,7 @@ export const useMood = () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     return moodLogs.find((log) => {
-      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate() 
-        : new Date();
+      const logDate = toJsDate(log.createdAt);
       return logDate >= today && logDate < tomorrow;
     });
   }, [moodLogs]);
@@ -174,21 +178,15 @@ export const useMood = () => {
 
     // Ordenar logs por fecha (más reciente primero)
     const sortedLogs = [...moodLogs].sort((a, b) => {
-      const dateA = a.createdAt && typeof a.createdAt.toDate === 'function' 
-        ? a.createdAt.toDate() 
-        : new Date(a.createdAt);
-      const dateB = b.createdAt && typeof b.createdAt.toDate === 'function' 
-        ? b.createdAt.toDate() 
-        : new Date(b.createdAt);
+      const dateA = toJsDate(a.createdAt);
+      const dateB = toJsDate(b.createdAt);
       return dateB.getTime() - dateA.getTime();
     });
 
     // Agrupar logs por día (tomar solo el primer log de cada día)
     const logsByDay = new Map();
     sortedLogs.forEach(log => {
-      const logDate = log.createdAt && typeof log.createdAt.toDate === 'function' 
-        ? log.createdAt.toDate() 
-        : new Date(log.createdAt);
+      const logDate = toJsDate(log.createdAt);
       logDate.setHours(0, 0, 0, 0);
       
       const dateKey = logDate.getTime();
@@ -208,9 +206,7 @@ export const useMood = () => {
 
       // Verificar si han pasado más de 24 horas desde el último log
       if (i === 0) {
-        const lastLogTime = sortedLogs[0].createdAt && typeof sortedLogs[0].createdAt.toDate === 'function' 
-          ? sortedLogs[0].createdAt.toDate() 
-          : new Date(sortedLogs[0].createdAt);
+        const lastLogTime = toJsDate(sortedLogs[0].createdAt);
         
         const hoursSinceLastLog = (now.getTime() - lastLogTime.getTime()) / (1000 * 60 * 60);
         

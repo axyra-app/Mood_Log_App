@@ -51,7 +51,7 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
       // Manejar diferentes tipos de fecha (Firebase Timestamp, Date, string)
       if (date && typeof date === 'object' && 'toDate' in date) {
         // Firebase Timestamp
-        validDate = date.toDate();
+        validDate = (date as any).toDate();
       } else if (date instanceof Date) {
         validDate = date;
       } else {
@@ -89,7 +89,7 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
       // Manejar diferentes tipos de fecha (Firebase Timestamp, Date, string)
       if (date && typeof date === 'object' && 'toDate' in date) {
         // Firebase Timestamp
-        validDate = date.toDate();
+        validDate = (date as any).toDate();
       } else if (date instanceof Date) {
         validDate = date;
       } else {

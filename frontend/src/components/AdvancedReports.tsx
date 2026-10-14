@@ -1,7 +1,6 @@
 import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -13,7 +12,7 @@ import { moodAnalyzerAgent } from '../services/specializedAgents';
 interface AdvancedReport {
   id?: string;
   userId: string;
-  reportType: 'mood_analysis' | 'chat_analysis' | 'crisis_assessment' | 'weekly_summary' | 'monthly_summary';
+  reportType: 'mood_analysis' | 'diary_analysis' | 'chat_analysis' | 'crisis_assessment' | 'weekly_summary' | 'monthly_summary';
   title: string;
   content: string;
   insights: string[];
@@ -30,7 +29,6 @@ interface AdvancedReport {
 const AdvancedReports: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
-  const navigate = useNavigate();
   const [reports, setReports] = useState<AdvancedReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'custom'>('week');
@@ -304,14 +302,15 @@ const AdvancedReports: React.FC = () => {
 
       toast.loading('Generando reporte PDF...', { id: 'pdf-generation' });
 
+      const reportType: 'mood' | 'diary' = report.reportType === 'mood_analysis' ? 'mood' : 'diary';
       const reportData = {
         title: report.title,
-        period: report.period,
+        period: report.period || { start: new Date(), end: new Date() },
         userId: user.uid,
-        type: report.reportType === 'mood_analysis' ? 'mood' : 'diary',
+        type: reportType,
       };
 
-      await generateAndDownloadReport(reportData.type, reportData);
+      await generateAndDownloadReport(reportType, reportData);
 
       toast.success('Reporte PDF generado exitosamente', { id: 'pdf-generation' });
     } catch (error) {
