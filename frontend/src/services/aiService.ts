@@ -192,16 +192,16 @@ Formato de respuesta en JSON:
         type: 'mood',
         priority: 'high',
         title: 'Plan de Apoyo Emocional Integral',
-        description: `Tu estado de ánimo actual (${moodData.overallMood}/5) indica que necesitas atención especializada. Es importante implementar estrategias de apoyo inmediato y a largo plazo.`,
+        description: `Tu estado de ánimo actual (${moodData.overallMood}/10) podría beneficiarse de apoyo y autocuidado.`,
         actionable: `1. Considera hablar con una persona de confianza o un profesional cualificado si te preocupa cómo te sientes\n2. Busca apoyo social de familiares o amistades de confianza\n3. Prueba una pausa breve para respirar con calma\n4. Anota situaciones que coincidan con cambios en tu estado de ánimo\n5. Elige una actividad cotidiana pequeña que te resulte reconfortante`,
         category: 'Salud Mental Crítica'
       });
-    } else if (moodData.overallMood >= 4) {
+    } else if (moodData.overallMood >= 8) {
       recommendations.push({
         type: 'mood',
         priority: 'low',
         title: 'Estrategia de Mantenimiento del Bienestar',
-        description: `Excelente estado de ánimo (${moodData.overallMood}/5). Es crucial mantener estos niveles positivos mediante estrategias preventivas y de consolidación.`,
+        description: `Tu estado de ánimo registrado es alto (${moodData.overallMood}/10).`,
         actionable: `1. Mantén tu rutina actual que te está funcionando bien\n2. Practica gratitud diaria escribiendo 3 cosas positivas cada mañana\n3. Ayuda a otros: el altruismo refuerza el bienestar personal\n4. Establece metas pequeñas y alcanzables para mantener la motivación\n5. Comparte tu experiencia positiva con otros que puedan beneficiarse`,
         category: 'Mantenimiento Positivo'
       });
@@ -326,7 +326,7 @@ Formato de respuesta en JSON:
     const textualAnalysis = this.generateTextualAnalysis(moodData);
 
     return {
-      summary: `Análisis personalizado basado en tu estado de ánimo (${moodData.overallMood.toFixed(1)}/5), energía (${moodData.energy.toFixed(1)}/10), estrés (${moodData.stress.toFixed(1)}/10) y sueño (${moodData.sleep.toFixed(1)}/10). ${moodData.feelings ? `Tus sentimientos: "${moodData.feelings}"` : ''}`,
+      summary: `Análisis personalizado basado en tu estado de ánimo (${moodData.overallMood.toFixed(1)}/10), energía (${moodData.energy.toFixed(1)}/10), estrés (${moodData.stress.toFixed(1)}/10) y sueño (${moodData.sleep.toFixed(1)}/10). ${moodData.feelings ? `Tus sentimientos: "${moodData.feelings}"` : ''}`,
       insights,
       recommendations: finalRecommendations,
       moodTrend: moodData.overallMood >= 4 ? 'improving' : moodData.overallMood <= 2 ? 'declining' : 'stable',
@@ -388,7 +388,7 @@ Formato de respuesta en JSON:
     if (moodData.overallMood >= 4) {
       return {
         title: 'Estrategia de Mantenimiento del Bienestar',
-        description: `Excelente estado de ánimo (${moodLabel}, ${moodData.overallMood}/5). Es crucial mantener estos niveles positivos mediante estrategias preventivas y de consolidación.`,
+        description: `Estado de ánimo alto (${moodLabel}, ${moodData.overallMood}/10).`,
         strategies: [
           'Mantén tu rutina actual que te está funcionando bien',
           'Practica gratitud diaria escribiendo 3 cosas positivas cada mañana',
@@ -401,7 +401,7 @@ Formato de respuesta en JSON:
 
     return {
       title: 'Estrategia de Mantenimiento del Bienestar',
-      description: `Tu estado de ánimo actual (${moodLabel}, ${moodData.overallMood}/5) puede mejorarse con estrategias de bienestar preventivas.`,
+      description: `Tu estado de ánimo actual (${moodLabel}, ${moodData.overallMood}/10) puede explorarse con estrategias cotidianas de bienestar.`,
       strategies: [
         'Establece una rutina diaria que incluya actividades placenteras',
         'Practica gratitud diaria identificando al menos una cosa positiva',
@@ -457,12 +457,12 @@ Formato de respuesta en JSON:
     const recommendations: string[] = [];
 
     // Insights basados en el texto
-    if (hasPositive && moodValue >= 4) {
+    if (hasPositive && moodValue >= 8) {
       insights.push('Tu descripción refleja un estado emocional positivo que coincide con tu evaluación numérica del estado de ánimo');
       recommendations.push('Continúa cultivando estos momentos positivos y documenta qué te ayuda a mantener este bienestar');
     }
 
-    if (hasNegative && moodValue <= 3) {
+    if (hasNegative && moodValue <= 4) {
       insights.push('Tu descripción textual coincide con un estado de ánimo bajo, lo que indica autoconciencia emocional');
       recommendations.push('Considera técnicas de reestructuración cognitiva para cambiar patrones de pensamiento negativos');
     }
@@ -499,7 +499,7 @@ Formato de respuesta en JSON:
     // Recomendaciones generales basadas en el texto
     if (insights.length === 0) {
       insights.push('Tu descripción personal proporciona contexto valioso sobre tu estado emocional actual');
-      insights.push(`Basado en tu estado de ánimo (${moodValue}/5) y tus emociones (${emotionsText}), hay espacio para crecimiento personal`);
+      insights.push(`Basado en tu estado de ánimo (${moodValue}/10) y tus emociones (${emotionsText}), hay espacio para crecimiento personal`);
     }
 
     if (recommendations.length === 0) {
@@ -509,7 +509,7 @@ Formato de respuesta en JSON:
 
     return {
       title: 'Análisis de tu Reflexión Personal',
-      description: `Basado en lo que escribiste sobre cómo te sientes, junto con tu estado de ánimo (${moodValue}/5) y las emociones que identificaste (${emotionsText}), aquí tienes insights personalizados:`,
+      description: `Basado en lo que escribiste sobre cómo te sientes, junto con tu estado de ánimo (${moodValue}/10) y las emociones que identificaste (${emotionsText}), aquí tienes ideas para reflexionar:`,
       insights: insights.length > 0 ? insights : [
         'Tu reflexión personal muestra autoconciencia emocional',
         'La conexión entre tus pensamientos y emociones es importante para tu bienestar'

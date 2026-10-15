@@ -1,6 +1,7 @@
 import { Heart, Plus, TrendingUp } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { useMood } from '../hooks/useMood';
 import MoodEditModal from './MoodEditModal';
 import MoodHistoryCard from './MoodHistoryCard';
@@ -11,7 +12,7 @@ interface MoodHistoryPanelProps {
 
 const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false }) => {
   const navigate = useNavigate();
-  const { moodLogs, loading, updateMoodLog } = useMood();
+  const { moodLogs, loading, error, updateMoodLog, deleteMoodLog, refreshMoodLogs } = useMood();
   const [showAll, setShowAll] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedMoodLog, setSelectedMoodLog] = useState<any>(null);
@@ -54,11 +55,29 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
 
   const handleSaveMood = async (updatedMoodLog: any) => {
     try {
-      await updateMoodLog(updatedMoodLog.id, updatedMoodLog);
+      await updateMoodLog(updatedMoodLog.id, {
+        mood: updatedMoodLog.mood,
+        energy: updatedMoodLog.energy,
+        stress: updatedMoodLog.stress,
+        sleep: updatedMoodLog.sleep,
+        notes: updatedMoodLog.notes,
+      });
       setShowEditModal(false);
       setSelectedMoodLog(null);
     } catch (error) {
       console.error('Error updating mood log:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteMood = async (moodLog: any) => {
+    if (!window.confirm('¿Eliminar este registro de estado de ánimo? Esta acción no se puede deshacer.')) return;
+    try {
+      await deleteMoodLog(moodLog.id);
+      toast.success('Registro eliminado.');
+    } catch (error) {
+      console.error('Error deleting mood log:', error);
+      toast.error(error instanceof Error ? error.message : 'No se pudo eliminar el registro.');
     }
   };
 
@@ -89,6 +108,15 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`rounded-lg border p-6 text-center ${isDarkMode ? 'border-red-800 bg-red-900/20 text-red-200' : 'border-red-200 bg-red-50 text-red-800'}`}>
+        <p>No se pudo cargar el historial: {error}</p>
+        <button onClick={() => void refreshMoodLogs()} className='mt-3 underline'>Reintentar</button>
       </div>
     );
   }
@@ -180,6 +208,7 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
             moodLog={moodLog}
             isDarkMode={isDarkMode}
             onEdit={handleEditMood}
+            onDelete={handleDeleteMood}
           />
         ))}
       </div>

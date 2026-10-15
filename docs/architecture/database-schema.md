@@ -11,7 +11,7 @@ No agregues colecciones o campos a partir de esta lista sin revisar los llamador
 | Colección | Campos de propiedad que usan las reglas | Acceso local observado | Consideraciones |
 |---|---|---|---|
 | `users/{userId}` | El ID del documento debe coincidir con `request.auth.uid`; `role` debe ser `user` al crear o actualizar. | Lectura, creación, actualización y borrado del dueño. | Existe un único rol de aplicación (`user`); las reglas no permiten registrar ni cambiar el perfil a otro rol. No hay lista completa de campos permitidos ni validación de tipos y límites. |
-| `moodLogs/{logId}` | `userId` | Crear si el nuevo documento tiene el UID propio; leer y borrar si el documento existente pertenece al usuario; actualizar si dueño existente y nuevo `userId` propio. | El servicio conserva campos de `MoodLog`; su tipo aún describe `mood` como 1–5, mientras la interfaz y algunos documentos hablan de 1–10. |
+| `moodLogs/{logId}` | `userId` | Crear si el nuevo documento tiene el UID propio; leer y borrar si el documento existente pertenece al usuario; actualizar si dueño existente y nuevo `userId` propio. | La escala canónica de ánimo del producto es 1–10; los registros históricos no se convierten automáticamente. |
 | `journalEntries/{entryId}` | `userId` | Propiedad comprobada al crear, leer, actualizar y borrar. | El servicio persiste texto en claro, fecha, etiquetas, estado de ánimo y datos opcionales de análisis. No existe cifrado cliente. |
 | `notifications/{notificationId}` | `userId` | Crear con `userId` propio; leer/borrar del dueño; actualizar sin cambiar propietario. | Otros servicios pueden producir campos/esquemas diferentes; confirmar cada llamador. |
 | `advancedReports/{reportId}` | `userId` | Crear con UID propio; acceso del dueño; actualizar sin cambiar propietario. | Verificar si el flujo activo persiste estos documentos. |
@@ -30,7 +30,7 @@ La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). 
 
 ### Registro de ánimo (`moodLogs`)
 
-`moodLogService` recibe un `MoodLog` y escribe el objeto recibido junto con `createdAt` y `updatedAt`. La interfaz actual `MoodLog` incluye `userId`, `mood`, `energy`, `stress`, `sleep`, `notes`, `activities`, `emotions` y `aiAnalysis`. El tipo comenta `mood` en escala 1–5; algunas pantallas/documentos describen otra escala. No asumir compatibilidad entre registros existentes: primero definir un modelo canónico y una estrategia de migración/visualización.
+`moodLogService` recibe un `MoodLog` y escribe el objeto recibido junto con `createdAt` y `updatedAt`. La interfaz actual `MoodLog` incluye `userId`, `mood`, `energy`, `stress`, `sleep`, `notes`, `activities`, `emotions` y `aiAnalysis`. La escala canónica de ánimo es 1–10, como utiliza el flujo de registro; esta definición no transforma registros históricos. Las métricas usan fechas de calendario local.
 
 ### Entrada de diario (`journalEntries`)
 

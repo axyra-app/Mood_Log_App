@@ -23,7 +23,7 @@ export interface User {
 export interface MoodLog {
   id: string;
   userId: string;
-  mood: number; // 1-5 scale
+  mood: number; // 1-10 scale
   energy: number; // 1-10 scale
   stress: number; // 1-10 scale
   sleep: number; // 1-10 scale

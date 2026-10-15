@@ -9,14 +9,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
+import { toDate } from '../utils/moodMetrics';
 
 const DashboardSimple: React.FC = () => {
   // Dashboard con logo personalizado
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
-  const { moodLogs, loading: moodLoading, getMoodStreak, getAverageMood } = useMood();
-  const { entries: journalEntries } = useJournal(user?.uid || '');
+  const { moodLogs, loading: moodLoading, error: moodError, getMoodStreak, getAverageMood } = useMood();
+  const {
+    entries: journalEntries,
+    loading: journalLoading,
+    error: journalError,
+    retryEntries,
+  } = useJournal(user?.uid || '');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -24,13 +30,12 @@ const DashboardSimple: React.FC = () => {
     setIsLoaded(true);
   }, []);
 
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - 6);
   const weeklyLogs = moodLogs.filter((log) => {
-    const rawDate = log.createdAt as any;
-    const logDate =
-      rawDate && typeof rawDate.toDate === 'function' ? rawDate.toDate() : new Date(rawDate);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return logDate >= weekAgo;
+    const logDate = toDate(log.createdAt);
+    return logDate !== null && logDate >= weekStart && logDate <= new Date();
   });
 
   const averageMood = getAverageMood(7);
@@ -116,6 +121,12 @@ const DashboardSimple: React.FC = () => {
 
       {/* Main Content */}
       <main className='max-w-7xl mx-auto mobile-padding py-4 sm:py-6 lg:py-8'>
+        {moodError && (
+          <div className='mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>
+            No se pudieron actualizar tus registros de ánimo: {moodError}
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className='mb-6 sm:mb-8'>
           <h2 className={`mobile-heading font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -161,7 +172,14 @@ const DashboardSimple: React.FC = () => {
           </div>
 
           <div className='mobile-card'>
-            {journalEntries.length === 0 ? (
+            {journalError ? (
+              <div className='py-6 text-center'>
+                <p className={`${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>No se pudo cargar el diario.</p>
+                <button onClick={retryEntries} className='mt-2 text-sm underline'>Reintentar</button>
+              </div>
+            ) : journalLoading && journalEntries.length === 0 ? (
+              <div className='py-8 text-center text-gray-500'>Cargando el diario...</div>
+            ) : journalEntries.length === 0 ? (
               <div className='text-center py-8'>
                 <div className='text-6xl mb-4'>📝</div>
                 <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>

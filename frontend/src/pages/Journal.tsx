@@ -14,7 +14,7 @@ const Journal: React.FC = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { entries, templates, loading, error, deleteEntry } =
+  const { entries, templates, loading, error, deleteEntry, retryEntries } =
     useJournal(user?.uid || '');
 
   const [showEditor, setShowEditor] = useState(false);
@@ -57,7 +57,7 @@ const Journal: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error('Error al cargar el diario');
+      toast.error(error);
     }
   }, [error]);
 
@@ -229,7 +229,14 @@ const Journal: React.FC = () => {
         </div>
 
         {/* Lista de entradas */}
-        {filteredEntries.length === 0 ? (
+        {error && (
+          <div className='mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>
+            <p>No se pudo cargar o actualizar el diario: {error}</p>
+            <button onClick={retryEntries} className='mt-2 underline'>Reintentar carga</button>
+          </div>
+        )}
+
+        {!error && filteredEntries.length === 0 ? (
           <div className='text-center py-12'>
             <div className='text-6xl mb-4'>📝</div>
             <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
@@ -249,7 +256,7 @@ const Journal: React.FC = () => {
               </button>
             )}
           </div>
-        ) : (
+        ) : !error ? (
           <div className='grid gap-4 sm:gap-6'>
             {filteredEntries.map((entry) => (
               <div
@@ -438,7 +445,7 @@ const Journal: React.FC = () => {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Editor de Diario */}

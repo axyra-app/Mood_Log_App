@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  createMoodLogWithAI,
+  createMoodLog as saveMoodLog,
   deleteMoodLog,
   getMoodLogsByUser,
   getMoodStatistics,
@@ -9,12 +9,12 @@ import {
   updateMoodLog,
 } from '../services/moodLogService';
 import { MoodLog } from '../types';
-
-const toJsDate = (d: any): Date => {
-  if (d && typeof d.toDate === 'function') return d.toDate();
-  if (d instanceof Date) return d;
-  return new Date(d || Date.now());
-};
+import {
+  getAverageMoodForDays,
+  getMoodStreak as calculateMoodStreak,
+  getMoodTrend as calculateMoodTrend,
+  toDate,
+} from '../utils/moodMetrics';
 
 export const useMood = () => {
   const { user } = useAuth();
@@ -65,7 +65,7 @@ export const useMood = () => {
       try {
         setLoading(true);
         setError(null);
-        const moodLogId = await createMoodLogWithAI({
+        const moodLogId = await saveMoodLog({
           ...moodData,
           userId: user.uid,
         });
@@ -127,104 +127,20 @@ export const useMood = () => {
   const getTodaysMoodLog = useCallback(() => {
     if (!moodLogs.length) return null;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
     return moodLogs.find((log) => {
-      const logDate = toJsDate(log.createdAt);
-      return logDate >= today && logDate < tomorrow;
+      const logDate = toDate(log.createdAt);
+      return logDate?.toDateString() === new Date().toDateString();
     });
   }, [moodLogs]);
 
-  // Get mood trend
-  const getMoodTrend = useCallback(() => {
-    if (moodLogs.length < 2) return 'stable';
+  const getMoodTrend = useCallback(() => calculateMoodTrend(moodLogs), [moodLogs]);
 
-    const recent = moodLogs.slice(0, 7); // Last 7 days
-    const older = moodLogs.slice(7, 14); // Previous 7 days
-
-    if (recent.length === 0 || older.length === 0) return 'stable';
-
-    const recentAvg = recent.reduce((sum, log) => sum + log.mood, 0) / recent.length;
-    const olderAvg = older.reduce((sum, log) => sum + log.mood, 0) / older.length;
-
-    const difference = recentAvg - olderAvg;
-    if (difference > 0.2) return 'improving';
-    if (difference < -0.2) return 'declining';
-    return 'stable';
-  }, [moodLogs]);
-
-  // Get average mood for period
   const getAverageMood = useCallback(
-    (days: number = 7) => {
-      const recent = moodLogs.slice(0, days);
-      if (recent.length === 0) return 0;
-
-      return recent.reduce((sum, log) => sum + log.mood, 0) / recent.length;
-    },
-    [moodLogs]
+    (days: number = 7) => getAverageMoodForDays(moodLogs, days) ?? 0,
+    [moodLogs],
   );
 
-  // Get mood streak
-  const getMoodStreak = useCallback(() => {
-    if (moodLogs.length === 0) return 0;
-
-    let streak = 0;
-    const now = new Date();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Ordenar logs por fecha (más reciente primero)
-    const sortedLogs = [...moodLogs].sort((a, b) => {
-      const dateA = toJsDate(a.createdAt);
-      const dateB = toJsDate(b.createdAt);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    // Agrupar logs por día (tomar solo el primer log de cada día)
-    const logsByDay = new Map();
-    sortedLogs.forEach(log => {
-      const logDate = toJsDate(log.createdAt);
-      logDate.setHours(0, 0, 0, 0);
-      
-      const dateKey = logDate.getTime();
-      if (!logsByDay.has(dateKey)) {
-        logsByDay.set(dateKey, logDate);
-      }
-    });
-
-    // Convertir a array de fechas únicas ordenadas
-    const uniqueDates = Array.from(logsByDay.values()).sort((a, b) => b.getTime() - a.getTime());
-
-    // Calcular racha desde el día más reciente
-    for (let i = 0; i < uniqueDates.length; i++) {
-      const logDate = uniqueDates[i];
-      const expectedDate = new Date(today);
-      expectedDate.setDate(expectedDate.getDate() - i);
-
-      // Verificar si han pasado más de 24 horas desde el último log
-      if (i === 0) {
-        const lastLogTime = toJsDate(sortedLogs[0].createdAt);
-        
-        const hoursSinceLastLog = (now.getTime() - lastLogTime.getTime()) / (1000 * 60 * 60);
-        
-        // Si han pasado más de 24 horas, reiniciar la racha
-        if (hoursSinceLastLog > 24) {
-          return 0;
-        }
-      }
-
-      if (logDate.getTime() === expectedDate.getTime()) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-
-    return streak;
-  }, [moodLogs]);
+  const getMoodStreak = useCallback(() => calculateMoodStreak(moodLogs), [moodLogs]);
 
   // Setup real-time subscription
   useEffect(() => {
@@ -234,6 +150,7 @@ export const useMood = () => {
       if (isMounted) {
         setMoodLogs([]);
         setStatistics(null);
+        setError(null);
       }
       return;
     }
@@ -249,11 +166,18 @@ export const useMood = () => {
 
     initializeData();
 
-    const unsubscribe = subscribeToMoodLogs(user.uid, (logs) => {
-      if (isMounted) {
-        setMoodLogs(logs);
-      }
-    });
+    const unsubscribe = subscribeToMoodLogs(
+      user.uid,
+      (logs) => {
+        if (isMounted) {
+          setMoodLogs(logs);
+          setError(null);
+        }
+      },
+      (subscriptionError) => {
+        if (isMounted) setError(subscriptionError.message);
+      },
+    );
 
     return () => {
       isMounted = false;

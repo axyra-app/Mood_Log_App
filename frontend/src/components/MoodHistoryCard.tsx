@@ -1,4 +1,4 @@
-import { Calendar, Edit, Heart, Smile, TrendingUp } from 'lucide-react';
+import { Calendar, Edit, Heart, Smile, Trash2, TrendingUp } from 'lucide-react';
 import React from 'react';
 
 interface MoodLog {
@@ -16,9 +16,10 @@ interface MoodHistoryCardProps {
   moodLog: MoodLog;
   isDarkMode?: boolean;
   onEdit?: (moodLog: MoodLog) => void;
+  onDelete?: (moodLog: MoodLog) => void;
 }
 
-const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode = false, onEdit }) => {
+const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode = false, onEdit, onDelete }) => {
 
   const getMoodEmoji = (mood: number) => {
     if (mood >= 9) return '😊';
@@ -134,15 +135,33 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
             {formatTime(moodLog.createdAt)}
           </span>
         </div>
-        <button
-          onClick={handleEditClick}
-          className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
-            isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
-          }`}
-          title="Editar estado de ánimo"
-        >
-          <Edit className="w-4 h-4" />
-        </button>
+        <div className='flex items-center gap-1'>
+          <button
+            onClick={handleEditClick}
+            className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
+              isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+            }`}
+            title='Editar estado de ánimo'
+            aria-label='Editar estado de ánimo'
+          >
+            <Edit className='w-4 h-4' />
+          </button>
+          {onDelete && (
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(moodLog);
+              }}
+              className={`p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors ${
+                isDarkMode ? 'text-gray-400 hover:text-red-300' : 'text-gray-400 hover:text-red-600'
+              }`}
+              title='Eliminar estado de ánimo'
+              aria-label='Eliminar estado de ánimo'
+            >
+              <Trash2 className='w-4 h-4' />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Estado de ánimo principal */}

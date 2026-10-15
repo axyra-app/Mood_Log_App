@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import LogoutModal from '../components/LogoutModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useMood } from '../hooks/useMood';
-import { aiService, MoodAnalysisResult } from '../services/aiService';
+import { moodAnalyzerAgent } from '../services/specializedAgents';
+import { AIRecommendation, MoodAnalysisResult } from '../services/aiService';
 import Logo from '../components/Logo';
 
 const MoodFlowSimple: React.FC = () => {
@@ -27,6 +29,7 @@ const MoodFlowSimple: React.FC = () => {
   const [moodData, setMoodData] = useState<any>(null);
   const [aiAnalysis, setAiAnalysis] = useState<MoodAnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useState(false);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😔', '😐', '🙂', '😊', '😄', '🤩', '🥰', '😍', '🌟'];
@@ -104,53 +107,76 @@ const MoodFlowSimple: React.FC = () => {
 
       const result = await createMoodLog(moodLogData);
       setMoodData(result);
-      
-      // Generate AI analysis
-      setAnalyzing(true);
-      try {
-        const analysis = await aiService.analyzeMood({
-          overallMood: currentMood,
+      setAiAnalysis(null);
+      setShowAnalysis(true);
+      toast.success('Estado de ánimo guardado.');
+    } catch (error) {
+      console.error('Error creating mood log:', error);
+      toast.error(error instanceof Error ? error.message : 'No se pudo guardar el estado de ánimo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnalyzeMood = async () => {
+    if (!aiDataConsent) {
+      toast.error('Confirma el envío de estos datos antes de solicitar el análisis.');
+      return;
+    }
+    if (currentMood === null || !moodData) return;
+
+    setAnalyzing(true);
+    try {
+      const response = await moodAnalyzerAgent.analyzeMood({
+        moodLogs: [{
+          mood: currentMood,
           energy,
           stress,
           sleep,
           activities,
           emotions,
-          feelings,
-        });
-        setAiAnalysis(analysis);
-      } catch (aiError) {
-        console.error('Error generating AI analysis:', aiError);
-        // Provide fallback analysis
-        const fallbackAnalysis = {
-          summary: 'Análisis básico basado en tus datos',
-          insights: [
-            `Estado de ánimo: ${currentMood <= 3 ? 'Bajo' : currentMood >= 8 ? 'Alto' : 'Moderado'}`,
-            `Energía: ${energy < 4 ? 'Baja' : energy > 7 ? 'Alta' : 'Moderada'}`,
-            `Estrés: ${stress > 7 ? 'Alto' : stress < 4 ? 'Bajo' : 'Moderado'}`
-          ],
-          recommendations: [
-            {
-              type: 'general' as const,
-              priority: 'medium' as const,
-              title: 'Continúa registrando',
-              description: 'Mantén el hábito de registrar tu estado de ánimo diariamente.',
-              actionable: 'Intenta registrar tu estado de ánimo a la misma hora cada día.',
-              category: 'Hábitos'
-            }
-          ],
-          moodTrend: 'stable' as const,
-          riskLevel: 'low' as const
-        };
-        setAiAnalysis(fallbackAnalysis);
-      } finally {
-        setAnalyzing(false);
-      }
-      
-      setShowAnalysis(true);
+          notes: feelings,
+          createdAt: new Date().toISOString(),
+        }],
+      }) as Record<string, unknown>;
+      const asTextList = (value: unknown): string[] =>
+        Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+      const summary = typeof response.summary === 'string' ? response.summary : '';
+      const insights = asTextList(response.insights);
+      const recommendations: AIRecommendation[] = asTextList(response.recommendations).map((description) => ({
+        type: 'general',
+        priority: 'medium',
+        title: 'Sugerencia para reflexionar',
+        description,
+        actionable: description,
+        category: 'Autorreflexión',
+      }));
+      const moodTrend = response.moodTrend === 'improving' || response.moodTrend === 'declining'
+        ? response.moodTrend
+        : 'stable';
+      const riskLevel = response.riskLevel === 'medium' || response.riskLevel === 'high'
+        ? response.riskLevel
+        : 'low';
+
+      setAiAnalysis({
+        summary,
+        insights,
+        recommendations,
+        moodTrend,
+        riskLevel,
+        textualAnalysis: {
+          title: 'Reflexión sobre tu registro',
+          description: summary,
+          insights,
+          recommendations: asTextList(response.nextSteps),
+        },
+      });
+      toast.success('Reflexión generada.');
     } catch (error) {
-      console.error('Error creating mood log:', error);
+      console.error('Error generating mood analysis:', error);
+      toast.error(error instanceof Error ? error.message : 'No se pudo generar el análisis.');
     } finally {
-      setLoading(false);
+      setAnalyzing(false);
     }
   };
 
@@ -560,7 +586,7 @@ const MoodFlowSimple: React.FC = () => {
                     loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 text-white hover:bg-purple-700'
                   }`}
                 >
-                  {loading ? 'Guardando...' : 'Guardar y Analizar'}
+                  {loading ? 'Guardando...' : 'Guardar registro'}
                 </button>
               </div>
             </div>
@@ -589,7 +615,7 @@ const MoodFlowSimple: React.FC = () => {
                 </h4>
                 <div className='mt-2 space-y-2'>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    <strong>Estado:</strong> {moodLabels[currentMood! - 1]} ({currentMood}/5)
+                    <strong>Estado:</strong> {moodLabels[currentMood! - 1]} ({currentMood}/10)
                   </p>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     <strong>Energía:</strong> {energy}/10 {energy >= 7 ? '🔋' : energy >= 4 ? '⚡' : '🔋'}
@@ -602,6 +628,26 @@ const MoodFlowSimple: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              <label className='flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300'>
+                <input
+                  type='checkbox'
+                  checked={aiDataConsent}
+                  onChange={(event) => setAiDataConsent(event.target.checked)}
+                  className='mt-1'
+                />
+                <span>Si solicito una reflexión, entiendo que mi estado de ánimo, medidas, actividades, emociones y notas se enviarán a Groq.</span>
+              </label>
+              {!aiAnalysis && (
+                <button
+                  type='button'
+                  onClick={handleAnalyzeMood}
+                  disabled={analyzing || !aiDataConsent}
+                  className='px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50'
+                >
+                  {analyzing ? 'Analizando...' : 'Solicitar reflexión con IA'}
+                </button>
+              )}
 
               {/* Análisis 1: Estrategias de Regulación Emocional */}
               {aiAnalysis?.emotionalRegulation && (

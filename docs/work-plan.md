@@ -19,8 +19,8 @@
 |---|---|---|---|
 | 0. Alcance y restricciones | Delimitar el núcleo: check-in manual, diario, historial y resúmenes descriptivos. Registrar lo que se pospone y conservar Firebase como arquitectura existente, sin aprobar migración. | Alcance reflejado en la documentación de producto y biometría; decisiones pendientes explícitas. | **Completada** |
 | 1. Seguridad de Firebase | Auditar reglas de Firestore y Storage frente a llamadores activos. Crear pruebas de autorización para propietario, otra cuenta y usuario anónimo; corregir brechas confirmadas sin romper flujos; revisar CI y dependencias de producción. | Pruebas negativas y positivas reproducibles en emulador; reglas locales alineadas con las operaciones; dependencias de producción sin avisos conocidos; ningún despliegue implícito. | **En curso** |
-| 2. Modelo canónico | Confirmar escala de ánimo, frecuencia de entradas por día, zona horaria/fecha, campos del diario y procedencia por observación. Comparar con los documentos y servicios existentes. | Decisiones registradas y estrategia de compatibilidad/migración propuesta antes de cambiar esquema. | Pendiente |
-| 3. Flujos centrales | Probar creación, consulta, edición y borrado de ánimo y diario, además de historial, formularios, estados vacíos, fallos y uso móvil. | Recorridos completos en entorno aislado; datos y estados consistentes tras recarga. | Pendiente |
+| 2. Modelo canónico | Confirmar escala de ánimo, frecuencia de entradas por día, zona horaria/fecha, campos del diario y procedencia por observación. Comparar con los documentos y servicios existentes. | Decisiones registradas y estrategia de compatibilidad/migración propuesta antes de cambiar esquema. | **Parcial** |
+| 3. Flujos centrales | Probar creación, consulta, edición y borrado de ánimo y diario, además de historial, formularios, estados vacíos, fallos y uso móvil. | Recorridos completos en entorno aislado; datos y estados consistentes tras recarga. | **En curso** |
 | 4. Calidad automatizada | Incorporar typecheck y pruebas pertinentes al flujo automatizado; ejecutar build y dejar comandos y resultados documentados. | CI valida tipos y pruebas relevantes, además del build; fallos visibles y reproducibles. | **Parcial** |
 | 5. Descubrimiento biométrico | Solo tras completar seguridad/modelo: validar un prototipo con fixtures sintéticos y estudiar importación local iniciada por la persona. | Prueba de concepto con límites, consentimiento, borrado y evaluación documentados; sin ingesta real ni persistencia cloud no aprobada. | Bloqueada por etapas 1–4 |
 
@@ -39,8 +39,8 @@ Las pruebas actuales cubren perfiles/roles, acceso propietario/otra cuenta/anón
 
 ## Decisiones que se deben cerrar en la etapa 2
 
-1. **Escala:** el repositorio contiene referencias incompatibles a escalas distintas. No convertir ni borrar registros hasta fijar la escala canónica y definir cómo presentar datos históricos.
-2. **Frecuencia diaria:** decidir si se admite un registro o varios por día y qué zona horaria define el día. No imponer todavía unicidad por `(userId, fecha)`.
+1. **Escala:** decisión confirmada: usar 1–10, consistente con el registro activo. No convertir ni borrar registros históricos.
+2. **Frecuencia diaria:** el flujo actual permite varios registros por día; mantenerlo y no imponer unicidad por `(userId, fecha)` hasta que producto decida lo contrario. Las rachas actuales usan días calendario locales del dispositivo; una zona horaria de cuenta sigue pendiente.
 3. **Procedencia:** fuente y calidad pertenecen a cada observación de una métrica, no a un registro compuesto de ánimo que puede mezclar entradas manuales e importadas.
 4. **Backend:** conservar Firebase durante las etapas iniciales. Una migración requiere decisión, análisis, plan de reversión y aprobación aparte.
 

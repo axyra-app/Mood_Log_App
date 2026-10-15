@@ -39,7 +39,7 @@ Permitir que una persona que lo elige:
 - No está decidido si en una fase futura se analizará semánticamente el texto libre del diario.
 - La propuesta de implementación compartida menciona un backend distinto, pero el repositorio actual documenta Firebase. No se aprueba una migración por inferencia; debe resolverse como decisión arquitectónica separada.
 - No está decidido si se permite más de un check-in de ánimo por día. El diseño debe soportar la decisión de producto sin imponer un índice único prematuro.
-- La escala de ánimo canónica debe consolidarse con el modelo y la UI existentes antes de diseñar persistencia nueva; no asumir una escala 1–5 por estar en la propuesta.
+- La escala canónica confirmada para el producto es 1–10, coherente con el flujo actual. No asumir la escala 1–5 de la propuesta ni transformar registros históricos.
 - No existe integración implementada al momento de escribir esta especificación.
 
 ## 5. Alcance candidato del MVP

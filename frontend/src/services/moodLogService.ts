@@ -108,59 +108,30 @@ export const deleteMoodLog = async (moodLogId: string): Promise<void> => {
   }
 };
 
-// AI Analysis Integration
-export const createMoodLogWithAI = async (
-  moodData: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt' | 'aiAnalysis'>
-): Promise<string> => {
-  try {
-    // Simple analysis without AI
-    const aiAnalysis = {
-      insights: ['Análisis básico disponible'],
-      recommendations: ['Continúa registrando tu estado de ánimo'],
-      patterns: ['Patrón básico detectado']
-    };
-
-    // Create mood log with AI analysis
-    const moodLogsRef = collection(db, 'moodLogs');
-    const docRef = await addDoc(moodLogsRef, {
-      ...moodData,
-      aiAnalysis,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating mood log with AI:', error);
-    // Fallback: create without AI analysis
-    return await createMoodLog(moodData);
-  }
-};
-
 // Real-time subscriptions
-export const subscribeToMoodLogs = (userId: string, callback: (moodLogs: MoodLog[]) => void) => {
+export const subscribeToMoodLogs = (
+  userId: string,
+  callback: (moodLogs: MoodLog[]) => void,
+  onError: (error: Error) => void,
+) => {
   try {
     const moodLogsRef = collection(db, 'moodLogs');
     const q = query(moodLogsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(50));
 
     return onSnapshot(q, (querySnapshot) => {
-      try {
-        const moodLogs = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as MoodLog[];
-        callback(moodLogs);
-      } catch (error) {
-        console.error('Error processing mood logs snapshot:', error);
-        callback([]);
-      }
+      const moodLogs = querySnapshot.docs.map((snapshot) => ({
+        id: snapshot.id,
+        ...snapshot.data(),
+      })) as MoodLog[];
+      callback(moodLogs);
     }, (error) => {
       console.error('Error in mood logs subscription:', error);
-      callback([]);
+      onError(error);
     });
   } catch (error) {
     console.error('Error setting up mood logs subscription:', error);
-    return () => {}; // Return empty unsubscribe function
+    onError(error instanceof Error ? error : new Error('Unable to subscribe to mood logs.'));
+    return () => {};
   }
 };
 
@@ -230,7 +201,7 @@ export const getMoodStatistics = async (userId: string, days: number = 30) => {
     // Most common emotions
     const emotionCounts: Record<string, number> = {};
     moodLogs.forEach((log) => {
-      log.emotions.forEach((emotion) => {
+      (log.emotions || []).forEach((emotion) => {
         emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
       });
     });
@@ -243,7 +214,7 @@ export const getMoodStatistics = async (userId: string, days: number = 30) => {
     // Most common activities
     const activityCounts: Record<string, number> = {};
     moodLogs.forEach((log) => {
-      log.activities.forEach((activity) => {
+      (log.activities || []).forEach((activity) => {
         activityCounts[activity] = (activityCounts[activity] || 0) + 1;
       });
     });
@@ -341,9 +312,9 @@ export const searchMoodLogs = async (
     if (searchTerm) {
       moodLogs = moodLogs.filter(
         (log) =>
-          log.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          log.emotions.some((emotion) => emotion.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          log.activities.some((activity) => activity.toLowerCase().includes(searchTerm.toLowerCase()))
+          (log.notes || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (log.emotions || []).some((emotion) => emotion.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (log.activities || []).some((activity) => activity.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -375,9 +346,9 @@ export const exportMoodData = async (userId: string, format: 'json' | 'csv' = 'j
           (log.energy || 0).toString(),
           (log.stress || 0).toString(),
           (log.sleep || 0).toString(),
-          `"${log.notes.replace(/"/g, '""')}"`,
-          `"${log.emotions.join('; ')}"`,
-          `"${log.activities.join('; ')}"`,
+          `"${(log.notes || '').replace(/"/g, '""')}"`,
+          `"${(log.emotions || []).join('; ')}"`,
+          `"${(log.activities || []).join('; ')}"`,
         ];
         csvRows.push(row.join(','));
       });

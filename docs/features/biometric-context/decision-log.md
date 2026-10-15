@@ -62,11 +62,11 @@ Este documento registra decisiones de la feature `FEAT-BIO-001`. Los estados ind
 
 ## ADR-BIO-008 — Frecuencia y escala del check-in
 
-- **Estado:** pendiente de producto
+- **Estado:** escala resuelta; frecuencia y zona horaria pendientes
 - **Fecha:** 14 de octubre de 2026
-- **Contexto:** la propuesta sugiere un único registro por día y una escala 1–5, mientras que el producto/repositorio existente presenta una escala de ánimo distinta.
-- **Decisión pendiente:** determinar cuántas entradas se permiten por día, qué zona horaria define el día, y cuál será la escala canónica tras revisar datos existentes y migración.
-- **Restricción provisional:** no imponer unicidad `(user_id, entry_date)` ni reducir/transformar la escala en el esquema nuevo hasta tomar la decisión.
+- **Contexto:** el flujo activo permite varios registros por día y usa escala 1–10; la propuesta biométrica sugiere un único registro diario y escala 1–5.
+- **Decisión:** conservar 1–10 y no imponer unicidad diaria ni transformar registros históricos.
+- **Pendiente:** definir una zona horaria de cuenta si se necesita que las rachas y los períodos sean consistentes entre dispositivos.
 
 ## ADR-BIO-009 — Correlaciones en la primera versión
 

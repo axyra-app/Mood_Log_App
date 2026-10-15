@@ -12,26 +12,35 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
-import { aiService } from '../services/aiService';
+import { moodAnalyzerAgent } from '../services/specializedAgents';
+import { MoodLog } from '../types';
+import { toDate } from '../utils/moodMetrics';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
-  const { statistics, loading, getMoodTrend, getAverageMood, getMoodStreak } = useMood();
+  const { moodLogs, loading, error, getMoodTrend, getMoodStreak } = useMood();
   const { entries: journalEntries } = useJournal(user?.uid || '');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useState(false);
+
+  useEffect(() => {
+    setAiAnalysis(null);
+    setAiDataConsent(false);
+  }, [timeRange]);
 
   // Función para exportar estadísticas como PDF
   const exportStatistics = async () => {
     try {
+      const periodMoodLogs = getLogsInPeriod();
       const doc = new jsPDF();
 
       // Configuración del documento
@@ -90,7 +99,7 @@ const Statistics: React.FC = () => {
 
       // Análisis de IA si está disponible
       if (aiAnalysis) {
-        addText('Análisis Profesional con IA', 16, true, '#374151');
+        addText('Reflexión sobre tu bienestar con IA', 16, true, '#374151');
         yPosition += 5;
 
         if (aiAnalysis.summary) {
@@ -100,22 +109,22 @@ const Statistics: React.FC = () => {
         }
 
         if (aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0) {
-          addText('Recomendaciones:', 14, true, '#374151');
-          aiAnalysis.recommendations.forEach((rec: string) => {
-            addText(`• ${rec}`, 12, false, '#6B7280');
+          addText('Ideas para la autorreflexión:', 14, true, '#374151');
+          aiAnalysis.recommendations.forEach((rec: unknown) => {
+          addText(`• ${typeof rec === 'string' ? rec : JSON.stringify(rec)}`, 12, false, '#6B7280');
           });
           yPosition += 5;
         }
       }
 
       // Actividad reciente
-      if (statistics?.moodLogs && statistics.moodLogs.length > 0) {
+      if (periodMoodLogs.length > 0) {
         addText('Actividad Reciente', 16, true, '#374151');
         yPosition += 5;
 
-        const recentLogs = statistics.moodLogs.slice(0, 10);
+        const recentLogs = periodMoodLogs.slice(0, 10);
         recentLogs.forEach((log: any) => {
-          const date = new Date(log.createdAt).toLocaleDateString('es-CO');
+          const date = toDate(log.createdAt)?.toLocaleDateString('es-CO') || 'Fecha inválida';
           const moodLevel = getMoodLevel(log.mood);
           addText(`${date}: ${moodLevel.level} (${log.mood}/10)`, 12, false, '#6B7280');
         });
@@ -166,6 +175,7 @@ const Statistics: React.FC = () => {
         // Lunes de esta semana
         const monday = new Date(now);
         monday.setDate(now.getDate() - now.getDay() + 1);
+        monday.setHours(0, 0, 0, 0);
         startDate = monday;
         break;
       case 'month':
@@ -183,56 +193,57 @@ const Statistics: React.FC = () => {
 
   // Generar análisis con IA profesional
   const generateAIAnalysis = async () => {
+    if (!aiDataConsent) {
+      toast.error('Confirma el envío de estos datos antes de solicitar el análisis.');
+      return;
+    }
+
+    const logs = getLogsInPeriod();
+    if (logs.length === 0) {
+      toast.error('No hay registros de ánimo en este período para analizar.');
+      return;
+    }
+
     setAnalyzing(true);
     try {
-      const { startDate, endDate } = getPeriodData();
-
-      // Obtener datos de estado de ánimo del período
-      const moodLogs: any[] = statistics?.moodLogs?.filter((log: any) => {
-        const logDate = new Date(log.createdAt);
-        return logDate >= startDate && logDate <= endDate;
-      }) || [];
-
-      // Crear datos para el análisis de IA
-      const moodData = {
-        overallMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
-        energy: moodLogs.length > 0 ? moodLogs.reduce((sum: number, log: any) => sum + (log.energy || 5), 0) / moodLogs.length : 5,
-        stress: moodLogs.length > 0 ? moodLogs.reduce((sum: number, log: any) => sum + (log.stress || 5), 0) / moodLogs.length : 5,
-        sleep: moodLogs.length > 0 ? moodLogs.reduce((sum: number, log: any) => sum + (log.sleep || 5), 0) / moodLogs.length : 5,
-        emotions: moodLogs.flatMap((log: any) => log.emotions || []),
-        activities: moodLogs.flatMap((log: any) => log.activities || []),
-        feelings: moodLogs.length > 0 ? moodLogs[moodLogs.length - 1]?.feelings || '' : '',
-      };
-
-      const analysis = await aiService.analyzeMood(moodData);
+      const analysis = await moodAnalyzerAgent.analyzeMood({
+        period: timeRange,
+        moodLogs: logs.slice(0, 60).map((log) => ({
+          date: toDate(log.createdAt)?.toISOString(),
+          mood: log.mood,
+          energy: log.energy,
+          stress: log.stress,
+          sleep: log.sleep,
+          emotions: log.emotions || [],
+          activities: log.activities || [],
+          notes: log.notes || '',
+        })),
+      });
       setAiAnalysis(analysis);
 
       toast.success('Análisis de IA generado exitosamente');
     } catch (error) {
       console.error('Error generating AI analysis:', error);
-      toast.error('Error al generar análisis de IA');
+      toast.error(error instanceof Error ? error.message : 'Error al generar análisis de IA');
     } finally {
       setAnalyzing(false);
     }
   };
 
+  const getLogsInPeriod = () => {
+    const { startDate, endDate } = getPeriodData();
+    return moodLogs.filter((log) => {
+      const logDate = toDate(log.createdAt);
+      return logDate !== null && logDate >= startDate && logDate <= endDate;
+    });
+  };
+
   // Estadísticas del período
   const periodStats = {
-    totalMoodLogs: (() => {
-      if (!statistics?.moodLogs || statistics.moodLogs.length === 0) {
-        return 0;
-      }
-      
-      const { startDate, endDate } = getPeriodData();
-      
-      const logsInPeriod = statistics.moodLogs.filter((log: any) => {
-        const logDate = new Date(log.createdAt);
-        return logDate >= startDate && logDate <= endDate;
-      });
-      
-      return logsInPeriod.length;
-    })(),
-    averageMood: getAverageMood(timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365),
+    totalMoodLogs: getLogsInPeriod().length,
+    averageMood: getLogsInPeriod().length
+      ? getLogsInPeriod().reduce((sum, log) => sum + log.mood, 0) / getLogsInPeriod().length
+      : 0,
     streak: getMoodStreak(),
     trend: getMoodTrend(),
     journalEntries: journalEntries.filter((entry) => {
@@ -333,6 +344,12 @@ const Statistics: React.FC = () => {
       />
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+        {error && (
+          <div className='mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>
+            No se pudieron cargar todos tus registros: {error}
+          </div>
+        )}
+
         {/* Información del Período */}
         <div className='mb-6'>
           <p className='text-sm text-gray-600 dark:text-gray-400'>
@@ -347,8 +364,8 @@ const Statistics: React.FC = () => {
               <div>
                 <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>Estado de Ánimo Promedio</p>
                 <p className='text-3xl font-bold text-gray-900 dark:text-white'>{periodStats.averageMood.toFixed(1)}</p>
-                <p className={`text-sm font-medium ${moodLevel.color}`}>
-                  {moodLevel.icon} {moodLevel.level}
+                <p className={`text-sm font-medium ${periodStats.totalMoodLogs ? moodLevel.color : 'text-gray-500'}`}>
+                  {periodStats.totalMoodLogs ? `${moodLevel.icon} ${moodLevel.level}` : 'Sin registros'}
                 </p>
               </div>
               <div className='w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center'>
@@ -409,14 +426,14 @@ const Statistics: React.FC = () => {
                 <span className='text-white text-lg'>🧠</span>
               </div>
               <div>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Análisis Profesional con IA</h3>
-                <p className='text-sm text-gray-600 dark:text-gray-300'>Insights psicológicos basados en tus datos</p>
+                <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Reflexión sobre tu bienestar con IA</h3>
+                    <p className='text-sm text-gray-600 dark:text-gray-300'>Observaciones descriptivas, no clínicas</p>
               </div>
             </div>
 
             <button
               onClick={generateAIAnalysis}
-              disabled={analyzing}
+              disabled={analyzing || !aiDataConsent || getLogsInPeriod().length === 0}
               className='px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50'
             >
               <span className='text-lg'>🧠</span>
@@ -424,10 +441,20 @@ const Statistics: React.FC = () => {
             </button>
           </div>
 
+          <label className='mb-4 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300'>
+            <input
+              type='checkbox'
+              checked={aiDataConsent}
+              onChange={(event) => setAiDataConsent(event.target.checked)}
+              className='mt-1'
+            />
+            <span>Entiendo que el estado de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período se enviarán a Groq para generar el análisis.</span>
+          </label>
+
           {analyzing ? (
             <div className='text-center py-8'>
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4'></div>
-              <p className='text-gray-600'>Analizando tus datos con IA profesional...</p>
+              <p className='text-gray-600'>Analizando tus datos...</p>
             </div>
           ) : aiAnalysis ? (
             <div className='space-y-6'>
@@ -485,7 +512,7 @@ const Statistics: React.FC = () => {
                 <div>
                   <h4 className='font-semibold text-gray-900 mb-3 flex items-center'>
                     <Target className='w-5 h-5 mr-2 text-purple-500' />
-                    Recomendaciones Profesionales
+                    Ideas para la autorreflexión
                   </h4>
                   <div className='space-y-4'>
                     {aiAnalysis.recommendations.map((rec: any, index: number) => (
@@ -496,16 +523,16 @@ const Statistics: React.FC = () => {
                         <div className='flex items-start space-x-3'>
                           <Target className='w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0' />
                           <div className='flex-1'>
-                            <h5 className='font-semibold text-purple-800 mb-2'>{rec.title}</h5>
-                            <p className='text-sm text-purple-700 mb-2'>{rec.description}</p>
+                            <h5 className='font-semibold text-purple-800 mb-2'>{typeof rec === 'string' ? 'Sugerencia' : rec.title}</h5>
+                            <p className='text-sm text-purple-700 mb-2'>{typeof rec === 'string' ? rec : rec.description}</p>
                             <div className='bg-white rounded p-3 border border-purple-100'>
-                              <p className='text-sm text-gray-800 whitespace-pre-line'>{rec.actionable}</p>
+                              <p className='text-sm text-gray-800 whitespace-pre-line'>{typeof rec === 'string' ? rec : rec.actionable}</p>
                             </div>
-                            <div className='mt-2'>
+                            {typeof rec !== 'string' && <div className='mt-2'>
                               <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-600'>
                                 {rec.category}
                               </span>
-                            </div>
+                            </div>}
                           </div>
                         </div>
                       </div>
@@ -519,7 +546,7 @@ const Statistics: React.FC = () => {
                 <div className='bg-gray-50 rounded-lg p-4 border'>
                   <h4 className='font-semibold text-gray-900 mb-2 flex items-center'>
                     <AlertTriangle className='w-5 h-5 mr-2 text-orange-500' />
-                    Evaluación de Bienestar
+                    Indicador generado por IA (no clínico)
                   </h4>
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -531,7 +558,7 @@ const Statistics: React.FC = () => {
                     }`}
                   >
                     {aiAnalysis.riskLevel === 'high'
-                      ? 'Requiere Atención'
+                      ? 'Considera buscar apoyo de confianza'
                       : aiAnalysis.riskLevel === 'medium'
                       ? 'Seguimiento Recomendado'
                       : 'Estado Saludable'}
@@ -569,13 +596,15 @@ const Statistics: React.FC = () => {
             }> = [];
 
             // Agregar registros de estado de ánimo
-            if (statistics?.moodLogs) {
-              statistics.moodLogs.forEach((log: any) => {
+            if (moodLogs.length) {
+              moodLogs.forEach((log: MoodLog) => {
+                const date = toDate(log.createdAt);
+                if (!date) return;
                 allActivities.push({
                   type: 'mood',
                   title: 'Estado de ánimo registrado',
-                  description: `Nivel ${log.mood}/5 - ${getMoodLevel(log.mood).level}`,
-                  date: new Date(log.createdAt),
+                  description: `Nivel ${log.mood}/10 - ${getMoodLevel(log.mood).level}`,
+                  date,
                   icon: getMoodLevel(log.mood).icon,
                   color: 'purple',
                 });

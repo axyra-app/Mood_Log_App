@@ -17,7 +17,7 @@ interface MoodEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   moodLog: MoodLog | null;
-  onSave: (updatedMoodLog: MoodLog) => void;
+  onSave: (updatedMoodLog: MoodLog) => Promise<void> | void;
   isDarkMode?: boolean;
 }
 
@@ -35,6 +35,7 @@ const MoodEditModal: React.FC<MoodEditModalProps> = ({
     sleep: 5,
     notes: ''
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (moodLog) {
@@ -48,7 +49,7 @@ const MoodEditModal: React.FC<MoodEditModalProps> = ({
     }
   }, [moodLog]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!moodLog) return;
 
     const updatedMoodLog: MoodLog = {
@@ -60,9 +61,16 @@ const MoodEditModal: React.FC<MoodEditModalProps> = ({
       notes: formData.notes
     };
 
-    onSave(updatedMoodLog);
-    toast.success('Estado de ánimo actualizado correctamente');
-    onClose();
+    setSaving(true);
+    try {
+      await onSave(updatedMoodLog);
+      toast.success('Estado de ánimo actualizado correctamente');
+      onClose();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo actualizar el registro.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const getMoodEmoji = (mood: number) => {
@@ -116,6 +124,7 @@ const MoodEditModal: React.FC<MoodEditModalProps> = ({
             </div>
             <button
               onClick={onClose}
+              disabled={saving}
               className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
                 isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
               }`}
@@ -262,10 +271,11 @@ const MoodEditModal: React.FC<MoodEditModalProps> = ({
           </button>
           <button
             onClick={handleSave}
+            disabled={saving}
             className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
           >
             <Save className="w-4 h-4" />
-            <span>Guardar Cambios</span>
+            <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
           </button>
         </div>
       </div>

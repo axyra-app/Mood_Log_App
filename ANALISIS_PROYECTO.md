@@ -30,17 +30,17 @@ En esta revisión se endurecieron localmente la propiedad de registros, la inmut
 
 **Acción:** unificar contratos de datos, completar validaciones de campos y probar todas las operaciones activas con Firebase Emulator Suite antes de desplegar reglas.
 
-### 2. IA cliente y datos sensibles
+### 2. IA y datos sensibles
 
-`specializedAgents.ts` y `journalService.ts` inicializan Groq desde el navegador usando una variable `VITE_*`. Los valores `VITE_*` se publican con el cliente; no son secretos. El contenido emocional también puede enviarse al proveedor externo según el flujo habilitado.
+Las tareas de IA disponibles pasan por `frontend/api/ai.ts`, una función de servidor autenticada que usa el secreto `GROQ_API_KEY`; la clave no debe configurarse como `VITE_*`. El texto emocional se envía a Groq cuando la persona solicita explícitamente un análisis. La interfaz debe informar qué datos se envían y mostrar los errores del proveedor sin sustituirlos por una respuesta ficticia.
 
-**Acción:** no configurar claves privadas en frontend; trasladar las llamadas a un backend/función con secretos de servidor, limitar datos enviados y documentar proveedor, consentimiento y retención. Si una clave real ya fue incluida en un bundle, revocarla y revisar su uso.
+**Pendiente:** documentar con precisión la retención aplicable en Groq y revisar periódicamente límites, autenticación y datos enviados. Si una clave real llegó a incluirse en un bundle, revocarla y revisar su uso.
 
 ### 3. Modelo de producto aún no consolidado
 
-El tipo `MoodLog` describe `mood` en escala 1–5, mientras algunas pantallas y documentos usan una escala 1–10. El hook de chat mantiene campos profesionales y el servicio `chatService` modela participantes. La interfaz de usuario y `AuthContext` difieren en la representación del rol.
+El tipo y el flujo de registro de `MoodLog` usan la escala canónica 1–10; no se convierten automáticamente valores históricos. El hook de chat mantiene campos profesionales y el servicio `chatService` modela participantes. La interfaz de usuario y `AuthContext` difieren en la representación del rol.
 
-**Acción:** elegir escala/modelo canónico, decidir qué capacidades forman parte del MVP y migrar datos/servicios con compatibilidad explícita.
+**Acción:** mantener coordinados tipos, métricas, vistas y documentación con la escala 1–10, y definir explícitamente cualquier futura migración de datos.
 
 ### 4. Privacidad, crisis y afirmaciones de producto
 

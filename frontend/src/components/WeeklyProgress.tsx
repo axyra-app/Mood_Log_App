@@ -1,5 +1,6 @@
 import { Calendar, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import React from 'react';
+import { toDate } from '../utils/moodMetrics';
 
 interface WeeklyProgressProps {
   moodLogs: any[];
@@ -9,11 +10,13 @@ interface WeeklyProgressProps {
 const WeeklyProgress: React.FC<WeeklyProgressProps> = ({ moodLogs, className = '' }) => {
   const getWeekData = () => {
     const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const firstDay = new Date(now);
+    firstDay.setHours(0, 0, 0, 0);
+    firstDay.setDate(firstDay.getDate() - 6);
 
     const weekLogs = moodLogs.filter((log) => {
-      const logDate = log.createdAt?.toDate ? log.createdAt.toDate() : new Date(log.createdAt);
-      return logDate >= weekAgo;
+      const logDate = toDate(log.createdAt);
+      return logDate !== null && logDate >= firstDay && logDate <= now;
     });
 
     // Crear array de 7 días
@@ -21,10 +24,12 @@ const WeeklyProgress: React.FC<WeeklyProgressProps> = ({ moodLogs, className = '
     const weekData = [];
 
     for (let i = 6; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const date = new Date(now);
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - i);
       const dayLogs = weekLogs.filter((log) => {
-        const logDate = log.createdAt?.toDate ? log.createdAt.toDate() : new Date(log.createdAt);
-        return logDate.toDateString() === date.toDateString();
+        const logDate = toDate(log.createdAt);
+        return logDate?.toDateString() === date.toDateString();
       });
 
       const avgMood = dayLogs.length > 0 ? dayLogs.reduce((sum, log) => sum + log.mood, 0) / dayLogs.length : 0;
@@ -57,17 +62,17 @@ const WeeklyProgress: React.FC<WeeklyProgressProps> = ({ moodLogs, className = '
   };
 
   const getMoodColor = (mood: number) => {
-    if (mood >= 4) return 'bg-green-500';
-    if (mood >= 3) return 'bg-yellow-500';
-    if (mood >= 2) return 'bg-orange-500';
+    if (mood >= 8) return 'bg-green-500';
+    if (mood >= 6) return 'bg-yellow-500';
+    if (mood >= 4) return 'bg-orange-500';
     return 'bg-red-500';
   };
 
   const getMoodEmoji = (mood: number) => {
-    if (mood >= 4.5) return '😊';
-    if (mood >= 3.5) return '🙂';
-    if (mood >= 2.5) return '😐';
-    if (mood >= 1.5) return '😕';
+    if (mood >= 9) return '😊';
+    if (mood >= 7) return '🙂';
+    if (mood >= 5) return '😐';
+    if (mood >= 3) return '😕';
     return '😢';
   };
 
@@ -98,14 +103,14 @@ const WeeklyProgress: React.FC<WeeklyProgressProps> = ({ moodLogs, className = '
         <div className='flex items-center justify-between mb-2'>
           <span className='text-sm text-gray-600'>Promedio semanal</span>
           <span className='text-lg font-bold text-gray-900'>
-            {weekAvg > 0 ? `${Math.round(weekAvg * 10) / 10}/5` : 'N/A'}
+            {weekAvg > 0 ? `${Math.round(weekAvg * 10) / 10}/10` : 'N/A'}
           </span>
         </div>
         {weekAvg > 0 && (
           <div className='w-full bg-gray-200 rounded-full h-2'>
             <div
               className={`h-2 rounded-full ${getMoodColor(weekAvg)}`}
-              style={{ width: `${(weekAvg / 5) * 100}%` }}
+              style={{ width: `${(weekAvg / 10) * 100}%` }}
             ></div>
           </div>
         )}

@@ -6,13 +6,12 @@ import {
   getDefaultPrompts,
   getDefaultTemplates,
   getJournalEntryById,
-  getJournalPrompts,
-  getJournalTemplates,
   updateJournalEntry,
 } from '../services/journalService';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { toDate } from '../utils/moodMetrics';
 
 export const useJournal = (userId: string) => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -20,13 +19,13 @@ export const useJournal = (userId: string) => {
   const [prompts, setPrompts] = useState<JournalPrompt[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [entriesRetry, setEntriesRetry] = useState(0);
 
   // Load journal entries with real-time updates
   const loadEntries = useCallback(
     (limitCount: number = 50) => {
       if (!userId) return () => {};
 
-      
       const journalRef = collection(db, 'journalEntries');
       const q = query(
         journalRef, 
@@ -46,7 +45,7 @@ export const useJournal = (userId: string) => {
               userId: data.userId,
               title: data.title,
               content: data.content,
-              date: data.date?.toDate() || new Date(),
+              date: toDate(data.date) || new Date(),
               tags: data.tags || [],
               mood: data.mood,
               energy: data.energy,
@@ -57,17 +56,18 @@ export const useJournal = (userId: string) => {
               aiSuggestions: data.aiSuggestions || [],
               aiAnalysis: data.aiAnalysis,
               isPrivate: data.isPrivate || false,
-              createdAt: data.createdAt?.toDate() || new Date(),
-              updatedAt: data.updatedAt?.toDate() || new Date(),
+              createdAt: toDate(data.createdAt) || new Date(),
+              updatedAt: toDate(data.updatedAt) || new Date(),
             });
           });
 
           setEntries(journalEntries);
+          setError(null);
           setLoading(false);
         },
         (error) => {
-          console.error('❌ Error in journal entries listener:', error);
-          setError('Error loading journal entries');
+          console.error('Error in journal entries listener:', error);
+          setError(error.message || 'No se pudo cargar el diario.');
           setLoading(false);
         }
       );
@@ -77,46 +77,13 @@ export const useJournal = (userId: string) => {
     [userId]
   );
 
-  // Load templates
-  const loadTemplates = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await getJournalTemplates();
-      
-      // Always use default templates for now to avoid duplication
-      const defaultTemplates = getDefaultTemplates();
-      setTemplates(defaultTemplates);
-    } catch (err) {
-      console.error('❌ Error loading templates:', err);
-      setError(err instanceof Error ? err.message : 'Error loading templates');
-      // Fallback to default templates
-      const defaultTemplates = getDefaultTemplates();
-      setTemplates(defaultTemplates);
-    } finally {
-      setLoading(false);
-    }
+  // Templates and prompts are intentionally local until their Firestore write rules are defined.
+  const loadTemplates = useCallback(() => {
+    setTemplates(getDefaultTemplates());
   }, []);
 
-  // Load prompts
-  const loadPrompts = useCallback(async (category?: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await getJournalPrompts(category);
-      
-      // Always use default prompts for now to avoid duplication
-      const defaultPrompts = getDefaultPrompts();
-      setPrompts(defaultPrompts);
-    } catch (err) {
-      console.error('❌ Error loading prompts:', err);
-      setError(err instanceof Error ? err.message : 'Error loading prompts');
-      // Fallback to default prompts
-      const defaultPrompts = getDefaultPrompts();
-      setPrompts(defaultPrompts);
-    } finally {
-      setLoading(false);
-    }
+  const loadPrompts = useCallback(() => {
+    setPrompts(getDefaultPrompts());
   }, []);
 
   // Create new journal entry
@@ -125,12 +92,10 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
 
-
       const newEntry = await createJournalEntry({
         ...entryData,
       });
 
-      
       // No need to manually update state - the listener will handle it
       return newEntry;
     } catch (err) {
@@ -148,12 +113,10 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
 
-
       await updateJournalEntry(entryId, {
         ...updates,
       });
 
-      
       // No need to manually update state - the listener will handle it
     } catch (err) {
       console.error('❌ Error updating journal entry:', err);
@@ -170,10 +133,7 @@ export const useJournal = (userId: string) => {
       setLoading(true);
       setError(null);
 
-      
       await deleteJournalEntry(entryId);
-      
-      
       // No need to manually update state - the listener will handle it
     } catch (err) {
       console.error('❌ Error deleting journal entry:', err);
@@ -296,26 +256,29 @@ export const useJournal = (userId: string) => {
     return streak;
   }, [entries]);
 
+  const retryEntries = useCallback(() => {
+    setError(null);
+    setEntries([]);
+    setLoading(true);
+    setEntriesRetry((retry) => retry + 1);
+  }, []);
+
   // Load data on mount with real-time listeners
   useEffect(() => {
-    if (userId) {
-      setLoading(true);
-      
-      // Set up real-time listener for journal entries
-      const unsubscribeEntries = loadEntries();
-      
-      // Load templates and prompts (these don't need real-time updates)
-      loadTemplates();
-      loadPrompts();
-
-      // Cleanup function
-      return () => {
-        if (unsubscribeEntries) {
-          unsubscribeEntries();
-        }
-      };
+    if (!userId) {
+      setEntries([]);
+      setLoading(false);
+      setError(null);
+      return;
     }
-  }, [userId, loadEntries, loadTemplates, loadPrompts]);
+
+    setLoading(true);
+    const unsubscribeEntries = loadEntries();
+    loadTemplates();
+    loadPrompts();
+
+    return unsubscribeEntries;
+  }, [userId, entriesRetry, loadEntries, loadTemplates, loadPrompts]);
 
   return {
     // State
@@ -332,6 +295,7 @@ export const useJournal = (userId: string) => {
     getEntry,
     analyzeEntry,
     loadEntries,
+    retryEntries,
     loadTemplates,
     loadPrompts,
 
