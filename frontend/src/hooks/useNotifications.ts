@@ -19,8 +19,7 @@ import { firebaseConnectionManager } from '../services/firebaseConnectionManager
 export interface Notification {
   id: string;
   userId: string;
-  psychologistId?: string;
-  type: 'chat_message' | 'appointment_request' | 'appointment_accepted' | 'appointment_rejected' | 'medical_report' | 'profile_incomplete';
+  type: 'profile_incomplete' | 'general';
   title: string;
   message: string;
   isRead: boolean;
@@ -28,7 +27,7 @@ export interface Notification {
   data?: any;
 }
 
-export const useNotifications = (userId: string, userRole: 'user' | 'psychologist') => {
+export const useNotifications = (userId: string) => {
   const { user, profileLoaded } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,15 +40,14 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     }
 
 
-    // Query diferente según el rol del usuario
     const notificationsQuery = query(
       collection(db, 'notifications'),
-      where(userRole === 'user' ? 'userId' : 'psychologistId', '==', userId),
+      where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
       limit(50)
     );
 
-    const listenerKey = `notifications-${userId}-${userRole}`;
+    const listenerKey = `notifications-${userId}`;
     
     const unsubscribe = onSnapshot(
       notificationsQuery,
@@ -57,11 +55,12 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
         try {
           const notificationsData = snapshot.docs.map((doc) => {
             const data = doc.data();
+            const type: Notification['type'] =
+              data.type === 'profile_incomplete' ? 'profile_incomplete' : 'general';
             return {
               id: doc.id,
               userId: data.userId,
-              psychologistId: data.psychologistId,
-              type: data.type,
+              type,
               title: data.title,
               message: data.message,
               isRead: data.isRead || false,
@@ -118,7 +117,7 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     return () => {
       firebaseConnectionManager.unregisterListener(listenerKey);
     };
-  }, [userId, userRole, user, profileLoaded]);
+  }, [userId, user, profileLoaded]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -181,76 +180,4 @@ export const useNotifications = (userId: string, userRole: 'user' | 'psychologis
     deleteNotification,
     createNotification,
   };
-};
-
-// Función para crear notificación cuando un paciente escribe
-export const createChatNotification = async (
-  psychologistId: string,
-  senderId: string,
-  senderName: string,
-  message: string,
-  sessionId?: string
-) => {
-  try {
-    // No crear notificación si el remitente es el mismo psicólogo
-    if (senderId === psychologistId) {
-      return;
-    }
-
-    const notificationData: any = {
-      userId: psychologistId, // El psicólogo recibe la notificación
-      psychologistId: psychologistId,
-      senderId: senderId,
-      senderName: senderName,
-      type: 'chat_message',
-      title: `Nuevo mensaje de ${senderName}`,
-      message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
-      isRead: false,
-      createdAt: serverTimestamp(),
-    };
-    
-    // Solo agregar relatedItemId si existe
-    if (sessionId) {
-      notificationData.relatedItemId = sessionId;
-    }
-    
-    const docRef = await addDoc(collection(db, 'notifications'), notificationData);
-    
-    return docRef.id;
-  } catch (error) {
-    console.error('❌ Error creating chat notification:', error);
-    throw error;
-  }
-};
-
-// Función para crear notificación cuando un psicólogo escribe
-export const createPsychologistChatNotification = async (
-  userId: string,
-  senderId: string,
-  senderName: string,
-  message: string,
-  sessionId?: string
-) => {
-  try {
-    const notificationData: any = {
-      userId: userId, // El usuario recibe la notificación
-      psychologistId: senderId,
-      senderId: senderId,
-      senderName: senderName,
-      type: 'chat_message',
-      title: `Nuevo mensaje de ${senderName}`,
-      message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
-      isRead: false,
-      createdAt: serverTimestamp(),
-    };
-    
-    // Solo agregar relatedItemId si existe
-    if (sessionId) {
-      notificationData.relatedItemId = sessionId;
-    }
-    
-    await addDoc(collection(db, 'notifications'), notificationData);
-  } catch (error) {
-    console.error('Error creating psychologist chat notification:', error);
-  }
 };

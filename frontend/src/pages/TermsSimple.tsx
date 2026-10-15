@@ -105,16 +105,18 @@ const TermsSimple: React.FC = () => {
                 2. DESCRIPCIÓN DEL SERVICIO
               </h2>
               <p className="text-lg leading-relaxed">
-                Mood Log App es una aplicación de seguimiento del estado de ánimo que utiliza inteligencia artificial 
-                para analizar emociones y conectar usuarios con psicólogos profesionales. Nuestro servicio incluye:
+                Mood Log App es una aplicación personal de seguimiento del estado de ánimo y escritura reflexiva. Sus funciones incluyen:
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
                 <li>Análisis de emociones mediante IA</li>
-                <li>Conexión con psicólogos certificados</li>
-                <li>Chat en tiempo real</li>
+                <li>Conversaciones de autorreflexión generadas por inteligencia artificial</li>
                 <li>Estadísticas y reportes personalizados</li>
                 <li>Herramientas de bienestar emocional</li>
               </ul>
+              <p className="text-lg leading-relaxed mt-4">
+                Las funciones de inteligencia artificial ofrecen contenido informativo y de autorreflexión; no proporcionan
+                atención clínica, asesoría médica, diagnósticos ni servicios de emergencia.
+              </p>
             </section>
 
             <section>
@@ -137,7 +139,7 @@ const TermsSimple: React.FC = () => {
               </h2>
               <p className="text-lg leading-relaxed">
                 Respetamos tu privacidad y protegemos tus datos personales de acuerdo con nuestra Política de Privacidad. 
-                Toda la información emocional y de salud mental se maneja con la máxima confidencialidad.
+                Consulta la Política de Privacidad para conocer cómo se procesan y protegen tus datos.
               </p>
             </section>
 
@@ -148,19 +150,18 @@ const TermsSimple: React.FC = () => {
                 5. RETENCIÓN Y ELIMINACIÓN DE DATOS
               </h2>
               <p className="text-lg leading-relaxed">
-                Para optimizar el rendimiento y proteger tu privacidad, implementamos políticas de retención automática:
+                Los datos que guardas se utilizan para ofrecer las funciones de la aplicación. No ofrecemos actualmente
+                citas médicas ni conversaciones persistentes con profesionales. La disponibilidad de controles de
+                eliminación puede variar según la función y el proveedor de almacenamiento.
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li><strong>Mensajes de chat:</strong> Se conservan por 10 días para mantener continuidad en las conversaciones</li>
-                <li><strong>Citas médicas:</strong> Se eliminan automáticamente 3 días después de la fecha programada</li>
-                <li><strong>Notificaciones:</strong> Se archivan después de 7 días de inactividad</li>
-                <li><strong>Datos de sesión:</strong> Se limpian automáticamente cada 30 días</li>
-                <li><strong>Registros de estado de ánimo:</strong> Se mantienen indefinidamente para análisis de tendencias</li>
-                <li><strong>Entradas de diario:</strong> Se conservan permanentemente a menos que solicites su eliminación</li>
+                <li>Los registros de estado de ánimo y las entradas del diario se guardan en tu cuenta para mostrar el historial y generar análisis.</li>
+                <li>El contenido que envías a una función de IA puede procesarse mediante proveedores externos para generar una respuesta.</li>
+                <li>Los periodos de conservación también pueden depender de los servicios de infraestructura utilizados.</li>
               </ul>
               <p className="text-lg leading-relaxed mt-4">
-                Puedes solicitar la eliminación completa de tu cuenta y todos tus datos en cualquier momento 
-                contactando nuestro equipo de soporte.
+                Antes de guardar información sensible, revisa la Política de Privacidad y evita incluir datos que no sean
+                necesarios para la función que estás utilizando.
               </p>
             </section>
 
@@ -185,11 +186,11 @@ const TermsSimple: React.FC = () => {
               <h2 className={`text-3xl font-black mb-4 transition-colors duration-500 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                7. SERVICIOS PROFESIONALES
+                7. LÍMITES DEL SERVICIO
               </h2>
               <p className="text-lg leading-relaxed">
-                Los psicólogos en nuestra plataforma son profesionales certificados. Sin embargo, Mood Log App 
-                no se hace responsable por la calidad de los servicios profesionales prestados por terceros.
+                Mood Log App no presta servicios médicos ni psicológicos y no sustituye la atención de profesionales
+                cualificados. Si existe peligro inmediato, contacta los servicios de emergencia de tu localidad.
               </p>
             </section>
 

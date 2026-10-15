@@ -133,8 +133,6 @@ test("owners cannot transfer documents to another account", async () => {
   const ownedCollections = [
     "moodLogs",
     "journalEntries",
-    "chatSessions",
-    "chatMessages",
     "notifications",
     "advancedReports",
     "statistics",
@@ -158,6 +156,25 @@ test("owners cannot transfer documents to another account", async () => {
   }
 });
 
+test("legacy psychologist and persisted chat collections are denied", async () => {
+  const ownerDb = authenticatedDb(ownerId);
+  for (const collectionName of [
+    "psychologists",
+    "psychologistRatings",
+    "patients",
+    "appointments",
+    "chatSessions",
+    "chatMessages",
+    "chats",
+    "messages",
+  ]) {
+    await assertFails(setDoc(doc(ownerDb, `${collectionName}/legacy-document`), {
+      userId: ownerId,
+      role: "user",
+    }));
+  }
+});
+
 test("users cannot assign or change their own privileged role", async () => {
   const ownerDb = authenticatedDb(ownerId);
   const otherUserDb = authenticatedDb(otherUserId);
@@ -170,7 +187,9 @@ test("users cannot assign or change their own privileged role", async () => {
     displayName: "Updated owner",
   }));
   await assertFails(updateDoc(doc(ownerDb, `users/${ownerId}`), { role: "psychologist" }));
+  await assertFails(updateDoc(doc(ownerDb, `users/${ownerId}`), { role: "admin" }));
   await assertFails(setDoc(doc(otherUserDb, `users/${otherUserId}`), { role: "psychologist" }));
+  await assertFails(setDoc(doc(otherUserDb, `users/${otherUserId}`), { displayName: "No role" }));
 });
 
 test("statistics can be created by their owner and cannot be accessed by another user", async () => {

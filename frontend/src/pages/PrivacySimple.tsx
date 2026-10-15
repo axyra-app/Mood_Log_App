@@ -93,14 +93,14 @@ const PrivacySimple: React.FC = () => {
                 1. INFORMACIÓN QUE RECOPILAMOS
               </h2>
               <p className="text-lg leading-relaxed">
-                Recopilamos información que nos proporcionas directamente y datos de uso cuando interactúas con nuestro servicio:
+                La información que se procesa depende de las funciones que utilizas. Puede incluir:
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Información de cuenta (nombre, email, contraseña)</li>
+                <li>Información de cuenta, como nombre y correo electrónico (las credenciales de acceso son gestionadas por el proveedor de autenticación)</li>
                 <li>Datos de estado de ánimo y emociones</li>
-                <li>Mensajes de chat con psicólogos</li>
+                <li>Entradas del diario y contenido que envías a funciones de inteligencia artificial</li>
                 <li>Información de uso de la aplicación</li>
-                <li>Datos técnicos (IP, navegador, dispositivo)</li>
+                <li>Datos técnicos que puedan procesar los proveedores de infraestructura, como información del dispositivo o registros de diagnóstico</li>
               </ul>
             </section>
 
@@ -115,8 +115,7 @@ const PrivacySimple: React.FC = () => {
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
                 <li>Proporcionar y mejorar nuestros servicios</li>
-                <li>Analizar emociones mediante IA</li>
-                <li>Conectarte con psicólogos apropiados</li>
+                <li>Generar análisis y respuestas de autorreflexión mediante funciones de inteligencia artificial</li>
                 <li>Personalizar tu experiencia</li>
                 <li>Comunicarnos contigo</li>
                 <li>Cumplir con obligaciones legales</li>
@@ -130,13 +129,11 @@ const PrivacySimple: React.FC = () => {
                 3. COMPARTIR INFORMACIÓN
               </h2>
               <p className="text-lg leading-relaxed">
-                No vendemos tu información personal. Podemos compartir información en las siguientes circunstancias:
+                No vendemos tu información personal. La información puede procesarse o compartirse en estos casos:
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Con psicólogos cuando solicitas sus servicios</li>
-                <li>Con proveedores de servicios que nos ayudan a operar</li>
-                <li>Cuando es requerido por ley</li>
-                <li>Para proteger nuestros derechos y seguridad</li>
+                <li>Con proveedores de infraestructura y de inteligencia artificial cuando sea necesario para prestar la función que solicitas. El contenido enviado a una función de IA puede transmitirse a ese proveedor.</li>
+                <li>Cuando es requerido por ley o necesario para proteger derechos y seguridad</li>
               </ul>
             </section>
 

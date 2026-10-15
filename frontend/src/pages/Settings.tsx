@@ -48,9 +48,7 @@ const Settings: React.FC = () => {
   // Estados para notificaciones por Gmail
   const [emailSettings, setEmailSettings] = useState({
     weeklyReports: true,
-    appointmentReminders: true,
     moodInsights: true,
-    emergencyAlerts: true,
   });
 
   useEffect(() => {
@@ -193,7 +191,7 @@ const Settings: React.FC = () => {
                 <div>
                   <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notificaciones Push</p>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Recibe notificaciones de nuevas citas y mensajes
+                    Recibe avisos relacionados con tu actividad en la aplicación
                   </p>
                 </div>
                 <label className='relative inline-flex items-center cursor-pointer'>
@@ -241,10 +239,10 @@ const Settings: React.FC = () => {
               </div>
               <div>
                 <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Notificaciones por Gmail
+                  Preferencias de correo
                 </h3>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Configura qué emails recibir semanalmente
+                  Configura tus preferencias de correo
                 </p>
               </div>
             </div>
@@ -262,24 +260,6 @@ const Settings: React.FC = () => {
                     type='checkbox'
                     checked={emailSettings.weeklyReports}
                     onChange={(e) => handleEmailSettingsChange('weeklyReports', e.target.checked)}
-                    className='sr-only peer'
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Recordatorios de Citas</p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Notificaciones sobre citas próximas
-                  </p>
-                </div>
-                <label className='relative inline-flex items-center cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={emailSettings.appointmentReminders}
-                    onChange={(e) => handleEmailSettingsChange('appointmentReminders', e.target.checked)}
                     className='sr-only peer'
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
@@ -306,23 +286,6 @@ const Settings: React.FC = () => {
                 </label>
               </div>
 
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Alertas de Emergencia</p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Notificaciones importantes sobre tu bienestar
-                  </p>
-                </div>
-                <label className='relative inline-flex items-center cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={emailSettings.emergencyAlerts}
-                    onChange={(e) => handleEmailSettingsChange('emergencyAlerts', e.target.checked)}
-                    className='sr-only peer'
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
             </div>
           </div>
 

@@ -13,6 +13,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,8 +32,6 @@ const Statistics: React.FC = () => {
   // Función para exportar estadísticas como PDF
   const exportStatistics = async () => {
     try {
-      // Importar jsPDF dinámicamente
-      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
 
       // Configuración del documento

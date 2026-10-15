@@ -4,7 +4,7 @@ export interface User {
   email: string;
   displayName?: string;
   photoURL?: string;
-  role: 'user' | 'psychologist';
+  role: 'user';
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -15,131 +15,6 @@ export interface User {
     phone: string;
     relationship: string;
   };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Psychologist Types
-export interface Psychologist extends User {
-  role: 'psychologist';
-  professionalTitle?: string;
-  licenseNumber: string;
-  specialization: string;
-  yearsOfExperience: number;
-  bio: string;
-  cvUrl?: string;
-  rating: number;
-  patientsCount: number;
-  isAvailable: boolean;
-  workingHours?: {
-    monday: { start: string; end: string; available: boolean };
-    tuesday: { start: string; end: string; available: boolean };
-    wednesday: { start: string; end: string; available: boolean };
-    thursday: { start: string; end: string; available: boolean };
-    friday: { start: string; end: string; available: boolean };
-    saturday: { start: string; end: string; available: boolean };
-    sunday: { start: string; end: string; available: boolean };
-  };
-  consultationFee?: number;
-  languages?: string[];
-  treatmentMethods?: string[];
-}
-
-// Patient Types
-export interface Patient {
-  id: string;
-  userId: string;
-  psychologistId: string;
-  assignedAt: Date;
-  status: 'active' | 'inactive' | 'discharged';
-  diagnosis?: string;
-  treatmentGoals: string[];
-  riskLevel: 'low' | 'medium' | 'high';
-  lastSessionDate?: Date;
-  nextSessionDate?: Date;
-  totalSessions: number;
-  notes?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Session Notes Types
-export interface SessionNote {
-  id: string;
-  patientId: string;
-  psychologistId: string;
-  sessionDate: Date;
-  sessionType: 'individual' | 'group' | 'family' | 'online';
-  duration: number; // in minutes
-  notes: string;
-  observations: string;
-  interventions: string[];
-  homework?: string;
-  nextSessionGoals: string[];
-  moodBefore: number; // 1-10 scale
-  moodAfter: number; // 1-10 scale
-  progress: number; // 1-10 scale
-  concerns: string[];
-  strengths: string[];
-  attachments?: string[]; // file URLs
-  isConfidential: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Treatment Plan Types
-export interface TreatmentPlan {
-  id: string;
-  patientId: string;
-  psychologistId: string;
-  title: string;
-  description: string;
-  objectives: TreatmentObjective[];
-  phases: TreatmentPhase[];
-  startDate: Date;
-  endDate?: Date;
-  status: 'active' | 'completed' | 'paused' | 'cancelled';
-  progress: number; // 0-100
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface TreatmentObjective {
-  id: string;
-  title: string;
-  description: string;
-  targetDate: Date;
-  completed: boolean;
-  completedAt?: Date;
-  progress: number; // 0-100
-}
-
-export interface TreatmentPhase {
-  id: string;
-  title: string;
-  description: string;
-  duration: number; // in weeks
-  activities: string[];
-  goals: string[];
-  completed: boolean;
-  completedAt?: Date;
-}
-
-// Appointment Types
-export interface Appointment {
-  id: string;
-  patientId: string;
-  psychologistId: string;
-  appointmentDate: Date;
-  duration: number; // in minutes
-  type: 'consultation' | 'follow-up' | 'emergency';
-  notes?: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -167,30 +42,6 @@ export interface AIAnalysis {
   sentiment: 'positive' | 'negative' | 'neutral';
   suggestions: string[];
   patterns: string[];
-}
-
-// Chat Types
-export interface ChatMessage {
-  id: string;
-  chatId: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: Date;
-  isRead: boolean;
-  messageType: 'text' | 'image' | 'file';
-}
-
-export interface Chat {
-  id: string;
-  participants: string[]; // user IDs
-  lastMessage?: ChatMessage;
-  lastMessageAt: Date;
-  isActive: boolean;
-  createdAt: Date;
-  chatType: 'ai' | 'psychologist'; // Tipo de chat: IA o psicólogo real
-  aiDoctorType?: 'general' | 'specialist'; // Tipo de doctor IA
-  psychologistId?: string; // ID del psicólogo si es chat real
 }
 
 // Statistics Types
@@ -235,7 +86,7 @@ export interface PushNotification {
   userId: string;
   title: string;
   body: string;
-  type: 'appointment' | 'reminder' | 'message' | 'mood_check' | 'emergency' | 'general';
+  type: 'reminder' | 'mood_check' | 'general';
   data?: any;
   read: boolean;
   sentAt: Date;
@@ -246,11 +97,8 @@ export interface NotificationSettings {
   userId: string;
   pushEnabled: boolean;
   emailEnabled: boolean;
-  appointmentReminders: boolean;
   moodCheckReminders: boolean;
-  messageNotifications: boolean;
   weeklyReports: boolean;
-  emergencyAlerts: boolean;
   quietHours: {
     enabled: boolean;
     start: string; // HH:MM format
@@ -345,15 +193,9 @@ export interface RegisterForm {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'user' | 'psychologist';
   phone?: string;
   dateOfBirth?: string;
   gender?: string;
-  // Psychologist specific fields
-  licenseNumber?: string;
-  specialization?: string;
-  yearsOfExperience?: number;
-  bio?: string;
 }
 
 // Journal Types (Notion-style)
@@ -403,50 +245,6 @@ export interface JournalPrompt {
   difficulty: 'easy' | 'medium' | 'hard';
   estimatedTime: number; // in minutes
   tags: string[];
-}
-
-// Medical Report Types
-export interface MedicalReport {
-  id: string;
-  patientId: string;
-  psychologistId: string;
-  reportType: 'initial' | 'progress' | 'discharge' | 'emergency';
-  title: string;
-  content: string;
-  diagnosis?: string;
-  treatment?: string;
-  recommendations?: string;
-  nextAppointment?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface PatientHistory {
-  id: string;
-  patientId: string;
-  psychologistId: string;
-  medicalHistory: {
-    mentalHealth: string[];
-    physicalHealth: string[];
-    medications: string[];
-    allergies: string[];
-    familyHistory: string[];
-  };
-  psychologicalHistory: {
-    previousTherapy: string[];
-    diagnoses: string[];
-    treatments: string[];
-    hospitalizations: string[];
-  };
-  socialHistory: {
-    education: string;
-    occupation: string;
-    relationships: string;
-    livingSituation: string;
-    substanceUse: string[];
-  };
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 // Component Props Types

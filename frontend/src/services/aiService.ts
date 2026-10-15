@@ -79,7 +79,7 @@ class AIService {
           messages: [
             {
               role: 'system',
-              content: 'Eres un psicólogo experto en análisis de estado de ánimo. Proporciona análisis profesionales y recomendaciones prácticas basadas en datos de bienestar emocional.'
+              content: 'Eres un asistente de IA que resume datos personales de estado de ánimo para apoyar la autorreflexión. Ofrece observaciones generales y prácticas; no diagnostiques, no recomiendes tratamientos y no presentes el resultado como una evaluación profesional.'
             },
             {
               role: 'user',
@@ -111,18 +111,13 @@ class AIService {
     const randomSeed = Math.random().toString(36).substring(7);
     const sessionId = Math.random().toString(36).substring(2, 15);
     
-    const randomPerspective = [
-      'perspectiva cognitivo-conductual', 'enfoque humanista', 'abordaje sistémico', 'perspectiva mindfulness',
-      'enfoque psicodinámico', 'abordaje centrado en soluciones', 'perspectiva positiva', 'enfoque integrativo'
-    ];
-    
     const randomStyle = [
       'análisis reflexivo', 'evaluación empática', 'revisión comprensiva', 'análisis detallado',
       'evaluación personalizada', 'análisis profundo', 'revisión cuidadosa', 'evaluación holística'
     ];
     
     return `
-Eres un psicólogo clínico especializado en análisis de estados de ánimo. Realiza un ${randomStyle[Math.floor(Math.random() * randomStyle.length)]} desde una ${randomPerspective[Math.floor(Math.random() * randomPerspective.length)]}.
+Eres un asistente de IA que ayuda a describir datos de estado de ánimo para la autorreflexión. Realiza un ${randomStyle[Math.floor(Math.random() * randomStyle.length)]}. No diagnostiques, no atribuyas causas clínicas ni recomiendes tratamientos.
 
 DATOS ESPECÍFICOS DEL USUARIO:
 - Estado de ánimo general: ${moodData.overallMood}/10
@@ -143,13 +138,13 @@ INSTRUCCIONES CRÍTICAS:
 - Incluye detalles específicos del perfil emocional del usuario
 - Sé empático y profesional pero específico
 - Considera el contexto individual y único
-- Varía tu estilo de comunicación y enfoque terapéutico
+- Deja claro que las observaciones son informativas y no constituyen una evaluación profesional
 - Incluye observaciones únicas basadas en los patrones específicos
 
 Formato de respuesta en JSON:
 {
   "summary": "Resumen personalizado y específico del estado emocional único del usuario",
-  "insights": ["Insight específico basado en sus datos únicos", "Patrón identificado personalizado", "Observación clínica relevante"],
+  "insights": ["Observación basada en los datos", "Patrón descriptivo identificado", "Pregunta de autorreflexión"],
   "recommendations": [
     {
       "type": "energy|stress|sleep|mood|general",
@@ -198,7 +193,7 @@ Formato de respuesta en JSON:
         priority: 'high',
         title: 'Plan de Apoyo Emocional Integral',
         description: `Tu estado de ánimo actual (${moodData.overallMood}/5) indica que necesitas atención especializada. Es importante implementar estrategias de apoyo inmediato y a largo plazo.`,
-        actionable: `1. Contacta a un profesional de salud mental (psicólogo o psiquiatra) para evaluación\n2. Establece una red de apoyo con familiares y amigos de confianza\n3. Implementa técnicas de respiración profunda (4-7-8) durante episodios difíciles\n4. Mantén un diario emocional para identificar patrones y desencadenantes\n5. Considera terapia cognitivo-conductual para cambiar patrones de pensamiento negativos`,
+        actionable: `1. Considera hablar con una persona de confianza o un profesional cualificado si te preocupa cómo te sientes\n2. Busca apoyo social de familiares o amistades de confianza\n3. Prueba una pausa breve para respirar con calma\n4. Anota situaciones que coincidan con cambios en tu estado de ánimo\n5. Elige una actividad cotidiana pequeña que te resulte reconfortante`,
         category: 'Salud Mental Crítica'
       });
     } else if (moodData.overallMood >= 4) {

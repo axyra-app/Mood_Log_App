@@ -33,7 +33,7 @@ interface AuthContextType {
   loading: boolean;
   profileLoaded: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role?: string, professionalData?: any) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signUpWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -231,12 +231,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUp = async (
-    email: string,
-    password: string,
-    _role?: string,
-    _professionalData?: any
-  ) => {
+  const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -406,7 +401,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       
 
-      // Si es psicólogo, también actualizar en la colección de psicólogos
       // Forzar una recarga del estado del usuario para actualizar las verificaciones
       await refreshUserState();
 

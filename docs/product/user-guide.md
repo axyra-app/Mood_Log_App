@@ -19,8 +19,8 @@ flowchart TD
     Dashboard --> Statistics["/statistics (protegida)"]
     Dashboard --> Reports["/reports (protegida)"]
     Dashboard --> Chat["/chat (protegida)"]
-    Chat --> Mia["/chat/dr-mia"]
-    Chat --> Bryan["/chat/dr-bryan"]
+    Chat --> Mia["/chat/assistant/mia"]
+    Chat --> Reflection["/chat/assistant/reflection"]
     Dashboard --> Profile["/profile (protegida)"]
     Dashboard --> Settings["/settings (protegida)"]
 ```
@@ -63,11 +63,11 @@ Presenta resúmenes y gráficos generados a partir de los registros disponibles,
 
 Ruta protegida a informes avanzados. La persistencia y disponibilidad de esta funcionalidad deben confirmarse con las reglas y el servicio; su presencia en la ruta no garantiza que los informes se guarden en Firestore.
 
-### Selección y chat (`/chat`, `/chat/dr-mia`, `/chat/dr-bryan`, `/chat/ai/:doctorType`)
+### Selección y chat (`/chat`, `/chat/assistant/:assistantId`)
 
-La interfaz actual ofrece perfiles llamados Mia y Bryan con descripciones de apoyo. El componente puede enviar mensajes a agentes inicializados desde el navegador. El historial se mantiene en estado de la página y no se observó persistencia de la conversación en ese componente.
+La interfaz ofrece dos enfoques de autorreflexión: una conversación cálida con Mia y una guía basada en preguntas. El chat envía los mensajes al proveedor de IA configurado desde el navegador y mantiene la conversación solo en el estado de la página; no guarda el historial en Firestore.
 
-Los nombres/textos visibles incluyen lenguaje médico/profesional que debe revisarse: el producto no debe representar a un agente como médico o psicólogo real. El detector de crisis del repositorio no está conectado a este chat. No introduzcas datos sensibles hasta que estén implementados controles, consentimiento y backend seguro.
+Estos asistentes no son profesionales de salud, no proporcionan atención clínica ni deben usarse para emergencias. El proveedor externo puede procesar el texto enviado; evita incluir información sensible. La ruta requiere autenticación.
 
 ### Perfil y ajustes (`/profile`, `/settings`)
 

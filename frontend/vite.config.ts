@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -6,6 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -37,15 +39,16 @@ export default defineConfig({
     sourcemap: false,
     minify: 'esbuild',
     rollupOptions: {
-      external: [],
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-          ui: ['lucide-react', 'framer-motion'],
-          charts: ['recharts'],
-          utils: ['date-fns', 'react-hot-toast'],
+        manualChunks(id) {
+          const firebasePackage = id.match(/\/node_modules\/(@firebase|firebase)\/([^/]+)/);
+          if (!firebasePackage) {
+            return undefined;
+          }
+
+          const packageName =
+            firebasePackage[1] === '@firebase' ? firebasePackage[2] : `sdk-${firebasePackage[2]}`;
+          return `firebase-${packageName}`;
         },
       },
     },

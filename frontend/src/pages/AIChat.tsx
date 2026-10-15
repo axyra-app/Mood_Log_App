@@ -1,9 +1,8 @@
 import { ArrowLeft, Send, Bot, Clock, Shield, Star } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { drMiaAgent, drBryanAgent } from '../services/specializedAgents';
-import { useAuth } from '../contexts/AuthContext';
+import { empatheticCompanionAgent, reflectionGuideAgent } from '../services/specializedAgents';
 
 interface Message {
   id: string;
@@ -13,12 +12,11 @@ interface Message {
   isTyping?: boolean;
 }
 
-interface DoctorProfile {
+interface AssistantProfile {
   name: string;
-  specialty: string;
+  description: string;
   icon: string;
   color: string;
-  description: string;
   features: Array<{
     icon: React.ReactNode;
     text: string;
@@ -28,81 +26,56 @@ interface DoctorProfile {
 
 const AIChat: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const params = useParams();
-  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
+  const [assistant, setAssistant] = useState<AssistantProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Perfiles de los doctores
-  const doctorProfiles: Record<string, DoctorProfile> = {
-    'dr-mia': {
-      name: 'Dra. Mia',
-      specialty: 'Medicina General',
-      icon: '🩺',
-      color: 'from-blue-500 to-cyan-500',
-      description: 'Respuestas inmediatas 24/7 con inteligencia artificial especializada',
+  const assistantProfiles: Record<'mia' | 'reflection', AssistantProfile> = {
+    mia: {
+      name: 'Mia',
+      description: 'Conversación cálida para expresar emociones y ordenar ideas',
+      icon: '💬',
+      color: 'from-pink-500 to-rose-500',
       features: [
-        { icon: <Clock className="w-4 h-4" />, text: 'Disponible 24/7', color: 'text-green-600' },
-        { icon: <Shield className="w-4 h-4" />, text: 'Respuestas inmediatas', color: 'text-blue-600' },
-        { icon: <Star className="w-4 h-4" />, text: 'Basado en evidencia médica', color: 'text-yellow-600' }
+        { icon: <Clock className="w-4 h-4" />, text: 'Disponible cuando quieras', color: 'text-green-600' },
+        { icon: <Shield className="w-4 h-4" />, text: 'Enfoque respetuoso', color: 'text-blue-600' },
+        { icon: <Star className="w-4 h-4" />, text: 'Apoyo para autorreflexión', color: 'text-yellow-600' },
       ]
     },
-    'dr-bryan': {
-      name: 'Dr. Bryan',
-      specialty: 'Psicología Clínica',
-      icon: '🧠',
-      color: 'from-purple-500 to-pink-500',
-      description: 'Apoyo psicológico especializado con técnicas basadas en evidencia',
+    reflection: {
+      name: 'Guía reflexiva',
+      description: 'Preguntas para explorar hábitos, patrones y perspectivas',
+      icon: '✨',
+      color: 'from-blue-500 to-indigo-600',
       features: [
-        { icon: <Clock className="w-4 h-4" />, text: 'Disponible 24/7', color: 'text-green-600' },
-        { icon: <Shield className="w-4 h-4" />, text: 'Apoyo emocional', color: 'text-purple-600' },
-        { icon: <Star className="w-4 h-4" />, text: 'Técnicas psicológicas', color: 'text-pink-600' }
+        { icon: <Clock className="w-4 h-4" />, text: 'A tu propio ritmo', color: 'text-green-600' },
+        { icon: <Shield className="w-4 h-4" />, text: 'Preguntas abiertas', color: 'text-purple-600' },
+        { icon: <Star className="w-4 h-4" />, text: 'Ideas prácticas', color: 'text-pink-600' },
       ]
     }
   };
 
   useEffect(() => {
-    // Determinar qué doctor está seleccionado
-    // Primero intentar obtener del parámetro de la ruta, luego del pathname
-    let doctorType: 'dr-mia' | 'dr-bryan' = 'dr-mia';
-    
-    if (params.doctorType) {
-      // Si viene de la ruta /chat/ai/:doctorType
-      doctorType = params.doctorType === 'dr-mia' ? 'dr-mia' : 'dr-bryan';
-    } else if (location.pathname.includes('dr-mia')) {
-      doctorType = 'dr-mia';
-    } else if (location.pathname.includes('dr-bryan')) {
-      doctorType = 'dr-bryan';
-    } else {
-      // Si no se puede determinar, usar dr-mia por defecto
-      doctorType = 'dr-mia';
-    }
-
-    // Validar que el doctorType existe en los perfiles
-    if (!doctorProfiles[doctorType]) {
-      console.error('Tipo de doctor no válido:', doctorType);
+    const assistantId = params.assistantId;
+    if (assistantId !== 'mia' && assistantId !== 'reflection') {
       navigate('/chat');
       return;
     }
 
-    setDoctor(doctorProfiles[doctorType]);
+    setAssistant(assistantProfiles[assistantId]);
 
-    // Mensaje de bienvenida inicial
-    const welcomeMessage: Message = {
+    setMessages([{
       id: 'welcome',
-      content: doctorType === 'dr-mia' 
-        ? '¡Hola! Soy la Dra. Mia, tu asistente médico virtual. Estoy aquí para ayudarte con consultas médicas generales, información sobre síntomas y consejos de salud. ¿En qué puedo ayudarte hoy?'
-        : '¡Hola! Soy el Dr. Bryan, tu psicólogo virtual. Estoy aquí para brindarte apoyo emocional, técnicas de manejo del estrés y orientación psicológica. ¿Cómo te sientes hoy?',
+      content: assistantId === 'mia'
+        ? 'Hola, soy Mia, una asistente de IA para ayudarte a expresar lo que sientes y ordenar tus ideas. ¿Qué te gustaría explorar?'
+        : 'Hola, soy una guía reflexiva de IA. Puedo ayudarte a observar una situación desde distintas perspectivas. ¿Qué tienes en mente?',
       sender: 'ai',
-      timestamp: new Date()
-    };
-
-    setMessages([welcomeMessage]);
-  }, [location.pathname, params.doctorType, navigate]);
+      timestamp: new Date(),
+    }]);
+  }, [params.assistantId, navigate]);
 
   useEffect(() => {
     scrollToBottom();
@@ -127,28 +100,10 @@ const AIChat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Determinar qué agente usar
-      let doctorType: 'dr-mia' | 'dr-bryan' = 'dr-mia';
-      
-      if (params.doctorType) {
-        doctorType = params.doctorType === 'dr-mia' ? 'dr-mia' : 'dr-bryan';
-      } else if (location.pathname.includes('dr-mia')) {
-        doctorType = 'dr-mia';
-      } else if (location.pathname.includes('dr-bryan')) {
-        doctorType = 'dr-bryan';
-      }
-      
-      const agent = doctorType === 'dr-mia' ? drMiaAgent : drBryanAgent;
-
-      // Obtener contexto del usuario si está disponible
-      const context = user ? {
-        userId: user.uid,
-        userEmail: user.email,
-        timestamp: new Date().toISOString()
-      } : null;
-
-      // Obtener respuesta del agente
-      const aiResponse = await agent.chat(inputMessage, context);
+      const agent = params.assistantId === 'mia'
+        ? empatheticCompanionAgent
+        : reflectionGuideAgent;
+      const aiResponse = await agent.chat(inputMessage);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -164,7 +119,7 @@ const AIChat: React.FC = () => {
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Disculpa, estoy experimentando dificultades técnicas. Por favor, inténtalo de nuevo o consulta con un profesional en persona si es urgente.',
+        content: 'Disculpa, estoy teniendo dificultades técnicas. Inténtalo de nuevo más tarde. Si existe peligro inmediato, contacta los servicios de emergencia de tu localidad.',
         sender: 'ai',
         timestamp: new Date()
       };
@@ -182,12 +137,12 @@ const AIChat: React.FC = () => {
     }
   };
 
-  if (!doctor) {
+  if (!assistant) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando consulta...</p>
+          <p className="mt-4 text-gray-600">Cargando conversación...</p>
         </div>
       </div>
     );
@@ -207,13 +162,13 @@ const AIChat: React.FC = () => {
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${doctor.color} flex items-center justify-center text-white text-xl`}>
-                {doctor.icon}
+              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${assistant.color} flex items-center justify-center text-white text-xl`}>
+                {assistant.icon}
               </div>
               
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">{doctor.name}</h1>
-                <p className="text-sm text-gray-600">{doctor.specialty}</p>
+                <h1 className="text-xl font-semibold text-gray-900">{assistant.name}</h1>
+                <p className="text-sm text-gray-600">{assistant.description}</p>
               </div>
             </div>
 
@@ -287,7 +242,7 @@ const AIChat: React.FC = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`Escribe tu consulta para ${doctor.name}...`}
+                placeholder={`Escribe un mensaje para ${assistant.name}...`}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={2}
                 disabled={isLoading}
@@ -299,7 +254,7 @@ const AIChat: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 !inputMessage.trim() || isLoading
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : `bg-gradient-to-r ${doctor.color} text-white hover:opacity-90`
+                  : `bg-gradient-to-r ${assistant.color} text-white hover:opacity-90`
               }`}
             >
               <Send className="w-4 h-4" />
@@ -307,7 +262,7 @@ const AIChat: React.FC = () => {
           </div>
           
           <div className="mt-2 text-xs text-gray-500">
-            <p>💡 <strong>Recuerda:</strong> Esta es una consulta virtual. Para síntomas graves o emergencias, consulta con un profesional en persona.</p>
+            <p>💡 <strong>Recuerda:</strong> Esta conversación generada por IA es para autorreflexión; no proporciona atención clínica ni asesoría médica. Ante un peligro inmediato, contacta los servicios de emergencia de tu localidad.</p>
           </div>
         </div>
       </div>

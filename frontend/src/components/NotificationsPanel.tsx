@@ -1,4 +1,4 @@
-import { Bell, Calendar, Check, FileText, MessageCircle, AlertCircle } from 'lucide-react';
+import { Bell, Check, AlertCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,14 +22,6 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     switch (type) {
       case 'profile_incomplete':
         return <AlertCircle className='w-4 h-4' />;
-      case 'chat_message':
-        return <MessageCircle className='w-4 h-4' />;
-      case 'appointment_request':
-      case 'appointment_accepted':
-      case 'appointment_rejected':
-        return <Calendar className='w-4 h-4' />;
-      case 'medical_report':
-        return <FileText className='w-4 h-4' />;
       default:
         return <Bell className='w-4 h-4' />;
     }
@@ -39,16 +31,6 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     switch (type) {
       case 'profile_incomplete':
         return isDarkMode ? 'text-red-400' : 'text-red-600';
-      case 'chat_message':
-        return isDarkMode ? 'text-blue-400' : 'text-blue-600';
-      case 'appointment_request':
-        return isDarkMode ? 'text-yellow-400' : 'text-yellow-600';
-      case 'appointment_accepted':
-        return isDarkMode ? 'text-green-400' : 'text-green-600';
-      case 'appointment_rejected':
-        return isDarkMode ? 'text-red-400' : 'text-red-600';
-      case 'medical_report':
-        return isDarkMode ? 'text-purple-400' : 'text-purple-600';
       default:
         return isDarkMode ? 'text-gray-400' : 'text-gray-600';
     }
@@ -79,12 +61,6 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ isDarkMode }) =
     switch (notification.type) {
       case 'profile_incomplete':
         navigate('/profile');
-        break;
-      case 'chat_message':
-        navigate('/chat');
-        break;
-      case 'medical_report':
-        navigate('/reports');
         break;
       default:
         navigate('/dashboard');

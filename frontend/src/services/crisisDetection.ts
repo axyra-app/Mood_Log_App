@@ -10,7 +10,6 @@ export interface CrisisSignal {
   detectedAt: Date;
   resolved: boolean;
   resolvedAt?: Date;
-  psychologistId?: string;
   interventionRequired: boolean;
   metadata: {
     moodScore?: number;
@@ -29,7 +28,6 @@ export interface CrisisAssessment {
   recommendations: string[];
   immediateActions: string[];
   followUpRequired: boolean;
-  psychologistNotification: boolean;
   emergencyContact: boolean;
   assessmentScore: number;
   confidence: number;
@@ -131,7 +129,6 @@ export const detectCrisisSignals = async (
     const immediateActions = generateImmediateActions(overallRisk, signals);
 
     // Determinar si se requiere notificación
-    const psychologistNotification = overallRisk === 'high' || overallRisk === 'critical';
     const emergencyContact = overallRisk === 'critical';
     const followUpRequired = overallRisk !== 'low';
 
@@ -144,7 +141,6 @@ export const detectCrisisSignals = async (
       recommendations,
       immediateActions,
       followUpRequired,
-      psychologistNotification,
       emergencyContact,
       assessmentScore,
       confidence,
@@ -478,28 +474,6 @@ export const getRecentCrisisAssessments = async (userId: string, limitCount: num
     }));
   } catch (error) {
     console.error('Error obteniendo evaluaciones de crisis:', error);
-    throw error;
-  }
-};
-
-// Notificar a psicólogos sobre crisis
-export const notifyPsychologistOfCrisis = async (
-  userId: string,
-  assessment: CrisisAssessment,
-  psychologistId: string
-): Promise<void> => {
-  try {
-    await addDoc(collection(db, 'crisisAlerts'), {
-      userId,
-      psychologistId,
-      assessment,
-      urgency: assessment.overallRisk,
-      createdAt: new Date(),
-      resolved: false,
-      notificationSent: true,
-    });
-  } catch (error) {
-    console.error('Error notificando psicólogo sobre crisis:', error);
     throw error;
   }
 };

@@ -1,31 +1,31 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // Components
-import AdvancedReports from './components/AdvancedReports';
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingChatBubble from './components/FloatingChatBubble';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Pages
-import AIChat from './pages/AIChat';
-import ChatSelection from './pages/ChatSelection';
-import CompleteProfile from './pages/CompleteProfile';
-import DashboardSimple from './pages/DashboardSimple';
-import ForgotPassword from './pages/ForgotPassword';
-import Home from './pages/Home';
-import Journal from './pages/Journal';
-import LoginSimple from './pages/LoginSimple';
-import MoodFlowSimple from './pages/MoodFlowSimple';
-import PrivacySimple from './pages/PrivacySimple';
-import Profile from './pages/Profile';
-import RegisterSimple from './pages/RegisterSimple';
-import Settings from './pages/Settings';
-import Statistics from './pages/Statistics';
-import TermsSimple from './pages/TermsSimple';
+const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
+const AIChat = lazy(() => import('./pages/AIChat'));
+const ChatSelection = lazy(() => import('./pages/ChatSelection'));
+const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
+const DashboardSimple = lazy(() => import('./pages/DashboardSimple'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const Home = lazy(() => import('./pages/Home'));
+const Journal = lazy(() => import('./pages/Journal'));
+const LoginSimple = lazy(() => import('./pages/LoginSimple'));
+const MoodFlowSimple = lazy(() => import('./pages/MoodFlowSimple'));
+const PrivacySimple = lazy(() => import('./pages/PrivacySimple'));
+const Profile = lazy(() => import('./pages/Profile'));
+const RegisterSimple = lazy(() => import('./pages/RegisterSimple'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Statistics = lazy(() => import('./pages/Statistics'));
+const TermsSimple = lazy(() => import('./pages/TermsSimple'));
 
 function App() {
   return (
@@ -34,7 +34,14 @@ function App() {
         <AuthProvider>
           <Router>
             <div className='App'>
-              <Routes>
+              <Suspense
+                fallback={
+                  <div className='min-h-screen flex items-center justify-center text-gray-600'>
+                    Cargando...
+                  </div>
+                }
+              >
+                <Routes>
                 {/* Public routes */}
                 <Route path='/' element={<Home />} />
                 <Route path='/login' element={<LoginSimple />} />
@@ -86,25 +93,9 @@ function App() {
                   }
                 />
 
-                {/* Rutas específicas de Confidente IA */}
+                {/* Rutas de conversación de autorreflexión */}
                 <Route
-                  path='/chat/dr-mia'
-                  element={
-                    <ProtectedRoute>
-                      <AIChat />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path='/chat/dr-bryan'
-                  element={
-                    <ProtectedRoute>
-                      <AIChat />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path='/chat/ai/:doctorType'
+                  path='/chat/assistant/:assistantId'
                   element={
                     <ProtectedRoute>
                       <AIChat />
@@ -157,7 +148,8 @@ function App() {
                     </div>
                   }
                 />
-              </Routes>
+                </Routes>
+              </Suspense>
 
               {/* Burbuja flotante de chat IA */}
               <FloatingChatBubble />

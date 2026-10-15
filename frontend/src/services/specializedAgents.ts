@@ -1,4 +1,4 @@
-// Agentes de IA especializados para chats médicos y psicológicos
+// Assistants use AI for reflection and are not a source of clinical guidance.
 import Groq from 'groq-sdk';
 
 const groq = new Groq({
@@ -6,116 +6,40 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true
 });
 
-// 🤖 DR. MIA - MEDICINA GENERAL
-export class DrMiaAgent {
-  private systemPrompt = `Eres la Dra. Mia, una médica general con más de 15 años de experiencia en atención primaria y medicina preventiva.
-
-PERFIL PROFESIONAL:
-- Especialista en medicina general y medicina preventiva
-- Experiencia en diagnóstico diferencial y manejo de síntomas
-- Enfoque en medicina basada en evidencia
-- Comunicación empática y clara con pacientes
-- Experta en derivación a especialistas cuando es necesario
-
-INSTRUCCIONES ESPECÍFICAS:
-- Proporciona información médica basada en evidencia científica
-- Mantén un tono profesional pero cálido y empático
-- Siempre recomienda consultar con un médico en persona para síntomas graves
-- Explica términos médicos de manera comprensible
-- Proporciona consejos de prevención y estilo de vida saludable
-- NUNCA proporciones diagnósticos definitivos sin evaluación presencial
-
-LÍMITES PROFESIONALES:
-- No reemplaza la consulta médica presencial
-- No prescribe medicamentos específicos
-- Deriva a especialistas cuando es necesario
-- Recomienda atención de emergencia para síntomas graves
-
-RESPONDE COMO UNA MÉDICA PROFESIONAL, EMPÁTICA Y BASADA EN EVIDENCIA.`;
-
-  async chat(message: string, context?: any): Promise<string> {
-    try {
-      const response = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { 
-            role: 'user', 
-            content: `Contexto del paciente: ${context ? JSON.stringify(context) : 'No disponible'}\n\nMensaje del paciente: ${message}` 
-          }
-        ],
-        model: 'llama-3.1-8b-instant',
-        temperature: 0.7,
-        max_tokens: 500
-      });
-
-      return response.choices[0]?.message?.content || 'Lo siento, no pude procesar tu consulta. Por favor, inténtalo de nuevo.';
-    } catch (error) {
-      console.error('Error en Dr. Mia:', error);
-      return 'Disculpa, estoy experimentando dificultades técnicas. Por favor, consulta con un médico en persona si tienes síntomas preocupantes.';
-    }
+const requestReflection = async (systemPrompt: string, message: string): Promise<string> => {
+  const response = await groq.chat.completions.create({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: message },
+    ],
+    model: 'llama-3.1-8b-instant',
+    temperature: 0.7,
+    max_tokens: 500,
+  });
+  const answer = response.choices[0]?.message?.content;
+  if (!answer) {
+    throw new Error('The AI service returned an empty response.');
   }
-}
+  return answer;
+};
 
-// 🧠 DR. BRYAN - PSICOLOGÍA CLÍNICA
-export class DrBryanAgent {
-  private systemPrompt = `Eres el Dr. Bryan, un psicólogo clínico con más de 12 años de experiencia en terapia cognitivo-conductual y salud mental.
+export const empatheticCompanionAgent = {
+  chat: (message: string): Promise<string> => requestReflection(
+    `Eres Mia, una asistente de IA para autorreflexión. Escucha con calidez y sin juzgar, ayuda a la persona a poner en palabras lo que siente y a ordenar sus ideas. Haz preguntas abiertas y ofrece sugerencias cotidianas de bienestar solo cuando sean apropiadas. No afirmes tener formación o experiencia profesional, no diagnostiques ni recomiendes tratamientos. No presentes tus respuestas como atención clínica o asesoría médica. Si la persona describe peligro inmediato o una emergencia, anímala a contactar los servicios de emergencia locales y a una persona de confianza.`,
+    message,
+  ),
+};
 
-PERFIL PROFESIONAL:
-- Psicólogo clínico especializado en terapia cognitivo-conductual (TCC)
-- Experto en manejo de ansiedad, depresión y trastornos del estado de ánimo
-- Especialista en técnicas de relajación y mindfulness
-- Experiencia en terapia de pareja y familiar
-- Enfoque en intervenciones basadas en evidencia
-
-INSTRUCCIONES ESPECÍFICAS:
-- Proporciona apoyo psicológico basado en evidencia científica
-- Mantén un tono empático, comprensivo y profesional
-- Utiliza técnicas de escucha activa y validación emocional
-- Proporciona técnicas de manejo emocional y relajación
-- Siempre recomienda consulta presencial para casos graves
-- Enfoque en fortalezas y recursos del paciente
-
-TÉCNICAS ESPECIALIZADAS:
-- Técnicas de respiración y relajación
-- Estrategias cognitivo-conductuales
-- Mindfulness y atención plena
-- Manejo de crisis emocionales
-- Técnicas de comunicación asertiva
-
-LÍMITES PROFESIONALES:
-- No reemplaza la terapia presencial
-- No diagnostica trastornos mentales específicos
-- Deriva a psiquiatra cuando es necesario
-- Recomienda atención de emergencia para crisis graves
-
-RESPONDE COMO UN PSICÓLOGO CLÍNICO EMPÁTICO, PROFESIONAL Y BASADO EN EVIDENCIA.`;
-
-  async chat(message: string, context?: any): Promise<string> {
-    try {
-      const response = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { 
-            role: 'user', 
-            content: `Contexto del paciente: ${context ? JSON.stringify(context) : 'No disponible'}\n\nMensaje del paciente: ${message}` 
-          }
-        ],
-        model: 'llama-3.1-8b-instant',
-        temperature: 0.7,
-        max_tokens: 500
-      });
-
-      return response.choices[0]?.message?.content || 'Lo siento, no pude procesar tu consulta. Por favor, inténtalo de nuevo.';
-    } catch (error) {
-      console.error('Error en Dr. Bryan:', error);
-      return 'Disculpa, estoy experimentando dificultades técnicas. Si estás pasando por una crisis emocional, por favor contacta a un profesional de salud mental o llama a una línea de crisis.';
-    }
-  }
-}
+export const reflectionGuideAgent = {
+  chat: (message: string): Promise<string> => requestReflection(
+    `Eres una guía de IA para autorreflexión. Ayuda a la persona a explorar una situación mediante preguntas abiertas, identificar perspectivas y pensar en pequeños pasos prácticos. Mantén un tono respetuoso y evita juicios. No afirmes tener formación o experiencia profesional, no diagnostiques, no recomiendes tratamientos ni presentes tus respuestas como atención clínica o asesoría médica. Si la persona describe peligro inmediato o una emergencia, anímala a contactar los servicios de emergencia locales y a una persona de confianza.`,
+    message,
+  ),
+};
 
 // 🧠 ANALISTA DE ESTADO DE ÁNIMO INTELIGENTE
 export class MoodAnalyzerAgent {
-  private systemPrompt = `Eres un analista especializado en estados de ánimo y bienestar emocional con formación en psicología positiva, terapia cognitivo-conductual y análisis de patrones emocionales.
+  private systemPrompt = `Eres un asistente de inteligencia artificial que resume registros personales de estado de ánimo para apoyar la autorreflexión. No eres profesional de salud y no brindas atención clínica, diagnósticos ni tratamientos.
 
 ESPECIALIZACIÓN:
 - Análisis profundo de patrones emocionales y tendencias de bienestar
@@ -132,7 +56,7 @@ INSTRUCCIONES ESPECÍFICAS:
 - Mantén un enfoque positivo, constructivo y basado en fortalezas
 - Considera el contexto temporal, circunstancias del usuario y factores externos
 - Proporciona alertas tempranas para cambios preocupantes
-- Incluye técnicas específicas de intervención psicológica
+- Ofrece ideas generales y prácticas para la autorreflexión, sin presentarlas como intervención profesional
 
 ANÁLISIS INCLUYE:
 - Patrones temporales (días de la semana, horas, estacionalidad)
@@ -171,7 +95,7 @@ RESPONDE EN FORMATO JSON:
   "nextSteps": ["próximo paso específico con timeline", "seguimiento sugerido con frecuencia"],
   "moodTrend": "improving|stable|declining",
   "keyFactors": ["factor influyente específico con explicación", "factor contextual importante"],
-  "interventionStrategies": ["estrategia de intervención específica", "técnica terapéutica recomendada"],
+  "interventionStrategies": ["idea general para apoyar la autorreflexión", "pequeño paso práctico"],
   "wellnessPlan": ["plan de bienestar personalizado", "objetivos específicos a corto plazo"]
 }`;
 
@@ -202,13 +126,8 @@ RESPONDE EN FORMATO JSON:
         'momento de introspección', 'evaluación personal', 'análisis emocional', 'revisión de bienestar'
       ];
       
-      const randomApproach = [
-        'enfoque cognitivo-conductual', 'perspectiva humanista', 'abordaje sistémico', 'enfoque integrativo',
-        'perspectiva psicodinámica', 'abordaje centrado en soluciones', 'enfoque mindfulness', 'perspectiva positiva'
-      ];
-
       const prompt = `
-        Eres un psicólogo clínico especializado en análisis de estados de ánimo. Realiza un ${randomContext[Math.floor(Math.random() * randomContext.length)]} con ${randomApproach[Math.floor(Math.random() * randomApproach.length)]}.
+        Realiza un ${randomContext[Math.floor(Math.random() * randomContext.length)]} descriptivo para apoyar la autorreflexión. No diagnostiques, infieras causas clínicas ni presentes conclusiones como evaluación profesional.
 
         DATOS ESPECÍFICOS DEL USUARIO:
         ${moodData.moodLogs.map((log: any, index: number) => 
@@ -224,9 +143,9 @@ RESPONDE EN FORMATO JSON:
         - Proporciona análisis ÚNICO y personalizado basado en estos datos específicos
         - Evita respuestas genéricas o repetitivas - cada análisis debe ser diferente
         - Incluye detalles específicos del perfil emocional del usuario
-        - Sé empático y profesional pero específico
+        - Sé empático y específico, dejando claro que los resultados son informativos y no clínicos
         - Considera el contexto individual y único
-        - Varía tu estilo de comunicación y enfoque terapéutico
+        - Varía la forma de presentar observaciones descriptivas sin atribuirles validez clínica
         - Incluye observaciones únicas basadas en los patrones específicos
 
         RESPONDE EN FORMATO JSON:
@@ -248,7 +167,7 @@ RESPONDE EN FORMATO JSON:
           "nextSteps": ["próximo paso específico con timeline", "seguimiento sugerido con frecuencia"],
           "moodTrend": "improving|stable|declining",
           "keyFactors": ["factor influyente específico con explicación", "factor contextual importante"],
-          "interventionStrategies": ["estrategia de intervención específica", "técnica terapéutica recomendada"],
+          "interventionStrategies": ["idea general para apoyar la autorreflexión", "pequeño paso práctico"],
           "wellnessPlan": ["plan de bienestar personalizado", "objetivos específicos a corto plazo"]
         }
       `;
@@ -327,7 +246,7 @@ RESPONDE EN FORMATO JSON:
       ],
       interventionStrategies: [
         `Estrategia de intervención: ${avgMood < 5 ? 'Implementa técnicas de regulación emocional inmediatas' : 'Mantén y refuerza las estrategias actuales que te funcionan'}`,
-        `Técnica terapéutica: ${avgMood < 5 ? 'Considera terapia cognitivo-conductual para patrones de pensamiento' : 'Continúa con técnicas de mantenimiento del bienestar'}`
+        `Idea de autorreflexión: ${avgMood < 5 ? 'Anota qué situaciones coinciden con cambios en tu estado de ánimo' : 'Observa qué hábitos cotidianos acompañan los días positivos'}`
       ],
       wellnessPlan: [
         `Plan de bienestar: ${avgMood < 5 ? 'Enfócate en actividades que generen placer y satisfacción' : 'Mantén tu rutina actual y considera nuevas actividades positivas'}`,
@@ -337,7 +256,4 @@ RESPONDE EN FORMATO JSON:
   }
 }
 
-// Instancias de los agentes
-export const drMiaAgent = new DrMiaAgent();
-export const drBryanAgent = new DrBryanAgent();
 export const moodAnalyzerAgent = new MoodAnalyzerAgent();

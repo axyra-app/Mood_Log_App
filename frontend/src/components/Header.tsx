@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const { notifications, unreadCount } = useNotifications(user?.uid || '', 'user');
+  const { notifications, unreadCount } = useNotifications(user?.uid || '');
 
   // No mostrar en dashboard
   const isDashboard = location.pathname === '/dashboard';

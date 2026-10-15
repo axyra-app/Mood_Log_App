@@ -9,7 +9,6 @@ export interface UserSettings {
     push: boolean;
     sms: boolean;
     moodReminders: boolean;
-    appointmentReminders: boolean;
     achievementNotifications: boolean;
     crisisAlerts: boolean;
     quietHours: {
@@ -20,7 +19,7 @@ export interface UserSettings {
   };
   // Configuración de privacidad
   privacy: {
-    profileVisibility: 'public' | 'private' | 'psychologists-only';
+    profileVisibility: 'public' | 'private';
     dataSharing: boolean;
     analyticsOptIn: boolean;
     marketingEmails: boolean;
@@ -40,22 +39,6 @@ export interface UserSettings {
     enableDetailedLogging: boolean;
     autoSave: boolean;
   };
-  // Configuración de psicólogo (solo para psicólogos)
-  psychologist?: {
-    availability: {
-      monday: { start: string; end: string; available: boolean };
-      tuesday: { start: string; end: string; available: boolean };
-      wednesday: { start: string; end: string; available: boolean };
-      thursday: { start: string; end: string; available: boolean };
-      friday: { start: string; end: string; available: boolean };
-      saturday: { start: string; end: string; available: boolean };
-      sunday: { start: string; end: string; available: boolean };
-    };
-    sessionDuration: number; // en minutos
-    maxPatientsPerDay: number;
-    emergencyContact: string;
-    autoAcceptAppointments: boolean;
-  };
   // Metadatos
   createdAt: Date;
   updatedAt: Date;
@@ -68,7 +51,6 @@ export const DEFAULT_USER_SETTINGS: Omit<UserSettings, 'userId' | 'createdAt' | 
     push: true,
     sms: false,
     moodReminders: true,
-    appointmentReminders: true,
     achievementNotifications: true,
     crisisAlerts: true,
     quietHours: {
@@ -226,24 +208,6 @@ class UserSettingsService {
     }
   }
 
-  // Actualizar configuración de psicólogo
-  async updatePsychologistSettings(
-    userId: string,
-    psychologistUpdates: Partial<UserSettings['psychologist']>
-  ): Promise<void> {
-    try {
-      const settingsRef = doc(db, 'userSettings', userId);
-
-      await updateDoc(settingsRef, {
-        psychologist: psychologistUpdates,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error('Error updating psychologist settings:', error);
-      throw error;
-    }
-  }
-
   // Resetear configuración a valores por defecto
   async resetToDefaults(userId: string): Promise<void> {
     try {
@@ -298,22 +262,6 @@ class UserSettingsService {
       }
     }
 
-    // Validar horas de disponibilidad del psicólogo
-    if (settings.psychologist?.availability) {
-      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-
-      for (const day of days) {
-        const dayAvailability =
-          settings.psychologist.availability[day as keyof typeof settings.psychologist.availability];
-        if (dayAvailability) {
-          if (!timeRegex.test(dayAvailability.start) || !timeRegex.test(dayAvailability.end)) {
-            errors.push(`Horas de disponibilidad inválidas para ${day}`);
-          }
-        }
-      }
-    }
-
     // Validar zona horaria
     if (settings.app?.timezone) {
       try {
@@ -331,6 +279,5 @@ class UserSettingsService {
 }
 
 export const userSettingsService = new UserSettingsService();
-
 
 

@@ -412,7 +412,7 @@ export class PDFReportGenerator {
       this.addSection('Importante', [
         'Este análisis es generado por inteligencia artificial.',
         'Refleja patrones generales basados en tus entradas.',
-        'Para análisis más profundos, consulta con un psicólogo.'
+        'Este resumen es informativo y no sustituye la orientación de un profesional cualificado.'
       ]);
 
       this.addFooter();

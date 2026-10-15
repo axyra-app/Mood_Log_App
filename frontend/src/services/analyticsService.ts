@@ -4,8 +4,7 @@ import { db } from './firebase';
 export interface ReportData {
   id?: string;
   userId?: string;
-  psychologistId?: string;
-  type: 'mood_trends' | 'patient_progress' | 'crisis_analysis' | 'appointment_summary' | 'wellness_overview';
+  type: 'mood_trends' | 'wellness_overview';
   title: string;
   description: string;
   period: {
@@ -218,7 +217,7 @@ class AnalyticsService {
 
     if (analytics.trend === 'down') {
       recommendations.push('Considera aumentar las actividades que te generan bienestar.');
-      recommendations.push('Es importante mantener contacto regular con tu psicólogo.');
+      recommendations.push('Considera hablar con una persona de confianza o un profesional cualificado si los cambios te preocupan.');
     }
 
     if (analytics.average < 3) {

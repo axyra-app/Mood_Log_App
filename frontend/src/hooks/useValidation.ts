@@ -47,40 +47,6 @@ export const commonValidationRules: ValidationRules = {
     pattern: /^[\+]?[1-9][\d]{0,15}$/,
     message: 'Por favor ingresa un número de teléfono válido',
   },
-  // Validaciones específicas para psicólogos
-  professionalTitle: {
-    required: true,
-    minLength: 3,
-    maxLength: 100,
-    message: 'El título profesional debe tener entre 3 y 100 caracteres',
-  },
-  specialization: {
-    required: true,
-    message: 'Por favor selecciona una especialización',
-  },
-  yearsOfExperience: {
-    required: true,
-    custom: (value: string) => {
-      const num = parseInt(value);
-      if (isNaN(num) || num < 0 || num > 50) {
-        return 'Los años de experiencia deben ser un número entre 0 y 50';
-      }
-      return null;
-    },
-  },
-  licenseNumber: {
-    required: true,
-    minLength: 3,
-    maxLength: 20,
-    pattern: /^[A-Z0-9\-]+$/,
-    message: 'El número de licencia debe tener entre 3 y 20 caracteres alfanuméricos',
-  },
-  bio: {
-    required: true,
-    minLength: 50,
-    maxLength: 1000,
-    message: 'La descripción profesional debe tener entre 50 y 1000 caracteres',
-  },
 };
 
 export const useValidation = () => {

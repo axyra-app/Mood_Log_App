@@ -24,7 +24,7 @@ El servicio existente contiene listas de términos y reglas para asignar niveles
 - No detectar expresiones indirectas, idioma, contexto, negación, ironía o errores ortográficos.
 - Marcar contenido no relacionado con una emergencia.
 - Producir niveles de riesgo sin validación clínica.
-- Depender de datos de un esquema anterior, como notificaciones a psicólogos.
+- Depender de notificaciones o flujos heredados que no estén implementados y verificados.
 - Intentar persistir en colecciones no habilitadas por las reglas locales.
 
 No se deben usar sus niveles, confianza o puntuación para afirmar una evaluación válida. No se deben guardar ni transmitir estos análisis sin una decisión de privacidad, finalidad y retención.

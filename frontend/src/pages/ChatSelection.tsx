@@ -24,8 +24,8 @@ const ChatSelection: React.FC = () => {
     return () => window.removeEventListener('storage', handleThemeChange);
   }, []);
 
-  const handleAIChat = (doctorType: 'dr-mia' | 'dr-bryan') => {
-    navigate(`/chat/${doctorType}`);
+  const handleAIChat = (assistantId: 'mia' | 'reflection') => {
+    navigate(`/chat/assistant/${assistantId}`);
   };
 
   return (
@@ -48,7 +48,7 @@ const ChatSelection: React.FC = () => {
             ¡Hola, {user?.displayName || 'Usuario'}! 👋
           </h2>
           <p className={`text-base sm:text-lg max-w-2xl mx-auto ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Estamos aquí para escucharte sin juicios. Elige con qué tipo de acompañamiento te gustaría conversar hoy:
+            Estamos aquí para escucharte sin juicios. Elige el enfoque de autorreflexión que prefieras:
           </p>
         </div>
 
@@ -66,7 +66,7 @@ const ChatSelection: React.FC = () => {
               </div>
               <h3 className='text-2xl font-bold mb-2'>Espacio de Desahogo</h3>
               <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Compañera empática enfocada en escucha activa, comprensión y validación emocional.
+                Una conversación cálida para poner en palabras lo que sientes y ordenar tus ideas.
               </p>
             </div>
 
@@ -77,7 +77,7 @@ const ChatSelection: React.FC = () => {
               </div>
               <div className='flex items-center space-x-3'>
                 <Shield className='w-4 h-4 text-purple-500' />
-                <span>Espacio privado y libre de juicios</span>
+                <span>Un espacio de autorreflexión sin juicios</span>
               </div>
               <div className='flex items-center space-x-3'>
                 <Sparkles className='w-4 h-4 text-pink-500' />
@@ -86,11 +86,11 @@ const ChatSelection: React.FC = () => {
             </div>
 
             <button
-              onClick={() => handleAIChat('dr-mia')}
+              onClick={() => handleAIChat('mia')}
               className='w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 px-6 rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all font-semibold flex items-center justify-center space-x-2 shadow-md'
             >
               <User className='w-5 h-5' />
-              <span>Hablar con Mia (Empática)</span>
+              <span>Conversar con Mia</span>
               <ArrowRight className='w-4 h-4' />
             </button>
           </div>
@@ -107,7 +107,7 @@ const ChatSelection: React.FC = () => {
               </div>
               <h3 className='text-2xl font-bold mb-2'>Guía Reflexivo</h3>
               <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Orientación práctica para identificar patrones, hábitos y encontrar claridad mental.
+                Preguntas para observar patrones, hábitos y perspectivas con mayor claridad.
               </p>
             </div>
 
@@ -127,11 +127,11 @@ const ChatSelection: React.FC = () => {
             </div>
 
             <button
-              onClick={() => handleAIChat('dr-bryan')}
+              onClick={() => handleAIChat('reflection')}
               className='w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold flex items-center justify-center space-x-2 shadow-md'
             >
               <User className='w-5 h-5' />
-              <span>Hablar con Bryan (Reflexivo)</span>
+              <span>Usar la guía reflexiva</span>
               <ArrowRight className='w-4 h-4' />
             </button>
           </div>
@@ -148,7 +148,7 @@ const ChatSelection: React.FC = () => {
             <div>
               <h4 className='font-semibold text-base mb-1'>Nota sobre privacidad y bienestar</h4>
               <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Este asistente es una herramienta de apoyo emocional y autorreflexión, no un terapeuta humano ni un servicio médico de urgencias. Si estás experimentando una situación de crisis severa o emergencia, por favor acude a una línea de atención especializada de tu localidad o a un centro de salud cercano.
+                Estas respuestas son generadas por IA para apoyar la autorreflexión; no son atención clínica, asesoría médica ni un servicio de emergencia. Si existe peligro inmediato, contacta los servicios de emergencia de tu localidad o a una persona de confianza.
               </p>
             </div>
           </div>

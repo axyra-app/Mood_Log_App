@@ -10,11 +10,9 @@ No agregues colecciones o campos a partir de esta lista sin revisar los llamador
 
 | Colección | Campos de propiedad que usan las reglas | Acceso local observado | Consideraciones |
 |---|---|---|---|
-| `users/{userId}` | El ID del documento debe coincidir con `request.auth.uid`. | Lectura, creación, actualización y borrado del dueño; alta restringida a rol ausente o `user`, actualización conserva el rol previo. | No hay lista completa de campos permitidos ni validación de tipos y límites. |
+| `users/{userId}` | El ID del documento debe coincidir con `request.auth.uid`; `role` debe ser `user` al crear o actualizar. | Lectura, creación, actualización y borrado del dueño. | Existe un único rol de aplicación (`user`); las reglas no permiten registrar ni cambiar el perfil a otro rol. No hay lista completa de campos permitidos ni validación de tipos y límites. |
 | `moodLogs/{logId}` | `userId` | Crear si el nuevo documento tiene el UID propio; leer y borrar si el documento existente pertenece al usuario; actualizar si dueño existente y nuevo `userId` propio. | El servicio conserva campos de `MoodLog`; su tipo aún describe `mood` como 1–5, mientras la interfaz y algunos documentos hablan de 1–10. |
 | `journalEntries/{entryId}` | `userId` | Propiedad comprobada al crear, leer, actualizar y borrar. | El servicio persiste texto en claro, fecha, etiquetas, estado de ánimo y datos opcionales de análisis. No existe cifrado cliente. |
-| `chatSessions/{sessionId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar solo si dueño existente y nuevo coinciden con la sesión. | No concede acceso a un psicólogo/participante distinto. |
-| `chatMessages/{messageId}` | `userId` | Igual que `chatSessions`. | El hook `useChat` crea mensajes con `sessionId`, `senderId`, `senderName`, `content`, `timestamp`, `isRead` y `messageType`; verificar si envía también `userId`, requerido por la regla de creación. |
 | `notifications/{notificationId}` | `userId` | Crear con `userId` propio; leer/borrar del dueño; actualizar sin cambiar propietario. | Otros servicios pueden producir campos/esquemas diferentes; confirmar cada llamador. |
 | `advancedReports/{reportId}` | `userId` | Crear con UID propio; acceso del dueño; actualizar sin cambiar propietario. | Verificar si el flujo activo persiste estos documentos. |
 | `statistics/{statId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar sin cambiar propietario. | La creación y el aislamiento tienen cobertura en las pruebas de reglas del emulador. |
@@ -22,13 +20,13 @@ No agregues colecciones o campos a partir de esta lista sin revisar los llamador
 | `journalTemplates/{templateId}`, `journalPrompts/{promptId}` | Sin propiedad | Lectura para cualquier usuario autenticado; no se permite escritura. | `journalService` incluye inicialización de datos por defecto desde el cliente; las reglas actuales no autorizan esa escritura. |
 | Otras colecciones | — | Denegadas por la regla catch-all. | Incluye nombres usados por otros servicios, por ejemplo `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts`, hasta que se definan reglas explícitas. |
 
-La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Las pruebas automatizadas actuales cubren roles, propiedad, transferencias de propietario y creación de estadísticas, no todos los campos ni operaciones de todas las colecciones. Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
+La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Las pruebas automatizadas cubren que el rol sea `user`, la propiedad, las transferencias de propietario y la denegación de colecciones heredadas. Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
 
 ## Formas de datos observadas en el código
 
 ### Perfil (`users/{uid}`)
 
-`AuthContext` lee y escribe propiedades como `email`, `displayName`, `username`, `role`, `createdAt`, `updatedAt`, nombre y teléfono. La interfaz de `User` en `frontend/src/types/index.ts` también declara campos heredados y `role: 'user' | 'psychologist'`, mientras el contexto de autenticación expone `role: 'user'`. No se debe tratar el rol del cliente como autorización confiable.
+`AuthContext` crea el perfil con `role: 'user'`; el formulario de registro no presenta opciones de rol. La interfaz compartida `User` también declara el rol como el literal `user`. La autorización se aplica en las reglas de Firestore y no debe confiarse únicamente a los tipos o al cliente.
 
 ### Registro de ánimo (`moodLogs`)
 
@@ -38,19 +36,13 @@ La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). 
 
 `journalService.createJournalEntry` guarda `userId`, `title`, `content`, `date`, `tags`, `mood`, `energy`, `stress`, `sleep`, `activities`, `emotions`, `aiSuggestions`, `aiAnalysis`, `isPrivate`, `createdAt` y `updatedAt`; elimina valores nulos antes de escribir. El contenido se guarda como texto legible.
 
-### Conversaciones y mensajes
+### Conversaciones de autorreflexión
 
-| Implementación | Colecciones | Modelo/campos principales |
-|---|---|---|
-| Hook `useChat` | `chatSessions`, `chatMessages` | Sesión con `userId`, `psychologistId`, participantes y metadatos; mensaje con `sessionId`, `senderId`, `content` y `timestamp`. Conserva un modelo profesional/legacy. |
-| Servicio `chatService` | `chats`, `messages` y `typing` | Conversación con `participants`, `chatType` y actividad; mensaje con `chatId`, emisor/destinatario y contenido. |
-| Reglas actuales | `chatSessions`, `chatMessages` | Cada documento exige `userId` para acceso. No hay reglas para `chats`, `messages` ni `typing`. |
-
-Estos contratos no son intercambiables. El producto debe escoger un único modelo y alinear el servicio, las reglas, las consultas y los índices antes de considerar chat operativo.
+El chat con IA mantiene su historial solo en memoria del navegador durante la vista actual; no utiliza colecciones de Firestore para mensajes o sesiones. El texto se envía al proveedor de IA para generar la respuesta. Las colecciones de chat persistente y las colecciones profesionales heredadas no están autorizadas por las reglas y no forman parte del modelo activo.
 
 ## Índices
 
-`firestore.indexes.json` conserva índices para `appointments`, `notifications`, `chatSessions` y `chatMessages`, incluidos campos de la experiencia profesional anterior. No es un inventario de consultas garantizadas ni coincide necesariamente con los módulos B2C actuales. Firestore puede requerir índices adicionales según filtros/ordenamientos. Ante el enlace de error que devuelve Firebase:
+`firestore.indexes.json` conserva los índices definidos para las consultas actuales que requieren composición. No es una garantía de que todas las consultas del cliente estén cubiertas. Firestore puede requerir índices adicionales según filtros/ordenamientos. Ante el enlace de error que devuelve Firebase:
 
 1. Confirma que la consulta y los campos son los esperados.
 2. Añade el índice mínimo necesario al archivo versionado.
