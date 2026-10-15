@@ -126,15 +126,8 @@ export const useJournal = (userId: string) => {
       setError(null);
 
 
-      // Analyze content with AI if provided
-      let aiAnalysis;
-      if (entryData.content && entryData.content.trim().length > 10) {
-        aiAnalysis = await analyzeJournalEntry(entryData.content);
-      }
-
       const newEntry = await createJournalEntry({
         ...entryData,
-        aiAnalysis,
       });
 
       
@@ -156,15 +149,8 @@ export const useJournal = (userId: string) => {
       setError(null);
 
 
-      // Re-analyze content if it was updated
-      let aiAnalysis = updates.aiAnalysis;
-      if (updates.content && updates.content.trim().length > 10) {
-        aiAnalysis = await analyzeJournalEntry(updates.content);
-      }
-
       await updateJournalEntry(entryId, {
         ...updates,
-        aiAnalysis,
       });
 
       
@@ -220,7 +206,7 @@ export const useJournal = (userId: string) => {
       return await analyzeJournalEntry(content);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error analyzing journal entry');
-      return null;
+      throw err;
     } finally {
       setLoading(false);
     }

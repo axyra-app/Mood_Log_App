@@ -194,7 +194,7 @@ const AdvancedReports: React.FC = () => {
     } catch (error) {
       console.error('Error generating mood report:', error);
       toast.error(
-        'Error al generar el reporte de estado de ánimo. Por favor, intenta nuevamente o contacta soporte si el problema persiste.'
+        error instanceof Error ? error.message : 'Error al generar el reporte de estado de ánimo.'
       );
     } finally {
       setLoading(false);
@@ -286,7 +286,7 @@ const AdvancedReports: React.FC = () => {
     } catch (error) {
       console.error('Error generating diary report:', error);
       toast.error(
-        'Error al generar el reporte de diario. Por favor, intenta nuevamente o contacta soporte si el problema persiste.'
+        error instanceof Error ? error.message : 'Error al generar el reporte de diario.'
       );
     } finally {
       setLoading(false);
@@ -363,6 +363,9 @@ const AdvancedReports: React.FC = () => {
         {/* Controls */}
         <div className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 sm:mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Generar Nuevo Reporte</h2>
+          <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Al generar un análisis con IA, se enviarán los registros del período seleccionado a Groq para procesarlos. No incluyas información que no quieras compartir con un proveedor externo.
+          </p>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
             {/* Period Selection */}

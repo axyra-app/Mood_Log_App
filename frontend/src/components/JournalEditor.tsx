@@ -104,7 +104,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
       toast.success('Análisis completado');
     } catch (error) {
       console.error('Error analyzing entry:', error);
-      toast.error('Error al analizar la entrada');
+      toast.error(error instanceof Error ? error.message : 'Error al analizar la entrada');
     } finally {
       setIsAnalyzing(false);
     }
@@ -187,6 +187,9 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                 <X className="w-6 h-6" />
               </button>
             </div>
+            <p className="mt-3 text-xs text-gray-500">
+              Si eliges analizar, el contenido se enviará a Groq para generar una respuesta. No incluyas información que no quieras compartir con un proveedor externo.
+            </p>
           </div>
         </div>
 
@@ -218,7 +221,11 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                 <textarea
                   ref={textareaRef}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    setAiAnalysis(null);
+                    setShowAIAnalysis(false);
+                  }}
                   placeholder="Escribe aquí tu entrada del diario... (Ctrl+Enter para guardar, Ctrl+Espacio para IA)"
                   className="w-full min-h-[300px] sm:min-h-[400px] px-3 sm:px-4 py-3 text-base leading-relaxed border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   onKeyDown={handleKeyPress}

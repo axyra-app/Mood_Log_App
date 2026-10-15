@@ -18,7 +18,19 @@ El proyecto debe instalar dependencias desde `frontend/` y usar esa carpeta como
 
 ## Variables y claves
 
-No guardes secretos de servidor en `VITE_*`: se incluyen en el código del navegador. El frontend actual consume `VITE_GROQ_API_KEY` desde servicios de cliente; no habilites claves privadas allí. Migra llamadas de IA a un backend/función con secreto de servidor antes de procesar datos sensibles.
+No guardes secretos de servidor en `VITE_*`: se incluyen en el código del navegador. Las llamadas activas de Groq se sirven desde `frontend/api/ai.ts`, que verifica el ID token de Firebase y solo entonces usa la clave del servidor. No agregues `VITE_GROQ_API_KEY`.
+
+Para habilitar la función en Vercel, configura estas variables como secretos del proyecto y selecciona los entornos de Preview y Production necesarios:
+
+| Variable | Valor |
+|---|---|
+| `GROQ_API_KEY` | Clave privada generada en Groq. |
+| `FIREBASE_PROJECT_ID` | ID del proyecto usado por la app, actualmente `mood-log-app-01`. |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | JSON completo de una cuenta de servicio dedicada, guardado como secreto. |
+
+Usa una cuenta de servicio dedicada y el rol mínimo disponible para Firestore. El SDK Admin omite las reglas: los permisos de datos de Firestore no se limitan a la colección `aiUsage`, así que protege esta clave como una credencial con acceso al proyecto. No la compartas por chat ni la guardes en Git. Mantén la raíz del proyecto Vercel en `frontend` para que `/api/ai` se detecte como función Node. Tras guardar las variables, crea un deployment nuevo.
+
+La API acepta chat, análisis de diario y análisis de ánimo; valida el tamaño de entrada y limita cada cuenta autenticada a 40 solicitudes diarias. El chat admite hasta 4.000 caracteres, el análisis de diario 5.000 y el análisis de ánimo hasta 60 registros (18 KB de datos). Son límites iniciales, no una garantía de gasto máximo. Las acciones de IA seleccionadas por el usuario transmiten texto/datos a Groq; informa de ello en la interfaz y evita enviar datos sensibles innecesarios. `npm run dev` de Vite por sí solo no ejecuta funciones de Vercel; prueba la API desde un Preview de Vercel.
 
 La configuración Firebase del cliente está escrita en `frontend/src/services/firebase.ts`; las variables de Firebase declaradas en workflows no cambian esa configuración hasta que el código las consuma. La configuración de Firebase en cliente no sustituye las reglas de autorización.
 

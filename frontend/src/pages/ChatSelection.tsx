@@ -148,7 +148,7 @@ const ChatSelection: React.FC = () => {
             <div>
               <h4 className='font-semibold text-base mb-1'>Nota sobre privacidad y bienestar</h4>
               <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Estas respuestas son generadas por IA para apoyar la autorreflexión; no son atención clínica, asesoría médica ni un servicio de emergencia. Si existe peligro inmediato, contacta los servicios de emergencia de tu localidad o a una persona de confianza.
+                Los mensajes que envíes se procesan mediante Groq para generar respuestas y no se guardan como historial en Mood Log App. No incluyas información que no quieras compartir con un proveedor externo. Estas respuestas de IA apoyan la autorreflexión; no son atención clínica, asesoría médica ni un servicio de emergencia. Si existe peligro inmediato, contacta los servicios de emergencia de tu localidad o a una persona de confianza.
               </p>
             </div>
           </div>

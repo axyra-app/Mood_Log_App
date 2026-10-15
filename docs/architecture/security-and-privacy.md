@@ -10,17 +10,17 @@ Esta página describe los archivos de reglas y el código local revisados. **No 
 
 `firestore.rules` define:
 
-- `users/{userId}`: lectura y operaciones del propietario si el UID coincide con el ID del documento; alta restringida a `role` ausente o `user`, y actualización que conserva el rol existente.
+- `users/{userId}`: lectura y operaciones del propietario si el UID coincide con el ID del documento; alta y actualización requieren `role: 'user'`.
 - `moodLogs` y `journalEntries`: el `userId` debe coincidir al crear, y se comprueba el dueño al leer, actualizar o borrar.
-- `chatSessions`, `chatMessages`, `notifications`, `advancedReports`, `statistics` y `reminders`: creación con propietario autenticado y actualización que conserva el `userId` del dueño existente.
-- `statistics`: lectura, creación, actualización y borrado del propietario.
+- `notifications`, `advancedReports`, `statistics` y `reminders`: acceso asociado al propietario autenticado y actualización sin cambiar su `userId`.
+- `userSettings/{settingsId}`: lectura y escritura cuando el ID del documento coincide con el UID autenticado.
 - `journalTemplates` y `journalPrompts`: lectura disponible para usuarios autenticados.
 - Cualquier colección no listada: denegada por la regla final.
 
 ### Limitaciones y estado de validación
 
 1. Las reglas de propiedad/rol y creación de `statistics` tienen ahora cobertura automatizada en `frontend/tests/security/firestore-rules.test.mjs`; ejecuta `cd frontend && npm run test:rules`. Esto valida las reglas versionadas en el emulador, no las reglas desplegadas en Firebase.
-2. Los flujos de `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts` no están permitidos por las reglas locales. El hook de chat que usa `chatMessages` también debe comprobar que envía el `userId` requerido.
+2. Las colecciones de chat persistente (`chats`, `messages`, `chatSessions` y `chatMessages`), `typing`, `crisisAssessments` y `crisisAlerts` no están permitidas por las reglas locales.
 3. La inicialización desde cliente de plantillas/prompts no está permitida: las reglas solo conceden lectura.
 4. Las reglas no son un esquema completo: faltan validaciones de campos, tipos, límites y estados permitidos. Consultas Firestore también deben limitarse para que la regla pueda probar el propietario de cada documento.
 5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. Hay pruebas con UID propio/ajeno/anónimo, tipo no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
@@ -35,9 +35,11 @@ Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilid
 
 ## IA y secretos
 
-Algunos módulos del frontend inicializan Groq con `VITE_GROQ_API_KEY` y permiten explícitamente su uso desde navegador. **Una variable `VITE_*` no es secreta**: puede quedar en los archivos descargados por cualquier visitante. No guardar allí claves privadas; si una clave real ya se publicó en un bundle, revocarla/rotarla y revisar uso y facturación.
+Las llamadas activas a Groq pasan por `frontend/api/ai.ts`; el frontend no incluye la clave ni inicializa el SDK de Groq. La función exige un ID token de Firebase válido, valida tamaños de entrada y limita la cuota a 40 solicitudes diarias por UID mediante un contador en `aiUsage`. Las reglas por defecto deniegan el acceso directo de clientes a esa colección. La función necesita `GROQ_API_KEY`, `FIREBASE_PROJECT_ID` y `FIREBASE_SERVICE_ACCOUNT_JSON` en Vercel; no agregues claves a `VITE_*` ni a Git.
 
-Las solicitudes de IA pueden transmitir el contenido del diario o contexto emocional a un tercero. Antes de habilitar el flujo se necesita un backend/función con secreto de servidor, una política de minimización de datos, consentimiento informado y documentación del proveedor y retención. El análisis local de fallback no equivale a una evaluación clínica. La app no debe presentarse como terapeuta, diagnóstico ni servicio de emergencia.
+El chat, el análisis explícito de una entrada del diario y la generación de reportes pueden transmitir texto o datos emocionales a Groq. La interfaz informa antes de estas acciones; guardar una entrada no inicia por sí mismo el análisis. Revisa el tratamiento y las condiciones del proveedor antes de usar datos reales, y minimiza el contenido enviado. Las respuestas son informativas y de autorreflexión; no son atención clínica, diagnóstico ni servicio de emergencia.
+
+La cuenta de servicio del backend es un secreto sensible. El SDK Admin omite las reglas de Firestore; para escribir el contador requiere permisos IAM de datos de Firestore que no se limitan a la colección `aiUsage`. Usa una cuenta de servicio dedicada con el rol mínimo disponible, limita su uso al entorno de Vercel y protégela como una credencial capaz de acceder a datos del proyecto. La cuota diaria reduce el abuso por cuenta, pero no garantiza un límite absoluto de facturación; controla también el uso en Groq y Vercel.
 
 La configuración Firebase de cliente está escrita directamente en `frontend/src/services/firebase.ts`; una API key Firebase de cliente no es un secreto de servidor. La protección de datos depende de reglas, configuración del proyecto, restricciones de API y controles de acceso.
 
@@ -51,6 +53,6 @@ El diario se persiste como texto legible. La propuesta de cifrado con Web Crypto
 - Ejecutar `cd frontend && npm run test:rules` para probar reglas locales de Firestore en un proyecto demo de emulador; complementar con pruebas de Storage, otros flujos y verificación del proyecto/reglas remotos antes de producción.
 - Para cada colección: probar crear, leer/listar, actualizar y eliminar como dueño, segundo usuario y usuario anónimo.
 - Probar Storage con UID propio, UID ajeno, tipo MIME/tamaño inválido y URLs de descarga.
-- Revisar el bundle y las solicitudes de red para comprobar que no salen claves de servidor ni datos que no tengan consentimiento.
+- Revisar el bundle y las solicitudes de red para comprobar que no salen claves de servidor y que las acciones de IA transmiten solo el contenido indicado en la interfaz.
 - Revisar dominios autorizados, IAM, acceso a Vercel, previews, logs, retención, eliminación de cuenta y respuesta a incidentes.
 - Hacer revisar términos y política de privacidad por la persona responsable antes de recopilar datos reales.

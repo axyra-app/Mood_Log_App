@@ -115,7 +115,7 @@ const AIChat: React.FC = () => {
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error enviando mensaje:', error);
-      toast.error('Error al enviar mensaje. Por favor, inténtalo de nuevo.');
+      toast.error(error instanceof Error ? error.message : 'Error al enviar mensaje. Por favor, inténtalo de nuevo.');
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),

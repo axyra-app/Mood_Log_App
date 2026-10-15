@@ -44,7 +44,7 @@ La configuración de emuladores Firestore y Storage está en `firebase.json`; `n
 
 Vite publica en el bundle del navegador todas las variables con prefijo `VITE_`. Por lo tanto, no pongas en ellas claves privadas, tokens de administración ni credenciales de servidor, aunque el archivo `.env.local` esté ignorado por Git.
 
-Hay código que consume `VITE_GROQ_API_KEY` desde el cliente. No uses una clave privada o de producción ahí. Si se requiere IA, migra la solicitud a una función/backend con secreto de servidor y limita los datos transmitidos; desactivar la variable no convierte las llamadas directas en arquitectura segura.
+Las llamadas activas de IA usan `/api/ai` en Vercel y requieren secretos de servidor configurados en el panel: `GROQ_API_KEY`, `FIREBASE_PROJECT_ID` y `FIREBASE_SERVICE_ACCOUNT_JSON`. No agregues `VITE_GROQ_API_KEY`: cualquier variable `VITE_*` puede quedar expuesta en el bundle. El servidor local de Vite no ejecuta esta función; prueba la IA desde un Preview de Vercel.
 
 La configuración Firebase de cliente no es una clave administrativa. No obstante, las reglas deben limitar el acceso y el cliente actual debe conectarse solo al proyecto autorizado para la tarea.
 

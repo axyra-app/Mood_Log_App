@@ -18,7 +18,7 @@ No agregues colecciones o campos a partir de esta lista sin revisar los llamador
 | `statistics/{statId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar sin cambiar propietario. | La creación y el aislamiento tienen cobertura en las pruebas de reglas del emulador. |
 | `reminders/{reminderId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar sin cambiar propietario. | Confirmar el flujo con pruebas antes de considerarlo disponible. |
 | `journalTemplates/{templateId}`, `journalPrompts/{promptId}` | Sin propiedad | Lectura para cualquier usuario autenticado; no se permite escritura. | `journalService` incluye inicialización de datos por defecto desde el cliente; las reglas actuales no autorizan esa escritura. |
-| Otras colecciones | — | Denegadas por la regla catch-all. | Incluye nombres usados por otros servicios, por ejemplo `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts`, hasta que se definan reglas explícitas. |
+| Otras colecciones | — | Denegadas a clientes por la regla catch-all. | Incluye nombres heredados como `chats`, `messages`, `chatSessions`, `chatMessages`, `typing`, `crisisAssessments` y `crisisAlerts`. `aiUsage/{uid}` es un contador interno escrito por la API con Firebase Admin; no es accesible desde el cliente y el SDK Admin omite las reglas. |
 
 La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Las pruebas automatizadas cubren que el rol sea `user`, la propiedad, las transferencias de propietario y la denegación de colecciones heredadas. Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
 

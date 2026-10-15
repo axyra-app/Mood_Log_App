@@ -33,7 +33,7 @@ Corrige los errores que reporte y vuelve a ejecutar tanto typecheck como build. 
 La escritura/consulta no coincide con las reglas locales o remotas, el usuario no está autenticado o el documento no pertenece al UID actual. Verifica:
 
 1. `auth.currentUser` y el UID usado en la operación.
-2. La colección exacta: el servicio `chatService` usa `chats`/`messages`, que las reglas locales no autorizan; el hook `useChat` usa `chatSessions`/`chatMessages`.
+2. La colección exacta y si está permitida por `firestore.rules`; las colecciones heredadas de chat persistente no están autorizadas.
 3. Que los documentos consultados tengan el campo de propietario requerido por la regla.
 4. Que las reglas estén desplegadas en el proyecto esperado; el archivo local no confirma las reglas remotas.
 
@@ -71,6 +71,6 @@ No. El servicio guarda el contenido en texto legible en Firestore. El cifrado lo
 
 No está documentado ni implementado un flujo completo offline con cola de escritura y sincronización. El plugin PWA cachea recursos de la aplicación, pero esto no garantiza disponibilidad offline de datos de Firebase.
 
-### ¿Puedo poner una clave de IA en `.env.local`?
+### ¿Dónde configuro la clave de IA?
 
-No si se usa un prefijo `VITE_` y se pretende mantenerla privada: Vite publica esas variables en el cliente. El flujo de Groq actual se inicializa desde el navegador. Hace falta un backend con secreto de servidor antes de usar una clave privada o enviar información íntima.
+Configura `GROQ_API_KEY` como secreto del proyecto en Vercel; no uses `VITE_GROQ_API_KEY`, porque Vite incluiría el valor en el bundle del navegador. El endpoint `/api/ai` también requiere `FIREBASE_PROJECT_ID` y `FIREBASE_SERVICE_ACCOUNT_JSON`. `npm run dev` de Vite no ejecuta funciones; prueba con un Preview de Vercel.

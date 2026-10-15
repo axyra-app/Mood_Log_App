@@ -45,8 +45,8 @@ La presencia de configuración para un proveedor de hosting no confirma dónde e
 1. **Sesión:** Firebase Auth notifica cambios a `AuthContext`; el contexto carga el documento `users/{uid}`.
 2. **Registro de ánimo:** `moodLogService` escribe y consulta `moodLogs`. El objeto guardado se deriva de los datos que le pasa el llamador; los tipos y pantallas aún no comparten una escala documentada como contrato único.
 3. **Diario:** `journalService` escribe en `journalEntries` y consulta plantillas/prompts. El servicio persiste contenido legible; no cifra el texto antes de enviarlo a Firestore.
-4. **Chat:** hay más de una implementación. `useChat` usa `chatSessions` y `chatMessages`; `chatService` usa `chats` y `messages`. Las reglas locales no autorizan estas últimas colecciones y no corresponden plenamente al modelo de participantes heredado.
-5. **IA:** algunos módulos de cliente inicializan el SDK de Groq con `VITE_GROQ_API_KEY`. Las variables `VITE_*` se incorporan al cliente y no son secretos. `aiService` contiene un análisis de fallback y la llamada real que aparece allí está comentada.
+4. **Chat:** el chat actual conserva sus mensajes en memoria del navegador y no usa colecciones de chat persistentes. Sus solicitudes a Groq pasan por `/api/ai`.
+5. **IA:** las llamadas activas a Groq se realizan desde la función Node `/api/ai` de Vercel. Esta valida ID tokens de Firebase, limita las entradas y aplica una cuota diaria por UID; la clave se configura solo como secreto de servidor. El chat y los análisis seleccionados por el usuario transmiten su contenido a Groq.
 
 Los detalles e incompatibilidades conocidos se registran en [database-schema.md](./database-schema.md). No tratar ninguno de estos flujos como verificado en producción sin probarlo en un entorno Firebase de desarrollo.
 

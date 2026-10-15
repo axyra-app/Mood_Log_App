@@ -13,6 +13,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
+import { requestAi } from './aiApi';
 import { db } from './firebase';
 import { initializeDefaultJournalData } from './journalDefaultData';
 
@@ -281,14 +282,6 @@ export const getJournalPrompts = async (category?: string): Promise<JournalPromp
 };
 
 // AI Analysis Service for Journal Entries
-import Groq from 'groq-sdk';
-
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true
-});
-
-// AI Analysis Service for Journal Entries
 export const analyzeJournalEntry = async (
   content: string
 ): Promise<{
@@ -297,149 +290,10 @@ export const analyzeJournalEntry = async (
   insights: string[];
   recommendations: string[];
   summary: string;
-}> => {
-  try {
-    // Simulate AI processing time
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Use Groq for professional analysis
-    const response = await groq.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: `Eres un asistente de IA que resume entradas de diario para apoyar la autorreflexión. No eres profesional de salud y no brindas atención clínica, diagnósticos ni tratamientos.
-
-INSTRUCCIONES ESPECÍFICAS:
-- Resume el contenido del diario de forma empática, clara y no clínica
-- Identifica el sentimiento general (positivo, negativo, neutral)
-- Extrae temas principales mencionados
-- Proporciona observaciones descriptivas basadas únicamente en el texto
-- Ofrece sugerencias cotidianas de autorreflexión
-- Genera un resumen breve y neutral
-- Usa lenguaje comprensivo y no juzgues
-- Responde en español
-
-RESPONDE EN FORMATO JSON:
-{
-  "sentiment": "positive|negative|neutral",
-  "themes": ["tema1", "tema2", "tema3"],
-  "insights": ["observación descriptiva", "pregunta para la autorreflexión"],
-  "recommendations": ["recomendación práctica", "sugerencia constructiva"],
-  "summary": "Resumen breve del contenido"
-}`
-        },
-        {
-          role: 'user',
-          content: `Analiza esta entrada de diario personal:\n\n"${content}"`
-        }
-      ],
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.7,
-      max_tokens: 800,
-      response_format: { type: 'json_object' },
-    });
-
-    const analysis = JSON.parse(response.choices[0]?.message?.content || '{}');
-    
-    return {
-      sentiment: analysis.sentiment || 'neutral',
-      themes: analysis.themes || ['General'],
-      insights: analysis.insights || ['Continúa reflexionando sobre tus experiencias'],
-      recommendations: analysis.recommendations || ['Mantén el hábito de escribir en tu diario'],
-      summary: analysis.summary || 'Análisis de tu reflexión personal',
-    };
-
-  } catch (error) {
-    console.error('❌ Error analyzing journal entry with Groq:', error);
-    
-    // Fallback to simple analysis
-    const words = content.toLowerCase().split(/\s+/);
-    const positiveWords = [
-      'feliz', 'alegre', 'contento', 'bueno', 'excelente', 'genial', 'maravilloso', 'increíble', 'perfecto', 'fantástico',
-      'amor', 'querer', 'querido', 'hermoso', 'bello', 'divertido', 'risa', 'sonreír', 'sonrisa', 'risa',
-      'éxito', 'logro', 'conseguir', 'ganar', 'victoria', 'triunfo', 'superar', 'mejorar', 'progreso',
-      'gratitud', 'agradecido', 'bendecido', 'afortunado', 'suerte', 'oportunidad', 'momento', 'experiencia',
-      'paz', 'tranquilo', 'calma', 'relajado', 'satisfecho', 'pleno', 'completo', 'realizado'
-    ];
-    
-    const negativeWords = [
-      'triste', 'malo', 'terrible', 'horrible', 'deprimido', 'ansioso', 'estresado', 'preocupado', 'molesto', 'enojado',
-      'miedo', 'temer', 'asustado', 'nervioso', 'angustiado', 'desesperado', 'perdido', 'confundido', 'solo', 'solitario',
-      'fracaso', 'fallar', 'perder', 'derrota', 'problema', 'dificultad', 'obstáculo', 'barrera', 'lucha', 'pelea',
-      'dolor', 'sufrimiento', 'pena', 'luto', 'duelo', 'separación', 'ruptura', 'abandono', 'rechazo', 'crítica'
-    ];
-
-    const positiveCount = words.filter((word) => positiveWords.some(pw => word.includes(pw))).length;
-    const negativeCount = words.filter((word) => negativeWords.some(nw => word.includes(nw))).length;
-
-    let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
-    if (positiveCount > negativeCount && positiveCount > 0) {
-      sentiment = 'positive';
-    } else if (negativeCount > positiveCount && negativeCount > 0) {
-      sentiment = 'negative';
-    }
-
-    // Extract themes based on content analysis
-    const themes = [];
-    const contentLower = content.toLowerCase();
-    
-    if (contentLower.includes('trabajo') || contentLower.includes('trabajar') || contentLower.includes('oficina') || contentLower.includes('empleo')) {
-      themes.push('Trabajo');
-    }
-    if (contentLower.includes('familia') || contentLower.includes('familiares') || contentLower.includes('padres') || contentLower.includes('hermanos')) {
-      themes.push('Familia');
-    }
-    if (contentLower.includes('amigos') || contentLower.includes('amistad') || contentLower.includes('compañeros') || contentLower.includes('social')) {
-      themes.push('Amistades');
-    }
-    if (contentLower.includes('salud') || contentLower.includes('ejercicio') || contentLower.includes('deporte') || contentLower.includes('médico')) {
-      themes.push('Salud');
-    }
-    if (contentLower.includes('estudio') || contentLower.includes('aprender') || contentLower.includes('universidad') || contentLower.includes('escuela')) {
-      themes.push('Educación');
-    }
-    if (contentLower.includes('amor') || contentLower.includes('pareja') || contentLower.includes('novio') || contentLower.includes('novia')) {
-      themes.push('Relaciones');
-    }
-    if (contentLower.includes('viaje') || contentLower.includes('vacaciones') || contentLower.includes('aventura') || contentLower.includes('explorar')) {
-      themes.push('Viajes');
-    }
-    if (contentLower.includes('hobby') || contentLower.includes('pasatiempo') || contentLower.includes('música') || contentLower.includes('arte')) {
-      themes.push('Pasatiempos');
-    }
-
-    if (themes.length === 0) {
-      themes.push('General');
-    }
-
-    // Generate contextual insights and recommendations
-    const insights = [];
-    const recommendations = [];
-
-    if (sentiment === 'positive') {
-      insights.push('Tu entrada refleja una perspectiva positiva y constructiva');
-      recommendations.push('Continúa cultivando esta mentalidad positiva');
-    } else if (sentiment === 'negative') {
-      insights.push('Tu entrada muestra algunos desafíos emocionales');
-      recommendations.push('Considera técnicas de manejo del estrés y mindfulness');
-    } else {
-      insights.push('Tu reflexión muestra un equilibrio emocional');
-      recommendations.push('Mantén la práctica regular de autorreflexión');
-    }
-
-    return {
-      sentiment,
-      themes,
-      insights,
-      recommendations,
-      summary: sentiment === 'positive' 
-        ? 'Reflexión positiva sobre tus experiencias' 
-        : sentiment === 'negative'
-        ? 'Reflexión sobre desafíos y emociones'
-        : 'Reflexión equilibrada sobre tu día',
-    };
-  }
-};
+}> => requestAi({
+  task: 'journal-analysis',
+  content,
+});
 
 // Default Journal Templates
 export const getDefaultTemplates = (): JournalTemplate[] => [
