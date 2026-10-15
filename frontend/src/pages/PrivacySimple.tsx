@@ -216,9 +216,9 @@ const PrivacySimple: React.FC = () => {
                 Si tienes preguntas sobre esta política de privacidad, puedes contactarnos en:
               </p>
               <div className="mt-4 space-y-2">
-                <p>📧 Email: privacy@moodlogapp.com</p>
-                <p>📞 Teléfono: +1 (555) 123-4567</p>
-                <p>📍 Dirección: 123 Innovation St, Tech City, TC 12345</p>
+                <p>📧 Email: <a className="underline" href="mailto:moodloga@gmail.com">moodloga@gmail.com</a></p>
+                <p>📞 Teléfono: <a className="underline" href="tel:+573187249579">+57 318 724 9579</a></p>
+                <p>📍 Ubicación: Envigado, Antioquia, Colombia</p>
               </div>
             </section>
 
