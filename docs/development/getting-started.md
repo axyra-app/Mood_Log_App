@@ -3,7 +3,7 @@
 ## Requisitos
 
 - Git y acceso autorizado al repositorio.
-- Node.js 18.x para coincidir con los workflows de GitHub Actions. `package.json` no fija un rango `engines`; acuerda y prueba otra versión antes de cambiar la versión de CI.
+- Node.js 22.x para coincidir con los workflows de GitHub Actions y los requisitos actuales de Firebase CLI. `package.json` no fija un rango `engines`; prueba otra versión antes de cambiar la versión de CI.
 - npm, incluido con Node.js.
 
 ## Instalar y ejecutar
@@ -38,7 +38,7 @@ Antes de ejecutar la aplicación que escribe datos:
 3. Comprueba que las cuentas de prueba y reglas sean de desarrollo.
 4. No escribas diarios, chats ni registros de personas reales en pruebas.
 
-No se identificó un `.env.example` ni una configuración completa del emulador en el repositorio. Si se agrega configuración por ambiente, debe actualizarse también `firebase.ts`, CI, Vercel y esta guía.
+La configuración de emuladores Firestore y Storage está en `firebase.json`; `npm run test:rules` inicia ambos con un ID de proyecto demo y prueba sus reglas sin desplegar. Esto no configura la app cliente para apuntar a emuladores. No hay emulador de Auth configurado. Si se agrega configuración por ambiente, debe actualizarse también `firebase.ts`, CI, Vercel y esta guía.
 
 ## Variables de entorno y secretos
 
@@ -50,14 +50,16 @@ La configuración Firebase de cliente no es una clave administrativa. No obstant
 
 ## Validación y CI
 
-El workflow `.github/workflows/ci.yml` instala dependencias y ejecuta `npm run build`; no ejecuta `npm run typecheck` ni pruebas automatizadas. `frontend/package.json` no define comandos de test o lint. Ejecuta localmente:
+El workflow `.github/workflows/ci.yml` instala dependencias, prueba reglas Firestore/Storage, ejecuta typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas de componentes/servicios. `frontend/package.json` define el comando de reglas, pero no comandos generales de test o lint. Ejecuta localmente:
 
 ```sh
+npm run test:rules
 npm run typecheck
+npm audit --omit=dev
 npm run build
 ```
 
-No interpretes un build Vite exitoso como validación de tipos. No se pudo confirmar el resultado de estas verificaciones al redactar esta guía si faltan dependencias en el entorno: primero ejecuta `npm ci` desde `frontend/` y registra los resultados reales.
+No interpretes un build Vite exitoso como validación de tipos. La última verificación local registrada pasó estas cuatro comprobaciones; tras cambiar código o dependencias, vuelve a ejecutarlas y registra cualquier fallo.
 
 ## Trabajo seguro
 

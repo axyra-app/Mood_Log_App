@@ -11,7 +11,12 @@ service cloud.firestore {
     // PERFIL DE USUARIO
     // ========================================
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == 'user');
+      allow update: if isOwner(userId)
+        && request.resource.data.get('role', null) == resource.data.get('role', null);
+      allow delete: if isOwner(userId);
     }
     
     // ========================================
@@ -38,21 +43,28 @@ service cloud.firestore {
     match /chatSessions/{sessionId} {
       allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
     }
     
     match /chatMessages/{messageId} {
       allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
     // NOTIFICACIONES
     // ========================================
     match /notifications/{notificationId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
@@ -66,20 +78,30 @@ service cloud.firestore {
     // REPORTES AVANZADOS Y ESTADÍSTICAS
     // ========================================
     match /advancedReports/{reportId} {
-      allow read, write, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
     }
-    
+
     match /statistics/{statId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================
     // RECORDATORIOS
     // ========================================
     match /reminders/{reminderId} {
-      allow read, write, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
     }
     
     // ========================================

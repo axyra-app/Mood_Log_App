@@ -24,7 +24,7 @@ Vite transpila TypeScript, pero el build no sustituye el chequeo completo de tip
 npm run typecheck
 ```
 
-Corrige los errores que reporte y vuelve a ejecutar tanto typecheck como build. El CI actual ejecuta build, no typecheck.
+Corrige los errores que reporte y vuelve a ejecutar tanto typecheck como build. CI ejecuta typecheck, pruebas de reglas Firestore/Storage y build.
 
 ## Firebase
 

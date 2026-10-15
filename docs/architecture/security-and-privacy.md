@@ -10,27 +10,28 @@ Esta página describe los archivos de reglas y el código local revisados. **No 
 
 `firestore.rules` define:
 
-- `users/{userId}`: lectura/escritura si el UID autenticado coincide con el ID del documento.
+- `users/{userId}`: lectura y operaciones del propietario si el UID coincide con el ID del documento; alta restringida a `role` ausente o `user`, y actualización que conserva el rol existente.
 - `moodLogs` y `journalEntries`: el `userId` debe coincidir al crear, y se comprueba el dueño al leer, actualizar o borrar.
-- `chatSessions`, `chatMessages`, `notifications`, `advancedReports` y `reminders`: controles de propiedad basados en `userId`.
-- `statistics`: lectura/escritura sobre documentos cuyo propietario coincide.
+- `chatSessions`, `chatMessages`, `notifications`, `advancedReports`, `statistics` y `reminders`: creación con propietario autenticado y actualización que conserva el `userId` del dueño existente.
+- `statistics`: lectura, creación, actualización y borrado del propietario.
 - `journalTemplates` y `journalPrompts`: lectura disponible para usuarios autenticados.
 - Cualquier colección no listada: denegada por la regla final.
 
-### Limitaciones que requieren corrección y pruebas
+### Limitaciones y estado de validación
 
-1. Las reglas de `users` permiten al dueño modificar cualquier campo, incluido `role`. No usar un valor de rol escrito por el cliente para autorizar privilegios.
-2. Las reglas de actualización de `chatSessions`, `chatMessages`, `notifications`, `advancedReports` y `reminders` comprueban al propietario del documento existente, pero no exigen en todos los casos que el documento nuevo conserve el mismo `userId`.
-3. `statistics` no tiene una condición de creación basada en `request.resource`; los documentos nuevos pueden quedar bloqueados.
-4. Los flujos de `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts` no están permitidos por las reglas locales. El hook de chat que usa `chatMessages` también debe comprobar que envía el `userId` requerido.
-5. La inicialización desde cliente de plantillas/prompts no está permitida: las reglas solo conceden lectura.
-6. Las reglas no son un esquema completo: faltan validaciones de campos, tipos, límites y estados permitidos. Consultas Firestore también deben limitarse para que la regla pueda probar el propietario de cada documento.
+1. Las reglas de propiedad/rol y creación de `statistics` tienen ahora cobertura automatizada en `frontend/tests/security/firestore-rules.test.mjs`; ejecuta `cd frontend && npm run test:rules`. Esto valida las reglas versionadas en el emulador, no las reglas desplegadas en Firebase.
+2. Los flujos de `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts` no están permitidos por las reglas locales. El hook de chat que usa `chatMessages` también debe comprobar que envía el `userId` requerido.
+3. La inicialización desde cliente de plantillas/prompts no está permitida: las reglas solo conceden lectura.
+4. Las reglas no son un esquema completo: faltan validaciones de campos, tipos, límites y estados permitidos. Consultas Firestore también deben limitarse para que la regla pueda probar el propietario de cada documento.
+5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. Hay pruebas con UID propio/ajeno/anónimo, tipo no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
 
 Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilidades. No despliegues cambios de reglas sin pruebas de propietario, otro usuario y usuario sin autenticación.
 
 ## Cloud Storage
 
-`storage.rules` permite leer y escribir rutas bajo `users/{userId}/...` solo al propietario y deniega las demás rutas. No comprueba tamaño, tipo MIME ni contenido. El servicio `uploadFile` obtiene además una URL de descarga; trata estas URLs como datos que podrían compartirse y evita incluirlas en logs o documentos públicos. Verifica que todos los llamadores usen rutas con el UID esperado antes de habilitar cargas.
+`storage.rules` limita rutas bajo `users/{userId}/...` al propietario y valida tamaño/MIME en altas y actualizaciones. `uploadFile` exige sesión, valida esas mismas restricciones y prefija la ruta con el UID autenticado; el nombre original no se guarda en metadata. El flujo de chat usa nombres aleatorios y solo tipos permitidos.
+
+`getDownloadURL` produce una URL con token portador: quien obtiene el enlace puede acceder al archivo sin volver a pasar por las reglas de UID. No trates un enlace como privado por el solo hecho de que las reglas limiten la ruta; evita compartir archivos sensibles, no incluyas esos enlaces en logs y revisa revocación/rotación de tokens antes de ampliar el uso. No subas muestras de salud ni diarios por esta ruta.
 
 ## IA y secretos
 
@@ -47,7 +48,7 @@ El diario se persiste como texto legible. La propuesta de cifrado con Web Crypto
 ## Verificación previa a producción
 
 - Confirmar el proyecto y las reglas activas en Firebase Console.
-- Probar reglas con Emulator Suite o un proyecto de desarrollo separado; el repositorio no demuestra que el emulador esté configurado.
+- Ejecutar `cd frontend && npm run test:rules` para probar reglas locales de Firestore en un proyecto demo de emulador; complementar con pruebas de Storage, otros flujos y verificación del proyecto/reglas remotos antes de producción.
 - Para cada colección: probar crear, leer/listar, actualizar y eliminar como dueño, segundo usuario y usuario anónimo.
 - Probar Storage con UID propio, UID ajeno, tipo MIME/tamaño inválido y URLs de descarga.
 - Revisar el bundle y las solicitudes de red para comprobar que no salen claves de servidor ni datos que no tengan consentimiento.

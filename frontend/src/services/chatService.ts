@@ -15,7 +15,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { Chat, ChatMessage } from '../types';
-import { db } from './firebase';
+import { auth, db } from './firebase';
 
 // Chat Management Functions
 export const createChat = async (chatData: Omit<Chat, 'id' | 'createdAt' | 'lastMessageAt'>): Promise<string> => {
@@ -311,8 +311,26 @@ export const subscribeToTypingStatus = (chatId: string, callback: (typingUsers: 
 // File sharing in chat
 export const uploadChatFile = async (file: File, chatId: string): Promise<string> => {
   try {
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(chatId)) {
+      throw new Error('El identificador del chat no es válido.');
+    }
+
+    const extensionByType: Record<string, string> = {
+      'application/pdf': 'pdf',
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+    const extension = extensionByType[file.type];
+    if (!extension) {
+      throw new Error('Tipo de archivo no permitido para compartir.');
+    }
+    if (!auth.currentUser) {
+      throw new Error('Debes iniciar sesión para compartir un archivo.');
+    }
+
     const { uploadFile } = await import('./firebase');
-    const fileName = `chat/${chatId}/${Date.now()}_${file.name}`;
+    const fileName = `chat/${chatId}/${crypto.randomUUID()}.${extension}`;
     const downloadURL = await uploadFile(file, fileName);
     return downloadURL;
   } catch (error) {

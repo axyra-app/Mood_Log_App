@@ -4,6 +4,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_UPLOAD_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+]);
+
 // Firebase configuration - Production ready
 const firebaseConfig = {
   apiKey: "AIzaSyA-C1BT_zMxuYc9KijrjwJvQ7q6HambXhc",
@@ -37,32 +45,41 @@ export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : nul
 
 // Función para subir archivos con retry y mejor manejo de errores
 export const uploadFile = async (file: File, path: string): Promise<string> => {
+  const userId = auth.currentUser?.uid;
+  if (!userId) {
+    throw new Error('Debes iniciar sesión para subir un archivo.');
+  }
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    throw new Error('El archivo supera el límite de 10 MB.');
+  }
+  if (!ALLOWED_UPLOAD_TYPES.has(file.type)) {
+    throw new Error('Tipo de archivo no permitido. Usa una imagen JPEG, PNG, WebP o un PDF.');
+  }
+
+  const pathSegments = path.split('/').filter(Boolean);
+  if (
+    pathSegments.length === 0
+    || pathSegments.some((segment) => segment === '.' || segment === '..')
+  ) {
+    throw new Error('La ruta del archivo no es válida.');
+  }
+
   const maxRetries = 3;
   let retryCount = 0;
   
   while (retryCount < maxRetries) {
     try {
-      
-      const storageRef = ref(storage, path);
-      
-      // Configurar metadata específica para evitar problemas de CORS
+      const storageRef = ref(storage, `users/${userId}/${pathSegments.join('/')}`);
       const metadata = {
-        contentType: file.type || 'application/octet-stream',
-        cacheControl: 'public, max-age=31536000',
+        contentType: file.type,
+        cacheControl: 'private, no-store',
         customMetadata: {
           uploadedAt: new Date().toISOString(),
-          originalName: file.name,
         },
       };
       
-      
-      
       const snapshot = await uploadBytes(storageRef, file, metadata);
-      
-      
       const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      
       return downloadURL;
     } catch (error) {
       retryCount++;

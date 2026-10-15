@@ -32,7 +32,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Router>
             <div className='App'>
               <Routes>
                 {/* Public routes */}

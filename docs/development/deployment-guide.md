@@ -14,7 +14,7 @@ Esta guía describe la configuración versionada. No se verificó acceso a los p
 
 El proyecto debe instalar dependencias desde `frontend/` y usar esa carpeta como raíz de aplicación si Vercel no está configurado ya para hacerlo. El archivo no prueba la configuración activa del panel ni que el sitio sea privado.
 
-`.github/workflows/ci.yml` instala dependencias con Node.js 18 y ejecuta build. `.github/workflows/deploy.yml` se denomina Deploy to Production, pero su trabajo ejecuta build y termina indicando que Vercel realiza el despliegue; **no contiene un paso de despliegue a Vercel**. Confirma la integración GitHub–Vercel, rama de producción, previews y controles de acceso en el panel.
+`.github/workflows/ci.yml` instala dependencias con Node.js 22 y Java 21, ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build. Aún no ejecuta pruebas de componentes/servicios. `.github/workflows/deploy.yml` se denomina Deploy to Production, pero su trabajo ejecuta build y termina indicando que Vercel realiza el despliegue; **no contiene un paso de despliegue a Vercel**. Confirma la integración GitHub–Vercel, rama de producción, previews y controles de acceso en el panel.
 
 ## Variables y claves
 
@@ -34,7 +34,7 @@ El archivo `firebase.json` apunta a:
 Antes de desplegar:
 
 1. Confirma el proyecto activo y la cuenta autorizada. No dependas del contexto de una terminal compartida.
-2. Revisa y prueba reglas en Firebase Emulator Suite o proyecto de desarrollo. El repositorio no confirma que los emuladores estén configurados.
+2. Revisa y prueba reglas en Firebase Emulator Suite o proyecto de desarrollo. `npm run test:rules` en `frontend/` prueba las reglas locales de Firestore y Storage con un ID demo; esto no confirma las reglas remotas ni configura el cliente de la app para usar emuladores.
 3. Comprueba que los servicios y colecciones utilizadas por el frontend tengan reglas compatibles; hay discrepancias descritas en [database-schema.md](../architecture/database-schema.md).
 4. Obtén revisión del cambio y confirma plan de reversión.
 

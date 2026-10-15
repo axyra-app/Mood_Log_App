@@ -17,18 +17,18 @@ La base visual y varios flujos están presentes, pero el repositorio conserva im
 | Producto | B2C en transición; hay código heredado profesional en hooks, tipos y servicios. |
 | PWA | Plugin `vite-plugin-pwa` configurado. No equivale a sincronización offline de datos. |
 | IA | Servicios inicializados desde el frontend; algunas rutas consumen `VITE_GROQ_API_KEY`. El análisis de `aiService` usa fallback y la llamada real mostrada está comentada. |
-| Typecheck/build | Scripts definidos. En esta sesión no pudieron ejecutarse porque faltaban `tsc` y `vite` en `frontend/node_modules`; no se concluye si el código pasa o falla. |
-| Pruebas | No se encontraron archivos de pruebas en el árbol inspeccionado ni scripts de test/lint en `frontend/package.json`. |
+| Typecheck/build | `npm run typecheck` y `npm run build` pasan con las dependencias instaladas. El build conserva avisos de tamaño de chunks y de importación compartida de jsPDF. |
+| Pruebas | Hay pruebas de reglas Firestore y Storage en el emulador (`npm run test:rules`); lint y pruebas de componentes/servicios aún no están configurados. |
 
 ## Hallazgos prioritarios
 
 ### 1. Colecciones y permisos Firebase no están alineados
 
-Las reglas locales permiten un conjunto definido de colecciones, pero servicios como `chatService` usan `chats`, `messages` y `typing`, denegadas por la regla catch-all. Otros flujos usan `chatSessions` y `chatMessages`, cuyo modelo de mensajes debe incluir `userId` para satisfacer las reglas. Las reglas actuales también permiten leer plantillas/prompts pero no escribirlas, mientras el cliente intenta inicializarlas.
+Las reglas locales permiten un conjunto definido de colecciones, pero servicios como `chatService` usan `chats`, `messages` y `typing`, denegadas por la regla catch-all. Otros flujos usan `chatSessions` y `chatMessages`, cuyo modelo de mensajes debe incluir `userId` para satisfacer las reglas. Las reglas permiten leer plantillas/prompts, no inicializarlas desde el cliente.
 
-Además, ciertas reglas de actualización no impiden cambiar `userId`, el perfil permite modificar todos sus campos y `statistics` no tiene una condición explícita de creación. La documentación técnica actual describe colección por colección en [database-schema.md](docs/architecture/database-schema.md) y las limitaciones en [security-and-privacy.md](docs/architecture/security-and-privacy.md).
+En esta revisión se endurecieron localmente la propiedad de registros, la inmutabilidad del rol, la creación de `statistics` y el acceso a Storage. Se añadieron pruebas del emulador para propietario, otra cuenta y usuario anónimo; siguen faltando pruebas y decisiones para todos los flujos heredados. Las reglas versionadas aún no se han desplegado y su estado remoto no se verificó. La documentación técnica describe las limitaciones en [database-schema.md](docs/architecture/database-schema.md) y [security-and-privacy.md](docs/architecture/security-and-privacy.md).
 
-**Acción:** escoger contratos de datos únicos, endurecer validaciones y probar lecturas/escrituras como propietario, otro usuario y usuario no autenticado con Firebase Emulator Suite o un proyecto de desarrollo separado.
+**Acción:** unificar contratos de datos, completar validaciones de campos y probar todas las operaciones activas con Firebase Emulator Suite antes de desplegar reglas.
 
 ### 2. IA cliente y datos sensibles
 
@@ -50,15 +50,15 @@ El servicio del diario persiste `content` en texto legible. El cifrado local es 
 
 ### 5. Validación y despliegue
 
-`.github/workflows/ci.yml` ejecuta `npm ci` y `npm run build`, pero no typecheck ni pruebas. El workflow `deploy.yml` también compila; no contiene un paso de despliegue a Vercel. La integración real y el acceso a deployments deben comprobarse en los paneles.
+`.github/workflows/ci.yml` instala dependencias, configura Java 21 y Node 22, ejecuta pruebas de reglas Firestore/Storage en emulador, typecheck, auditoría de dependencias de producción y `npm run build`; todavía no ejecuta pruebas de componentes/servicios. El workflow `deploy.yml` también compila; no contiene un paso de despliegue a Vercel. La integración real y el acceso a deployments deben comprobarse en los paneles.
 
-En esta sesión los comandos ejecutados desde `frontend/` no encontraron `tsc` ni `vite`, porque no estaban instaladas las dependencias. No se obtuvo un resultado de build ni typecheck del código.
+En la revisión del 14 de octubre de 2026, `npm run test:rules` (7 pruebas), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron. El build reporta avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. `npm audit` completo sigue reportando 15 avisos de desarrollo (7 moderados y 8 altos), por dependencias asociadas principalmente a Vite/Tailwind y Firebase CLI. Las remediaciones sugeridas por npm requieren cambios mayores de toolchain; no se aplicó una actualización forzada.
 
-**Acción:** instalar desde `frontend/` con `npm ci`, ejecutar `npm run typecheck` y `npm run build`, añadir pruebas de reglas y hacer obligatorios los chequeos relevantes en CI.
+**Acción pendiente:** incorporar pruebas de componentes/servicios a CI conforme se estabilicen los flujos y planear la actualización del toolchain con pruebas de compatibilidad. La auditoría de producción permanece sin vulnerabilidades conocidas según `npm audit --omit=dev`.
 
 ## Secuencia recomendada
 
-1. **Aislar desarrollo:** configurar Firebase Emulator Suite o un proyecto Firebase de pruebas y confirmar que el cliente no escribe en producción.
+1. **Aislar desarrollo:** las pruebas de reglas Firestore ya usan el emulador con un ID demo; aún se debe confirmar que la app cliente no escribe en producción y decidir si se configura Auth/Storage Emulator para otros flujos.
 2. **Cerrar seguridad y contratos:** seleccionar un esquema canónico para ánimo, diarios y chat; alinear servicios, tipos, reglas e índices; probar acceso cruzado entre cuentas.
 3. **Validar el MVP:** ejecutar typecheck/build y completar pruebas para cuenta, perfil, registro/consulta/edición/eliminación de ánimo y diario.
 4. **Resolver IA y privacidad:** eliminar secretos del cliente, formalizar consentimiento y revisar términos/privacidad.

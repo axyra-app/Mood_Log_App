@@ -10,19 +10,19 @@ No agregues colecciones o campos a partir de esta lista sin revisar los llamador
 
 | Colección | Campos de propiedad que usan las reglas | Acceso local observado | Consideraciones |
 |---|---|---|---|
-| `users/{userId}` | El ID del documento debe coincidir con `request.auth.uid`. | Lectura y escritura del dueño. | No hay lista de campos permitidos; un usuario puede editar también campos sensibles como `role`. |
+| `users/{userId}` | El ID del documento debe coincidir con `request.auth.uid`. | Lectura, creación, actualización y borrado del dueño; alta restringida a rol ausente o `user`, actualización conserva el rol previo. | No hay lista completa de campos permitidos ni validación de tipos y límites. |
 | `moodLogs/{logId}` | `userId` | Crear si el nuevo documento tiene el UID propio; leer y borrar si el documento existente pertenece al usuario; actualizar si dueño existente y nuevo `userId` propio. | El servicio conserva campos de `MoodLog`; su tipo aún describe `mood` como 1–5, mientras la interfaz y algunos documentos hablan de 1–10. |
 | `journalEntries/{entryId}` | `userId` | Propiedad comprobada al crear, leer, actualizar y borrar. | El servicio persiste texto en claro, fecha, etiquetas, estado de ánimo y datos opcionales de análisis. No existe cifrado cliente. |
-| `chatSessions/{sessionId}` | `userId` | Crear si `userId` es el UID; leer/borrar si el documento pertenece al usuario; actualizar si el documento existente pertenece al usuario. | La regla de actualización no exige que el nuevo documento conserve el mismo `userId`. No concede acceso a un psicólogo/participante distinto. |
+| `chatSessions/{sessionId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar solo si dueño existente y nuevo coinciden con la sesión. | No concede acceso a un psicólogo/participante distinto. |
 | `chatMessages/{messageId}` | `userId` | Igual que `chatSessions`. | El hook `useChat` crea mensajes con `sessionId`, `senderId`, `senderName`, `content`, `timestamp`, `isRead` y `messageType`; verificar si envía también `userId`, requerido por la regla de creación. |
-| `notifications/{notificationId}` | `userId` | Crear con `userId` propio; operaciones sobre documento existente si pertenece al usuario. | Otros servicios pueden producir campos/esquemas diferentes; confirmar cada llamador. |
-| `advancedReports/{reportId}` | `userId` | Crear propio; acceso al dueño del documento existente. | Verificar si el flujo activo persiste estos documentos. |
-| `statistics/{statId}` | `userId` | Lectura/escritura si el documento existente pertenece al usuario. | No hay permiso `create` separado: las nuevas escrituras pueden ser denegadas porque no existe `resource.data` antes de crear. |
-| `reminders/{reminderId}` | `userId` | Crear propio; acceso al dueño existente. | No asumir que el flujo está disponible sin probar las reglas. |
+| `notifications/{notificationId}` | `userId` | Crear con `userId` propio; leer/borrar del dueño; actualizar sin cambiar propietario. | Otros servicios pueden producir campos/esquemas diferentes; confirmar cada llamador. |
+| `advancedReports/{reportId}` | `userId` | Crear con UID propio; acceso del dueño; actualizar sin cambiar propietario. | Verificar si el flujo activo persiste estos documentos. |
+| `statistics/{statId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar sin cambiar propietario. | La creación y el aislamiento tienen cobertura en las pruebas de reglas del emulador. |
+| `reminders/{reminderId}` | `userId` | Crear con UID propio; leer/borrar del dueño; actualizar sin cambiar propietario. | Confirmar el flujo con pruebas antes de considerarlo disponible. |
 | `journalTemplates/{templateId}`, `journalPrompts/{promptId}` | Sin propiedad | Lectura para cualquier usuario autenticado; no se permite escritura. | `journalService` incluye inicialización de datos por defecto desde el cliente; las reglas actuales no autorizan esa escritura. |
 | Otras colecciones | — | Denegadas por la regla catch-all. | Incluye nombres usados por otros servicios, por ejemplo `chats`, `messages`, `typing`, `crisisAssessments` y `crisisAlerts`, hasta que se definan reglas explícitas. |
 
-La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
+La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Las pruebas automatizadas actuales cubren roles, propiedad, transferencias de propietario y creación de estadísticas, no todos los campos ni operaciones de todas las colecciones. Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
 
 ## Formas de datos observadas en el código
 

@@ -33,6 +33,7 @@ Las propuestas de mejora con requisitos, diseño técnico, privacidad y validaci
 
 | Documento | Contenido |
 |---|---|
+| [Plan de trabajo](work-plan.md) | Etapas, dependencias, entregables y estado de consolidación antes de biometría. |
 | [Inicio local](development/getting-started.md) | Requisitos, instalación, validación y conexión a Firebase. |
 | [Estándares de código](development/code-standards.md) | TypeScript, React, accesibilidad, privacidad y validación. |
 | [Despliegue](development/deployment-guide.md) | Configuración versionada, workflows, Firebase y controles de acceso. |
@@ -46,7 +47,7 @@ Las propuestas de mejora con requisitos, diseño técnico, privacidad y validaci
 - Las reglas locales no cubren todas las colecciones usadas por el frontend y no se ha confirmado su estado remoto.
 - El diario se almacena como texto legible. El cifrado local y la sincronización offline completa no están implementados.
 - Algunos flujos de IA se ejecutan en el cliente; una variable `VITE_*` no es un secreto.
-- CI ejecuta el build, pero no typecheck ni pruebas automatizadas. Consulta las guías para comandos y validaciones.
+- CI ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes/servicios. Consulta las guías para comandos y validaciones.
 - La existencia de un workflow de build no demuestra que Vercel despliegue automáticamente ni que el sitio sea privado.
 
 Para una lectura ejecutiva, consulta [el análisis técnico](../ANALISIS_PROYECTO.md) y el [documento de visión](../DOCUMENTO_VISION_Y_ARQUITECTURA.md). Antes de utilizar información real, revisa [seguridad y privacidad](architecture/security-and-privacy.md) y verifica Firebase y hosting en sus paneles.

@@ -8,6 +8,7 @@ Mood Log App es un proyecto web para registrar estados de ánimo, escribir refle
 
 Empieza por el [índice de documentación](docs/README.md). Las guías cubren:
 
+- [Plan de trabajo y estado de ejecución](docs/work-plan.md)
 - [Visión de producto y hoja de ruta](docs/product/vision-and-roadmap.md)
 - [Especificación de mejora: contexto biométrico](docs/features/biometric-context/README.md)
 - [Guía de pantallas y estado funcional](docs/product/user-guide.md)
@@ -29,7 +30,7 @@ Estado conocido a partir del código del repositorio:
 - Los modelos de datos, especialmente chat y escala de ánimo, todavía requieren consolidación.
 - Algunas rutas de IA consumen claves `VITE_*` desde el navegador. Estas variables no son secretos.
 - El diario se almacena como texto legible; el cifrado de extremo a extremo descrito en ideas de producto no está implementado.
-- CI ejecuta build, pero no typecheck ni pruebas automatizadas. Consulta la guía de desarrollo para el estado y los comandos.
+- CI ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes/servicios. Consulta la [guía de desarrollo](docs/development/getting-started.md).
 - Las reglas y configuración versionadas no confirman qué está desplegado en Firebase o en el proveedor de hosting.
 
 Consulta [ANALISIS_PROYECTO.md](ANALISIS_PROYECTO.md) para el análisis técnico y la priorización de trabajo.
