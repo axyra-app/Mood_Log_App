@@ -4,17 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useValidation } from '../hooks/useValidation';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const { setError, hasError, getError, clearError } = useValidation();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
   });
   const [loading, setLoading] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const navigate = useNavigate();
 
@@ -27,10 +28,6 @@ const CompleteProfile: React.FC = () => {
       });
     }
   }, [user]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

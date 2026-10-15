@@ -5,14 +5,19 @@ import {
   BookOpen,
   Heart,
   MessageCircle,
+  Moon,
   Shield,
   Sparkles,
+  Sun,
 } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Home: React.FC = () => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
+
   return (
     <div className='min-h-screen bg-white'>
       {/* Header */}
@@ -23,6 +28,15 @@ const Home: React.FC = () => {
               <Logo size='lg' />
             </div>
             <div className='flex space-x-3 sm:space-x-4'>
+              <button
+                type='button'
+                onClick={toggleDarkMode}
+                aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                className='touch-target rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900'
+              >
+                {isDarkMode ? <Sun className='h-5 w-5' /> : <Moon className='h-5 w-5' />}
+              </button>
               <Link
                 to='/login'
                 className='touch-target text-gray-600 hover:text-gray-900 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm sm:text-base font-medium'

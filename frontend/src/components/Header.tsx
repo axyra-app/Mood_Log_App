@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../hooks/useNotifications';
 import Logo from './Logo';
 
@@ -24,9 +25,9 @@ const Header: React.FC<HeaderProps> = ({
   actions,
 }) => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('theme') === 'dark' || false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -35,19 +36,6 @@ const Header: React.FC<HeaderProps> = ({
   // No mostrar en dashboard
   const isDashboard = location.pathname === '/dashboard';
   const shouldShowBackButton = showBackButton && !isDashboard;
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-
-    if (newDarkMode) {
-      localStorage.setItem('theme', 'dark');
-      document.documentElement.classList.add('dark');
-    } else {
-      localStorage.setItem('theme', 'light');
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -61,14 +49,6 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleBackClick = () => {
-    // Mantener el modo oscuro al navegar
-    const currentTheme = localStorage.getItem('theme');
-    if (currentTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
     if (backTo) {
       navigate(backTo);
     } else {
@@ -88,10 +68,6 @@ const Header: React.FC<HeaderProps> = ({
             {/* Botón Home */}
             <button
               onClick={() => {
-                const currentTheme = localStorage.getItem('theme');
-                if (currentTheme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                }
                 navigate('/dashboard');
               }}
               className={`p-2 rounded-lg transition-colors ${

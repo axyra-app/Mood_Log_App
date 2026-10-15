@@ -4,7 +4,7 @@ import {
   updatePassword,
 } from 'firebase/auth';
 import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { Bell, Clock, Eye, EyeOff, Globe, Info, Lock, Mail, Save, Shield, User } from 'lucide-react';
+import { Bell, Clock, Eye, EyeOff, Globe, Info, Lock, Mail, Moon, Save, Shield, Sun, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ import { auth, db } from '../services/firebase';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, setDarkMode } = useTheme();
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,6 @@ const Settings: React.FC = () => {
     notifications: true,
     emailUpdates: true,
     weeklyReports: true,
-    darkMode: false,
     language: 'es',
     timezone: 'America/Bogota',
   });
@@ -166,6 +165,40 @@ const Settings: React.FC = () => {
         </div>
 
         <div className='space-y-8'>
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className='flex items-center justify-between gap-4'>
+              <div className='flex items-center space-x-3'>
+                <div className={`w-10 h-10 ${isDarkMode ? 'bg-indigo-900' : 'bg-indigo-100'} rounded-lg flex items-center justify-center`}>
+                  {isDarkMode
+                    ? <Moon className='w-5 h-5 text-indigo-300' />
+                    : <Sun className='w-5 h-5 text-indigo-600' />}
+                </div>
+                <div>
+                  <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Apariencia</h3>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Elige el modo claro u oscuro para toda la aplicación
+                  </p>
+                </div>
+              </div>
+              <button
+                type='button'
+                role='switch'
+                aria-checked={isDarkMode}
+                aria-label='Activar modo oscuro'
+                onClick={() => setDarkMode(!isDarkMode)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                  isDarkMode ? 'bg-purple-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    isDarkMode ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Notificaciones */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-6'>

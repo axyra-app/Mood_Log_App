@@ -1,28 +1,14 @@
 import { ArrowRight, Bot, Clock, Heart, Shield, Sparkles, User } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const ChatSelection: React.FC = () => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
-
-    const handleThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme');
-      setIsDarkMode(currentTheme === 'dark');
-    };
-
-    window.addEventListener('storage', handleThemeChange);
-    return () => window.removeEventListener('storage', handleThemeChange);
-  }, []);
 
   const handleAIChat = (assistantId: 'mia' | 'reflection') => {
     navigate(`/chat/assistant/${assistantId}`);

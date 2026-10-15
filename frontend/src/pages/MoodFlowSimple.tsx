@@ -218,13 +218,7 @@ const MoodFlowSimple: React.FC = () => {
 
               {/* Volver al Dashboard */}
               <button
-                onClick={() => {
-                  const currentTheme = localStorage.getItem('theme');
-                  if (currentTheme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                  }
-                  navigate('/dashboard');
-                }}
+                onClick={() => navigate('/dashboard')}
                 className={`px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                   isDarkMode 
                     ? 'bg-purple-600 hover:bg-purple-700 text-white' 

@@ -2,15 +2,16 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const LoginSimple: React.FC = () => {
   const { signIn, signInWithGoogle, user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showAlreadyLoggedIn, setShowAlreadyLoggedIn] = useState(false);
   const [googleError, setGoogleError] = useState('');
@@ -51,10 +52,6 @@ const LoginSimple: React.FC = () => {
       setShowAlreadyLoggedIn(false);
     }
   }, [user, navigate]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

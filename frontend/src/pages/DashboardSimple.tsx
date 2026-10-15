@@ -6,16 +6,17 @@ import Logo from '../components/Logo';
 import MoodHistoryPanel from '../components/MoodHistoryPanel';
 import NotificationsPanel from '../components/NotificationsPanel';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
 
 const DashboardSimple: React.FC = () => {
   // Dashboard con logo personalizado
   const { user } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const { moodLogs, loading: moodLoading, getMoodStreak, getAverageMood } = useMood();
   const { entries: journalEntries } = useJournal(user?.uid || '');
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -34,10 +35,6 @@ const DashboardSimple: React.FC = () => {
 
   const averageMood = getAverageMood(7);
   const streak = getMoodStreak();
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   if (!isLoaded) {
     return (

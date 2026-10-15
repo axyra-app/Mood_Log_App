@@ -3,15 +3,16 @@ import { AlertCircle, CheckCircle, Loader2, Mail, Moon, Shield, Sun, Zap } from 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { useTheme } from '../contexts/ThemeContext';
 import { auth } from '../services/firebase';
 import { getPasswordResetErrorMessage } from '../utils/errorMessages';
 
 const ForgotPassword: React.FC = () => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
@@ -28,10 +29,6 @@ const ForgotPassword: React.FC = () => {
     }
     return () => clearTimeout(timer);
   }, [success, countdown]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
