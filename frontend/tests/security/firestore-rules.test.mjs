@@ -18,7 +18,7 @@ import {
   where,
   query,
 } from "firebase/firestore";
-import { getBytes, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getBytes, ref, uploadBytes } from "firebase/storage";
 
 const projectId = "demo-mood-log-rules";
 const ownerId = "owner-a";
@@ -213,8 +213,16 @@ test("Storage access is owner-only and upload size/type are restricted", async (
   await assertSucceeds(uploadBytes(ownerFile, new Uint8Array([1, 2, 3]), {
     contentType: "image/png",
   }));
+  await assertSucceeds(uploadBytes(ownerFile, new Uint8Array([4, 5, 6]), {
+    contentType: "image/jpeg",
+  }));
   await assertSucceeds(getBytes(ownerFile));
   await assertFails(getBytes(foreignFile));
+  await assertFails(uploadBytes(ownerFile, new Uint8Array([7, 8, 9]), {
+    contentType: "text/plain",
+  }));
+  await assertFails(deleteObject(foreignFile));
+  await assertSucceeds(deleteObject(ownerFile));
   await assertFails(uploadBytes(
     ref(ownerStorage, `users/${ownerId}/attachments/unsupported.txt`),
     new Uint8Array([1, 2, 3]),
