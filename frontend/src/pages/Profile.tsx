@@ -11,6 +11,7 @@ const Profile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
   const { isDarkMode } = useTheme();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [profileLoadError, setProfileLoadError] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -22,31 +23,56 @@ const Profile: React.FC = () => {
     location: '',
     username: '',
   });
+  const [originalProfileData, setOriginalProfileData] = useState(profileData);
 
   useEffect(() => {
+    let isCurrent = true;
+
     const loadUserData = async () => {
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileData({
-              displayName: userData.displayName || user.displayName || '',
-              email: userData.email || user.email || '',
-              phone: userData.phone || '',
-              bio: userData.bio || '',
-              location: userData.location || '',
-              username: userData.username || '',
-            });
-          }
-        } catch (error) {
-          console.error('Error loading user data:', error);
+      setIsLoaded(false);
+      setProfileLoadError(false);
+
+      if (!user) {
+        setProfileLoadError(true);
+        setIsLoaded(true);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!isCurrent) return;
+        if (!userDoc.exists()) {
+          throw new Error('No se encontró el perfil del usuario.');
+        }
+
+        const userData = userDoc.data();
+        const loadedProfileData = {
+          displayName: userData.displayName || user.displayName || '',
+          email: userData.email || user.email || '',
+          phone: userData.phone || '',
+          bio: userData.bio || '',
+          location: userData.location || '',
+          username: userData.username || '',
+        };
+        setProfileData(loadedProfileData);
+        setOriginalProfileData(loadedProfileData);
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        if (isCurrent) {
+          setProfileLoadError(true);
+          toast.error('No se pudo cargar tu perfil. Inténtalo de nuevo.');
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoaded(true);
         }
       }
-      setIsLoaded(true);
     };
 
-    loadUserData();
+    void loadUserData();
+    return () => {
+      isCurrent = false;
+    };
   }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -62,7 +88,9 @@ const Profile: React.FC = () => {
 
     setLoading(true);
     try {
-      await updateUserProfile(profileData);
+      const { email: _email, ...profileUpdates } = profileData;
+      await updateUserProfile(profileUpdates);
+      setOriginalProfileData(profileData);
       setIsEditing(false);
       toast.success('Perfil actualizado exitosamente');
     } catch (error) {
@@ -75,23 +103,38 @@ const Profile: React.FC = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset form data to original values
-    if (user) {
-      setProfileData({
-        displayName: user.displayName || '',
-        email: user.email || '',
-        phone: '',
-        bio: '',
-        location: '',
-        username: user.email?.split('@')[0] || '',
-      });
-    }
+    setProfileData(originalProfileData);
   };
 
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (profileLoadError) {
+    return (
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header
+          title="Mi Perfil"
+          subtitle="Gestiona tu información personal"
+          backTo="/dashboard"
+          backLabel="Volver al Dashboard"
+        />
+        <main className="mx-auto max-w-xl px-4 py-16 text-center">
+          <p role="alert" className={`mb-5 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            No pudimos cargar tu perfil. No se guardarán datos vacíos para evitar sobrescribir tu información.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded-lg bg-purple-600 px-5 py-3 font-medium text-white hover:bg-purple-700"
+          >
+            Reintentar
+          </button>
+        </main>
       </div>
     );
   }
@@ -199,11 +242,14 @@ const Profile: React.FC = () => {
                 value={profileData.email}
                 onChange={handleInputChange}
                 maxLength={254}
-                disabled={!isEditing}
+                readOnly
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                  isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-300' : 'bg-gray-100 border-gray-300 text-gray-600'
+                } cursor-not-allowed`}
               />
+              <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                El correo de acceso se administra en Firebase Authentication y no se modifica desde este formulario.
+              </p>
             </div>
 
             {/* Teléfono */}

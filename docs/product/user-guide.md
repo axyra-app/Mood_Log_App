@@ -71,7 +71,7 @@ Estos asistentes no son profesionales de salud, no proporcionan atención clíni
 
 ### Perfil y ajustes (`/profile`, `/settings`)
 
-Rutas protegidas para información personal y preferencias. Confirma en el código cada operación de cuenta, cambio de contraseña, borrado o contacto de emergencia antes de presentarla como disponible; la interfaz por sí sola no prueba que se complete correctamente.
+Rutas protegidas para información personal y preferencias. El correo de acceso se muestra como no editable en el perfil porque cambiarlo requiere una operación de Firebase Authentication distinta de actualizar el documento del perfil. Las pantallas cargan los datos de Firestore; si falla esa lectura, muestran un error y no permiten guardar formularios vacíos. Las preferencias disponibles se guardan en el documento `users/{uid}`. El cambio de contraseña aplica a cuentas de correo/contraseña; cuentas de Google se administran desde Google. Fotos y archivos siguen pendientes.
 
 ### Privacidad y términos (`/privacy`, `/terms`)
 

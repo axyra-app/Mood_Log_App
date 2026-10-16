@@ -1,7 +1,7 @@
 # Análisis técnico de Mood Log App
 
 **Revisión:** 16 de octubre de 2026
-**Alcance:** lectura del código y configuración versionados del frontend, Firebase, documentación y workflows. No se accedió a Firebase Console, Vercel ni a datos de producción. Este análisis no acredita el estado remoto.
+**Alcance:** lectura del código y configuración versionados del frontend, Firebase, documentación y workflows. El propietario informó que publicó las reglas desde Firebase Console para `mood-log-app-01`; no se consultó el estado remoto por API ni se usaron datos reales. Se comprobó que Vercel sirve el sitio y los bundles correspondientes al commit `2e2af01`; esto no verifica los flujos con sesión autenticada.
 
 ## Resumen ejecutivo
 
@@ -13,7 +13,7 @@ La base visual y varios flujos están presentes, pero el repositorio conserva im
 |---|---|
 | Frontend | React 18, TypeScript, Vite, React Router y Tailwind; aplicación cliente. |
 | Backend propio | Función serverless de Vercel en `frontend/api/ai.ts`, usada para solicitudes de IA autenticadas. |
-| Firebase | Cliente inicializado en `frontend/src/services/firebase.ts`; reglas e índices versionados localmente. Estado remoto no verificado. |
+| Firebase | Cliente inicializado en `frontend/src/services/firebase.ts`; reglas e índices versionados localmente. El propietario confirmó haber publicado las reglas en el proyecto `mood-log-app-01`; no se verificó el contenido remoto ni se probaron operaciones autenticadas contra producción. |
 | Producto | B2C en transición; hay código heredado profesional en hooks, tipos y servicios. |
 | PWA | Plugin `vite-plugin-pwa` configurado. No equivale a sincronización offline de datos. |
 | IA | Las solicitudes activas pasan por `frontend/api/ai.ts`; `GROQ_API_KEY` se utiliza en el servidor. El cliente prepara y limita los datos de análisis antes de enviarlos. |
@@ -52,7 +52,7 @@ El servicio del diario persiste `content` en texto legible. El cifrado local es 
 
 `.github/workflows/ci.yml` instala dependencias, configura Java 21 y Node 22, y ejecuta pruebas de reglas Firestore/Storage en emulador, pruebas de API (`test:api`), configuración de índices (`test:config`), métricas (`test:unit`), typecheck, auditoría de dependencias de producción y build. Aún no hay pruebas de componentes de interfaz. El workflow `deploy.yml` también compila; no contiene un paso de despliegue a Vercel. La integración real y el acceso a deployments deben comprobarse en los paneles.
 
-En la revisión del 16 de octubre de 2026, `npm run test:api` pasó (6 pruebas), `npm run test:config` pasó (2), `npm run test:unit` pasó (5), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron (0 vulnerabilidades de producción). En una ejecución posterior, `npm run test:rules` pasó 22/22 pruebas con los emuladores Firestore y Storage usando un JRE 21 temporal, requisito de Firebase CLI. Esto valida las reglas locales, no el despliegue remoto. El build reporta avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. El audit completo de dependencias de desarrollo no se volvió a ejecutar en esta revisión.
+En la revisión del 16 de octubre de 2026, `npm run test:api` pasó (6 pruebas), `npm run test:config` pasó (2), `npm run test:unit` pasó (5), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron. `npm run test:rules` pasó 22/22 con los emuladores Firestore y Storage usando un JRE 21 temporal, y volvió a pasar en CI para el commit `2e2af01`. El pipeline completo de ese commit terminó correctamente. Se comprobó que el sitio publicado responde `200` y que el bundle actualizado está servido; esto no sustituye una prueba funcional autenticada contra Firebase. El build conserva avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. El audit completo de dependencias de desarrollo no se volvió a ejecutar en esta revisión.
 
 **Acción pendiente:** incorporar pruebas de componentes/servicios a CI conforme se estabilicen los flujos y planear la actualización del toolchain con pruebas de compatibilidad. La auditoría de producción permanece sin vulnerabilidades conocidas según `npm audit --omit=dev`.
 

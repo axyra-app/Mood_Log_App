@@ -1,7 +1,7 @@
 # Plan de trabajo: consolidación de Mood Log
 
 **Estado:** en curso
-**Actualizado:** 14 de octubre de 2026
+**Actualizado:** 16 de octubre de 2026
 **Objetivo:** estabilizar las capacidades centrales antes de iniciar integraciones biométricas.
 
 ## Principios de ejecución
@@ -22,7 +22,7 @@
 | 1. Seguridad de Firebase | Auditar reglas de Firestore y Storage frente a llamadores activos. Crear pruebas de autorización para propietario, otra cuenta y usuario anónimo; corregir brechas confirmadas sin romper flujos; revisar CI y dependencias de producción. | Pruebas negativas y positivas reproducibles en emulador; reglas locales alineadas con las operaciones; dependencias de producción sin avisos conocidos; ningún despliegue implícito. | **En curso** |
 | 2. Modelo canónico | Confirmar escala de ánimo, frecuencia de entradas por día, zona horaria/fecha, campos del diario y procedencia por observación. Comparar con los documentos y servicios existentes. | Decisiones registradas y estrategia de compatibilidad/migración propuesta antes de cambiar esquema. | **Parcial** |
 | 3. Flujos centrales | Probar creación, consulta, edición y borrado de ánimo y diario, además de historial, formularios, estados vacíos, fallos y uso móvil. | Recorridos completos en entorno aislado; datos y estados consistentes tras recarga. | **En curso** |
-| 4. Calidad automatizada | Incorporar typecheck y pruebas pertinentes al flujo automatizado; ejecutar build y dejar comandos y resultados documentados. | CI valida tipos y pruebas relevantes, además del build; fallos visibles y reproducibles. | **Parcial** |
+| 4. Calidad automatizada | Incorporar typecheck y pruebas pertinentes al flujo automatizado; ejecutar build y dejar comandos y resultados documentados. | CI valida reglas, API, índices, métricas, tipos, auditoría de producción y build; fallos visibles y reproducibles. | **Completada** |
 | 5. Descubrimiento biométrico | Solo tras completar seguridad/modelo: validar un prototipo con fixtures sintéticos y estudiar importación local iniciada por la persona. | Prueba de concepto con límites, consentimiento, borrado y evaluación documentados; sin ingesta real ni persistencia cloud no aprobada. | Bloqueada por etapas 1–4 |
 
 ## Trabajo activo: etapa 1
@@ -36,7 +36,7 @@ La revisión inicial identificó brechas y ya hay una primera corrección local 
 - `firebase/storage.rules` ahora restringe por UID, valida tipo y tamaño; la subida del cliente comprueba sesión, MIME, límite y nombres no controlados. Los enlaces `getDownloadURL` son bearer links y no deben tratarse como privados solo por las reglas.
 - `npm audit --omit=dev` inicialmente reportó 20 avisos de producción. Se actualizaron Firebase 13, React Router 7 y jsPDF 4, y se aplicó un override parcheado de gRPC.
 
-La suite de reglas ahora contiene 22 pruebas y cubre perfiles/roles, propiedad, transferencia de propietario, límites de ánimo/diario, notificaciones, ajustes, reportes/recordatorios, colecciones de solo lectura y Storage; `npm run test:rules` pasó 22/22 en emulador usando temporalmente un JRE 21. El propietario confirmó que publicó las reglas de Firestore en `mood-log-app-01` desde Firebase Console. CI también ejecuta las pruebas de API, configuración de índices y métricas. En una verificación local anterior pasaron `npm run test:api`, `npm run test:config`, `npm run test:unit`, `npm run typecheck`, `npm run build` y `npm audit --omit=dev` (0 vulnerabilidades de producción). La etapa sigue en curso: falta probar manualmente los recorridos activos y decidir qué flujos heredados conservar. Una colección sin reglas explícitas no se habilitará automáticamente; primero se decide si el flujo sigue dentro del producto. La carga de fotos/archivos queda aplazada como capacidad próxima. El audit completo de dependencias de desarrollo no se volvió a ejecutar en esta revisión.
+La suite de reglas contiene 22 pruebas para perfiles/roles, propiedad, transferencias, límites de ánimo/diario, notificaciones, ajustes, reportes/recordatorios, colecciones de solo lectura y Storage. `npm run test:rules` pasó localmente 22/22 y CI volvió a pasar la suite tras el último cambio. El propietario confirmó que publicó las reglas de Firestore en `mood-log-app-01` desde Firebase Console; aún no se hizo una prueba manual autenticada contra ese proyecto. El CI de `2e2af01` terminó correctamente con reglas, API (6), índices (2), métricas (5), typecheck, auditoría de dependencias de producción y build. La etapa sigue en curso: falta probar manualmente los recorridos activos y decidir qué flujos heredados conservar. Una colección sin reglas explícitas no se habilitará automáticamente; primero se decide si el flujo sigue dentro del producto. La carga de fotos/archivos queda aplazada como capacidad próxima. El audit completo de dependencias de desarrollo no se volvió a ejecutar en esta revisión.
 
 ## Decisiones que se deben cerrar en la etapa 2
 
@@ -44,6 +44,7 @@ La suite de reglas ahora contiene 22 pruebas y cubre perfiles/roles, propiedad, 
 2. **Frecuencia diaria:** el flujo actual permite varios registros por día; mantenerlo y no imponer unicidad por `(userId, fecha)` hasta que producto decida lo contrario. Las rachas actuales usan días calendario locales del dispositivo; una zona horaria de cuenta sigue pendiente.
 3. **Procedencia:** fuente y calidad pertenecen a cada observación de una métrica, no a un registro compuesto de ánimo que puede mezclar entradas manuales e importadas.
 4. **Backend:** conservar Firebase durante las etapas iniciales. Una migración requiere decisión, análisis, plan de reversión y aprobación aparte.
+5. **Zona horaria:** sigue pendiente decidir si las rachas e informes usarán la zona del dispositivo o una zona guardada en el perfil; no se cambia el esquema hasta cerrar esta decisión.
 
 ## Criterios de cierre del plan
 

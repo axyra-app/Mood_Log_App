@@ -28,6 +28,19 @@ interface User {
   photoURL?: string;
 }
 
+type UserProfileUpdates = {
+  displayName?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  photoURL?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  location?: string;
+  bio?: string;
+};
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -37,7 +50,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signUpWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  updateUserProfile: (updates: UserProfileUpdates) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -372,7 +385,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateUserProfile = async (updates: Partial<User>) => {
+  const updateUserProfile = async (updates: UserProfileUpdates) => {
     try {
       if (!user) throw new Error('No user logged in');
 
