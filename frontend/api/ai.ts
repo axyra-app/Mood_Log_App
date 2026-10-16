@@ -1,8 +1,3 @@
-import Groq from 'groq-sdk';
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
-
 interface VercelRequest {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
@@ -59,26 +54,35 @@ const parseBody = (body: unknown): AiRequest | null => {
     : null;
 };
 
-const getAdminServices = () => {
+const getAdminServices = async () => {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if (!serviceAccountJson) {
     throw new Error('Missing Firebase Admin credentials.');
   }
 
+  const [appModule, authModule, firestoreModule] = await Promise.all([
+    import('firebase-admin/app'),
+    import('firebase-admin/auth'),
+    import('firebase-admin/firestore'),
+  ]);
   const credentials = JSON.parse(serviceAccountJson);
-  const app = getApps()[0] ?? initializeApp({
-    credential: cert(credentials),
+  const app = appModule.getApps()[0] ?? appModule.initializeApp({
+    credential: appModule.cert(credentials),
     projectId: process.env.FIREBASE_PROJECT_ID || credentials.project_id,
   });
 
   return {
-    auth: getAuth(app),
-    firestore: getFirestore(app),
+    auth: authModule.getAuth(app),
+    firestore: firestoreModule.getFirestore(app),
+    fieldValue: firestoreModule.FieldValue,
   };
 };
 
-const consumeDailyQuota = async (uid: string): Promise<boolean> => {
-  const { firestore } = getAdminServices();
+const consumeDailyQuota = async (
+  uid: string,
+  firestore: Awaited<ReturnType<typeof getAdminServices>>['firestore'],
+  fieldValue: Awaited<ReturnType<typeof getAdminServices>>['fieldValue'],
+): Promise<boolean> => {
   const day = new Date().toISOString().slice(0, 10);
   const quotaRef = firestore.collection('aiUsage').doc(uid);
 
@@ -94,7 +98,7 @@ const consumeDailyQuota = async (uid: string): Promise<boolean> => {
     transaction.set(quotaRef, {
       day,
       count: currentCount + 1,
-      updatedAt: FieldValue.serverTimestamp(),
+      updatedAt: fieldValue.serverTimestamp(),
     });
     return true;
   });
@@ -145,6 +149,7 @@ const requestGroq = async (
     throw new Error('Missing Groq API key.');
   }
 
+  const { default: Groq } = await import('groq-sdk');
   const groq = new Groq({ apiKey });
   let systemPrompt: string;
   let userContent: string;
@@ -210,10 +215,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  let services: ReturnType<typeof getAdminServices>;
+  let services: Awaited<ReturnType<typeof getAdminServices>>;
   try {
-    services = getAdminServices();
-  } catch {
+    services = await getAdminServices();
+  } catch (error) {
+    console.error('AI service initialization failed:', error instanceof Error ? error.name : 'UnknownError');
     sendError(res, 503, 'El servicio de IA no está configurado correctamente.');
     return;
   }
@@ -247,7 +253,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    if (!(await consumeDailyQuota(uid))) {
+    if (!(await consumeDailyQuota(uid, services.firestore, services.fieldValue))) {
       sendError(res, 429, 'Alcanzaste el límite diario de solicitudes de IA. Inténtalo mañana.');
       return;
     }
