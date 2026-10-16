@@ -15,7 +15,7 @@
   "dependencies": {
     "date-fns": "^2.29.3",
     "firebase": "^13.0.0",
-    "firebase-admin": "^14.5.0",
+    "firebase-admin": "13.10.0",
     "framer-motion": "^10.12.4",
     "groq-sdk": "0.33.0",
     "html2canvas": "1.4.1",

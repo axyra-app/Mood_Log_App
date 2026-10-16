@@ -1,3 +1,7 @@
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+
 const MAX_REQUEST_BYTES = 24_000;
 const MAX_DAILY_REQUESTS = 40;
 const MODEL = 'llama-3.1-8b-instant';
@@ -116,12 +120,6 @@ const jsonResponse = (status: number, body: unknown, headers: HeadersInit = {}):
 const sendError = (status: number, message: string, headers: HeadersInit = {}): Response =>
   jsonResponse(status, { error: message }, headers);
 
-type NativeModuleImport = <T>(specifier: string) => Promise<T>;
-const importNativeModule = new Function(
-  'specifier',
-  'return import(specifier)',
-) as NativeModuleImport;
-
 const getSafeErrorCode = (error: unknown): string => {
   if (!error || typeof error !== 'object' || !('code' in error)) {
     return error instanceof Error ? error.name : 'UnknownError';
@@ -154,20 +152,15 @@ const getAdminServices = async () => {
     process.env.FIREBASE_PROJECT_ID,
   );
 
-  const [appModule, authModule, firestoreModule] = await Promise.all([
-    importNativeModule<typeof import('firebase-admin/app')>('firebase-admin/app'),
-    importNativeModule<typeof import('firebase-admin/auth')>('firebase-admin/auth'),
-    importNativeModule<typeof import('firebase-admin/firestore')>('firebase-admin/firestore'),
-  ]);
-  const app = appModule.getApps()[0] ?? appModule.initializeApp({
-    credential: appModule.cert(credentials),
+  const app = getApps()[0] ?? initializeApp({
+    credential: cert(credentials),
     projectId: credentials.projectId,
   });
 
   return {
-    auth: authModule.getAuth(app),
-    firestore: firestoreModule.getFirestore(app),
-    fieldValue: firestoreModule.FieldValue,
+    auth: getAuth(app),
+    firestore: getFirestore(app),
+    fieldValue: FieldValue,
   };
 };
 
