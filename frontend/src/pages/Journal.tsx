@@ -143,7 +143,7 @@ const Journal: React.FC = () => {
       />
 
       {/* Contenido Principal */}
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 sm:py-8'>
         {/* Barra de herramientas */}
         <div className='mb-6 sm:mb-8'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0'>

@@ -90,7 +90,7 @@ const FloatingChatBubble: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className='fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:right-6 z-50'>
+    <div className='fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:right-6 z-40'>
       {!isOpen ? (
         <button
           type='button'

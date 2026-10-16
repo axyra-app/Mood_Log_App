@@ -171,17 +171,17 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-none sm:rounded-lg w-full max-w-6xl h-full sm:h-auto sm:max-h-[95vh] overflow-y-auto">
+      <div className="bg-white rounded-none sm:rounded-lg w-full max-w-6xl min-w-0 h-full sm:h-auto sm:max-h-[95vh] overflow-x-hidden overflow-y-auto">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <BookOpen className="w-6 h-6 text-purple-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
+          <div className="grid grid-cols-[1fr_auto] items-center gap-3 sm:flex sm:justify-between">
+            <div className="col-span-2 flex min-w-0 items-center gap-3 sm:col-span-1">
+              <BookOpen className="h-6 w-6 shrink-0 text-purple-600" />
+              <h2 className="min-w-0 text-lg font-semibold text-gray-900 sm:text-xl">
                 {entry ? 'Editar Entrada' : 'Nueva Entrada del Diario'}
               </h2>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="col-span-2 flex items-center justify-end gap-2 sm:col-span-1 sm:gap-3">
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !content.trim() || !aiDataConsent}
@@ -200,6 +200,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
               </button>
               <button 
                 onClick={onClose} 
+                aria-label="Cerrar editor"
                 className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-6 h-6" />
@@ -209,8 +210,8 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="min-w-0 p-4 sm:p-6">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
             {/* Main Editor - Takes 2 columns */}
             <div className="lg:col-span-2 space-y-6">
               <label className="flex items-start gap-3 rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
