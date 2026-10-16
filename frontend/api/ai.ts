@@ -216,7 +216,10 @@ export default {
       services = await getAdminServices();
     } catch (error) {
       console.error('AI service initialization failed:', error instanceof Error ? error.name : 'UnknownError');
-      return sendError(503, 'El servicio de IA no está configurado correctamente.');
+      return sendError(
+        503,
+        'No se pudo inicializar Firebase Admin. Verifica FIREBASE_SERVICE_ACCOUNT_JSON y FIREBASE_PROJECT_ID en Vercel.',
+      );
     }
 
     const authorization = req.headers.get('authorization') || '';
