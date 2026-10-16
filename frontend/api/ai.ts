@@ -1,15 +1,3 @@
-interface VercelRequest {
-  method?: string;
-  headers: Record<string, string | string[] | undefined>;
-  body?: unknown;
-}
-
-interface VercelResponse {
-  setHeader(name: string, value: string): void;
-  status(code: number): VercelResponse;
-  json(body: unknown): void;
-}
-
 const MAX_REQUEST_BYTES = 24_000;
 const MAX_DAILY_REQUESTS = 40;
 const MODEL = 'llama-3.1-8b-instant';
@@ -34,9 +22,17 @@ const journalSystemPrompt = `Eres un asistente de IA que resume entradas de diar
 
 const moodSystemPrompt = `Eres un asistente de IA que resume datos personales de estado de ánimo para apoyar la autorreflexión. No eres profesional de salud y no brindas atención clínica, diagnósticos ni tratamientos. Usa únicamente los datos recibidos, no infieras causas clínicas, presenta patrones como observaciones descriptivas y responde en español como JSON con summary, patterns, insights, recommendations, riskLevel, nextSteps, moodTrend, keyFactors, interventionStrategies y wellnessPlan. riskLevel debe ser low, medium o high; moodTrend debe ser improving, stable o declining.`;
 
-const sendError = (res: VercelResponse, status: number, message: string): void => {
-  res.status(status).json({ error: message });
-};
+const jsonResponse = (status: number, body: unknown, headers: HeadersInit = {}): Response =>
+  Response.json(body, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      ...headers,
+    },
+  });
+
+const sendError = (status: number, message: string, headers: HeadersInit = {}): Response =>
+  jsonResponse(status, { error: message }, headers);
 
 const parseBody = (body: unknown): AiRequest | null => {
   if (typeof body === 'string') {
@@ -194,77 +190,71 @@ const requestGroq = async (
     : null;
 };
 
-export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
-  res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    sendError(res, 405, 'Método no permitido.');
-    return;
-  }
-
-  const contentLengthHeader = req.headers['content-length'];
-  const contentLength = typeof contentLengthHeader === 'string' ? Number(contentLengthHeader) : 0;
-  const body = parseBody(req.body);
-  const serializedBodyLength = body ? Buffer.byteLength(JSON.stringify(body), 'utf8') : 0;
-  if (contentLength > MAX_REQUEST_BYTES || serializedBodyLength > MAX_REQUEST_BYTES) {
-    sendError(res, 413, 'La solicitud supera el tamaño permitido.');
-    return;
-  }
-  if (!process.env.GROQ_API_KEY || !process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    sendError(res, 503, 'El servicio de IA aún no está configurado.');
-    return;
-  }
-
-  let services: Awaited<ReturnType<typeof getAdminServices>>;
-  try {
-    services = await getAdminServices();
-  } catch (error) {
-    console.error('AI service initialization failed:', error instanceof Error ? error.name : 'UnknownError');
-    sendError(res, 503, 'El servicio de IA no está configurado correctamente.');
-    return;
-  }
-
-  const authorization = req.headers.authorization;
-  const token = typeof authorization === 'string' && authorization.startsWith('Bearer ')
-    ? authorization.slice('Bearer '.length)
-    : '';
-  if (!token) {
-    sendError(res, 401, 'Inicia sesión para usar las funciones de IA.');
-    return;
-  }
-
-  let uid: string;
-  try {
-    uid = (await services.auth.verifyIdToken(token, true)).uid;
-  } catch {
-    sendError(res, 401, 'La sesión no es válida. Inicia sesión nuevamente.');
-    return;
-  }
-
-  if (!body || !['chat', 'journal-analysis', 'mood-analysis'].includes(String(body.task))) {
-    sendError(res, 400, 'La solicitud de IA no es válida.');
-    return;
-  }
-
-  const task = body.task as AiTask;
-  if (!isValidTaskRequest(task, body)) {
-    sendError(res, 400, 'Los datos enviados no son válidos o superan el límite permitido.');
-    return;
-  }
-
-  try {
-    if (!(await consumeDailyQuota(uid, services.firestore, services.fieldValue))) {
-      sendError(res, 429, 'Alcanzaste el límite diario de solicitudes de IA. Inténtalo mañana.');
-      return;
+export default {
+  async fetch(req: Request): Promise<Response> {
+    if (req.method !== 'POST') {
+      return sendError(405, 'Método no permitido.', { Allow: 'POST' });
     }
-    const result = await requestGroq(task, body);
-    if (result === null) {
-      sendError(res, 400, 'Los datos enviados no son válidos o superan el límite permitido.');
-      return;
+
+    const contentLengthHeader = req.headers.get('content-length');
+    const contentLength = contentLengthHeader ? Number(contentLengthHeader) : 0;
+    if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
+      return sendError(413, 'La solicitud supera el tamaño permitido.');
     }
-    res.status(200).json({ result });
-  } catch (error) {
-    console.error('AI request failed:', error instanceof Error ? error.name : 'UnknownError');
-    sendError(res, 503, 'No fue posible completar el análisis de IA. Inténtalo de nuevo más tarde.');
+
+    const rawBody = await req.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+      return sendError(413, 'La solicitud supera el tamaño permitido.');
+    }
+    const body = parseBody(rawBody);
+    if (!process.env.GROQ_API_KEY || !process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      return sendError(503, 'El servicio de IA aún no está configurado.');
+    }
+
+    let services: Awaited<ReturnType<typeof getAdminServices>>;
+    try {
+      services = await getAdminServices();
+    } catch (error) {
+      console.error('AI service initialization failed:', error instanceof Error ? error.name : 'UnknownError');
+      return sendError(503, 'El servicio de IA no está configurado correctamente.');
+    }
+
+    const authorization = req.headers.get('authorization') || '';
+    const token = authorization.startsWith('Bearer ')
+      ? authorization.slice('Bearer '.length)
+      : '';
+    if (!token) {
+      return sendError(401, 'Inicia sesión para usar las funciones de IA.');
+    }
+
+    let uid: string;
+    try {
+      uid = (await services.auth.verifyIdToken(token, true)).uid;
+    } catch {
+      return sendError(401, 'La sesión no es válida. Inicia sesión nuevamente.');
+    }
+
+    if (!body || !['chat', 'journal-analysis', 'mood-analysis'].includes(String(body.task))) {
+      return sendError(400, 'La solicitud de IA no es válida.');
+    }
+
+    const task = body.task as AiTask;
+    if (!isValidTaskRequest(task, body)) {
+      return sendError(400, 'Los datos enviados no son válidos o superan el límite permitido.');
+    }
+
+    try {
+      if (!(await consumeDailyQuota(uid, services.firestore, services.fieldValue))) {
+        return sendError(429, 'Alcanzaste el límite diario de solicitudes de IA. Inténtalo mañana.');
+      }
+      const result = await requestGroq(task, body);
+      if (result === null) {
+        return sendError(400, 'Los datos enviados no son válidos o superan el límite permitido.');
+      }
+      return jsonResponse(200, { result });
+    } catch (error) {
+      console.error('AI request failed:', error instanceof Error ? error.name : 'UnknownError');
+      return sendError(503, 'No fue posible completar el análisis de IA. Inténtalo de nuevo más tarde.');
+    }
   }
-}
+};
