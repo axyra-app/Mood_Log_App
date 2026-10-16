@@ -43,6 +43,15 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
     }
   }, []);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   const handleSave = async () => {
     if (!title.trim() || !content.trim()) {
       toast.error('Por favor completa el título y contenido');
@@ -171,7 +180,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-none sm:rounded-lg w-full max-w-6xl min-w-0 h-full sm:h-auto sm:max-h-[95vh] overflow-x-hidden overflow-y-auto">
+      <div className="bg-white rounded-none sm:rounded-lg w-full max-w-6xl min-w-0 h-full sm:h-auto sm:max-h-[95vh] overflow-x-hidden overflow-y-auto overscroll-contain">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
           <div className="grid grid-cols-[1fr_auto] items-center gap-3 sm:flex sm:justify-between">
