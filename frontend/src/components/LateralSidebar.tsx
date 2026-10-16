@@ -29,9 +29,9 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       icon: MessageCircle,
-      label: 'Confidente IA',
+      label: 'MIA',
       path: '/chat',
-      description: 'Tu espacio seguro y reflexivo',
+      description: 'Habla sobre cómo te sientes',
       color: 'bg-gradient-to-r from-green-500 to-emerald-500',
     },
     {

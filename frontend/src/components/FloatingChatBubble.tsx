@@ -1,8 +1,9 @@
-import { Bot, MessageCircle, Minimize2, Send, User, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Heart, MessageCircle, Minimize2, Send, Sparkles, User, X } from 'lucide-react';
+import React, { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { empatheticCompanionAgent } from '../services/specializedAgents';
 
 interface ChatMessage {
   id: string;
@@ -11,6 +12,19 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+const welcomeMessage: ChatMessage = {
+  id: 'welcome',
+  message: 'Hola, soy MIA. Este es un espacio para hablar de cómo te sientes, sin juicios. ¿Cómo va tu ánimo hoy?',
+  sender: 'ai',
+  timestamp: new Date(),
+};
+
+const suggestedMessages = [
+  'Quiero hablar de cómo me siento',
+  'Hoy ha sido un día difícil',
+  'Necesito calmar mi mente',
+];
+
 const FloatingChatBubble: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
@@ -18,321 +32,254 @@ const FloatingChatBubble: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Estado local para mensajes - inicializado con un mensaje de bienvenida
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      message: `¡Hola ${
-        user?.displayName || 'Usuario'
-      }! 👋 Soy tu asistente de bienestar emocional. ¿En qué puedo ayudarte hoy?`,
-      sender: 'ai',
-      timestamp: new Date(),
-    },
-  ]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  useEffect(() => {
+    if (isOpen && !isMinimized) inputRef.current?.focus();
+  }, [isOpen, isMinimized]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || isLoading) return;
-
+  const handleSendMessage = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     const userMessage = message.trim();
+    if (!userMessage || isLoading) return;
+
+    const userMsg: ChatMessage = {
+      id: `user_${Date.now()}`,
+      message: userMessage,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+
+    setMessages((previous) => [...previous, userMsg]);
     setMessage('');
     setIsLoading(true);
 
     try {
-      // Agregar mensaje del usuario
-      const userMsg: ChatMessage = {
-        id: `user_${Date.now()}`,
-        message: userMessage,
-        sender: 'user',
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => {
-        return [...prev, userMsg];
-      });
-
-      // Simular respuesta de IA
-      setTimeout(() => {
-        const aiResponse = generateAIResponse(userMessage, user?.displayName || 'Usuario');
-        const aiMsg: ChatMessage = {
-          id: `ai_${Date.now()}`,
-          message: aiResponse,
+      const response = await empatheticCompanionAgent.chat(userMessage);
+      setMessages((previous) => [
+        ...previous,
+        {
+          id: `mia_${Date.now()}`,
+          message: response,
           sender: 'ai',
           timestamp: new Date(),
-        };
-
-        setMessages((prev) => {
-          return [...prev, aiMsg];
-        });
-        setIsLoading(false);
-      }, 1000);
+        },
+      ]);
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Error al enviar mensaje');
+      console.error('Error sending message to MIA:', error);
+      setMessage(userMessage);
+      toast.error(error instanceof Error ? error.message : 'MIA no pudo responder. Inténtalo de nuevo.');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const generateAIResponse = (userMessage: string, userName: string): string => {
-    const message = userMessage.toLowerCase();
-
-    // Respuestas contextuales basadas en el mensaje del usuario
-    if (message.includes('hola') || message.includes('hi')) {
-      return `¡Hola ${userName}! 👋 Me alegra verte por aquí. Soy tu asistente de IA especializado en bienestar emocional. ¿Cómo te sientes hoy? ¿Hay algo en lo que pueda ayudarte?`;
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void handleSendMessage();
     }
-
-    if (message.includes('triste') || message.includes('deprimido') || message.includes('mal')) {
-      return `Entiendo que te sientes así, ${userName}. 😔 Es completamente normal tener días difíciles. Te sugiero algunas estrategias que pueden ayudar:\n\n1. 🌱 Respiración profunda: Inhala por 4 segundos, mantén por 4, exhala por 6\n2. 🎵 Música relajante: Escucha tu música favorita\n3. 🚶‍♂️ Caminata corta: Aunque sea 10 minutos al aire libre\n4. 📝 Escribe tus pensamientos: El diario puede ser muy terapéutico\n\n¿Te gustaría que profundicemos en alguna de estas estrategias?`;
-    }
-
-    if (message.includes('ansioso') || message.includes('ansiedad') || message.includes('nervioso')) {
-      return `La ansiedad puede ser abrumadora, ${userName}. 😌 Aquí tienes algunas técnicas que pueden ayudarte:\n\n1. 🧘‍♀️ Técnica 5-4-3-2-1: Identifica 5 cosas que ves, 4 que tocas, 3 que oyes, 2 que hueles, 1 que saboreas\n2. 💪 Tensión-relajación: Tensa y relaja cada grupo muscular\n3. 🌊 Respiración de caja: 4 segundos inhalar, 4 mantener, 4 exhalar, 4 pausa\n4. 🎯 Enfócate en el presente: ¿Qué puedes controlar ahora mismo?\n\n¿Cuál de estas técnicas te gustaría probar?`;
-    }
-
-    if (message.includes('feliz') || message.includes('bien') || message.includes('genial')) {
-      return `¡Qué maravilloso, ${userName}! 😊 Me alegra saber que te sientes bien. Los momentos positivos son tan importantes como los desafiantes. Te sugiero:\n\n1. 🌟 Celebra este momento: Disfruta plenamente esta sensación\n2. 📝 Regístralo: Anota qué te hizo sentir así\n3. 🔄 Compártelo: Si tienes ganas, comparte tu alegría con alguien\n4. 🎯 Mantén el momentum: ¿Qué puedes hacer para prolongar este sentimiento?\n\n¿Qué te está haciendo sentir tan bien hoy?`;
-    }
-
-    if (message.includes('estrés') || message.includes('estresado') || message.includes('presión')) {
-      return `El estrés puede ser muy desafiante, ${userName}. 😮‍💨 Aquí tienes algunas herramientas para manejarlo:\n\n1. 🧘‍♂️ Mindfulness: Dedica 5 minutos a observar tu respiración\n2. 📋 Prioriza: Haz una lista de 3 cosas más importantes hoy\n3. 🚫 Di no: Está bien establecer límites\n4. 🎨 Actividad creativa: Dibuja, escribe, o haz algo manual\n5. 💬 Habla con alguien: No tienes que enfrentarlo solo\n\n¿Qué tipo de estrés estás experimentando? ¿Laboral, personal, o académico?`;
-    }
-
-    if (message.includes('sueño') || message.includes('dormir') || message.includes('insomnio')) {
-      return `El sueño es fundamental para tu bienestar, ${userName}. 😴 Aquí tienes algunas estrategias para mejorar tu descanso:\n\n1. 🌙 Rutina nocturna: Acuéstate y levántate a la misma hora\n2. 📱 Sin pantallas: Evita dispositivos 1 hora antes de dormir\n3. 🛁 Relajación: Un baño tibio o lectura ligera\n4. 🌡️ Ambiente fresco: Temperatura entre 18-21°C\n5. ☕ Sin cafeína: Evita cafeína después de las 2 PM\n\n¿Tienes problemas para conciliar el sueño o para mantenerlo?`;
-    }
-
-    if (message.includes('gracias') || message.includes('thank you')) {
-      return `¡De nada, ${userName}! 😊 Es un placer poder ayudarte. Recuerda que estoy aquí siempre que necesites apoyo emocional o quieras conversar sobre tu bienestar.\n\n¿Hay algo más en lo que pueda asistirte hoy?`;
-    }
-
-    // Respuesta por defecto
-    return `Gracias por compartir eso conmigo, ${userName}. 🤗 Cada experiencia es única y valiosa. Me gustaría entenderte mejor para poder ayudarte de la manera más efectiva.\n\n¿Podrías contarme más sobre cómo te sientes en este momento? ¿Hay algo específico que te gustaría trabajar o mejorar en tu bienestar emocional?`;
   };
 
-  // No mostrar si no hay usuario autenticado
   if (!user) return null;
 
   return (
-    <>
-      {/* Botón flotante */}
-      {!isOpen && (
+    <div className='fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:right-6 z-50'>
+      {!isOpen ? (
         <button
+          type='button'
           onClick={() => setIsOpen(true)}
-          className={`touch-target fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${
-            isDarkMode
-              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
-              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+          aria-label='Abrir chat con MIA para hablar sobre tu estado de ánimo'
+          className='group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 text-white shadow-xl shadow-violet-900/20 ring-1 ring-white/25 transition duration-200 hover:-translate-y-0.5 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-300'
+        >
+          <span className='flex h-9 w-9 items-center justify-center rounded-full bg-white/15'>
+            <Heart className='h-5 w-5' aria-hidden='true' />
+          </span>
+          <span className='pr-1 text-left'>
+            <span className='block text-sm font-bold leading-4'>MIA</span>
+            <span className='mt-0.5 block text-[11px] leading-4 text-white/85'>Hablemos de tu ánimo</span>
+          </span>
+          <MessageCircle className='ml-1 h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5' aria-hidden='true' />
+        </button>
+      ) : (
+        <section
+          aria-label='Chat con MIA'
+          className={`flex w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden rounded-3xl border shadow-2xl shadow-gray-950/20 ${
+            isMinimized ? 'h-auto' : 'h-[min(640px,calc(100dvh-6rem))]'
+          } ${
+            isDarkMode ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-white text-gray-900'
           }`}
         >
-          <MessageCircle className='w-5 h-5 sm:w-6 sm:h-6 text-white mx-auto' />
-          {messages.filter((msg) => msg.sender === 'ai' && msg.id !== 'welcome').length > 0 && !isOpen && (
-            <div className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center'>
-              {messages.filter((msg) => msg.sender === 'ai' && msg.id !== 'welcome').length > 9
-                ? '9+'
-                : messages.filter((msg) => msg.sender === 'ai' && msg.id !== 'welcome').length}
-            </div>
-          )}
-        </button>
-      )}
-
-      {/* Ventana de chat */}
-      {isOpen && (
-        <div
-          className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-72 sm:w-80 h-80 sm:h-96 rounded-xl shadow-2xl transition-all duration-300 ${
-            isMinimized ? 'h-12' : ''
-          } ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
-        >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between p-4 rounded-t-xl ${
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
-            }`}
-          >
-            <div className='flex items-center space-x-2'>
-              <div className='w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center'>
-                <Bot className='w-4 h-4 text-white' />
+          <header className='relative flex items-center justify-between bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-4 text-white'>
+            <div className='absolute inset-x-0 top-0 h-px bg-white/30' />
+            <div className='flex min-w-0 items-center gap-3'>
+              <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25'>
+                <Heart className='h-5 w-5' aria-hidden='true' />
               </div>
-              <div>
-                <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Dra. Mia IA
-                </h3>
-                <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Asistente de Bienestar</p>
+              <div className='min-w-0'>
+                <div className='flex items-center gap-2'>
+                  <h2 className='text-base font-bold tracking-wide'>MIA</h2>
+                  <span className='rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/90'>
+                    IA
+                  </span>
+                </div>
+                <p className='mt-0.5 truncate text-xs text-white/85'>Un espacio para tu bienestar emocional</p>
               </div>
             </div>
-
-            <div className='flex items-center space-x-1'>
+            <div className='ml-2 flex shrink-0 items-center gap-1'>
               <button
-                onClick={() => setIsMinimized(!isMinimized)}
-                className={`touch-target p-1 rounded hover:bg-gray-600 transition-colors ${
-                  isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                }`}
+                type='button'
+                onClick={() => setIsMinimized((minimized) => !minimized)}
+                aria-label={isMinimized ? 'Expandir chat' : 'Minimizar chat'}
+                className='rounded-xl p-2 text-white/85 transition hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white'
               >
-                <Minimize2 className='w-4 h-4' />
+                <Minimize2 className='h-4 w-4' aria-hidden='true' />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
-                className={`touch-target p-1 rounded hover:bg-gray-600 transition-colors ${
-                  isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                }`}
+                type='button'
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsMinimized(false);
+                }}
+                aria-label='Cerrar chat'
+                className='rounded-xl p-2 text-white/85 transition hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white'
               >
-                <X className='w-4 h-4' />
+                <X className='h-4 w-4' aria-hidden='true' />
               </button>
             </div>
-          </div>
+          </header>
 
           {!isMinimized && (
             <>
-              {/* Mensajes */}
-              <div className='flex-1 overflow-y-auto mobile-padding space-y-4 h-56 sm:h-64 py-4'>
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`flex items-start gap-2 border-b px-4 py-2.5 text-[11px] leading-relaxed ${
+                  isDarkMode
+                    ? 'border-gray-800 bg-gray-950/60 text-gray-400'
+                    : 'border-violet-100 bg-violet-50/70 text-gray-600'
+                }`}
+              >
+                <Sparkles className='mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500' aria-hidden='true' />
+                <p>MIA es una IA para autorreflexión, no atención clínica. Tus mensajes se envían a Groq y no se guardan aquí.</p>
+              </div>
+
+              <div
+                aria-live='polite'
+                className={`flex-1 space-y-4 overflow-y-auto px-4 py-5 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50/70'}`}
+              >
+                {messages.map((chatMessage) => (
+                  <div
+                    key={chatMessage.id}
+                    className={`flex items-end gap-2 ${chatMessage.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {chatMessage.sender === 'ai' && (
+                      <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm'>
+                        <Heart className='h-3.5 w-3.5' aria-hidden='true' />
+                      </div>
+                    )}
                     <div
-                      className={`flex items-end gap-2 max-w-[85%] ${
-                        msg.sender === 'user' ? 'flex-row-reverse' : ''
+                      className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 ${
+                        chatMessage.sender === 'user'
+                          ? 'rounded-br-md bg-violet-600 text-white'
+                          : isDarkMode
+                            ? 'rounded-bl-md border border-gray-700 bg-gray-800 text-gray-100'
+                            : 'rounded-bl-md border border-gray-200 bg-white text-gray-800 shadow-sm'
                       }`}
                     >
-                      {/* Avatar */}
-                      <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
-                          msg.sender === 'user' 
-                            ? 'bg-purple-500' 
-                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                      <p className='whitespace-pre-wrap break-words text-sm leading-relaxed'>{chatMessage.message}</p>
+                      <time
+                        className={`mt-1.5 block text-right text-[10px] ${
+                          chatMessage.sender === 'user' ? 'text-violet-100/80' : 'text-gray-400'
                         }`}
                       >
-                        {msg.sender === 'user' ? (
-                          <User className='w-4 h-4 text-white' />
-                        ) : (
-                          <Bot className='w-4 h-4 text-white' />
-                        )}
-                      </div>
-                      
-                      {/* Burbuja de mensaje */}
-                      <div className='flex flex-col'>
-                        <div
-                          className={`px-4 py-2.5 rounded-2xl shadow-sm ${
-                            msg.sender === 'user'
-                              ? isDarkMode
-                                ? 'bg-purple-600 text-white rounded-br-sm'
-                                : 'bg-purple-500 text-white rounded-br-sm'
-                              : isDarkMode
-                              ? 'bg-gray-700 text-gray-100 rounded-bl-sm'
-                              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
-                          }`}
-                        >
-                          <p className='text-sm leading-relaxed whitespace-pre-wrap break-words'>{msg.message}</p>
-                        </div>
-                        <p
-                          className={`text-[10px] mt-1 px-1 ${
-                            msg.sender === 'user' 
-                              ? 'text-right text-gray-400' 
-                              : 'text-left text-gray-400'
-                          }`}
-                        >
-                          {msg.timestamp.toLocaleTimeString('es-CO', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
+                        {chatMessage.timestamp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                      </time>
                     </div>
+                    {chatMessage.sender === 'user' && (
+                      <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-200'>
+                        <User className='h-3.5 w-3.5' aria-hidden='true' />
+                      </div>
+                    )}
                   </div>
                 ))}
 
-                {/* Indicador de carga */}
-                {isLoading && (
-                  <div className='flex justify-start'>
-                    <div className='flex items-end gap-2 max-w-[85%]'>
-                      <div className='w-7 h-7 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-sm'>
-                        <Bot className='w-4 h-4 text-white' />
-                      </div>
-                      <div
-                        className={`px-4 py-2.5 rounded-2xl rounded-bl-sm shadow-sm ${
-                          isDarkMode ? 'bg-gray-700' : 'bg-white border border-gray-200'
+                {messages.length === 1 && !isLoading && (
+                  <div className='flex flex-wrap gap-2 pl-9'>
+                    {suggestedMessages.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type='button'
+                        onClick={() => setMessage(suggestion)}
+                        className={`rounded-full border px-3 py-2 text-left text-xs transition hover:border-violet-300 hover:text-violet-700 ${
+                          isDarkMode
+                            ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-violet-300'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-violet-50'
                         }`}
                       >
-                        <div className='flex space-x-1.5'>
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${
-                            isDarkMode ? 'bg-gray-400' : 'bg-gray-400'
-                          }`}></div>
-                          <div
-                            className={`w-2 h-2 rounded-full animate-bounce ${
-                              isDarkMode ? 'bg-gray-400' : 'bg-gray-400'
-                            }`}
-                            style={{ animationDelay: '0.1s' }}
-                          ></div>
-                          <div
-                            className={`w-2 h-2 rounded-full animate-bounce ${
-                              isDarkMode ? 'bg-gray-400' : 'bg-gray-400'
-                            }`}
-                            style={{ animationDelay: '0.2s' }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
+                        {suggestion}
+                      </button>
+                    ))}
                   </div>
                 )}
 
+                {isLoading && (
+                  <div className='flex items-end gap-2' aria-label='MIA está escribiendo'>
+                    <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white'>
+                      <Heart className='h-3.5 w-3.5' aria-hidden='true' />
+                    </div>
+                    <div className={`flex gap-1 rounded-2xl rounded-bl-md px-4 py-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-sm'}`}>
+                      <span className='h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400' />
+                      <span className='h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:120ms]' />
+                      <span className='h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:240ms]' />
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
-              <div className={`mobile-padding border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className='flex items-center space-x-2'>
-                  <input
-                    type='text'
+              <form
+                onSubmit={(event) => void handleSendMessage(event)}
+                className={`border-t px-3 pb-3 pt-3 ${isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}
+              >
+                <div className={`flex items-end gap-2 rounded-2xl border p-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 ${
+                  isDarkMode ? 'border-gray-700 bg-gray-800 focus-within:ring-violet-900/40' : 'border-gray-200 bg-gray-50'
+                }`}>
+                  <textarea
+                    ref={inputRef}
+                    rows={1}
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder='Escribe tu consulta para Dra. Mia...'
-                    className={`flex-1 mobile-button rounded-lg mobile-text border focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    onChange={(event) => setMessage(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder='Cuéntale a MIA cómo te sientes...'
+                    aria-label='Mensaje para MIA'
+                    maxLength={4000}
+                    className={`max-h-24 min-h-10 flex-1 resize-y bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-gray-400 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}
                   />
                   <button
-                    onClick={handleSendMessage}
+                    type='submit'
                     disabled={!message.trim() || isLoading}
-                    className={`touch-target p-2 rounded-lg transition-colors ${
-                      message.trim() && !isLoading
-                        ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                        : isDarkMode
-                        ? 'bg-gray-600 text-gray-400'
-                        : 'bg-gray-200 text-gray-400'
-                    }`}
+                    aria-label='Enviar mensaje a MIA'
+                    className='mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-500'
                   >
-                    <Send className='w-4 h-4' />
+                    <Send className='h-4 w-4' aria-hidden='true' />
                   </button>
                 </div>
-
-                <div className='mt-2 text-center'>
-                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    💡 Recuerda: Esta es una consulta virtual. Para síntomas graves o emergencias, consulta con un
-                    profesional en persona.
-                  </p>
-                </div>
-              </div>
+                <p className={`mt-2 text-center text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  MIA acompaña tu reflexión; no reemplaza ayuda profesional ni servicios de emergencia.
+                </p>
+              </form>
             </>
           )}
-        </div>
+        </section>
       )}
-    </>
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Clock, Heart, Shield, Sparkles, User } from 'lucide-react';
+import { ArrowRight, Heart, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -10,135 +10,93 @@ const ChatSelection: React.FC = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
-  const handleAIChat = (assistantId: 'mia' | 'reflection') => {
-    navigate(`/chat/assistant/${assistantId}`);
-  };
-
   return (
     <div
-      className={`min-h-screen transition-colors duration-500 ${
-        isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-purple-50 via-white to-pink-50 text-gray-900'
+      className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode ? 'bg-gray-950 text-white' : 'bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 text-gray-900'
       }`}
     >
       <Header
-        title='Confidente IA'
-        subtitle='Tu espacio personal, seguro y reflexivo 24/7'
+        title='MIA'
+        subtitle='Un espacio de autorreflexión para acompañar tu estado de ánimo'
         backTo='/dashboard'
         backLabel='Volver al Dashboard'
       />
 
-      <main className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {/* Welcome Section */}
-        <div className='text-center mb-10'>
-          <h2 className='text-3xl font-bold mb-3'>
-            ¡Hola, {user?.displayName || 'Usuario'}! 👋
+      <main className='mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16'>
+        <div className='mx-auto max-w-2xl text-center'>
+          <div className='mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25'>
+            <Heart className='h-8 w-8' aria-hidden='true' />
+          </div>
+          <p className='mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300'>Tu espacio emocional</p>
+          <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>
+            Hola, {user?.displayName || '¿cómo estás?'}
           </h2>
-          <p className={`text-base sm:text-lg max-w-2xl mx-auto ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Estamos aquí para escucharte sin juicios. Elige el enfoque de autorreflexión que prefieras:
+          <p className={`mx-auto mt-4 max-w-xl text-base leading-7 sm:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            MIA puede escucharte sin juzgar y ayudarte a poner en palabras cómo te sientes. No tienes que tener todo claro para empezar.
           </p>
         </div>
 
-        {/* Chat Options */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-8 mb-10'>
-          {/* Confidante 1: Empático */}
-          <div
-            className={`rounded-2xl shadow-xl border p-8 transition-all hover:scale-[1.02] ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-purple-100'
-            }`}
-          >
-            <div className='text-center mb-6'>
-              <div className='w-16 h-16 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md'>
-                <Heart className='w-8 h-8 text-white' />
-              </div>
-              <h3 className='text-2xl font-bold mb-2'>Espacio de Desahogo</h3>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Una conversación cálida para poner en palabras lo que sientes y ordenar tus ideas.
-              </p>
-            </div>
-
-            <div className='space-y-3 mb-6 text-sm'>
-              <div className='flex items-center space-x-3'>
-                <Clock className='w-4 h-4 text-green-500' />
-                <span>Disponible 24/7 a tu propio ritmo</span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <Shield className='w-4 h-4 text-purple-500' />
-                <span>Un espacio de autorreflexión sin juicios</span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <Sparkles className='w-4 h-4 text-pink-500' />
-                <span>Ideal para desahogarse y calmar la mente</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleAIChat('mia')}
-              className='w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 px-6 rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all font-semibold flex items-center justify-center space-x-2 shadow-md'
-            >
-              <User className='w-5 h-5' />
-              <span>Conversar con Mia</span>
-              <ArrowRight className='w-4 h-4' />
-            </button>
-          </div>
-
-          {/* Confidante 2: Reflexivo */}
-          <div
-            className={`rounded-2xl shadow-xl border p-8 transition-all hover:scale-[1.02] ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-100'
-            }`}
-          >
-            <div className='text-center mb-6'>
-              <div className='w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md'>
-                <Bot className='w-8 h-8 text-white' />
-              </div>
-              <h3 className='text-2xl font-bold mb-2'>Guía Reflexivo</h3>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Preguntas para observar patrones, hábitos y perspectivas con mayor claridad.
-              </p>
-            </div>
-
-            <div className='space-y-3 mb-6 text-sm'>
-              <div className='flex items-center space-x-3'>
-                <Clock className='w-4 h-4 text-green-500' />
-                <span>Disponible 24/7 de forma inmediata</span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <Shield className='w-4 h-4 text-blue-500' />
-                <span>Respuestas reflexivas estructuradas</span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <Sparkles className='w-4 h-4 text-indigo-500' />
-                <span>Ideal para resolver dilemas y ordenar ideas</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleAIChat('reflection')}
-              className='w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold flex items-center justify-center space-x-2 shadow-md'
-            >
-              <User className='w-5 h-5' />
-              <span>Usar la guía reflexiva</span>
-              <ArrowRight className='w-4 h-4' />
-            </button>
-          </div>
-        </div>
-
-        {/* Disclaimer / Información Importante */}
-        <div
-          className={`rounded-2xl shadow-md border p-6 ${
-            isDarkMode ? 'bg-gray-800/60 border-gray-700' : 'bg-purple-50/60 border-purple-200'
+        <section
+          className={`mx-auto mt-9 max-w-2xl overflow-hidden rounded-3xl border shadow-xl ${
+            isDarkMode ? 'border-gray-800 bg-gray-900 shadow-black/20' : 'border-violet-100 bg-white shadow-violet-950/5'
           }`}
         >
-          <div className='flex items-start space-x-3'>
-            <span className='text-2xl'>💡</span>
-            <div>
-              <h4 className='font-semibold text-base mb-1'>Nota sobre privacidad y bienestar</h4>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Los mensajes que envíes se procesan mediante Groq para generar respuestas y no se guardan como historial en Mood Log App. No incluyas información que no quieras compartir con un proveedor externo. Estas respuestas de IA apoyan la autorreflexión; no son atención clínica, asesoría médica ni un servicio de emergencia. Si existe peligro inmediato, contacta los servicios de emergencia de tu localidad o a una persona de confianza.
-              </p>
+          <div className='bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-6 text-white sm:px-8'>
+            <div className='flex items-center gap-4'>
+              <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25'>
+                <MessageCircle className='h-6 w-6' aria-hidden='true' />
+              </div>
+              <div>
+                <h3 className='text-xl font-bold'>Habla con MIA</h3>
+                <p className='mt-1 text-sm text-white/85'>Una conversación breve, a tu ritmo.</p>
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className='px-6 py-6 sm:px-8 sm:py-8'>
+            <ul className='space-y-4'>
+              <li className='flex items-start gap-3'>
+                <Heart className='mt-0.5 h-5 w-5 shrink-0 text-fuchsia-500' aria-hidden='true' />
+                <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>
+                  Explora tu ánimo y las emociones que estás sintiendo.
+                </span>
+              </li>
+              <li className='flex items-start gap-3'>
+                <Sparkles className='mt-0.5 h-5 w-5 shrink-0 text-violet-500' aria-hidden='true' />
+                <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>
+                  Encuentra una pregunta o un pequeño paso que te sirva hoy.
+                </span>
+              </li>
+              <li className='flex items-start gap-3'>
+                <ShieldCheck className='mt-0.5 h-5 w-5 shrink-0 text-emerald-500' aria-hidden='true' />
+                <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>
+                  Conversa sin presión: puedes compartir solo lo que quieras.
+                </span>
+              </li>
+            </ul>
+
+            <button
+              type='button'
+              onClick={() => navigate('/chat/assistant/mia')}
+              className='mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-3.5 font-semibold text-white shadow-md shadow-violet-600/20 transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-300'
+            >
+              <span>Hablar con MIA</span>
+              <ArrowRight className='h-4 w-4' aria-hidden='true' />
+            </button>
+          </div>
+        </section>
+
+        <aside
+          className={`mx-auto mt-6 flex max-w-2xl items-start gap-3 rounded-2xl border p-4 text-sm leading-relaxed ${
+            isDarkMode ? 'border-gray-800 bg-gray-900/70 text-gray-400' : 'border-gray-200 bg-white/80 text-gray-600'
+          }`}
+        >
+          <ShieldCheck className='mt-0.5 h-5 w-5 shrink-0 text-violet-500' aria-hidden='true' />
+          <p>
+            MIA es una IA para autorreflexión, no atención clínica ni un servicio de emergencia. Tus mensajes se envían a Groq para generar respuestas y no se guardan como historial en Mood Log. Evita compartir información que no quieras enviar a un proveedor externo. Si existe peligro inmediato, contacta los servicios de emergencia locales o a una persona de confianza.
+          </p>
+        </aside>
       </main>
     </div>
   );

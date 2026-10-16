@@ -35,8 +35,8 @@ const AIChat: React.FC = () => {
 
   const assistantProfiles: Record<'mia' | 'reflection', AssistantProfile> = {
     mia: {
-      name: 'Mia',
-      description: 'Conversación cálida para expresar emociones y ordenar ideas',
+      name: 'MIA',
+      description: 'Un espacio para hablar de tu ánimo y explorar cómo te sientes',
       icon: '💬',
       color: 'from-pink-500 to-rose-500',
       features: [
@@ -70,7 +70,7 @@ const AIChat: React.FC = () => {
     setMessages([{
       id: 'welcome',
       content: assistantId === 'mia'
-        ? 'Hola, soy Mia, una asistente de IA para ayudarte a expresar lo que sientes y ordenar tus ideas. ¿Qué te gustaría explorar?'
+        ? 'Hola, soy MIA. Estoy aquí para escucharte sin juicios y ayudarte a explorar cómo te sientes. ¿Cómo va tu ánimo hoy?'
         : 'Hola, soy una guía reflexiva de IA. Puedo ayudarte a observar una situación desde distintas perspectivas. ¿Qué tienes en mente?',
       sender: 'ai',
       timestamp: new Date(),
