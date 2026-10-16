@@ -59,52 +59,46 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b sticky top-0 z-50 safe-area-top`}>
       <div className='max-w-7xl mx-auto mobile-padding'>
-        <div className='flex items-center justify-between h-14 sm:h-16'>
-          {/* Lado Izquierdo */}
-          <div className='flex items-center space-x-4'>
-            {/* Logo */}
-            <Logo size='sm' showText={false} />
+        <div className='flex flex-col gap-2 py-2 md:min-h-16 md:flex-row md:items-center md:justify-between md:gap-4 md:py-0'>
+          <div className='flex min-w-0 items-center justify-between gap-2'>
+            <div className='flex min-w-0 items-center gap-1 sm:gap-3 md:gap-4'>
+              <Logo size='sm' showText={false} />
 
-            {/* Botón Home */}
-            <button
-              onClick={() => {
-                navigate('/dashboard');
-              }}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-              title='Ir al Dashboard'
-            >
-              <Home className='w-5 h-5' />
-            </button>
-
-            {shouldShowBackButton && (
               <button
-                onClick={handleBackClick}
-                className={`flex items-center ${
-                  isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                } transition-colors`}
+                onClick={() => navigate('/dashboard')}
+                className={`touch-target rounded-lg p-2 transition-colors ${
+                  isDarkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title='Ir al Dashboard'
+                aria-label='Ir al Dashboard'
               >
-                <ArrowLeft className='w-5 h-5 mr-2' />
-                <span className='hidden sm:inline'>{backLabel}</span>
+                <Home className='h-5 w-5' />
               </button>
-            )}
 
-            {(title || subtitle) && (
-              <div className='hidden md:block'>
-                {title && (
-                  <h1 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h1>
-                )}
-                {subtitle && <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{subtitle}</p>}
-              </div>
-            )}
-          </div>
+              {shouldShowBackButton && (
+                <button
+                  onClick={handleBackClick}
+                  className={`touch-target flex items-center rounded-lg p-2 transition-colors ${
+                    isDarkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                  aria-label={backLabel}
+                >
+                  <ArrowLeft className='h-5 w-5 sm:mr-2' />
+                  <span className='hidden sm:inline'>{backLabel}</span>
+                </button>
+              )}
 
-          {/* Lado Derecho */}
-          <div className='flex items-center space-x-2'>
-            {/* Acciones personalizadas */}
-            {actions}
+              {(title || subtitle) && (
+                <div className='hidden min-w-0 md:block'>
+                  {title && (
+                    <h1 className={`truncate text-lg font-semibold lg:text-xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h1>
+                  )}
+                  {subtitle && <p className={`truncate text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{subtitle}</p>}
+                </div>
+              )}
+            </div>
 
+            <div className='flex shrink-0 items-center gap-1 sm:gap-2'>
             {/* Notificaciones */}
             <div className='relative'>
               <button
@@ -282,17 +276,23 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           </div>
-        </div>
+          </div>
 
-        {/* Título móvil */}
-        {(title || subtitle) && (
-          <div className='md:hidden pb-4'>
+          {(title || subtitle) && (
+            <div className='min-w-0 md:hidden'>
             {title && (
-              <h1 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h1>
+                <h1 className={`text-lg font-semibold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h1>
             )}
             {subtitle && <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{subtitle}</p>}
-          </div>
-        )}
+            </div>
+          )}
+
+          {actions && (
+            <div className='flex min-w-0 max-w-full flex-wrap items-center gap-2 md:justify-end'>
+              {actions}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

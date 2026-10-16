@@ -49,11 +49,11 @@ Vista protegida que muestra saludo, acceso al diario, registros recientes y mét
 
 Recorrido por pasos que pide una valoración visual de 1 a 10, una descripción de cómo se siente la persona y detalles opcionales de energía, estrés, sueño, actividades y emociones. Al guardar, intenta crear un documento en `moodLogs` y muestra una pantalla de análisis.
 
-El tipo compartido de Firestore aún describe otra escala en sus comentarios; unifica el contrato antes de interpretar tendencias antiguas o comparar puntuaciones. El análisis disponible en `aiService` usa un fallback local; no debe presentarse como evaluación profesional o diagnóstico.
+El análisis de ánimo se solicita a una función autenticada y solo después de confirmar el envío de datos. Las respuestas son apoyo para la autorreflexión, no evaluación profesional ni diagnóstico; el servicio puede fallar y la interfaz presenta el error.
 
 ### Diario (`/journal`)
 
-Permite consultar entradas y ofrece acciones para crear, editar, buscar o eliminar; también presenta plantillas/prompts. El contenido se guarda como texto legible en Firestore. El sistema puede intentar analizar el texto con IA según la configuración y el contenido; consulta [Seguridad y privacidad](../architecture/security-and-privacy.md) antes de usarlo con información íntima.
+Permite consultar entradas y ofrece acciones para crear, editar, buscar o eliminar; también presenta plantillas/prompts. El contenido se guarda como texto legible en Firestore. Las acciones explícitas de IA pueden enviar contenido a un proveedor externo; consulta [Seguridad y privacidad](../firebase/security-and-privacy.md) antes de usarlo con información íntima.
 
 ### Estadísticas (`/statistics`)
 
@@ -65,7 +65,7 @@ Ruta protegida a informes avanzados. La persistencia y disponibilidad de esta fu
 
 ### Selección y chat (`/chat`, `/chat/assistant/:assistantId`)
 
-La interfaz ofrece dos enfoques de autorreflexión: una conversación cálida con Mia y una guía basada en preguntas. El chat envía los mensajes al proveedor de IA configurado desde el navegador y mantiene la conversación solo en el estado de la página; no guarda el historial en Firestore.
+La interfaz ofrece dos enfoques de autorreflexión: una conversación cálida con Mia y una guía basada en preguntas. El navegador envía la solicitud a una función autenticada de Vercel, que la procesa con el proveedor de IA; la conversación se mantiene solo en el estado de la página y no guarda el historial en Firestore.
 
 Estos asistentes no son profesionales de salud, no proporcionan atención clínica ni deben usarse para emergencias. El proveedor externo puede procesar el texto enviado; evita incluir información sensible. La ruta requiere autenticación.
 

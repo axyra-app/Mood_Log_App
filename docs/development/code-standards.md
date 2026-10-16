@@ -16,7 +16,7 @@ Los datos de Firestore son schemaless: una interfaz TypeScript no valida ni prot
 - Mantén la interfaz en componentes y separa las operaciones de datos en hooks/servicios siguiendo los patrones existentes.
 - Representa explícitamente estados de carga, error, vacío y éxito.
 - Evita ocultar fallos de Firebase o IA con respuestas que parezcan exitosas; registra errores sin incluir contenido sensible del usuario.
-- No dupliques modelos de chat o estado de ánimo: consulta [database-schema.md](../architecture/database-schema.md) y acuerda un contrato antes de ampliar un flujo.
+- No dupliques modelos de chat o estado de ánimo: consulta [database-schema.md](../firebase/database-schema.md) y acuerda un contrato antes de ampliar un flujo.
 
 ## Estilos y accesibilidad
 

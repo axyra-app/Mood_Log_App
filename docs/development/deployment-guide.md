@@ -41,15 +41,15 @@ La configuración Firebase del cliente está escrita en `frontend/src/services/f
 El archivo `firebase.json` apunta a:
 
 - Hosting estático en `frontend/dist`
-- Reglas Firestore en `firestore.rules`
-- Índices en `firestore.indexes.json`
-- Reglas Storage en `storage.rules`
+- Reglas Firestore en `firebase/firestore.rules`
+- Índices en `firebase/firestore.indexes.json`
+- Reglas Storage en `firebase/storage.rules`
 
 Antes de desplegar:
 
 1. Confirma el proyecto activo y la cuenta autorizada. No dependas del contexto de una terminal compartida.
 2. Revisa y prueba reglas en Firebase Emulator Suite o proyecto de desarrollo. `npm run test:rules` en `frontend/` prueba las reglas locales de Firestore y Storage con un ID demo; esto no confirma las reglas remotas ni configura el cliente de la app para usar emuladores.
-3. Comprueba que los servicios y colecciones utilizadas por el frontend tengan reglas compatibles; hay discrepancias descritas en [database-schema.md](../architecture/database-schema.md).
+3. Comprueba que los servicios y colecciones utilizadas por el frontend tengan reglas compatibles; hay discrepancias descritas en [database-schema.md](../firebase/database-schema.md).
 4. Obtén revisión del cambio y confirma plan de reversión.
 
 Comandos de Firebase CLI, solo después de verificar el destino:

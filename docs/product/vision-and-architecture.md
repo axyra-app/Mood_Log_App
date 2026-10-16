@@ -4,7 +4,7 @@
 **Fecha de revisión:** 14 de octubre de 2026
 **Estado:** definición de producto en evolución; implementación en transición
 
-Este documento reúne el propósito del producto y sus decisiones de alto nivel. La implementación observada y sus limitaciones se describen en [`docs/architecture/`](docs/architecture/overview.md). Una capacidad que aparece en la visión o en la hoja de ruta no debe considerarse disponible hasta que esté implementada, probada y documentada como tal.
+Este documento reúne el propósito del producto y sus decisiones de alto nivel. La implementación observada y sus limitaciones se describen en [la arquitectura](../architecture/overview.md) y el [análisis técnico](../analysis/project-analysis.md). Una capacidad que aparece en la visión o en la hoja de ruta no debe considerarse disponible hasta que esté implementada, probada y documentada como tal.
 
 ## 1. Propósito
 
@@ -28,7 +28,7 @@ La persona decide qué registrar, qué consultar y cuándo participar. Las métr
 
 ### Privacidad por diseño
 
-Los registros emocionales son sensibles. La recopilación debe ser mínima, con controles de acceso probados y decisiones transparentes sobre almacenamiento, proveedores externos, exportación y eliminación. El estado actual y las brechas están documentados en [Seguridad y privacidad](docs/architecture/security-and-privacy.md).
+Los registros emocionales son sensibles. La recopilación debe ser mínima, con controles de acceso probados y decisiones transparentes sobre almacenamiento, proveedores externos, exportación y eliminación. El estado actual y las brechas están documentados en [Seguridad y privacidad](../firebase/security-and-privacy.md).
 
 ### Progreso sin culpa
 
@@ -64,15 +64,15 @@ El repositorio contiene rutas y pantallas para autenticación, dashboard, regist
 
 Algunos hechos importantes del estado actual:
 
-- El registro de ánimo dispone de una escala visual de 1 a 10; el tipo compartido `MoodLog` mantiene una escala comentada como 1 a 5. Debe definirse el contrato canónico.
+- El flujo de registro de ánimo usa una escala de 1 a 10; las incompatibilidades de modelos históricos se detallan en el análisis técnico.
 - El diario se guarda como texto legible; no hay cifrado de extremo a extremo implementado.
-- Las llamadas de algunos agentes IA se originan desde el navegador y usan configuración `VITE_*`; no se deben usar secretos de servidor en ese contexto.
+- Las solicitudes activas de IA pasan por una función serverless autenticada; sus secretos deben permanecer en el entorno de servidor y nunca en variables `VITE_*`.
 - El chat mantiene más de un modelo de almacenamiento y la pantalla revisada no persiste el historial de conversación.
 - El motor de detección de crisis no aparece conectado al flujo de check-in o chat en el frontend revisado.
 - La PWA cachea recursos estáticos; no hay sincronización offline completa demostrada.
 - La compilación, las reglas remotas y la configuración de hosting requieren validación independiente.
 
-El estado detallado está en [`ANALISIS_PROYECTO.md`](ANALISIS_PROYECTO.md) y en la documentación técnica.
+El estado detallado está en el [análisis técnico](../analysis/project-analysis.md) y en la documentación técnica.
 
 ## 6. Hoja de ruta propuesta
 
@@ -137,10 +137,10 @@ No usar la cantidad o continuidad de registros como medida individual de salud m
 
 ## 8. Documentos relacionados
 
-- [Índice de documentación](docs/README.md)
-- [Arquitectura implementada](docs/architecture/overview.md)
-- [Datos y Firestore](docs/architecture/database-schema.md)
-- [Seguridad y privacidad](docs/architecture/security-and-privacy.md)
-- [Guía de usuario y estado funcional](docs/product/user-guide.md)
-- [Roadmap detallado](docs/product/vision-and-roadmap.md)
-- [Especificación de contexto biométrico](docs/features/biometric-context/README.md)
+- [Índice de documentación](../README.md)
+- [Arquitectura implementada](../architecture/overview.md)
+- [Datos y Firestore](../firebase/database-schema.md)
+- [Seguridad y privacidad](../firebase/security-and-privacy.md)
+- [Guía de usuario y estado funcional](user-guide.md)
+- [Roadmap detallado](vision-and-roadmap.md)
+- [Especificación de contexto biométrico](../features/biometric-context/README.md)

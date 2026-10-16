@@ -33,7 +33,7 @@ Corrige los errores que reporte y vuelve a ejecutar tanto typecheck como build. 
 La escritura/consulta no coincide con las reglas locales o remotas, el usuario no está autenticado o el documento no pertenece al UID actual. Verifica:
 
 1. `auth.currentUser` y el UID usado en la operación.
-2. La colección exacta y si está permitida por `firestore.rules`; las colecciones heredadas de chat persistente no están autorizadas.
+2. La colección exacta y si está permitida por `firebase/firestore.rules`; las colecciones heredadas de chat persistente no están autorizadas.
 3. Que los documentos consultados tengan el campo de propietario requerido por la regla.
 4. Que las reglas estén desplegadas en el proyecto esperado; el archivo local no confirma las reglas remotas.
 
@@ -45,7 +45,7 @@ Las reglas locales permiten lectura autenticada de `journalTemplates` y `journal
 
 ### Consulta Firestore requiere un índice
 
-Comprueba los filtros y ordenamiento de la consulta, y usa el enlace generado por Firebase para identificar los campos del índice. Añade el índice a `firestore.indexes.json`, prueba en desarrollo y despliega índices solo al proyecto confirmado.
+Comprueba los filtros y ordenamiento de la consulta, y usa el enlace generado por Firebase para identificar los campos del índice. Añade el índice a `firebase/firestore.indexes.json`, prueba en desarrollo y despliega índices solo al proyecto confirmado.
 
 ### No sé a qué Firebase se conecta el entorno local
 

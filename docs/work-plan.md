@@ -32,7 +32,7 @@ La revisión inicial identificó brechas y ya hay una primera corrección local 
 - Las reglas de actualización de colecciones con `userId` impiden cambiar el propietario.
 - `statistics` permite crear documentos propios, con pruebas de aislamiento.
 - Hay servicios que usan colecciones sin reglas explícitas y algunos flujos de inicialización escriben plantillas aunque las reglas locales solo permiten leerlas.
-- `storage.rules` ahora restringe por UID, valida tipo y tamaño; la subida del cliente comprueba sesión, MIME, límite y nombres no controlados. Los enlaces `getDownloadURL` son bearer links y no deben tratarse como privados solo por las reglas.
+- `firebase/storage.rules` ahora restringe por UID, valida tipo y tamaño; la subida del cliente comprueba sesión, MIME, límite y nombres no controlados. Los enlaces `getDownloadURL` son bearer links y no deben tratarse como privados solo por las reglas.
 - `npm audit --omit=dev` inicialmente reportó 20 avisos de producción. Se actualizaron Firebase 13, React Router 7 y jsPDF 4, y se aplicó un override parcheado de gRPC.
 
 Las pruebas actuales cubren perfiles/roles, acceso propietario/otra cuenta/anónimo, transferencia de propietario, creación de estadísticas y Storage con acceso propietario/ajeno/anónimo, MIME y tamaño. `npm run typecheck`, `npm run test:rules`, `npm run build` y `npm audit --omit=dev` pasan localmente. La etapa sigue en curso: falta ampliar cobertura a todas las operaciones activas y decidir qué flujos heredados conservar. Una colección sin reglas explícitas no se habilitará automáticamente; primero se decide si el flujo sigue dentro del producto. El audit completo aún registra 15 avisos en dependencias de desarrollo (7 moderados y 8 altos), entre ellas herramientas como Vite/Tailwind y Firebase CLI; su actualización puede exigir migraciones de compatibilidad separadas. CI ya incorpora las pruebas de reglas, typecheck, audit de dependencias de producción y build. Los cambios permanecen locales; no se desplegaron reglas remotas.
@@ -54,9 +54,10 @@ Las pruebas actuales cubren perfiles/roles, acceso propietario/otra cuenta/anón
 
 ## Referencias
 
-- [Análisis técnico del proyecto](../ANALISIS_PROYECTO.md)
+- [Análisis técnico del proyecto](analysis/project-analysis.md)
 - [Visión de producto y hoja de ruta](product/vision-and-roadmap.md)
+- [Visión y arquitectura del producto](product/vision-and-architecture.md)
 - [Arquitectura](architecture/overview.md)
-- [Datos y Firestore](architecture/database-schema.md)
-- [Seguridad y privacidad](architecture/security-and-privacy.md)
+- [Datos y Firestore](firebase/database-schema.md)
+- [Seguridad y privacidad](firebase/security-and-privacy.md)
 - [Especificación de contexto biométrico](features/biometric-context/README.md)

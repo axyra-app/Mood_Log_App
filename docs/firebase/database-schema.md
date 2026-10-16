@@ -20,7 +20,7 @@ No agregues colecciones o campos a partir de esta lista sin revisar los llamador
 | `journalTemplates/{templateId}`, `journalPrompts/{promptId}` | Sin propiedad | Lectura para cualquier usuario autenticado; no se permite escritura. | `journalService` incluye inicialización de datos por defecto desde el cliente; las reglas actuales no autorizan esa escritura. |
 | Otras colecciones | — | Denegadas a clientes por la regla catch-all. | Incluye nombres heredados como `chats`, `messages`, `chatSessions`, `chatMessages`, `typing`, `crisisAssessments` y `crisisAlerts`. `aiUsage/{uid}` es un contador interno escrito por la API con Firebase Admin; no es accesible desde el cliente y el SDK Admin omite las reglas. |
 
-La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). Las pruebas automatizadas cubren que el rol sea `user`, la propiedad, las transferencias de propietario y la denegación de colecciones heredadas. Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
+La tabla resume las reglas locales de [firestore.rules](../../firebase/firestore.rules). Las pruebas automatizadas cubren que el rol sea `user`, la propiedad, las transferencias de propietario y la denegación de colecciones heredadas. Un bloque `allow` solo define autorización; no valida automáticamente tipos, rangos, campos permitidos ni consistencia entre documentos.
 
 ## Formas de datos observadas en el código
 
@@ -36,13 +36,15 @@ La tabla resume las reglas locales de [firestore.rules](../../firestore.rules). 
 
 `journalService.createJournalEntry` guarda `userId`, `title`, `content`, `date`, `tags`, `mood`, `energy`, `stress`, `sleep`, `activities`, `emotions`, `aiSuggestions`, `aiAnalysis`, `isPrivate`, `createdAt` y `updatedAt`; elimina valores nulos antes de escribir. El contenido se guarda como texto legible.
 
+Los reportes consultan los documentos del usuario por `userId` y filtran el intervalo de `date` en el cliente; la consulta no requiere un índice compuesto adicional.
+
 ### Conversaciones de autorreflexión
 
 El chat con IA mantiene su historial solo en memoria del navegador durante la vista actual; no utiliza colecciones de Firestore para mensajes o sesiones. El texto se envía al proveedor de IA para generar la respuesta. Las colecciones de chat persistente y las colecciones profesionales heredadas no están autorizadas por las reglas y no forman parte del modelo activo.
 
 ## Índices
 
-`firestore.indexes.json` conserva los índices definidos para las consultas actuales que requieren composición. No es una garantía de que todas las consultas del cliente estén cubiertas. Firestore puede requerir índices adicionales según filtros/ordenamientos. Ante el enlace de error que devuelve Firebase:
+`firebase/firestore.indexes.json` conserva los índices definidos para las consultas actuales que requieren composición. No es una garantía de que todas las consultas del cliente estén cubiertas. Firestore puede requerir índices adicionales según filtros/ordenamientos. Ante el enlace de error que devuelve Firebase:
 
 1. Confirma que la consulta y los campos son los esperados.
 2. Añade el índice mínimo necesario al archivo versionado.

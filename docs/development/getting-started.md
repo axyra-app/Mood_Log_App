@@ -38,7 +38,7 @@ Antes de ejecutar la aplicación que escribe datos:
 3. Comprueba que las cuentas de prueba y reglas sean de desarrollo.
 4. No escribas diarios, chats ni registros de personas reales en pruebas.
 
-La configuración de emuladores Firestore y Storage está en `firebase.json`; `npm run test:rules` inicia ambos con un ID de proyecto demo y prueba sus reglas sin desplegar. Esto no configura la app cliente para apuntar a emuladores. No hay emulador de Auth configurado. Si se agrega configuración por ambiente, debe actualizarse también `firebase.ts`, CI, Vercel y esta guía.
+La configuración de emuladores Firestore y Storage está en `firebase.json`; las reglas e índices están en `firebase/`. `npm run test:rules` inicia los emuladores con un ID de proyecto demo y prueba las reglas sin desplegarlas. Esto no configura la app cliente para apuntar a emuladores. No hay emulador de Auth configurado. Consulta la [guía de Firebase](../firebase/README.md) antes de cambiar la configuración.
 
 ## Variables de entorno y secretos
 

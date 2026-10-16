@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useMood } from '../hooks/useMood';
 import { moodAnalyzerAgent } from '../services/specializedAgents';
 import { AIRecommendation, MoodAnalysisResult } from '../services/aiService';
+import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
 import Logo from '../components/Logo';
 
 const MoodFlowSimple: React.FC = () => {
@@ -127,8 +128,7 @@ const MoodFlowSimple: React.FC = () => {
 
     setAnalyzing(true);
     try {
-      const response = await moodAnalyzerAgent.analyzeMood({
-        moodLogs: [{
+      const response = await moodAnalyzerAgent.analyzeMood(prepareMoodAnalysis([{
           mood: currentMood,
           energy,
           stress,
@@ -137,13 +137,8 @@ const MoodFlowSimple: React.FC = () => {
           emotions,
           notes: feelings,
           createdAt: new Date().toISOString(),
-        }],
-      }) as Record<string, unknown>;
-      const asTextList = (value: unknown): string[] =>
-        Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
-      const summary = typeof response.summary === 'string' ? response.summary : '';
-      const insights = asTextList(response.insights);
-      const recommendations: AIRecommendation[] = asTextList(response.recommendations).map((description) => ({
+        }], 'registro actual').moodData);
+      const recommendations: AIRecommendation[] = response.recommendations.map((description) => ({
         type: 'general',
         priority: 'medium',
         title: 'Sugerencia para reflexionar',
@@ -151,24 +146,32 @@ const MoodFlowSimple: React.FC = () => {
         actionable: description,
         category: 'Autorreflexión',
       }));
-      const moodTrend = response.moodTrend === 'improving' || response.moodTrend === 'declining'
-        ? response.moodTrend
-        : 'stable';
-      const riskLevel = response.riskLevel === 'medium' || response.riskLevel === 'high'
-        ? response.riskLevel
-        : 'low';
 
       setAiAnalysis({
-        summary,
-        insights,
+        summary: response.summary,
+        insights: response.insights,
         recommendations,
-        moodTrend,
-        riskLevel,
+        moodTrend: response.moodTrend,
+        riskLevel: response.riskLevel,
+        ...(response.interventionStrategies.length > 0 ? {
+          emotionalRegulation: {
+            title: 'Ideas para regular emociones',
+            description: 'Opciones cotidianas para considerar, no indicaciones clínicas.',
+            strategies: response.interventionStrategies,
+          },
+        } : {}),
+        ...(response.wellnessPlan.length > 0 ? {
+          wellBeingMaintenance: {
+            title: 'Ideas de autocuidado',
+            description: 'Sugerencias generales para tu bienestar cotidiano.',
+            strategies: response.wellnessPlan,
+          },
+        } : {}),
         textualAnalysis: {
           title: 'Reflexión sobre tu registro',
-          description: summary,
-          insights,
-          recommendations: asTextList(response.nextSteps),
+          description: response.summary,
+          insights: response.insights,
+          recommendations: response.nextSteps,
         },
       });
       toast.success('Reflexión generada.');

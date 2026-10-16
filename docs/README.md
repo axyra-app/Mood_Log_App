@@ -26,8 +26,12 @@ Las propuestas de mejora con requisitos, diseño técnico, privacidad y validaci
 | Documento | Contenido |
 |---|---|
 | [Visión general](architecture/overview.md) | Componentes actuales, flujos de datos y alcance de la PWA. |
-| [Datos y Firestore](architecture/database-schema.md) | Colecciones observadas, incompatibilidades, reglas e índices. |
-| [Seguridad y privacidad](architecture/security-and-privacy.md) | Controles locales, limitaciones, IA, datos sensibles y verificación previa a producción. |
+| [Análisis técnico completo](analysis/project-analysis.md) | Hallazgos, estado técnico, riesgos y prioridades del proyecto. |
+| [Visión y arquitectura del producto](product/vision-and-architecture.md) | Propósito, principios, alcance y hoja de ruta. |
+
+## Firebase
+
+La documentación específica de Firebase se agrupa en [`firebase/`](firebase/README.md). El archivo requerido por Firebase CLI permanece en la raíz; las reglas e índices de Firestore y Storage están en `firebase/`.
 
 ## Desarrollo y operación
 
@@ -46,8 +50,8 @@ Las propuestas de mejora con requisitos, diseño técnico, privacidad y validaci
 - Conviven modelos B2C y código heredado; las colecciones de chat y la escala de ánimo requieren consolidación.
 - Las reglas locales no cubren todas las colecciones usadas por el frontend y no se ha confirmado su estado remoto.
 - El diario se almacena como texto legible. El cifrado local y la sincronización offline completa no están implementados.
-- Algunos flujos de IA se ejecutan en el cliente; una variable `VITE_*` no es un secreto.
+- Las solicitudes activas de IA pasan por una función serverless autenticada; las variables `VITE_*` son públicas y no deben contener secretos.
 - CI ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes/servicios. Consulta las guías para comandos y validaciones.
 - La existencia de un workflow de build no demuestra que Vercel despliegue automáticamente ni que el sitio sea privado.
 
-Para una lectura ejecutiva, consulta [el análisis técnico](../ANALISIS_PROYECTO.md) y el [documento de visión](../DOCUMENTO_VISION_Y_ARQUITECTURA.md). Antes de utilizar información real, revisa [seguridad y privacidad](architecture/security-and-privacy.md) y verifica Firebase y hosting en sus paneles.
+Para una lectura ejecutiva, consulta el [análisis técnico](analysis/project-analysis.md) y la [visión y arquitectura del producto](product/vision-and-architecture.md). Antes de utilizar información real, revisa [seguridad y privacidad de Firebase](firebase/security-and-privacy.md) y confirma el proyecto y los servicios en sus paneles.

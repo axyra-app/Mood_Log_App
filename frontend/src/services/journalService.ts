@@ -143,6 +143,47 @@ export const getJournalEntries = async (userId: string, limitCount: number = 10)
   }
 };
 
+export const getJournalEntriesByDateRange = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<JournalEntry[]> => {
+  try {
+    const journalRef = collection(db, 'journalEntries');
+    const journalQuery = query(journalRef, where('userId', '==', userId));
+    const snapshot = await getDocs(journalQuery);
+
+    return snapshot.docs
+      .map((journalDoc) => {
+        const data = journalDoc.data();
+        return {
+          id: journalDoc.id,
+          userId: data.userId,
+          title: data.title,
+          content: data.content,
+          date: data.date?.toDate() || data.createdAt?.toDate() || new Date(0),
+          tags: data.tags || [],
+          mood: data.mood,
+          energy: data.energy,
+          stress: data.stress,
+          sleep: data.sleep,
+          activities: data.activities || [],
+          emotions: data.emotions || [],
+          aiSuggestions: data.aiSuggestions || [],
+          aiAnalysis: data.aiAnalysis,
+          isPrivate: data.isPrivate || false,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        };
+      })
+      .filter((entry) => entry.date >= startDate && entry.date <= endDate)
+      .sort((first, second) => second.date.getTime() - first.date.getTime());
+  } catch (error) {
+    console.error('Error getting journal entries for the requested period:', error);
+    throw error;
+  }
+};
+
 export const getJournalEntryById = async (entryId: string): Promise<JournalEntry | null> => {
   try {
     const entryRef = doc(db, 'journalEntries', entryId);

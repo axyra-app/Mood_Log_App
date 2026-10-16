@@ -93,4 +93,4 @@ No comenzar el desarrollo de integración real hasta que:
 
 ## 9. Contexto del repositorio
 
-El frontend actual es React/Vite y se conecta directamente con Firebase. La estrategia móvil no incluye aún Capacitor ni una integración de salud nativa; véase [estrategia móvil](../../mobile/mobile-strategy.md). La base de datos y sus reglas tienen inconsistencias conocidas; véanse [datos y Firestore](../../architecture/database-schema.md) y [seguridad y privacidad actuales](../../architecture/security-and-privacy.md). La nueva función no debe añadir más persistencia hasta que esos controles estén consolidados.
+El frontend actual es React/Vite y se conecta directamente con Firebase. La estrategia móvil no incluye aún Capacitor ni una integración de salud nativa; véase [estrategia móvil](../../mobile/mobile-strategy.md). La base de datos y sus reglas tienen inconsistencias conocidas; véanse [datos y Firestore](../../firebase/database-schema.md) y [seguridad y privacidad actuales](../../firebase/security-and-privacy.md). La nueva función no debe añadir más persistencia hasta que esos controles estén consolidados.

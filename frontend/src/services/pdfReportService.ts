@@ -2,6 +2,8 @@
 import jsPDF from 'jspdf';
 import { moodAnalyzerAgent } from './specializedAgents';
 import { getRealMoodData } from './realDataService';
+import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
+import { analyzeJournalEntry, getJournalEntriesByDateRange } from './journalService';
 
 interface ReportData {
   title: string;
@@ -245,7 +247,10 @@ export class PDFReportGenerator {
       }
 
       // Analizar con IA
-      const analysis = await moodAnalyzerAgent.analyzeMood(moodData);
+      const analysis = await moodAnalyzerAgent.analyzeMood(prepareMoodAnalysis(
+        moodData.moodLogs,
+        `${data.period.start.toLocaleDateString('es-CO')} - ${data.period.end.toLocaleDateString('es-CO')}`,
+      ).moodData);
 
       // Generar PDF
       await this.addHeader(
@@ -364,28 +369,23 @@ export class PDFReportGenerator {
 
   async generateDiaryReport(data: ReportData): Promise<void> {
     try {
-      // Obtener datos del diario (simulados por ahora)
-      const diaryData = {
-        entries: [
-          {
-            date: new Date(),
-            content: 'Hoy me siento bien, tuve un buen día en el trabajo.',
-            mood: 8,
-            tags: ['trabajo', 'positivo']
-          }
-        ],
-        period: data.period
-      };
+      const entries = await getJournalEntriesByDateRange(
+        data.userId,
+        data.period.start,
+        data.period.end,
+      );
+      if (entries.length === 0) {
+        throw new Error('No hay entradas de diario en el período seleccionado.');
+      }
 
-      // Analizar con IA (usando el analizador de estado de ánimo)
-      const analysis = await moodAnalyzerAgent.analyzeMood({
-        moodLogs: diaryData.entries.map(entry => ({
-          mood: entry.mood,
-          date: entry.date,
-          notes: entry.content
-        })),
-        period: data.period
-      });
+      const journalContent = entries
+        .map((entry) => `${entry.date.toLocaleDateString('es-CO')} - ${entry.title}\n${entry.content}`)
+        .join('\n\n')
+        .slice(0, 5_000);
+      if (!journalContent.trim()) {
+        throw new Error('Las entradas del período no contienen texto para analizar.');
+      }
+      const analysis = await analyzeJournalEntry(journalContent);
 
       // Generar PDF
       await this.addHeader(
@@ -395,7 +395,7 @@ export class PDFReportGenerator {
 
       // Resumen del diario
       this.addSection('Resumen del Diario', [
-        `Total de entradas: ${diaryData.entries.length}`,
+        `Total de entradas: ${entries.length}`,
         analysis.summary
       ]);
 
@@ -403,7 +403,7 @@ export class PDFReportGenerator {
       this.addSection('Análisis Emocional', analysis.insights);
 
       // Patrones de escritura
-      this.addSection('Patrones Identificados', analysis.patterns);
+      this.addSection('Temas identificados', analysis.themes);
 
       // Recomendaciones
       this.addSection('Recomendaciones', analysis.recommendations);

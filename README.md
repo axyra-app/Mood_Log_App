@@ -13,9 +13,12 @@ Empieza por el [índice de documentación](docs/README.md). Las guías cubren:
 - [Especificación de mejora: contexto biométrico](docs/features/biometric-context/README.md)
 - [Guía de pantallas y estado funcional](docs/product/user-guide.md)
 - [Flujos de usuario](docs/product/user-flows.md)
-- [Seguridad y privacidad](docs/architecture/security-and-privacy.md)
+- [Firebase: seguridad y privacidad](docs/firebase/security-and-privacy.md)
 - [Arquitectura](docs/architecture/overview.md)
-- [Modelo de datos Firestore](docs/architecture/database-schema.md)
+- [Modelo de datos Firestore](docs/firebase/database-schema.md)
+- [Guía de Firebase](docs/firebase/README.md)
+- [Análisis técnico del proyecto](docs/analysis/project-analysis.md)
+- [Visión y arquitectura](docs/product/vision-and-architecture.md)
 - [Despliegue y operación](docs/development/deployment-guide.md)
 - [Protocolo de seguridad ante crisis](docs/product/crisis-protocol.md)
 
@@ -28,12 +31,12 @@ Estado conocido a partir del código del repositorio:
 - Frontend React 18, TypeScript y Vite; conexión cliente a Firebase Authentication, Firestore y Storage.
 - La configuración de PWA genera service worker y manifiesto; no implementa por sí sola sincronización offline de registros.
 - Los modelos de datos, especialmente chat y escala de ánimo, todavía requieren consolidación.
-- Algunas rutas de IA consumen claves `VITE_*` desde el navegador. Estas variables no son secretos.
+- Las solicitudes activas de IA pasan por una función de servidor en `frontend/api/ai.ts`; sus secretos no se deben exponer mediante variables `VITE_*`.
 - El diario se almacena como texto legible; el cifrado de extremo a extremo descrito en ideas de producto no está implementado.
 - CI ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes/servicios. Consulta la [guía de desarrollo](docs/development/getting-started.md).
 - Las reglas y configuración versionadas no confirman qué está desplegado en Firebase o en el proveedor de hosting.
 
-Consulta [ANALISIS_PROYECTO.md](ANALISIS_PROYECTO.md) para el análisis técnico y la priorización de trabajo.
+Consulta el [análisis técnico del proyecto](docs/analysis/project-analysis.md) para el estado y la priorización de trabajo.
 
 ## Tecnología
 
@@ -43,7 +46,7 @@ Consulta [ANALISIS_PROYECTO.md](ANALISIS_PROYECTO.md) para el análisis técnico
 - **Gráficos:** Recharts
 - **Exportación:** jsPDF y html2canvas
 - **PWA:** vite-plugin-pwa / Workbox
-- **IA:** SDK de Groq en algunos flujos cliente; revisar [seguridad y privacidad](docs/architecture/security-and-privacy.md) antes de habilitarlo
+- **IA:** las solicitudes activas pasan por una función de Vercel; revisa [seguridad y privacidad](docs/firebase/security-and-privacy.md)
 
 ## Acceso y desarrollo
 
@@ -53,7 +56,7 @@ Este repositorio documenta un proyecto privado. Las instrucciones de instalació
 
 El repositorio contiene reglas locales para Firestore y Storage, pero algunos servicios usan colecciones no incluidas en esas reglas. No se ha confirmado el estado remoto ni se deben inferir garantías de privacidad solo a partir de la existencia de una pantalla de login o de un repositorio privado.
 
-No pongas secretos de servidor en variables `VITE_*`, no despliegues reglas sin revisar el proyecto destino y no envíes contenido íntimo a proveedores externos sin consentimiento y controles adecuados. Ver [Seguridad y privacidad](docs/architecture/security-and-privacy.md).
+No pongas secretos de servidor en variables `VITE_*`, no despliegues reglas sin revisar el proyecto destino y no envíes contenido íntimo a proveedores externos sin consentimiento y controles adecuados. Ver [Seguridad y privacidad](docs/firebase/security-and-privacy.md).
 
 ## Historial del producto
 

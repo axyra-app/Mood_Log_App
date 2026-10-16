@@ -8,7 +8,7 @@ Esta página describe los archivos de reglas y el código local revisados. **No 
 
 ## Firestore: reglas locales
 
-`firestore.rules` define:
+`firebase/firestore.rules` define:
 
 - `users/{userId}`: lectura y operaciones del propietario si el UID coincide con el ID del documento; alta y actualización requieren `role: 'user'`.
 - `moodLogs` y `journalEntries`: el `userId` debe coincidir al crear, y se comprueba el dueño al leer, actualizar o borrar.
@@ -29,7 +29,7 @@ Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilid
 
 ## Cloud Storage
 
-`storage.rules` limita rutas bajo `users/{userId}/...` al propietario y valida tamaño/MIME en altas y actualizaciones. `uploadFile` exige sesión, valida esas mismas restricciones y prefija la ruta con el UID autenticado; el nombre original no se guarda en metadata. El flujo de chat usa nombres aleatorios y solo tipos permitidos.
+`firebase/storage.rules` limita rutas bajo `users/{userId}/...` al propietario y valida tamaño/MIME en altas y actualizaciones. `uploadFile` exige sesión, valida esas mismas restricciones y prefija la ruta con el UID autenticado; el nombre original no se guarda en metadata. El flujo de chat usa nombres aleatorios y solo tipos permitidos.
 
 `getDownloadURL` produce una URL con token portador: quien obtiene el enlace puede acceder al archivo sin volver a pasar por las reglas de UID. No trates un enlace como privado por el solo hecho de que las reglas limiten la ruta; evita compartir archivos sensibles, no incluyas esos enlaces en logs y revisa revocación/rotación de tokens antes de ampliar el uso. No subas muestras de salud ni diarios por esta ruta.
 

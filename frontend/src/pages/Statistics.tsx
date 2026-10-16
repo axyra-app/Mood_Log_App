@@ -19,8 +19,10 @@ import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
-import { moodAnalyzerAgent } from '../services/specializedAgents';
+import { MoodAnalysisResult, moodAnalyzerAgent } from '../services/specializedAgents';
+import { getMoodLogsByDateRange } from '../services/moodLogService';
 import { MoodLog } from '../types';
+import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
 import { toDate } from '../utils/moodMetrics';
 
 const Statistics: React.FC = () => {
@@ -28,12 +30,17 @@ const Statistics: React.FC = () => {
   const { moodLogs, loading, error, getMoodTrend, getMoodStreak } = useMood();
   const { entries: journalEntries } = useJournal(user?.uid || '');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [periodLogs, setPeriodLogs] = useState<MoodLog[]>([]);
+  const [periodLoading, setPeriodLoading] = useState(true);
+  const [periodError, setPeriodError] = useState<string | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<MoodAnalysisResult | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiDataConsent, setAiDataConsent] = useState(false);
 
   useEffect(() => {
     setAiAnalysis(null);
+    setAnalysisError(null);
     setAiDataConsent(false);
   }, [timeRange]);
 
@@ -174,7 +181,7 @@ const Statistics: React.FC = () => {
       case 'week':
         // Lunes de esta semana
         const monday = new Date(now);
-        monday.setDate(now.getDate() - now.getDay() + 1);
+        monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
         monday.setHours(0, 0, 0, 0);
         startDate = monday;
         break;
@@ -191,58 +198,73 @@ const Statistics: React.FC = () => {
     return { startDate, endDate: now };
   };
 
-  // Generar análisis con IA profesional
+  useEffect(() => {
+    if (!user?.uid) {
+      setPeriodLogs([]);
+      setPeriodLoading(false);
+      return;
+    }
+
+    let isCurrent = true;
+    const { startDate, endDate } = getPeriodData();
+    setPeriodLoading(true);
+    setPeriodError(null);
+
+    getMoodLogsByDateRange(user.uid, startDate, endDate)
+      .then((logs) => {
+        if (isCurrent) setPeriodLogs(logs);
+      })
+      .catch((loadError: unknown) => {
+        if (!isCurrent) return;
+        setPeriodError(loadError instanceof Error ? loadError.message : 'No se pudieron cargar los registros del período.');
+      })
+      .finally(() => {
+        if (isCurrent) setPeriodLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [timeRange, user?.uid]);
+
   const generateAIAnalysis = async () => {
     if (!aiDataConsent) {
       toast.error('Confirma el envío de estos datos antes de solicitar el análisis.');
       return;
     }
 
-    const logs = getLogsInPeriod();
-    if (logs.length === 0) {
+    if (periodLogs.length === 0) {
       toast.error('No hay registros de ánimo en este período para analizar.');
       return;
     }
 
+    setAnalysisError(null);
     setAnalyzing(true);
     try {
-      const analysis = await moodAnalyzerAgent.analyzeMood({
-        period: timeRange,
-        moodLogs: logs.slice(0, 60).map((log) => ({
-          date: toDate(log.createdAt)?.toISOString(),
-          mood: log.mood,
-          energy: log.energy,
-          stress: log.stress,
-          sleep: log.sleep,
-          emotions: log.emotions || [],
-          activities: log.activities || [],
-          notes: log.notes || '',
-        })),
-      });
+      const preparedAnalysis = prepareMoodAnalysis(periodLogs, timeRange);
+      const analysis = await moodAnalyzerAgent.analyzeMood(preparedAnalysis.moodData);
       setAiAnalysis(analysis);
-
-      toast.success('Análisis de IA generado exitosamente');
+      const countMessage = preparedAnalysis.includedCount < preparedAnalysis.totalCount
+        ? ` (${preparedAnalysis.includedCount} de ${preparedAnalysis.totalCount} registros más recientes)`
+        : '';
+      toast.success(`Análisis generado${countMessage}.`);
     } catch (error) {
       console.error('Error generating AI analysis:', error);
-      toast.error(error instanceof Error ? error.message : 'Error al generar análisis de IA');
+      const message = error instanceof Error ? error.message : 'No se pudo generar el análisis.';
+      setAnalysisError(message);
+      toast.error(message);
     } finally {
       setAnalyzing(false);
     }
   };
 
-  const getLogsInPeriod = () => {
-    const { startDate, endDate } = getPeriodData();
-    return moodLogs.filter((log) => {
-      const logDate = toDate(log.createdAt);
-      return logDate !== null && logDate >= startDate && logDate <= endDate;
-    });
-  };
+  const getLogsInPeriod = () => periodLogs;
 
   // Estadísticas del período
   const periodStats = {
-    totalMoodLogs: getLogsInPeriod().length,
-    averageMood: getLogsInPeriod().length
-      ? getLogsInPeriod().reduce((sum, log) => sum + log.mood, 0) / getLogsInPeriod().length
+    totalMoodLogs: periodLogs.length,
+    averageMood: periodLogs.length
+      ? periodLogs.reduce((sum, log) => sum + log.mood, 0) / periodLogs.length
       : 0,
     streak: getMoodStreak(),
     trend: getMoodTrend(),
@@ -296,7 +318,7 @@ const Statistics: React.FC = () => {
 
   const moodLevel = getMoodLevel(periodStats.averageMood);
 
-  if (loading) {
+  if (loading || periodLoading) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='text-center'>
@@ -315,13 +337,13 @@ const Statistics: React.FC = () => {
         backTo="/dashboard"
         backLabel="Volver al Dashboard"
         actions={
-          <div className='flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4'>
-            <div className='flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1'>
+          <div className='flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3'>
+            <div className='grid w-full grid-cols-3 rounded-lg bg-gray-100 p-1 dark:bg-gray-700 sm:w-auto'>
               {(['week', 'month', 'year'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
-                  className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                  className={`min-h-10 rounded-md px-2 text-xs font-medium transition-colors sm:min-h-9 sm:px-3 sm:text-sm ${
                     timeRange === range 
                       ? 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm' 
                       : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -334,7 +356,7 @@ const Statistics: React.FC = () => {
 
             <button 
               onClick={exportStatistics}
-              className='px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm sm:text-base'
+              className='flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 text-sm text-white transition-colors hover:bg-purple-700 sm:min-h-10 sm:w-auto sm:text-base'
             >
               <Download className='w-4 h-4' />
               <span>Exportar</span>
@@ -343,23 +365,28 @@ const Statistics: React.FC = () => {
         }
       />
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+      <main className='mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8'>
         {error && (
           <div className='mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>
             No se pudieron cargar todos tus registros: {error}
           </div>
         )}
+        {periodError && (
+          <div role='alert' className='mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>
+            No se pudieron cargar los registros de este período: {periodError}
+          </div>
+        )}
 
         {/* Información del Período */}
         <div className='mb-6'>
-          <p className='text-sm text-gray-600 dark:text-gray-400'>
+          <p className='break-words text-sm text-gray-600 dark:text-gray-400'>
             Período: {formatDateColombian(getPeriodData().startDate)} - {formatDateColombian(getPeriodData().endDate)}
           </p>
         </div>
 
         {/* Métricas Principales */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6'>
+        <div className='mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:mb-8 lg:grid-cols-4'>
+          <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-5'>
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>Estado de Ánimo Promedio</p>
@@ -374,7 +401,7 @@ const Statistics: React.FC = () => {
             </div>
           </div>
 
-          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6'>
+          <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-5'>
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>Registros de Ánimo</p>
@@ -387,7 +414,7 @@ const Statistics: React.FC = () => {
             </div>
           </div>
 
-          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6'>
+          <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-5'>
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>Racha Actual</p>
@@ -400,7 +427,7 @@ const Statistics: React.FC = () => {
             </div>
           </div>
 
-          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6'>
+          <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-5'>
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>Tendencia</p>
@@ -419,67 +446,79 @@ const Statistics: React.FC = () => {
         </div>
 
         {/* Análisis de IA */}
-        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8'>
-          <div className='flex items-center justify-between mb-6'>
-            <div className='flex items-center space-x-3'>
-              <div className='w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center'>
-                <span className='text-white text-lg'>🧠</span>
+        <section className='mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:mb-8 sm:p-6' aria-labelledby='analysis-heading'>
+          <div className='mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex min-w-0 items-center gap-3'>
+              <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500'>
+                <span className='text-lg text-white' aria-hidden='true'>🧠</span>
               </div>
-              <div>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Reflexión sobre tu bienestar con IA</h3>
-                    <p className='text-sm text-gray-600 dark:text-gray-300'>Observaciones descriptivas, no clínicas</p>
+              <div className='min-w-0'>
+                <h2 id='analysis-heading' className='text-base font-semibold text-gray-900 dark:text-white sm:text-lg'>Reflexión sobre tu bienestar con IA</h2>
+                <p className='text-sm text-gray-600 dark:text-gray-300'>Observaciones para reflexionar, no una evaluación clínica</p>
               </div>
             </div>
 
             <button
               onClick={generateAIAnalysis}
-              disabled={analyzing || !aiDataConsent || getLogsInPeriod().length === 0}
-              className='px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50'
+              disabled={analyzing || !aiDataConsent || periodLogs.length === 0 || Boolean(periodError)}
+              className='flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-semibold text-white transition hover:from-purple-700 hover:to-pink-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto'
             >
-              <span className='text-lg'>🧠</span>
-              <span>{analyzing ? 'Analizando...' : 'Generar Análisis'}</span>
+              {analyzing ? (
+                <span className='h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white' aria-hidden='true' />
+              ) : (
+                <span aria-hidden='true'>✨</span>
+              )}
+              <span>{analyzing ? 'Preparando reflexión…' : aiAnalysis ? 'Generar de nuevo' : 'Generar análisis'}</span>
             </button>
           </div>
 
-          <label className='mb-4 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300'>
+          <label className='mb-4 flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm leading-5 text-gray-700 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-300'>
             <input
               type='checkbox'
               checked={aiDataConsent}
               onChange={(event) => setAiDataConsent(event.target.checked)}
-              className='mt-1'
+              className='mt-0.5 h-5 w-5 shrink-0 accent-purple-600'
             />
-            <span>Entiendo que el estado de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período se enviarán a Groq para generar el análisis.</span>
+            <span>Entiendo que se enviarán a Groq mis registros de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período. El análisis usará como máximo 60 registros recientes.</span>
           </label>
 
+          {analysisError && (
+            <div role='alert' className='mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>
+              <AlertTriangle className='mt-0.5 h-4 w-4 shrink-0' />
+              <p>{analysisError}</p>
+            </div>
+          )}
+
           {analyzing ? (
-            <div className='text-center py-8'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4'></div>
-              <p className='text-gray-600'>Analizando tus datos...</p>
+            <div className='rounded-lg bg-purple-50/70 px-4 py-10 text-center dark:bg-purple-950/20' role='status' aria-live='polite'>
+              <div className='mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-purple-200 border-t-purple-600 dark:border-purple-900 dark:border-t-purple-300' />
+              <p className='font-medium text-gray-800 dark:text-gray-100'>Preparando tu reflexión</p>
+              <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>Estamos organizando los registros del período de forma segura.</p>
             </div>
           ) : aiAnalysis ? (
-            <div className='space-y-6'>
+            <div className='space-y-5 sm:space-y-6'>
               {/* Resumen Principal */}
               {aiAnalysis.summary && (
-                <div className='bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200'>
-                  <h4 className='font-semibold text-purple-800 mb-2 flex items-center'>
+                <div className='rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-4 dark:border-purple-900 dark:from-purple-950/50 dark:to-pink-950/30 sm:p-5'>
+                  <h3 className='mb-2 flex items-center font-semibold text-purple-900 dark:text-purple-200'>
                     <Info className='w-4 h-4 mr-2' />
-                    Resumen Ejecutivo
-                  </h4>
-                  <p className='text-gray-700'>{aiAnalysis.summary}</p>
+                    Resumen de los registros
+                  </h3>
+                  <p className='leading-relaxed text-gray-700 dark:text-gray-200'>{aiAnalysis.summary}</p>
                 </div>
               )}
 
               {/* Patrones Identificados */}
-              {aiAnalysis.patterns && aiAnalysis.patterns.length > 0 && (
+              {aiAnalysis.patterns.length > 0 && (
                 <div>
-                  <h4 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                  <h3 className='mb-3 flex items-center font-semibold text-gray-900 dark:text-white'>
                     <TrendingUp className='w-5 h-5 mr-2 text-blue-500' />
-                    Patrones Identificados
-                  </h4>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                    {aiAnalysis.patterns.map((pattern: string, index: number) => (
-                      <div key={index} className='bg-blue-50 rounded-lg p-3 border border-blue-200'>
-                        <p className='text-sm text-blue-800'>{pattern}</p>
+                    Patrones observados
+                  </h3>
+                  <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
+                    {aiAnalysis.patterns.map((pattern, index) => (
+                      <div key={`${index}-${pattern}`} className='rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/30'>
+                        <p className='text-sm leading-relaxed text-blue-900 dark:text-blue-200'>{pattern}</p>
                       </div>
                     ))}
                   </div>
@@ -487,20 +526,20 @@ const Statistics: React.FC = () => {
               )}
 
               {/* Insights Clave */}
-              {aiAnalysis.insights && aiAnalysis.insights.length > 0 && (
+              {aiAnalysis.insights.length > 0 && (
                 <div>
-                  <h4 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                  <h3 className='mb-3 flex items-center font-semibold text-gray-900 dark:text-white'>
                     <CheckCircle className='w-5 h-5 mr-2 text-green-500' />
-                    Insights Clave
-                  </h4>
+                    Observaciones clave
+                  </h3>
                   <div className='space-y-2'>
-                    {aiAnalysis.insights.map((insight: string, index: number) => (
+                    {aiAnalysis.insights.map((insight, index) => (
                       <div
-                        key={index}
-                        className='flex items-start space-x-3 bg-green-50 rounded-lg p-3 border border-green-200'
+                        key={`${index}-${insight}`}
+                        className='flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30'
                       >
                         <CheckCircle className='w-4 h-4 text-green-500 mt-0.5 flex-shrink-0' />
-                        <p className='text-sm text-green-800'>{insight}</p>
+                        <p className='text-sm leading-relaxed text-green-900 dark:text-green-200'>{insight}</p>
                       </div>
                     ))}
                   </div>
@@ -508,32 +547,21 @@ const Statistics: React.FC = () => {
               )}
 
               {/* Recomendaciones */}
-              {aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 && (
+              {aiAnalysis.recommendations.length > 0 && (
                 <div>
-                  <h4 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                  <h3 className='mb-3 flex items-center font-semibold text-gray-900 dark:text-white'>
                     <Target className='w-5 h-5 mr-2 text-purple-500' />
                     Ideas para la autorreflexión
-                  </h4>
-                  <div className='space-y-4'>
-                    {aiAnalysis.recommendations.map((rec: any, index: number) => (
+                  </h3>
+                  <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
+                    {aiAnalysis.recommendations.map((recommendation, index) => (
                       <div
-                        key={index}
-                        className='bg-purple-50 rounded-lg p-4 border border-purple-200'
+                        key={`${index}-${recommendation}`}
+                        className='rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-900 dark:bg-purple-950/30'
                       >
-                        <div className='flex items-start space-x-3'>
-                          <Target className='w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0' />
-                          <div className='flex-1'>
-                            <h5 className='font-semibold text-purple-800 mb-2'>{typeof rec === 'string' ? 'Sugerencia' : rec.title}</h5>
-                            <p className='text-sm text-purple-700 mb-2'>{typeof rec === 'string' ? rec : rec.description}</p>
-                            <div className='bg-white rounded p-3 border border-purple-100'>
-                              <p className='text-sm text-gray-800 whitespace-pre-line'>{typeof rec === 'string' ? rec : rec.actionable}</p>
-                            </div>
-                            {typeof rec !== 'string' && <div className='mt-2'>
-                              <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-600'>
-                                {rec.category}
-                              </span>
-                            </div>}
-                          </div>
+                        <div className='flex items-start gap-3'>
+                          <Target className='mt-0.5 h-5 w-5 shrink-0 text-purple-600 dark:text-purple-300' />
+                          <p className='text-sm leading-relaxed text-purple-900 dark:text-purple-200'>{recommendation}</p>
                         </div>
                       </div>
                     ))}
@@ -541,44 +569,103 @@ const Statistics: React.FC = () => {
                 </div>
               )}
 
-              {/* Evaluación de Riesgo */}
+              {aiAnalysis.keyFactors.length > 0 && (
+                <div>
+                  <h3 className='mb-3 font-semibold text-gray-900 dark:text-white'>Factores que aparecen en tus registros</h3>
+                  <div className='flex flex-wrap gap-2'>
+                    {aiAnalysis.keyFactors.map((factor, index) => (
+                      <span key={`${index}-${factor}`} className='rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200'>
+                        {factor}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {aiAnalysis.nextSteps.length > 0 && (
+                <div>
+                  <h3 className='mb-3 font-semibold text-gray-900 dark:text-white'>Pequeños pasos para considerar</h3>
+                  <ol className='space-y-2'>
+                    {aiAnalysis.nextSteps.map((step, index) => (
+                      <li key={`${index}-${step}`} className='flex items-start gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50'>
+                        <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700 dark:bg-purple-900 dark:text-purple-200'>{index + 1}</span>
+                        <span className='text-sm leading-relaxed text-gray-700 dark:text-gray-200'>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {aiAnalysis.interventionStrategies.length > 0 && (
+                <div>
+                  <h3 className='mb-3 font-semibold text-gray-900 dark:text-white'>Estrategias cotidianas mencionadas</h3>
+                  <ul className='space-y-2'>
+                    {aiAnalysis.interventionStrategies.map((strategy, index) => (
+                      <li key={`${index}-${strategy}`} className='flex items-start gap-2 text-sm leading-relaxed text-gray-700 dark:text-gray-200'>
+                        <span className='mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500' />
+                        {strategy}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {aiAnalysis.wellnessPlan.length > 0 && (
+                <div className='rounded-lg border border-teal-200 bg-teal-50 p-4 dark:border-teal-900 dark:bg-teal-950/30'>
+                  <h3 className='mb-2 font-semibold text-teal-900 dark:text-teal-200'>Ideas de autocuidado</h3>
+                  <ul className='space-y-2'>
+                    {aiAnalysis.wellnessPlan.map((idea, index) => (
+                      <li key={`${index}-${idea}`} className='text-sm leading-relaxed text-teal-900 dark:text-teal-200'>{idea}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Clasificación no clínica */}
               {aiAnalysis.riskLevel && (
-                <div className='bg-gray-50 rounded-lg p-4 border'>
-                  <h4 className='font-semibold text-gray-900 mb-2 flex items-center'>
+                <div className='rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50'>
+                  <h3 className='mb-2 flex items-center font-semibold text-gray-900 dark:text-white'>
                     <AlertTriangle className='w-5 h-5 mr-2 text-orange-500' />
-                    Indicador generado por IA (no clínico)
-                  </h4>
+                    Clasificación informativa generada por IA
+                  </h3>
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       aiAnalysis.riskLevel === 'high'
-                        ? 'bg-red-100 text-red-800'
+                        ? 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200'
                         : aiAnalysis.riskLevel === 'medium'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
+                        ? 'bg-yellow-100 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-200'
+                        : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                     }`}
                   >
                     {aiAnalysis.riskLevel === 'high'
-                      ? 'Considera buscar apoyo de confianza'
+                      ? 'Nivel indicado: alto'
                       : aiAnalysis.riskLevel === 'medium'
-                      ? 'Seguimiento Recomendado'
-                      : 'Estado Saludable'}
+                      ? 'Nivel indicado: medio'
+                      : 'Nivel indicado: bajo'}
                   </div>
+                  <p className='mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400'>Esta clasificación puede equivocarse. No es un diagnóstico ni una evaluación clínica.</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className='text-center py-8 text-gray-500'>
-              <div className='w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <span className='text-2xl'>🧠</span>
+            <div className='rounded-lg bg-gray-50 px-4 py-9 text-center text-gray-600 dark:bg-gray-900/50 dark:text-gray-300 sm:py-10'>
+              <div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-pink-100 text-2xl dark:from-purple-900/60 dark:to-pink-900/50' aria-hidden='true'>
+                🧠
               </div>
-              <p className='font-medium'>Análisis Inteligente de tu Bienestar</p>
-              <p className='text-sm'>Haz clic en "Generar Análisis" para obtener insights personalizados</p>
+              <p className='font-medium text-gray-900 dark:text-white'>
+                {periodLogs.length ? 'Tu reflexión aparecerá aquí' : 'Aún no hay registros en este período'}
+              </p>
+              <p className='mt-1 text-sm'>
+                {periodLogs.length
+                  ? 'Confirma el envío de tus datos y genera un análisis para ver observaciones y próximos pasos.'
+                  : 'Registra un estado de ánimo para generar una reflexión sobre este período.'}
+              </p>
             </div>
           )}
-        </div>
+        </section>
 
         {/* Actividad Reciente */}
-        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6'>
+        <div className='rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6'>
           <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center'>
             <Clock className='w-5 h-5 mr-2 text-gray-600 dark:text-gray-300' />
             Actividad Reciente
@@ -639,8 +726,8 @@ const Statistics: React.FC = () => {
             return (
               <div className='space-y-3'>
                 {allActivities.slice(0, 10).map((activity, index) => (
-                  <div key={index} className='flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>
-                    <div className='flex items-center space-x-3'>
+                  <div key={index} className='flex flex-col gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700 sm:flex-row sm:items-center sm:justify-between'>
+                    <div className='flex min-w-0 items-start gap-3'>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         activity.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900' :
                         activity.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900' :
@@ -648,7 +735,7 @@ const Statistics: React.FC = () => {
                       }`}>
                         <span className='text-sm'>{activity.icon}</span>
                       </div>
-                      <div>
+                      <div className='min-w-0'>
                         <p className='text-sm font-medium text-gray-900 dark:text-white'>{activity.title}</p>
                         <p className='text-xs text-gray-500 dark:text-gray-400'>{activity.description}</p>
                         <p className='text-xs text-gray-400 dark:text-gray-500'>
@@ -657,7 +744,7 @@ const Statistics: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className={`text-xs px-2 py-1 rounded-full ${
+                    <div className={`self-start whitespace-nowrap rounded-full px-2 py-1 text-xs sm:self-auto ${
                       activity.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400' :
                       activity.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' :
                       'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400'
@@ -671,7 +758,7 @@ const Statistics: React.FC = () => {
             );
           })()}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

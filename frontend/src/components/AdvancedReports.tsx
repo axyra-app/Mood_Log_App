@@ -7,6 +7,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { generateAndDownloadReport } from '../services/pdfReportService';
 import { getRealMoodData } from '../services/realDataService';
 import { moodAnalyzerAgent } from '../services/specializedAgents';
+import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
+import { analyzeJournalEntry, getJournalEntriesByDateRange } from '../services/journalService';
 
 // Interfaces locales para evitar problemas de importación
 interface AdvancedReport {
@@ -17,7 +19,7 @@ interface AdvancedReport {
   content: string;
   insights: string[];
   recommendations: string[];
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel?: 'low' | 'medium' | 'high';
   data?: any;
   period?: {
     start: Date;
@@ -36,6 +38,7 @@ const AdvancedReports: React.FC = () => {
   const [customEndDate, setCustomEndDate] = useState('');
   const [lastReportDate, setLastReportDate] = useState<string | null>(null);
   const [timeUntilNext, setTimeUntilNext] = useState<{hours: number, minutes: number} | null>(null);
+  const [aiDataConsent, setAiDataConsent] = useState(false);
 
 
   // Actualizar contador de tiempo cada minuto
@@ -100,7 +103,7 @@ const AdvancedReports: React.FC = () => {
     }
   };
 
-  const getPeriodDates = () => {
+  const getPeriodDates = (): { start: Date; end: Date } | null => {
     const now = new Date();
     let start: Date, end: Date;
 
@@ -114,18 +117,26 @@ const AdvancedReports: React.FC = () => {
         end = now;
         break;
       case 'custom':
-        start = new Date(customStartDate);
-        end = new Date(customEndDate);
+        if (!customStartDate || !customEndDate) return null;
+        start = new Date(`${customStartDate}T00:00:00`);
+        end = new Date(`${customEndDate}T23:59:59.999`);
         break;
       default:
         start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         end = now;
     }
 
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end < start) {
+      return null;
+    }
     return { start, end };
   };
 
   const generateMoodReport = async () => {
+    if (!aiDataConsent) {
+      toast.error('Confirma el envío de estos datos antes de solicitar el análisis.');
+      return;
+    }
     if (!canGenerateReport()) {
       const timeLeft = getTimeUntilNextReport();
       if (timeLeft) {
@@ -143,7 +154,12 @@ const AdvancedReports: React.FC = () => {
         return;
       }
 
-      const { start, end } = getPeriodDates();
+      const period = getPeriodDates();
+      if (!period) {
+        toast.error('Selecciona un período válido para generar el reporte.');
+        return;
+      }
+      const { start, end } = period;
 
       // Obtener datos reales de Firebase
       const realMoodData = await getRealMoodData(user.uid, start, end);
@@ -156,7 +172,10 @@ const AdvancedReports: React.FC = () => {
       }
 
       // Usar el agente de IA para analizar los datos reales
-      const aiAnalysis = await moodAnalyzerAgent.analyzeMood(realMoodData);
+      const aiAnalysis = await moodAnalyzerAgent.analyzeMood(prepareMoodAnalysis(
+        realMoodData.moodLogs,
+        `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`,
+      ).moodData);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -202,6 +221,10 @@ const AdvancedReports: React.FC = () => {
   };
 
   const generateDiaryReport = async () => {
+    if (!aiDataConsent) {
+      toast.error('Confirma el envío de estas entradas antes de solicitar el análisis.');
+      return;
+    }
     if (!canGenerateReport()) {
       const timeLeft = getTimeUntilNextReport();
       if (timeLeft) {
@@ -219,70 +242,54 @@ const AdvancedReports: React.FC = () => {
         return;
       }
 
-      const { start, end } = getPeriodDates();
+      const period = getPeriodDates();
+      if (!period) {
+        toast.error('Selecciona un período válido para generar el reporte.');
+        return;
+      }
+      const { start, end } = period;
 
-      // Obtener datos del diario (simulados por ahora, se integrará con el servicio real)
-      const diaryData = {
-        entries: [
-          {
-            date: new Date(),
-            content: 'Hoy me siento bien, tuve un buen día en el trabajo.',
-            mood: 8,
-            tags: ['trabajo', 'positivo'],
-          },
-          {
-            date: new Date(Date.now() - 86400000),
-            content: 'Ayer fue un día difícil, tuve muchas responsabilidades.',
-            mood: 5,
-            tags: ['estrés', 'trabajo'],
-          },
-        ],
-        period: { start, end },
-      };
+      const entries = await getJournalEntriesByDateRange(user.uid, start, end);
 
-      if (diaryData.entries.length === 0) {
+      if (entries.length === 0) {
         toast.error(
           'No hay entradas de diario para el período seleccionado. Por favor, escribe algunas entradas en tu diario antes de generar el reporte.'
         );
         return;
       }
 
-      // Usar el agente de IA para analizar el diario
-      const moodData = {
-        moodLogs: diaryData.entries.map((entry) => ({
-          mood: entry.mood,
-          date: entry.date,
-          notes: entry.content,
-        })),
-        period: { start, end },
-      };
-
-      const aiAnalysis = await moodAnalyzerAgent.analyzeMood(moodData);
+      const journalContent = entries
+        .map((entry) => `${entry.date.toLocaleDateString()} - ${entry.title}\n${entry.content}`)
+        .join('\n\n')
+        .slice(0, 5_000);
+      if (!journalContent.trim()) {
+        toast.error('Las entradas del período no contienen texto para analizar.');
+        return;
+      }
+      const aiAnalysis = await analyzeJournalEntry(journalContent);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
         userId: user.uid,
         reportType: 'diary_analysis',
         title: `Análisis de Diario - ${start.toLocaleDateString()} a ${end.toLocaleDateString()}`,
-        content: aiAnalysis.summary || 'Análisis de tu diario personal durante el período seleccionado.',
-        insights: aiAnalysis.insights || ['Tu diario muestra reflexiones regulares'],
-        recommendations: aiAnalysis.recommendations || ['Continúa escribiendo en tu diario'],
-        riskLevel: aiAnalysis.riskLevel || 'low',
+        content: aiAnalysis.summary,
+        insights: aiAnalysis.insights,
+        recommendations: aiAnalysis.recommendations,
         period: { start, end },
         createdAt: new Date(),
         data: {
           ...aiAnalysis,
           realData: {
-            totalEntries: diaryData.entries.length,
-            averageMood: diaryData.entries.reduce((sum, entry) => sum + entry.mood, 0) / diaryData.entries.length,
-            uniqueTags: [...new Set(diaryData.entries.flatMap((entry) => entry.tags))].length,
+            totalEntries: entries.length,
+            uniqueTags: [...new Set(entries.flatMap((entry) => entry.tags))].length,
           },
         },
       };
 
       // Simular guardado
       setReports((prev) => [report, ...prev]);
-      toast.success(`Reporte de diario generado exitosamente con ${diaryData.entries.length} entradas`);
+      toast.success(`Reporte de diario generado con ${entries.length} entradas reales.`);
     } catch (error) {
       console.error('Error generating diary report:', error);
       toast.error(
@@ -295,6 +302,10 @@ const AdvancedReports: React.FC = () => {
 
   const downloadReport = async (report: AdvancedReport) => {
     try {
+      if (!aiDataConsent) {
+        toast.error('Confirma el envío de datos antes de generar el PDF con análisis de IA.');
+        return;
+      }
       if (!user?.uid) {
         toast.error('Usuario no autenticado');
         return;
@@ -451,6 +462,17 @@ const AdvancedReports: React.FC = () => {
               )}
             </button>
           </div>
+          <label className={`mt-4 flex items-start gap-3 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            <input
+              type='checkbox'
+              checked={aiDataConsent}
+              onChange={(event) => setAiDataConsent(event.target.checked)}
+              className='mt-1 h-4 w-4 shrink-0 accent-purple-600'
+            />
+            <span>
+              Acepto enviar los registros o entradas del período seleccionado a Groq mediante el servicio de IA para generar este análisis y su PDF.
+            </span>
+          </label>
         </div>
 
         {/* Reports List */}
@@ -476,14 +498,16 @@ const AdvancedReports: React.FC = () => {
                     <div className='flex-1'>
                       <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2'>
                         <h3 className='text-base sm:text-lg font-semibold'>{report.title}</h3>
-                        <span
-                          className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(
-                            report.riskLevel
-                          )}`}
-                        >
-                          {getRiskLevelIcon(report.riskLevel)}
-                          <span className='ml-1'>{report.riskLevel.toUpperCase()}</span>
-                        </span>
+                        {report.riskLevel && (
+                          <span
+                            className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(
+                              report.riskLevel
+                            )}`}
+                          >
+                            {getRiskLevelIcon(report.riskLevel)}
+                            <span className='ml-1'>{report.riskLevel.toUpperCase()}</span>
+                          </span>
+                        )}
                       </div>
 
                       <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-3`}>{report.content}</p>

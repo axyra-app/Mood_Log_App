@@ -1,6 +1,6 @@
 # Análisis técnico de Mood Log App
 
-**Revisión:** 14 de octubre de 2026
+**Revisión:** 16 de octubre de 2026
 **Alcance:** lectura del código y configuración versionados del frontend, Firebase, documentación y workflows. No se accedió a Firebase Console, Vercel ni a datos de producción. Este análisis no acredita el estado remoto.
 
 ## Resumen ejecutivo
@@ -12,11 +12,11 @@ La base visual y varios flujos están presentes, pero el repositorio conserva im
 | Área | Estado observado |
 |---|---|
 | Frontend | React 18, TypeScript, Vite, React Router y Tailwind; aplicación cliente. |
-| Backend propio | No se encontró un backend/función server-side en el repositorio inspeccionado. |
+| Backend propio | Función serverless de Vercel en `frontend/api/ai.ts`, usada para solicitudes de IA autenticadas. |
 | Firebase | Cliente inicializado en `frontend/src/services/firebase.ts`; reglas e índices versionados localmente. Estado remoto no verificado. |
 | Producto | B2C en transición; hay código heredado profesional en hooks, tipos y servicios. |
 | PWA | Plugin `vite-plugin-pwa` configurado. No equivale a sincronización offline de datos. |
-| IA | Servicios inicializados desde el frontend; algunas rutas consumen `VITE_GROQ_API_KEY`. El análisis de `aiService` usa fallback y la llamada real mostrada está comentada. |
+| IA | Las solicitudes activas pasan por `frontend/api/ai.ts`; `GROQ_API_KEY` se utiliza en el servidor. El cliente prepara y limita los datos de análisis antes de enviarlos. |
 | Typecheck/build | `npm run typecheck` y `npm run build` pasan con las dependencias instaladas. El build conserva avisos de tamaño de chunks y de importación compartida de jsPDF. |
 | Pruebas | Hay pruebas de reglas Firestore y Storage en el emulador (`npm run test:rules`); lint y pruebas de componentes/servicios aún no están configurados. |
 
@@ -26,7 +26,7 @@ La base visual y varios flujos están presentes, pero el repositorio conserva im
 
 Las reglas locales permiten un conjunto definido de colecciones, pero servicios como `chatService` usan `chats`, `messages` y `typing`, denegadas por la regla catch-all. Otros flujos usan `chatSessions` y `chatMessages`, cuyo modelo de mensajes debe incluir `userId` para satisfacer las reglas. Las reglas permiten leer plantillas/prompts, no inicializarlas desde el cliente.
 
-En esta revisión se endurecieron localmente la propiedad de registros, la inmutabilidad del rol, la creación de `statistics` y el acceso a Storage. Se añadieron pruebas del emulador para propietario, otra cuenta y usuario anónimo; siguen faltando pruebas y decisiones para todos los flujos heredados. Las reglas versionadas aún no se han desplegado y su estado remoto no se verificó. La documentación técnica describe las limitaciones en [database-schema.md](docs/architecture/database-schema.md) y [security-and-privacy.md](docs/architecture/security-and-privacy.md).
+En esta revisión se endurecieron localmente la propiedad de registros, la inmutabilidad del rol, la creación de `statistics` y el acceso a Storage. Se añadieron pruebas del emulador para propietario, otra cuenta y usuario anónimo; siguen faltando pruebas y decisiones para todos los flujos heredados. Las reglas versionadas aún no se han desplegado y su estado remoto no se verificó. La documentación técnica describe las limitaciones en [database-schema.md](../firebase/database-schema.md) y [security-and-privacy.md](../firebase/security-and-privacy.md).
 
 **Acción:** unificar contratos de datos, completar validaciones de campos y probar todas las operaciones activas con Firebase Emulator Suite antes de desplegar reglas.
 
@@ -52,7 +52,7 @@ El servicio del diario persiste `content` en texto legible. El cifrado local es 
 
 `.github/workflows/ci.yml` instala dependencias, configura Java 21 y Node 22, ejecuta pruebas de reglas Firestore/Storage en emulador, typecheck, auditoría de dependencias de producción y `npm run build`; todavía no ejecuta pruebas de componentes/servicios. El workflow `deploy.yml` también compila; no contiene un paso de despliegue a Vercel. La integración real y el acceso a deployments deben comprobarse en los paneles.
 
-En la revisión del 14 de octubre de 2026, `npm run test:rules` (7 pruebas), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron. El build reporta avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. `npm audit` completo sigue reportando 15 avisos de desarrollo (7 moderados y 8 altos), por dependencias asociadas principalmente a Vite/Tailwind y Firebase CLI. Las remediaciones sugeridas por npm requieren cambios mayores de toolchain; no se aplicó una actualización forzada.
+En la revisión anterior del 14 de octubre de 2026, `npm run test:rules` (7 pruebas), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron. El 16 de octubre, tras estos cambios, `npm run typecheck` y `npm run build` volvieron a pasar; `npm run test:rules` no pudo ejecutarse porque el entorno disponible usa Java 8 y Firebase CLI requiere Java 21 o superior. El build reporta avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. `npm audit` completo sigue reportando 15 avisos de desarrollo (7 moderados y 8 altos), por dependencias asociadas principalmente a Vite/Tailwind y Firebase CLI. Las remediaciones sugeridas por npm requieren cambios mayores de toolchain; no se aplicó una actualización forzada.
 
 **Acción pendiente:** incorporar pruebas de componentes/servicios a CI conforme se estabilicen los flujos y planear la actualización del toolchain con pruebas de compatibilidad. La auditoría de producción permanece sin vulnerabilidades conocidas según `npm audit --omit=dev`.
 
@@ -67,4 +67,4 @@ En la revisión del 14 de octubre de 2026, `npm run test:rules` (7 pruebas), `np
 
 ## Documentación técnica
 
-Las guías mantenidas para arquitectura, modelo de datos, seguridad, desarrollo y despliegue están en [`docs/`](docs/README.md). Antes de cambiar un flujo, actualiza en conjunto su servicio, tipo, regla, índice, prueba y documentación asociada.
+Las guías mantenidas para arquitectura, modelo de datos, seguridad, desarrollo y despliegue están en [`docs/`](../README.md). Antes de cambiar un flujo, actualiza en conjunto su servicio, tipo, regla, índice, prueba y documentación asociada.

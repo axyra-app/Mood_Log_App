@@ -2,7 +2,7 @@
 
 ## Alcance y estado
 
-Este documento describe la implementación que se encuentra en el repositorio, no una arquitectura futura ni una garantía sobre el entorno desplegado. La aplicación está en transición hacia un producto personal B2C; todavía permanecen módulos, tipos y servicios heredados del producto anterior. Revisa [database-schema.md](./database-schema.md) y [security-and-privacy.md](./security-and-privacy.md) antes de cambiar servicios o reglas.
+Este documento describe la implementación que se encuentra en el repositorio, no una arquitectura futura ni una garantía sobre el entorno desplegado. La aplicación está en transición hacia un producto personal B2C; todavía permanecen módulos, tipos y servicios heredados del producto anterior. Revisa [el modelo de datos de Firebase](../firebase/database-schema.md) y [sus controles de seguridad](../firebase/security-and-privacy.md) antes de cambiar servicios o reglas.
 
 ## Vista general
 
@@ -38,7 +38,7 @@ La presencia de configuración para un proveedor de hosting no confirma dónde e
 | Hooks | `frontend/src/hooks/` | Estado y operaciones conectadas a las vistas; algunos conservan flujos del producto anterior. |
 | Servicios | `frontend/src/services/` | Firebase, acceso a datos, chat, análisis, notificaciones, crisis y exportación. |
 | Tipos | `frontend/src/types/` | Modelos TypeScript; contiene todavía tipos heredados que no necesariamente representan el esquema activo. |
-| Reglas e índices | `firestore.rules`, `storage.rules`, `firestore.indexes.json` | Configuración local declarativa para despliegue; no demuestra el estado remoto. |
+| Reglas e índices | `firebase/firestore.rules`, `firebase/storage.rules`, `firebase/firestore.indexes.json` | Configuración local declarativa para despliegue; no demuestra el estado remoto. |
 
 ## Flujos de datos actuales
 
@@ -48,7 +48,7 @@ La presencia de configuración para un proveedor de hosting no confirma dónde e
 4. **Chat:** el chat actual conserva sus mensajes en memoria del navegador y no usa colecciones de chat persistentes. Sus solicitudes a Groq pasan por `/api/ai`.
 5. **IA:** las llamadas activas a Groq se realizan desde la función Node `/api/ai` de Vercel. Esta valida ID tokens de Firebase, limita las entradas y aplica una cuota diaria por UID; la clave se configura solo como secreto de servidor. El chat y los análisis seleccionados por el usuario transmiten su contenido a Groq.
 
-Los detalles e incompatibilidades conocidos se registran en [database-schema.md](./database-schema.md). No tratar ninguno de estos flujos como verificado en producción sin probarlo en un entorno Firebase de desarrollo.
+Los detalles e incompatibilidades conocidos se registran en [el modelo de datos de Firebase](../firebase/database-schema.md). No tratar ninguno de estos flujos como verificado en producción sin probarlo en un entorno Firebase de desarrollo.
 
 ## PWA y ejecución sin conexión
 

@@ -9,9 +9,7 @@ HISTORIAS_DE_USUARIO.md
 FIREBASE-INDICES-GUIA.md
 FIREBASE-SETUP.md
 firebase.json
-firestore.indexes.json
-firestore.indexes-simplified.json
-firestore.rules
+firebase/
 deployment/
 config/
 scripts/

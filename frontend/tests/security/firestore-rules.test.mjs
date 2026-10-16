@@ -28,12 +28,12 @@ setLogLevel("silent");
 const environment = await initializeTestEnvironment({
   projectId,
   firestore: {
-    rules: await readFile(new URL("../../../firestore.rules", import.meta.url), "utf8"),
+    rules: await readFile(new URL("../../../firebase/firestore.rules", import.meta.url), "utf8"),
   },
   storage: {
     host: "127.0.0.1",
     port: 9199,
-    rules: await readFile(new URL("../../../storage.rules", import.meta.url), "utf8"),
+    rules: await readFile(new URL("../../../firebase/storage.rules", import.meta.url), "utf8"),
   },
 });
 

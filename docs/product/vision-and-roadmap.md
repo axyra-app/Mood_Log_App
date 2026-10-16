@@ -24,11 +24,11 @@ Muchas personas desean recordar cómo se sintieron, qué contexto acompañó ese
 | Capacidad | Estado observado | Lo que falta para considerarla lista |
 |---|---|---|
 | Cuenta y perfil | Hay flujos con Firebase Authentication y Firestore. | Pruebas de autorización, errores, recuperación, eliminación de cuenta y verificación de configuración. |
-| Registro de ánimo | La interfaz presenta un recorrido por pasos con valoración visual 1–10 y contexto. | Unificar escala en UI, tipos, estadísticas y reglas; probar creación/edición/borrado y duplicados. |
+| Registro de ánimo | La interfaz presenta un recorrido por pasos con valoración visual 1–10 y contexto. | Validar creación/edición/borrado y documentar compatibilidad de registros históricos. |
 | Dashboard e historial | Hay una vista principal e historial de registros. | Verificar cálculos, límites temporales, estados vacíos/error y consistencia con zona horaria. |
 | Diario | Hay interfaz para crear, consultar, editar y borrar entradas. | Asegurar reglas y operaciones; explicar tratamiento del texto y no prometer cifrado. |
 | Estadísticas e informes | Hay vista de estadísticas y generación PDF del lado cliente. | Verificar cálculos y contenido exportado; eliminar afirmaciones clínicas o correlaciones no sustentadas. |
-| Chat con IA | Hay selección de agentes y una interfaz conversacional. | Unificar persistencia/esquema, proteger credenciales en backend, consentimiento y evaluaciones de seguridad. |
+| Chat con IA | Hay selección de agentes; las solicitudes activas pasan por una función autenticada y la conversación permanece en la página. | Definir persistencia/esquema solo si se aprueba, revisar consentimiento y evaluar errores y seguridad. |
 | Detección de crisis | Hay lógica heurística en un servicio. | No se encontró conexión al recorrido principal. No es un detector confiable ni un servicio de respuesta. |
 | PWA | Plugin configurado para generar recursos PWA. | Pruebas en dispositivos; no ofrece por sí solo sincronización offline de datos. |
 | Cifrado local | Propuesta futura. | No implementado. Requiere diseño y recuperación de claves antes de prometerlo. |
@@ -82,7 +82,7 @@ Muchas personas desean recordar cómo se sintieron, qué contexto acompañó ese
 
 ### Etapa D — IA opcional y responsable
 
-- Mover solicitudes a un backend protegido.
+- Mantener solicitudes en el endpoint serverless autenticado y revisar periódicamente la protección de credenciales.
 - Acordar consentimiento, minimización, retención y proveedores.
 - Evaluar respuestas, errores, contenido de alto riesgo y límites de uso.
 - Mantener alternativas accesibles si la IA no está disponible.
@@ -124,8 +124,8 @@ Los indicadores deberán ser agregados y minimizados. Se pueden medir completitu
 ## 9. Documentación de apoyo
 
 - [Visión general de arquitectura](../architecture/overview.md)
-- [Datos y Firestore](../architecture/database-schema.md)
-- [Seguridad y privacidad](../architecture/security-and-privacy.md)
+- [Datos y Firestore](../firebase/database-schema.md)
+- [Seguridad y privacidad](../firebase/security-and-privacy.md)
 - [Guía funcional](./user-guide.md)
 - [Flujos](./user-flows.md)
 - [Crisis y recursos](./crisis-protocol.md)
