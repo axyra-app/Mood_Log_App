@@ -1,3 +1,7 @@
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+
 const MAX_REQUEST_BYTES = 24_000;
 const MAX_DAILY_REQUESTS = 40;
 const MODEL = 'llama-3.1-8b-instant';
@@ -148,20 +152,15 @@ const getAdminServices = async () => {
     process.env.FIREBASE_PROJECT_ID,
   );
 
-  const [appModule, authModule, firestoreModule] = await Promise.all([
-    import('firebase-admin/app'),
-    import('firebase-admin/auth'),
-    import('firebase-admin/firestore'),
-  ]);
-  const app = appModule.getApps()[0] ?? appModule.initializeApp({
-    credential: appModule.cert(credentials),
+  const app = getApps()[0] ?? initializeApp({
+    credential: cert(credentials),
     projectId: credentials.projectId,
   });
 
   return {
-    auth: authModule.getAuth(app),
-    firestore: firestoreModule.getFirestore(app),
-    fieldValue: firestoreModule.FieldValue,
+    auth: getAuth(app),
+    firestore: getFirestore(app),
+    fieldValue: FieldValue,
   };
 };
 
