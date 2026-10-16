@@ -32,6 +32,7 @@ Muchas personas desean recordar cómo se sintieron, qué contexto acompañó ese
 | Detección de crisis | Hay lógica heurística en un servicio. | No se encontró conexión al recorrido principal. No es un detector confiable ni un servicio de respuesta. |
 | PWA | Plugin configurado para generar recursos PWA. | Pruebas en dispositivos; no ofrece por sí solo sincronización offline de datos. |
 | Cifrado local | Propuesta futura. | No implementado. Requiere diseño y recuperación de claves antes de prometerlo. |
+| Imágenes y archivos | Próximamente; no hay flujo de carga visible para usuarios. | Definir proveedor y políticas de acceso. Supabase Storage es una posibilidad, aún no integrada; no usar claves de servicio en el cliente. |
 | Wearables / Capacitor | Propuesta exploratoria. | No hay integración nativa identificada en el código revisado. |
 
 ## 5. Alcance del MVP recomendado
@@ -51,6 +52,7 @@ Muchas personas desean recordar cómo se sintieron, qué contexto acompañó ese
 - Asistente de IA que procese información íntima sin backend, consentimiento y evaluación.
 - Cifrado de extremo a extremo anunciado antes de implementarse y probarse.
 - Sincronización offline de entradas sensibles sin modelo de cifrado y resolución de conflictos.
+- Carga de imágenes, fotos de perfil y archivos hasta completar el diseño e integración de almacenamiento privado.
 - Alertas de estrés basadas en HRV u otros biomarcadores.
 
 ## 6. Hoja de ruta

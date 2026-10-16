@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { User, Edit, Save, X } from 'lucide-react';
+import { User, Edit, Save, X, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 
@@ -108,6 +108,21 @@ const Profile: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border p-6`}>
+          <aside
+            aria-label='Función próximamente'
+            className={`mb-6 flex items-start gap-3 rounded-lg border p-4 ${
+              isDarkMode
+                ? 'border-purple-800 bg-purple-900/20 text-purple-200'
+                : 'border-purple-200 bg-purple-50 text-purple-800'
+            }`}
+          >
+            <Info className='mt-0.5 h-5 w-5 shrink-0' />
+            <p className='text-sm'>
+              <strong>Fotos de perfil y archivos: próximamente.</strong> Por ahora no es posible cargar imágenes ni
+              adjuntos.
+            </p>
+          </aside>
+
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">

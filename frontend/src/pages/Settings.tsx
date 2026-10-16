@@ -3,7 +3,7 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from 'firebase/auth';
-import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Bell, Clock, Eye, EyeOff, Globe, Info, Lock, Mail, Moon, Save, Shield, Sun, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -13,18 +13,35 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { auth, db } from '../services/firebase';
 
+type SettingsState = {
+  notifications: boolean;
+  emailUpdates: boolean;
+  weeklyReports: boolean;
+  language: string;
+  timezone: string;
+};
+
+type EmailSettingsState = {
+  weeklyReports: boolean;
+  moodInsights: boolean;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
   const { isDarkMode, setDarkMode } = useTheme();
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [settingsLoadError, setSettingsLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const currentUser = auth.currentUser;
   const isGoogleUser = currentUser?.providerData?.some((p) => p.providerId === 'google.com') ?? false;
 
   // Estados para configuración
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SettingsState>({
     notifications: true,
     emailUpdates: true,
     weeklyReports: true,
@@ -45,27 +62,102 @@ const Settings: React.FC = () => {
   });
 
   // Estados para notificaciones por Gmail
-  const [emailSettings, setEmailSettings] = useState({
+  const [emailSettings, setEmailSettings] = useState<EmailSettingsState>({
     weeklyReports: true,
     moodInsights: true,
   });
 
   useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+    let isCurrent = true;
 
-  const handleSettingsChange = (key: string, value: any) => {
+    const loadSettings = async () => {
+      setIsLoaded(false);
+      setSettingsLoadError(false);
+
+      if (!user) {
+        setSettingsLoadError(true);
+        setIsLoaded(true);
+        return;
+      }
+
+      try {
+        const userSnapshot = await getDoc(doc(db, 'users', user.uid));
+        if (!isCurrent) {
+          return;
+        }
+        if (!userSnapshot.exists()) {
+          throw new Error('No se encontró el perfil para cargar la configuración.');
+        }
+
+        const savedSettings = userSnapshot.data().settings;
+        if (isRecord(savedSettings)) {
+          setSettings((current) => ({
+            ...current,
+            notifications: typeof savedSettings.notifications === 'boolean'
+              ? savedSettings.notifications
+              : current.notifications,
+            emailUpdates: typeof savedSettings.emailUpdates === 'boolean'
+              ? savedSettings.emailUpdates
+              : current.emailUpdates,
+            weeklyReports: typeof savedSettings.weeklyReports === 'boolean'
+              ? savedSettings.weeklyReports
+              : current.weeklyReports,
+            language: typeof savedSettings.language === 'string'
+              ? savedSettings.language
+              : current.language,
+            timezone: typeof savedSettings.timezone === 'string'
+              ? savedSettings.timezone
+              : current.timezone,
+          }));
+
+          const savedEmailSettings = savedSettings.emailSettings;
+          if (isRecord(savedEmailSettings)) {
+            setEmailSettings((current) => ({
+              weeklyReports: typeof savedEmailSettings.weeklyReports === 'boolean'
+                ? savedEmailSettings.weeklyReports
+                : current.weeklyReports,
+              moodInsights: typeof savedEmailSettings.moodInsights === 'boolean'
+                ? savedEmailSettings.moodInsights
+                : current.moodInsights,
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        if (isCurrent) {
+          setSettingsLoadError(true);
+          toast.error('No se pudo cargar tu configuración. Inténtalo de nuevo.');
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoaded(true);
+        }
+      }
+    };
+
+    void loadSettings();
+    return () => {
+      isCurrent = false;
+    };
+  }, [user]);
+
+  const handleSettingsChange = <K extends keyof SettingsState,>(key: K, value: SettingsState[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleEmailSettingsChange = (key: string, value: boolean) => {
+  const handleEmailSettingsChange = (key: keyof EmailSettingsState, value: boolean) => {
     setEmailSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const saveSettings = async () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para guardar tu configuración.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await updateDoc(doc(db, 'users', user?.uid || ''), {
+      await updateDoc(doc(db, 'users', user.uid), {
         settings: {
           ...settings,
           emailSettings,
@@ -148,6 +240,27 @@ const Settings: React.FC = () => {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500'></div>
+      </div>
+    );
+  }
+
+  if (settingsLoadError) {
+    return (
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header title='Configuración' subtitle='Gestiona tu perfil y preferencias' backTo='/dashboard' />
+        <main className='mx-auto max-w-xl px-4 py-16 text-center'>
+          <p role='alert' className={`mb-5 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            No pudimos cargar tus preferencias. No se guardarán valores predeterminados para evitar reemplazar
+            tu configuración existente.
+          </p>
+          <button
+            type='button'
+            onClick={() => window.location.reload()}
+            className='rounded-lg bg-purple-600 px-5 py-3 font-medium text-white hover:bg-purple-700'
+          >
+            Reintentar
+          </button>
+        </main>
       </div>
     );
   }

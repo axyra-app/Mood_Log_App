@@ -4,7 +4,7 @@
 
 Los registros de ánimo, las reflexiones y las conversaciones pueden contener información íntima. La privacidad debe verificarse extremo a extremo: en el cliente, las reglas de Firebase, los proveedores externos, el hosting y los procesos de operación.
 
-Esta página describe los archivos de reglas y el código local revisados. **No confirma** cuáles reglas están desplegadas en Firebase, qué configuración aplica Vercel ni el cumplimiento legal del servicio. No usar datos personales reales hasta validar los flujos con usuarios distintos en un entorno de desarrollo.
+Esta página describe los archivos de reglas y el código revisado. El propietario del proyecto confirmó que pegó y publicó las reglas de Firestore en `mood-log-app-01` desde Firebase Console; no se verificaron por separado mediante API ni se validaron aún los flujos completos con usuarios reales. Esto no confirma la configuración de Vercel ni el cumplimiento legal del servicio. No usar datos personales reales hasta validar los flujos con cuentas distintas en un entorno de desarrollo.
 
 ## Firestore: reglas locales
 
@@ -27,13 +27,13 @@ Esta página describe los archivos de reglas y el código local revisados. **No 
 5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. La suite cubre propietario/ajeno/anónimo, reemplazo válido, MIME no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
 6. Firebase CLI requiere JDK 21 o superior para los emuladores. La última ejecución local pasó las 22 pruebas usando temporalmente un JRE 21; no se cambió el Java instalado en el sistema.
 
-Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilidades. Las reglas reforzadas y probadas permanecen versionadas localmente; aún falta confirmar el proyecto de destino y aprobar explícitamente cualquier despliegue. No se ha comprobado el estado de las reglas remotas.
+Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilidades. Las reglas reforzadas están versionadas y pasaron las pruebas locales; su publicación en `mood-log-app-01` fue confirmada por el propietario en Firebase Console. Aún falta probar los recorridos completos en el proyecto y revisar denegaciones inesperadas.
 
-## Cloud Storage
+## Imágenes y archivos: próximamente
 
-`firebase/storage.rules` limita rutas bajo `users/{userId}/...` al propietario y valida tamaño/MIME en altas y actualizaciones. `uploadFile` exige sesión, valida esas mismas restricciones y prefija la ruta con el UID autenticado; el nombre original no se guarda en metadata. El flujo de chat usa nombres aleatorios y solo tipos permitidos.
+La carga de fotos de perfil, imágenes y archivos adjuntos no está disponible en los flujos de usuario. Aunque el repositorio conserva reglas y un helper de Firebase Storage, no se debe presentar como una función habilitada. La opción de guardar estos objetos en Supabase es futura y todavía no está integrada; Firebase Authentication y Firestore continúan siendo los servicios activos.
 
-`getDownloadURL` produce una URL con token portador: quien obtiene el enlace puede acceder al archivo sin volver a pasar por las reglas de UID. No trates un enlace como privado por el solo hecho de que las reglas limiten la ruta; evita compartir archivos sensibles, no incluyas esos enlaces en logs y revisa revocación/rotación de tokens antes de ampliar el uso. No subas muestras de salud ni diarios por esta ruta.
+Antes de habilitar archivos, definir bucket privado, políticas de acceso por UID, límites de tipo/tamaño, eliminación al borrar la cuenta y manejo de enlaces de descarga. No se debe poner una clave de servicio de Supabase en el frontend.
 
 ## IA y secretos
 
@@ -54,7 +54,7 @@ El diario se persiste como texto legible. La propuesta de cifrado con Web Crypto
 - Confirmar el proyecto y las reglas activas en Firebase Console.
 - Ejecutar `cd frontend && npm run test:rules` para probar las reglas locales de Firestore y Storage en un proyecto demo de emulador (último resultado: 22/22 pasaron); complementar con pruebas manuales de flujos y verificación del proyecto/reglas remotos antes de producción.
 - Para cada colección: probar crear, leer/listar, actualizar y eliminar como dueño, segundo usuario y usuario anónimo.
-- Probar Storage con UID propio, UID ajeno, tipo MIME/tamaño inválido y URLs de descarga.
+- Mantener la carga de imágenes/archivos deshabilitada hasta definir e integrar un almacenamiento privado; no presentar el helper de Storage como función disponible.
 - Revisar el bundle y las solicitudes de red para comprobar que no salen claves de servidor y que las acciones de IA transmiten solo el contenido indicado en la interfaz.
 - Revisar dominios autorizados, IAM, acceso a Vercel, previews, logs, retención, eliminación de cuenta y respuesta a incidentes.
 - Hacer revisar términos y política de privacidad por la persona responsable antes de recopilar datos reales.

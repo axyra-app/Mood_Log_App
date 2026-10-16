@@ -79,6 +79,7 @@ Páginas públicas de información legal. Su redacción debe revisarse contra el
 
 ## Capacidades futuras que no deben darse por disponibles
 
+- Carga de imágenes, fotos de perfil y archivos: **próximamente**, aún no disponible en la interfaz. Supabase Storage es solo una opción por evaluar.
 - Cifrado de extremo a extremo del diario.
 - Sincronización completa sin conexión.
 - Respuesta humana o atención de emergencia desde la app.
