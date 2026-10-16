@@ -130,6 +130,9 @@ const getSafeErrorCode = (error: unknown): string => {
     : error instanceof Error ? error.name : 'UnknownError';
 };
 
+export const isInvalidFirebaseIdTokenError = (errorCode: string): boolean =>
+  /^auth\/(argument-error|id-token-expired|invalid-id-token|id-token-revoked|user-disabled|user-not-found)$/.test(errorCode);
+
 const parseBody = (body: unknown): AiRequest | null => {
   if (typeof body === 'string') {
     try {
@@ -313,7 +316,7 @@ export default {
       console.error('AI service initialization failed:', errorCode);
       return sendError(
         503,
-        `No se pudo iniciar Firebase Admin (código: ${errorCode}, Node: ${process.version}). Comparte solo estos datos técnicos; nunca compartas claves ni credenciales.`,
+        `No se pudo iniciar Firebase Admin (código: ${errorCode}). Comparte solo el código; nunca compartas claves ni credenciales.`,
       );
     }
 
@@ -327,14 +330,17 @@ export default {
 
     let uid: string;
     try {
-      uid = (await services.auth.verifyIdToken(token, true)).uid;
+      uid = (await services.auth.verifyIdToken(token)).uid;
     } catch (error) {
       const errorCode = getSafeErrorCode(error);
-      if (/^auth\/(argument-error|id-token-expired|invalid-id-token|id-token-revoked|user-disabled|user-not-found)$/.test(errorCode)) {
+      if (isInvalidFirebaseIdTokenError(errorCode)) {
         return sendError(401, 'La sesión no es válida. Inicia sesión nuevamente.');
       }
       console.error('AI authentication service failed:', errorCode);
-      return sendError(503, 'No se pudo validar la sesión con Firebase Authentication.');
+      return sendError(
+        503,
+        `Firebase Authentication no pudo validar la sesión (código: ${errorCode}). No compartas tokens.`,
+      );
     }
 
     if (!body || !['chat', 'journal-analysis', 'mood-analysis'].includes(String(body.task))) {

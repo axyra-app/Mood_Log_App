@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseFirebaseAdminCredentials } from '../../api/ai.ts';
+import {
+  isInvalidFirebaseIdTokenError,
+  parseFirebaseAdminCredentials,
+} from '../../api/ai.ts';
 
 const createServiceAccount = () => ({
   project_id: 'mood-log-test',
@@ -40,4 +43,22 @@ test('rejects a project ID that does not match the service account', () => {
     () => parseFirebaseAdminCredentials(JSON.stringify(createServiceAccount()), 'other-project'),
     /FIREBASE_PROJECT_ID no coincide/,
   );
+});
+
+test('classifies invalid or expired Firebase ID tokens as client authentication errors', () => {
+  for (const code of [
+    'auth/argument-error',
+    'auth/id-token-expired',
+    'auth/invalid-id-token',
+    'auth/id-token-revoked',
+    'auth/user-disabled',
+    'auth/user-not-found',
+  ]) {
+    assert.equal(isInvalidFirebaseIdTokenError(code), true, code);
+  }
+});
+
+test('does not classify Firebase service permission failures as invalid user tokens', () => {
+  assert.equal(isInvalidFirebaseIdTokenError('auth/insufficient-permission'), false);
+  assert.equal(isInvalidFirebaseIdTokenError('auth/internal-error'), false);
 });
