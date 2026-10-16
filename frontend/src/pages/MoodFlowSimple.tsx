@@ -366,6 +366,7 @@ const MoodFlowSimple: React.FC = () => {
                 <textarea
                   value={feelings}
                   onChange={(e) => setFeelings(e.target.value)}
+                  maxLength={5000}
                   placeholder='Escribe aquí cómo te sientes, qué pensamientos tienes, qué te preocupa o qué te hace feliz...'
                   className={`w-full h-32 p-4 rounded-lg border ${
                     isDarkMode

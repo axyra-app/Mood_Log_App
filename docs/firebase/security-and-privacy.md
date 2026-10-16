@@ -10,22 +10,24 @@ Esta página describe los archivos de reglas y el código local revisados. **No 
 
 `firebase/firestore.rules` define:
 
-- `users/{userId}`: lectura y operaciones del propietario si el UID coincide con el ID del documento; alta y actualización requieren `role: 'user'`.
-- `moodLogs` y `journalEntries`: el `userId` debe coincidir al crear, y se comprueba el dueño al leer, actualizar o borrar.
-- `notifications`, `advancedReports`, `statistics` y `reminders`: acceso asociado al propietario autenticado y actualización sin cambiar su `userId`.
-- `userSettings/{settingsId}`: lectura y escritura cuando el ID del documento coincide con el UID autenticado.
+- `users/{userId}`: acceso del propietario; restringe los campos del perfil, exige el rol `user` y no permite elevar el rol.
+- `moodLogs` y `journalEntries`: propietario autenticado, campos permitidos, escala de puntuación 1–10 y límites de contenido/listas.
+- `notifications`: acceso asociado al propietario, campos permitidos y cambios limitados al estado de lectura.
+- `userSettings/{settingsId}`: ID del documento ligado al UID, campos raíz permitidos y objetos de ajustes tipados como mapas.
+- `advancedReports`, `statistics` y `reminders`: acceso asociado al propietario y actualización sin cambiar el `userId`.
 - `journalTemplates` y `journalPrompts`: lectura disponible para usuarios autenticados.
 - Cualquier colección no listada: denegada por la regla final.
 
 ### Limitaciones y estado de validación
 
-1. Las reglas de propiedad/rol y creación de `statistics` tienen ahora cobertura automatizada en `frontend/tests/security/firestore-rules.test.mjs`; ejecuta `cd frontend && npm run test:rules`. Esto valida las reglas versionadas en el emulador, no las reglas desplegadas en Firebase.
+1. La suite `frontend/tests/security/firestore-rules.test.mjs` contiene 22 pruebas de reglas para perfiles, ánimo, diario, notificaciones, ajustes, reportes/recordatorios, plantillas/prompts y Storage, con operaciones permitidas/denegadas y validaciones de campos. Ejecuta `cd frontend && npm run test:rules`. Esto valida las reglas versionadas en el emulador, no las reglas desplegadas en Firebase.
 2. Las colecciones de chat persistente (`chats`, `messages`, `chatSessions` y `chatMessages`), `typing`, `crisisAssessments` y `crisisAlerts` no están permitidas por las reglas locales.
 3. Las plantillas y prompts solo se leen desde Firestore; cuando no hay documentos, los valores predeterminados se sirven localmente y no se intenta escribir desde el cliente.
-4. Las reglas no son un esquema completo: faltan validaciones de campos, tipos, límites y estados permitidos. Consultas Firestore también deben limitarse para que la regla pueda probar el propietario de cada documento.
-5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. Hay pruebas con UID propio/ajeno/anónimo, tipo no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
+4. Las reglas validan campos raíz y algunos tipos/límites; no son un validador exhaustivo de los elementos de todas las listas ni del contenido interno de los mapas de análisis y ajustes. Mantén validación equivalente en la aplicación y amplía pruebas cuando cambien los modelos. Consultas Firestore también deben limitarse para que la regla pueda probar el propietario de cada documento.
+5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. La suite cubre propietario/ajeno/anónimo, reemplazo válido, MIME no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
+6. Firebase CLI requiere JDK 21 o superior para los emuladores. La última ejecución local pasó las 22 pruebas usando temporalmente un JRE 21; no se cambió el Java instalado en el sistema.
 
-Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilidades. No despliegues cambios de reglas sin pruebas de propietario, otro usuario y usuario sin autenticación.
+Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilidades. Las reglas reforzadas y probadas permanecen versionadas localmente; aún falta confirmar el proyecto de destino y aprobar explícitamente cualquier despliegue. No se ha comprobado el estado de las reglas remotas.
 
 ## Cloud Storage
 
@@ -50,7 +52,7 @@ El diario se persiste como texto legible. La propuesta de cifrado con Web Crypto
 ## Verificación previa a producción
 
 - Confirmar el proyecto y las reglas activas en Firebase Console.
-- Ejecutar `cd frontend && npm run test:rules` para probar reglas locales de Firestore en un proyecto demo de emulador; complementar con pruebas de Storage, otros flujos y verificación del proyecto/reglas remotos antes de producción.
+- Ejecutar `cd frontend && npm run test:rules` para probar las reglas locales de Firestore y Storage en un proyecto demo de emulador (último resultado: 22/22 pasaron); complementar con pruebas manuales de flujos y verificación del proyecto/reglas remotos antes de producción.
 - Para cada colección: probar crear, leer/listar, actualizar y eliminar como dueño, segundo usuario y usuario anónimo.
 - Probar Storage con UID propio, UID ajeno, tipo MIME/tamaño inválido y URLs de descarga.
 - Revisar el bundle y las solicitudes de red para comprobar que no salen claves de servidor y que las acciones de IA transmiten solo el contenido indicado en la interfaz.

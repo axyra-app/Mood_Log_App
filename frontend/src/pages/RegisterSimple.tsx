@@ -225,6 +225,7 @@ const RegisterSimple: React.FC = () => {
                       name='firstName'
                       value={formData.firstName}
                       onChange={handleInputChange}
+                      maxLength={100}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                         hasError('firstName')
                           ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -250,6 +251,7 @@ const RegisterSimple: React.FC = () => {
                       name='lastName'
                       value={formData.lastName}
                       onChange={handleInputChange}
+                      maxLength={100}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                         hasError('lastName')
                           ? 'border-red-500 focus:border-red-500 focus:ring-red-500'

@@ -141,6 +141,7 @@ const CompleteProfile: React.FC = () => {
                     name='displayName'
                     value={formData.displayName}
                     onChange={handleInputChange}
+                    maxLength={120}
                     className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                       hasError('displayName')
                         ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -168,6 +169,7 @@ const CompleteProfile: React.FC = () => {
                     name='username'
                     value={formData.username}
                     onChange={handleInputChange}
+                    maxLength={64}
                     className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
                       hasError('username')
                         ? 'border-red-500 focus:border-red-500 focus:ring-red-500'

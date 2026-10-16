@@ -165,6 +165,7 @@ const Profile: React.FC = () => {
                 name="displayName"
                 value={profileData.displayName}
                 onChange={handleInputChange}
+                maxLength={120}
                 disabled={!isEditing}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
@@ -182,6 +183,7 @@ const Profile: React.FC = () => {
                 name="email"
                 value={profileData.email}
                 onChange={handleInputChange}
+                maxLength={254}
                 disabled={!isEditing}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
@@ -199,6 +201,7 @@ const Profile: React.FC = () => {
                 name="phone"
                 value={profileData.phone}
                 onChange={handleInputChange}
+                maxLength={40}
                 disabled={!isEditing}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
@@ -216,6 +219,7 @@ const Profile: React.FC = () => {
                 name="location"
                 value={profileData.location}
                 onChange={handleInputChange}
+                maxLength={120}
                 disabled={!isEditing}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
@@ -233,6 +237,7 @@ const Profile: React.FC = () => {
                 name="username"
                 value={profileData.username}
                 onChange={handleInputChange}
+                maxLength={64}
                 disabled={!isEditing}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
@@ -250,6 +255,7 @@ const Profile: React.FC = () => {
                 value={profileData.bio}
                 onChange={handleInputChange}
                 disabled={!isEditing}
+                maxLength={2000}
                 rows={4}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'

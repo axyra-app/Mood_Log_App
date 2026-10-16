@@ -126,6 +126,10 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
 
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
+      if (tags.length >= 50) {
+        toast.error('Una entrada puede tener como máximo 50 etiquetas.');
+        return;
+      }
       setTags([...tags, newTag.trim()]);
       setNewTag('');
     }
@@ -137,6 +141,10 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
 
   const addActivity = () => {
     if (newActivity.trim() && !activities.includes(newActivity.trim())) {
+      if (activities.length >= 50) {
+        toast.error('Una entrada puede tener como máximo 50 actividades.');
+        return;
+      }
       setActivities([...activities, newActivity.trim()]);
       setNewActivity('');
     }
@@ -148,6 +156,10 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
 
   const addEmotion = () => {
     if (newEmotion.trim() && !emotions.includes(newEmotion.trim())) {
+      if (emotions.length >= 50) {
+        toast.error('Una entrada puede tener como máximo 50 emociones.');
+        return;
+      }
       setEmotions([...emotions, newEmotion.trim()]);
       setNewEmotion('');
     }
@@ -222,6 +234,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  maxLength={200}
                   placeholder="Escribe un título para tu entrada..."
                   className="w-full px-3 sm:px-4 py-3 text-base sm:text-lg font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   onKeyDown={handleKeyPress}
@@ -241,6 +254,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                     setAiAnalysis(null);
                     setShowAIAnalysis(false);
                   }}
+                  maxLength={20000}
                   placeholder="Escribe aquí tu entrada del diario... (Ctrl+Enter para guardar, Ctrl+Espacio para IA)"
                   className="w-full min-h-[300px] sm:min-h-[400px] px-3 sm:px-4 py-3 text-base leading-relaxed border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   onKeyDown={handleKeyPress}
@@ -416,6 +430,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                     type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
+                    maxLength={100}
                     placeholder="Nueva etiqueta"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && addTag()}
@@ -450,6 +465,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                     type="text"
                     value={newActivity}
                     onChange={(e) => setNewActivity(e.target.value)}
+                    maxLength={100}
                     placeholder="Nueva actividad"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && addActivity()}
@@ -484,6 +500,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                     type="text"
                     value={newEmotion}
                     onChange={(e) => setNewEmotion(e.target.value)}
+                    maxLength={100}
                     placeholder="Nueva emoción"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && addEmotion()}

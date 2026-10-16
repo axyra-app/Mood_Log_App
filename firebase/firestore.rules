@@ -1,104 +1,230 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Función auxiliar para verificar si el usuario es el propietario
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    function hasStandardUserRole() {
-      return request.resource.data.role == 'user';
+    function isOwnerOf(data) {
+      return isSignedIn() && data.userId == request.auth.uid;
     }
 
-    // ========================================
-    // PERFIL DE USUARIO
-    // ========================================
+    function hasOnlyKeys(data, allowedKeys) {
+      return data.keys().hasOnly(allowedKeys);
+    }
+
+    function isScore(value) {
+      return value is int && value >= 1 && value <= 10;
+    }
+
+    function isOptionalScore(data, field) {
+      return !(field in data) || isScore(data[field]);
+    }
+
+    function isOptionalTimestamp(data, field) {
+      return !(field in data) || data[field] is timestamp;
+    }
+
+    function isOptionalString(data, field, maxLength) {
+      return !(field in data)
+        || data[field] == null
+        || (data[field] is string && data[field].size() <= maxLength);
+    }
+
+    function isOptionalList(data, field, maxItems) {
+      return !(field in data)
+        || (data[field] is list
+          && data[field].size() <= maxItems);
+    }
+
+    function hasValidMoodLog(data) {
+      return hasOnlyKeys(data, [
+          'userId', 'mood', 'energy', 'stress', 'sleep', 'notes',
+          'activities', 'emotions', 'aiAnalysis', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string
+        && isScore(data.mood)
+        && isScore(data.energy)
+        && isScore(data.stress)
+        && isScore(data.sleep)
+        && data.notes is string
+        && data.notes.size() <= 5000
+        && data.activities is list
+        && data.activities.size() <= 50
+        && data.emotions is list
+        && data.emotions.size() <= 50
+        && isOptionalTimestamp(data, 'createdAt')
+        && isOptionalTimestamp(data, 'updatedAt')
+        && (!('aiAnalysis' in data) || data.aiAnalysis is map);
+    }
+
+    function hasValidJournalEntry(data) {
+      return hasOnlyKeys(data, [
+          'userId', 'title', 'content', 'date', 'tags', 'mood', 'energy',
+          'stress', 'sleep', 'activities', 'emotions', 'aiSuggestions',
+          'aiAnalysis', 'isPrivate', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.content is string
+        && data.content.size() > 0
+        && data.content.size() <= 20000
+        && data.date is timestamp
+        && data.tags is list
+        && data.tags.size() <= 50
+        && isOptionalScore(data, 'mood')
+        && isOptionalScore(data, 'energy')
+        && isOptionalScore(data, 'stress')
+        && isOptionalScore(data, 'sleep')
+        && isOptionalList(data, 'activities', 50)
+        && isOptionalList(data, 'emotions', 50)
+        && isOptionalList(data, 'aiSuggestions', 50)
+        && (!('aiAnalysis' in data) || data.aiAnalysis is map)
+        && data.isPrivate is bool
+        && isOptionalTimestamp(data, 'createdAt')
+        && isOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function hasValidNotification(data) {
+      return hasOnlyKeys(data, [
+          'userId', 'type', 'title', 'message', 'isRead', 'data',
+          'createdAt', 'updatedAt', 'readAt'
+        ])
+        && data.userId is string
+        && data.type in ['profile_incomplete', 'general']
+        && data.title is string
+        && data.title.size() <= 200
+        && data.message is string
+        && data.message.size() <= 2000
+        && data.isRead is bool
+        && (!('data' in data) || data.data == null || data.data is map)
+        && isOptionalTimestamp(data, 'createdAt')
+        && isOptionalTimestamp(data, 'updatedAt')
+        && isOptionalTimestamp(data, 'readAt');
+    }
+
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && hasStandardUserRole();
-      allow update: if isOwner(userId) && hasStandardUserRole();
-      allow delete: if isOwner(userId);
+      function hasValidUserProfile(data) {
+        return hasOnlyKeys(data, [
+            'email', 'displayName', 'username', 'role', 'createdAt',
+            'updatedAt', 'firstName', 'lastName', 'phone', 'photoURL',
+            'dateOfBirth', 'gender', 'location', 'bio', 'emergencyContact', 'settings'
+          ])
+          && data.role == 'user'
+          && isOptionalString(data, 'email', 254)
+          && isOptionalString(data, 'displayName', 120)
+          && isOptionalString(data, 'username', 64)
+          && isOptionalString(data, 'firstName', 100)
+          && isOptionalString(data, 'lastName', 100)
+          && isOptionalString(data, 'phone', 40)
+          && isOptionalString(data, 'photoURL', 2048)
+          && isOptionalString(data, 'dateOfBirth', 20)
+          && isOptionalString(data, 'gender', 50)
+          && isOptionalString(data, 'location', 120)
+          && isOptionalString(data, 'bio', 2000)
+          && (!('createdAt' in data) || data.createdAt is timestamp)
+          && (!('updatedAt' in data) || data.updatedAt is timestamp)
+          && (!('emergencyContact' in data) || data.emergencyContact is map)
+          && (!('settings' in data) || data.settings is map);
+      }
+
+      allow read, delete: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && hasValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId)
+        && (request.resource.data.role == resource.data.role
+          || request.resource.data.role == 'user')
+        && hasValidUserProfile(request.resource.data);
     }
-    
-    // ========================================
-    // REGISTROS DE ESTADO DE ÁNIMO (MOOD LOGS)
-    // ========================================
+
     match /moodLogs/{moodLogId} {
-      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnerOf(resource.data);
+      allow create: if isOwnerOf(request.resource.data)
+        && hasValidMoodLog(request.resource.data);
+      allow update: if isOwnerOf(resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && hasValidMoodLog(request.resource.data);
     }
-    
-    // ========================================
-    // ENTRADAS DEL DIARIO PERSONAL
-    // ========================================
+
     match /journalEntries/{entryId} {
-      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnerOf(resource.data);
+      allow create: if isOwnerOf(request.resource.data)
+        && hasValidJournalEntry(request.resource.data);
+      allow update: if isOwnerOf(resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && hasValidJournalEntry(request.resource.data);
     }
-    
-    // ========================================
-    // NOTIFICACIONES
-    // ========================================
+
     match /notifications/{notificationId} {
-      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnerOf(resource.data);
+      allow create: if isOwnerOf(request.resource.data)
+        && hasValidNotification(request.resource.data);
+      allow update: if isOwnerOf(resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && hasValidNotification(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['isRead', 'updatedAt', 'readAt']);
     }
-    
-    // ========================================
-    // CONFIGURACIÓN DE USUARIO
-    // ========================================
+
     match /userSettings/{settingsId} {
-      allow read, write: if isOwner(settingsId);
+      function hasValidSettings(data) {
+        return hasOnlyKeys(data, [
+            'userId', 'notifications', 'privacy', 'app', 'moodLogging',
+            'createdAt', 'updatedAt', 'version'
+          ])
+          && (!('userId' in data) || data.userId == request.auth.uid)
+          && (!('notifications' in data) || data.notifications is map)
+          && (!('privacy' in data) || data.privacy is map)
+          && (!('app' in data) || data.app is map)
+          && (!('moodLogging' in data) || data.moodLogging is map)
+          && (!('createdAt' in data) || data.createdAt is timestamp)
+          && (!('updatedAt' in data) || data.updatedAt is timestamp)
+          && (!('version' in data) || data.version is int);
+      }
+
+      allow read: if isOwner(settingsId);
+      allow create, update: if isOwner(settingsId)
+        && hasValidSettings(request.resource.data);
+      allow delete: if isOwner(settingsId);
     }
-    
-    // ========================================
-    // REPORTES AVANZADOS Y ESTADÍSTICAS
-    // ========================================
+
     match /advancedReports/{reportId} {
-      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnerOf(resource.data);
+      allow create: if isOwnerOf(request.resource.data);
+      allow update: if isOwnerOf(resource.data)
+        && request.resource.data.userId == resource.data.userId;
     }
 
     match /statistics/{statId} {
-      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid;
-    }
-    
-    // ========================================
-    // RECORDATORIOS
-    // ========================================
-    match /reminders/{reminderId} {
-      allow read, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid;
-    }
-    
-    // ========================================
-    // PLANTILLAS Y PROMPTS DEL DIARIO (LECTURA PÚBLICA AUTENTICADA)
-    // ========================================
-    match /journalTemplates/{templateId} {
-      allow read: if request.auth != null;
-    }
-    
-    match /journalPrompts/{promptId} {
-      allow read: if request.auth != null;
+      allow read, delete: if isOwnerOf(resource.data);
+      allow create: if isOwnerOf(request.resource.data);
+      allow update: if isOwnerOf(resource.data)
+        && request.resource.data.userId == resource.data.userId;
     }
 
-    // Regla por defecto: Denegar cualquier otra colección no especificada
+    match /reminders/{reminderId} {
+      allow read, delete: if isOwnerOf(resource.data);
+      allow create: if isOwnerOf(request.resource.data);
+      allow update: if isOwnerOf(resource.data)
+        && request.resource.data.userId == resource.data.userId;
+    }
+
+    match /journalTemplates/{templateId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /journalPrompts/{promptId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
