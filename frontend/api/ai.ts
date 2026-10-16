@@ -310,10 +310,11 @@ export default {
         console.error('AI service configuration failed:', error.code);
         return sendError(503, error.message);
       }
-      console.error('AI service initialization failed:', getSafeErrorCode(error));
+      const errorCode = getSafeErrorCode(error);
+      console.error('AI service initialization failed:', errorCode);
       return sendError(
         503,
-        'No se pudo iniciar Firebase Admin. Revisa los logs de la función en Vercel; no compartas claves ni credenciales.',
+        `No se pudo iniciar Firebase Admin (código: ${errorCode}). Comparte solo este código; nunca compartas claves ni credenciales.`,
       );
     }
 
