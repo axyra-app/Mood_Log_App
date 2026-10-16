@@ -327,10 +327,17 @@ const Settings: React.FC = () => {
                   Notificaciones
                 </h3>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Configura cómo recibir notificaciones
+                  Configura tus preferencias para futuras notificaciones
                 </p>
               </div>
             </div>
+
+            <p role='note' className={`mb-4 rounded-lg p-3 text-sm ${
+              isDarkMode ? 'bg-amber-900/20 text-amber-200' : 'bg-amber-50 text-amber-800'
+            }`}>
+              Las notificaciones push aún no están conectadas. Este ajuste se guarda como preferencia, pero no enviará
+              avisos al dispositivo.
+            </p>
 
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
@@ -388,10 +395,17 @@ const Settings: React.FC = () => {
                   Preferencias de correo
                 </h3>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Configura tus preferencias de correo
+                  Configura tus preferencias para futuras funciones de correo
                 </p>
               </div>
             </div>
+
+            <p role='note' className={`mb-4 rounded-lg p-3 text-sm ${
+              isDarkMode ? 'bg-amber-900/20 text-amber-200' : 'bg-amber-50 text-amber-800'
+            }`}>
+              Mood Log todavía no envía reportes ni insights por correo. Estas preferencias se guardan, pero no activan
+              envíos.
+            </p>
 
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
