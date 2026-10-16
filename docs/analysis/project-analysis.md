@@ -18,27 +18,27 @@ La base visual y varios flujos están presentes, pero el repositorio conserva im
 | PWA | Plugin `vite-plugin-pwa` configurado. No equivale a sincronización offline de datos. |
 | IA | Las solicitudes activas pasan por `frontend/api/ai.ts`; `GROQ_API_KEY` se utiliza en el servidor. El cliente prepara y limita los datos de análisis antes de enviarlos. |
 | Typecheck/build | `npm run typecheck` y `npm run build` pasan con las dependencias instaladas. El build conserva avisos de tamaño de chunks y de importación compartida de jsPDF. |
-| Pruebas | Hay pruebas de reglas Firestore y Storage en el emulador (`npm run test:rules`); lint y pruebas de componentes/servicios aún no están configurados. |
+| Pruebas | CI incluye pruebas de reglas Firestore/Storage, API, índices y métricas; no hay lint ni pruebas de componentes de interfaz. |
 
 ## Hallazgos prioritarios
 
 ### 1. Colecciones y permisos Firebase no están alineados
 
-Las reglas locales permiten un conjunto definido de colecciones, pero servicios como `chatService` usan `chats`, `messages` y `typing`, denegadas por la regla catch-all. Otros flujos usan `chatSessions` y `chatMessages`, cuyo modelo de mensajes debe incluir `userId` para satisfacer las reglas. Las reglas permiten leer plantillas/prompts, no inicializarlas desde el cliente.
+Las reglas locales permiten un conjunto definido de colecciones y deniegan por defecto las colecciones heredadas de chat (`chats`, `messages`, `typing`, `chatSessions` y `chatMessages`). La revisión actual no encontró llamadas de persistencia de chat en el código de la aplicación. El servicio `crisisDetection.ts` sí contiene escritura y lectura de `crisisAssessments`, también denegadas por las reglas, pero no se encontraron llamadas a ese servicio desde otros módulos. No se deben abrir reglas para esos flujos hasta decidir si siguen siendo parte del producto y probarlos en el emulador.
 
-En esta revisión se endurecieron localmente la propiedad de registros, la inmutabilidad del rol, la creación de `statistics` y el acceso a Storage. Se añadieron pruebas del emulador para propietario, otra cuenta y usuario anónimo; siguen faltando pruebas y decisiones para todos los flujos heredados. Las reglas versionadas aún no se han desplegado y su estado remoto no se verificó. La documentación técnica describe las limitaciones en [database-schema.md](../firebase/database-schema.md) y [security-and-privacy.md](../firebase/security-and-privacy.md).
+Las reglas versionadas restringen la propiedad de registros, mantienen inmutable el rol de usuario, autorizan la creación propia de `statistics` y limitan Storage por UID, tipo y tamaño. Las pruebas existentes cubren propietario, otra cuenta y usuario anónimo para las operaciones incluidas, pero no todos los flujos heredados. Las reglas aún no se han desplegado desde esta revisión y su estado remoto no se verificó. La documentación técnica describe las limitaciones en [database-schema.md](../firebase/database-schema.md) y [security-and-privacy.md](../firebase/security-and-privacy.md).
 
 **Acción:** unificar contratos de datos, completar validaciones de campos y probar todas las operaciones activas con Firebase Emulator Suite antes de desplegar reglas.
 
 ### 2. IA y datos sensibles
 
-Las tareas de IA disponibles pasan por `frontend/api/ai.ts`, una función de servidor autenticada que usa el secreto `GROQ_API_KEY`; la clave no debe configurarse como `VITE_*`. El texto emocional se envía a Groq cuando la persona solicita explícitamente un análisis. La interfaz debe informar qué datos se envían y mostrar los errores del proveedor sin sustituirlos por una respuesta ficticia.
+Las tareas de IA disponibles pasan por `frontend/api/ai.ts`, una función de servidor autenticada que usa el secreto `GROQ_API_KEY`; la clave no debe configurarse como `VITE_*`. Los análisis de diario y de registros requieren confirmación explícita antes de enviar datos a Groq; el chat informa que los mensajes se envían al proveedor. La interfaz debe seguir mostrando los errores del proveedor sin sustituirlos por una respuesta ficticia.
 
 **Pendiente:** documentar con precisión la retención aplicable en Groq y revisar periódicamente límites, autenticación y datos enviados. Si una clave real llegó a incluirse en un bundle, revocarla y revisar su uso.
 
 ### 3. Modelo de producto aún no consolidado
 
-El tipo y el flujo de registro de `MoodLog` usan la escala canónica 1–10; no se convierten automáticamente valores históricos. El hook de chat mantiene campos profesionales y el servicio `chatService` modela participantes. La interfaz de usuario y `AuthContext` difieren en la representación del rol.
+El tipo y el flujo de registro de `MoodLog` usan la escala canónica 1–10; no se convierten automáticamente valores históricos. Aún quedan modelos y componentes heredados por revisar antes de retirar contratos antiguos. La representación del rol en la interfaz y `AuthContext` también requiere consolidación.
 
 **Acción:** mantener coordinados tipos, métricas, vistas y documentación con la escala 1–10, y definir explícitamente cualquier futura migración de datos.
 
@@ -50,9 +50,9 @@ El servicio del diario persiste `content` en texto legible. El cifrado local es 
 
 ### 5. Validación y despliegue
 
-`.github/workflows/ci.yml` instala dependencias, configura Java 21 y Node 22, ejecuta pruebas de reglas Firestore/Storage en emulador, typecheck, auditoría de dependencias de producción y `npm run build`; todavía no ejecuta pruebas de componentes/servicios. El workflow `deploy.yml` también compila; no contiene un paso de despliegue a Vercel. La integración real y el acceso a deployments deben comprobarse en los paneles.
+`.github/workflows/ci.yml` instala dependencias, configura Java 21 y Node 22, y ejecuta pruebas de reglas Firestore/Storage en emulador, pruebas de API (`test:api`), configuración de índices (`test:config`), métricas (`test:unit`), typecheck, auditoría de dependencias de producción y build. Aún no hay pruebas de componentes de interfaz. El workflow `deploy.yml` también compila; no contiene un paso de despliegue a Vercel. La integración real y el acceso a deployments deben comprobarse en los paneles.
 
-En la revisión anterior del 14 de octubre de 2026, `npm run test:rules` (7 pruebas), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron. El 16 de octubre, tras estos cambios, `npm run typecheck` y `npm run build` volvieron a pasar; `npm run test:rules` no pudo ejecutarse porque el entorno disponible usa Java 8 y Firebase CLI requiere Java 21 o superior. El build reporta avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. `npm audit` completo sigue reportando 15 avisos de desarrollo (7 moderados y 8 altos), por dependencias asociadas principalmente a Vite/Tailwind y Firebase CLI. Las remediaciones sugeridas por npm requieren cambios mayores de toolchain; no se aplicó una actualización forzada.
+En la revisión del 16 de octubre de 2026, `npm run test:api` pasó (6 pruebas), `npm run test:config` pasó (2), `npm run test:unit` pasó (5), `npm run typecheck`, `npm run build` y `npm audit --omit=dev` pasaron (0 vulnerabilidades de producción). `npm run test:rules` no pudo ejecutarse en el entorno local porque el JDK disponible es anterior a Java 21, requisito de Firebase CLI. El build reporta avisos de chunks grandes e importación compartida de jsPDF; no impidieron compilar. El audit completo de dependencias de desarrollo no se volvió a ejecutar en esta revisión.
 
 **Acción pendiente:** incorporar pruebas de componentes/servicios a CI conforme se estabilicen los flujos y planear la actualización del toolchain con pruebas de compatibilidad. La auditoría de producción permanece sin vulnerabilidades conocidas según `npm audit --omit=dev`.
 

@@ -33,7 +33,7 @@ Estado conocido a partir del código del repositorio:
 - Los modelos de datos, especialmente chat y escala de ánimo, todavía requieren consolidación.
 - Las solicitudes activas de IA pasan por una función de servidor en `frontend/api/ai.ts`; sus secretos no se deben exponer mediante variables `VITE_*`.
 - El diario se almacena como texto legible; el cifrado de extremo a extremo descrito en ideas de producto no está implementado.
-- CI ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes/servicios. Consulta la [guía de desarrollo](docs/development/getting-started.md).
+- CI ejecuta pruebas de reglas Firestore/Storage, API, configuración de índices y métricas, además de typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes de interfaz. Consulta la [guía de desarrollo](docs/development/getting-started.md).
 - Las reglas y configuración versionadas no confirman qué está desplegado en Firebase o en el proveedor de hosting.
 
 Consulta el [análisis técnico del proyecto](docs/analysis/project-analysis.md) para el estado y la priorización de trabajo.
@@ -60,4 +60,4 @@ No pongas secretos de servidor en variables `VITE_*`, no despliegues reglas sin 
 
 ## Historial del producto
 
-La rama `backup-version-universitaria` se menciona como referencia de la etapa anterior. Confirma su existencia y estado en GitHub antes de depender de ella como respaldo.
+No se encontró una referencia remota a la rama `backup-version-universitaria`; no dependas de ella como respaldo.

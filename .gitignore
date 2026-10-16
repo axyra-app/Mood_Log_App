@@ -236,3 +236,7 @@ ui-debug.log
 sw.js
 workbox-*.js
 .env*.local
+
+# Local improvement plans (keep private; do not publish)
+/docs/plan/PLAN-DE-MEJORAS.md
+/docs/plan/PLAN DE MEJORA ANTIGRAVITY.md
