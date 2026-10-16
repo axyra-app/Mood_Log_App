@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useMood } from '../hooks/useMood';
 import { moodAnalyzerAgent } from '../services/specializedAgents';
-import { AIRecommendation, MoodAnalysisResult } from '../services/aiService';
+import type { AIRecommendation, MoodAnalysisResult } from '../types/ai';
 import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
 import Logo from '../components/Logo';
 

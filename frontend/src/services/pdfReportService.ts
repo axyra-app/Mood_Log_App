@@ -1,5 +1,6 @@
 // Servicio para generar reportes PDF profesionales
 import jsPDF from 'jspdf';
+import logoUrl from '../assets/Logo_Mood_log_app.png';
 import { moodAnalyzerAgent } from './specializedAgents';
 import { getRealMoodData } from './realDataService';
 import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
@@ -25,11 +26,8 @@ export class PDFReportGenerator {
   private async addHeader(title: string, subtitle: string) {
     try {
       // Intentar cargar el logo como imagen
-      const logoUrl = 'https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png';
-      
       // Crear una imagen del logo
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       
       await new Promise((resolve, reject) => {
         img.onload = resolve;

@@ -46,13 +46,6 @@ export const getFirebaseEnvConfig = () => {
   };
 };
 
-// Función para obtener la configuración de OpenAI
-export const getOpenAIEnvConfig = () => {
-  return {
-    apiKey: getEnvVar('VITE_OPENAI_API_KEY'),
-  };
-};
-
 // Función para verificar si todas las variables de entorno están configuradas
 export const checkRequiredEnvVars = () => {
   const required = [
@@ -62,7 +55,6 @@ export const checkRequiredEnvVars = () => {
     'VITE_FIREBASE_STORAGE_BUCKET',
     'VITE_FIREBASE_MESSAGING_SENDER_ID',
     'VITE_FIREBASE_APP_ID',
-    'VITE_OPENAI_API_KEY',
   ];
 
   const missing = required.filter((key) => !getEnvVar(key));

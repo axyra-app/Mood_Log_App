@@ -27,6 +27,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
   const [emotions, setEmotions] = useState<string[]>(entry?.emotions || []);
   const [aiAnalysis, setAiAnalysis] = useState<any>(entry?.aiAnalysis || null);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
@@ -93,6 +94,11 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
   const handleAnalyze = async () => {
     if (!content.trim()) {
       toast.error('Por favor escribe algo antes de analizar');
+      return;
+    }
+
+    if (!aiDataConsent) {
+      toast.error('Confirma el envío del contenido a Groq antes de solicitar el análisis.');
       return;
     }
 
@@ -166,7 +172,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleAnalyze}
-                disabled={isAnalyzing || !content.trim()}
+                disabled={isAnalyzing || !content.trim() || !aiDataConsent}
                 className="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50 transition-colors"
               >
                 <Sparkles className="w-4 h-4" />
@@ -187,9 +193,6 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="mt-3 text-xs text-gray-500">
-              Si eliges analizar, el contenido se enviará a Groq para generar una respuesta. No incluyas información que no quieras compartir con un proveedor externo.
-            </p>
           </div>
         </div>
 
@@ -198,6 +201,18 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Main Editor - Takes 2 columns */}
             <div className="lg:col-span-2 space-y-6">
+              <label className="flex items-start gap-3 rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
+                <input
+                  type="checkbox"
+                  checked={aiDataConsent}
+                  onChange={(event) => setAiDataConsent(event.target.checked)}
+                  className="mt-1 h-4 w-4 accent-purple-600"
+                />
+                <span>
+                  Entiendo que, si solicito el análisis, el contenido de esta entrada se enviará a Groq para procesarlo. No incluyo información que no quiera compartir con un proveedor externo.
+                </span>
+              </label>
+
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

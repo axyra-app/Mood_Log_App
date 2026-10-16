@@ -1,5 +1,5 @@
 import { getAnalytics } from 'firebase/analytics';
-import { initializeApp } from 'firebase/app';
+import { FirebaseError, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
@@ -11,6 +11,31 @@ const ALLOWED_UPLOAD_TYPES = new Set([
   'image/webp',
   'application/pdf',
 ]);
+const RETRYABLE_STORAGE_ERRORS = new Set([
+  'storage/retry-limit-exceeded',
+  'storage/unknown',
+]);
+
+const getUploadErrorMessage = (error: unknown): string => {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case 'storage/unauthenticated':
+        return 'Tu sesión expiró. Inicia sesión de nuevo para subir el archivo.';
+      case 'storage/unauthorized':
+        return 'No tienes permisos para subir este archivo. Revisa las reglas de Firebase Storage.';
+      case 'storage/quota-exceeded':
+        return 'Se alcanzó el límite de almacenamiento del proyecto.';
+      case 'storage/canceled':
+        return 'La subida del archivo fue cancelada.';
+      default:
+        return `Error de Firebase Storage (${error.code}): ${error.message}`;
+    }
+  }
+
+  return error instanceof Error
+    ? `Error al subir el archivo: ${error.message}`
+    : 'Ocurrió un error inesperado al subir el archivo.';
+};
 
 // Firebase configuration - Production ready
 const firebaseConfig = {
@@ -43,7 +68,6 @@ export const storage = getStorage(app);
 // Initialize Analytics (only in browser environment)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-// Función para subir archivos con retry y mejor manejo de errores
 export const uploadFile = async (file: File, path: string): Promise<string> => {
   const userId = auth.currentUser?.uid;
   if (!userId) {
@@ -64,10 +88,8 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
     throw new Error('La ruta del archivo no es válida.');
   }
 
-  const maxRetries = 3;
-  let retryCount = 0;
-  
-  while (retryCount < maxRetries) {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const storageRef = ref(storage, `users/${userId}/${pathSegments.join('/')}`);
       const metadata = {
@@ -79,35 +101,21 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
       };
       
       const snapshot = await uploadBytes(storageRef, file, metadata);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      return downloadURL;
+      return await getDownloadURL(snapshot.ref);
     } catch (error) {
-      retryCount++;
-      console.error(`❌ Upload attempt ${retryCount} failed:`, error);
-      
-      if (retryCount >= maxRetries) {
-        console.error('❌ All upload attempts failed');
-        console.error('❌ Final error details:', {
-          code: (error as any)?.code,
-          message: (error as any)?.message,
-          serverResponse: (error as any)?.serverResponse,
-          name: (error as any)?.name,
-        });
-        
-        // Si es un error de CORS, sugerir solución alternativa
-        if ((error as any)?.message?.includes('CORS') || (error as any)?.code === 'storage/unauthorized') {
-          throw new Error('Error de CORS: La configuración de Firebase Storage necesita ser actualizada. Contacta al administrador.');
-        }
-        
-        throw new Error(`Error al subir el archivo después de ${maxRetries} intentos: ${(error as any)?.message || 'Error desconocido'}`);
+      const code = error instanceof FirebaseError ? error.code : undefined;
+      const shouldRetry = code !== undefined && RETRYABLE_STORAGE_ERRORS.has(code);
+      console.error('File upload failed', { attempt, code });
+
+      if (!shouldRetry || attempt === maxAttempts) {
+        throw new Error(getUploadErrorMessage(error));
       }
-      
-      // Esperar antes del siguiente intento
-      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
-  
-  throw new Error('Error inesperado en la subida de archivos');
+
+  throw new Error('Error inesperado al subir el archivo.');
 };
 
 export default app;

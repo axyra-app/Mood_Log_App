@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoUrl from '../assets/Logo_Mood_log_app.png';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -8,7 +9,6 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
   const [imageError, setImageError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState('https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png');
 
   const getSizeClasses = () => {
     switch (size) {
@@ -47,16 +47,6 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
   const sizes = getSizeClasses();
 
-  const handleImageError = () => {
-    if (currentSrc === 'https://i.postimg.cc/dDMbXDT2/Logo-Mood-log-app.png') {
-      setCurrentSrc('/Logo_Mood_log_app.png');
-    } else if (currentSrc === '/Logo_Mood_log_app.png') {
-      setCurrentSrc('/favicon.png');
-    } else {
-      setImageError(true);
-    }
-  };
-
   // SVG Logo inline como fallback principal
   const LogoSVG = () => (
     <svg 
@@ -84,10 +74,10 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
       {/* Logo Image with fallback */}
       {!imageError ? (
         <img
-          src={currentSrc}
+          src={logoUrl}
           alt="Mood Log App Logo"
           className={`${sizes.image} rounded-lg flex-shrink-0`}
-          onError={handleImageError}
+          onError={() => setImageError(true)}
         />
       ) : (
         // Fallback: SVG inline logo
