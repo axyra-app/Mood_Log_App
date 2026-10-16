@@ -13,6 +13,88 @@ interface AiRequest {
   moodData?: unknown;
 }
 
+interface FirebaseAdminCredentials {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+}
+
+type FirebaseAdminConfigurationErrorCode =
+  | 'missing-credentials'
+  | 'invalid-json'
+  | 'invalid-credentials'
+  | 'project-mismatch';
+
+class FirebaseAdminConfigurationError extends Error {
+  readonly code: FirebaseAdminConfigurationErrorCode;
+
+  constructor(code: FirebaseAdminConfigurationErrorCode, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+export const parseFirebaseAdminCredentials = (
+  serviceAccountValue: string | undefined,
+  configuredProjectId: string | undefined,
+): FirebaseAdminCredentials => {
+  const rawValue = serviceAccountValue?.trim();
+  if (!rawValue) {
+    throw new FirebaseAdminConfigurationError(
+      'missing-credentials',
+      'Falta FIREBASE_SERVICE_ACCOUNT_JSON en la configuración del servidor.',
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawValue);
+    if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+  } catch {
+    throw new FirebaseAdminConfigurationError(
+      'invalid-json',
+      'FIREBASE_SERVICE_ACCOUNT_JSON debe contener el JSON completo de una cuenta de servicio.',
+    );
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new FirebaseAdminConfigurationError(
+      'invalid-credentials',
+      'FIREBASE_SERVICE_ACCOUNT_JSON no contiene una cuenta de servicio válida.',
+    );
+  }
+
+  const account = parsed as Record<string, unknown>;
+  const credentialProjectId = typeof account.project_id === 'string' ? account.project_id.trim() : '';
+  const projectId = configuredProjectId?.trim() || credentialProjectId;
+  const clientEmail = typeof account.client_email === 'string' ? account.client_email.trim() : '';
+  const privateKey = typeof account.private_key === 'string'
+    ? account.private_key.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').trim()
+    : '';
+
+  if (
+    !projectId
+    || !credentialProjectId
+    || !clientEmail
+    || !privateKey.includes('-----BEGIN PRIVATE KEY-----')
+    || !privateKey.includes('-----END PRIVATE KEY-----')
+  ) {
+    throw new FirebaseAdminConfigurationError(
+      'invalid-credentials',
+      'La cuenta de servicio está incompleta o su clave privada no tiene un formato PEM válido.',
+    );
+  }
+
+  if (configuredProjectId?.trim() && configuredProjectId.trim() !== credentialProjectId) {
+    throw new FirebaseAdminConfigurationError(
+      'project-mismatch',
+      'FIREBASE_PROJECT_ID no coincide con el proyecto de la cuenta de servicio.',
+    );
+  }
+
+  return { projectId, clientEmail, privateKey };
+};
+
 const assistantPrompts: Record<AssistantId, string> = {
   mia: `Eres MIA, una asistente de IA centrada en acompañar la autorreflexión sobre el estado de ánimo. Escucha con calidez y sin juzgar; ayuda a la persona a identificar y expresar sus emociones, explorar qué necesita en este momento y considerar un pequeño paso cotidiano que cuide su bienestar. Mantén las respuestas breves y conversacionales, haz una pregunta abierta cada vez y no presupongas causas ni sentimientos que la persona no haya mencionado. No afirmes tener formación o experiencia profesional, no diagnostiques ni recomiendes tratamientos. No presentes tus respuestas como atención clínica o asesoría médica. Si la persona describe peligro inmediato o una emergencia, anímala a contactar los servicios de emergencia locales y a una persona de confianza.`,
   reflection: `Eres una guía de IA para autorreflexión. Ayuda a la persona a explorar una situación mediante preguntas abiertas, identificar perspectivas y pensar en pequeños pasos prácticos. Mantén un tono respetuoso y evita juicios. No afirmes tener formación o experiencia profesional, no diagnostiques, no recomiendes tratamientos ni presentes tus respuestas como atención clínica o asesoría médica. Si la persona describe peligro inmediato o una emergencia, anímala a contactar los servicios de emergencia locales y a una persona de confianza.`,
@@ -34,6 +116,16 @@ const jsonResponse = (status: number, body: unknown, headers: HeadersInit = {}):
 const sendError = (status: number, message: string, headers: HeadersInit = {}): Response =>
   jsonResponse(status, { error: message }, headers);
 
+const getSafeErrorCode = (error: unknown): string => {
+  if (!error || typeof error !== 'object' || !('code' in error)) {
+    return error instanceof Error ? error.name : 'UnknownError';
+  }
+  const code = error.code;
+  return typeof code === 'string' && /^[A-Za-z0-9/_-]{1,80}$/.test(code)
+    ? code
+    : error instanceof Error ? error.name : 'UnknownError';
+};
+
 const parseBody = (body: unknown): AiRequest | null => {
   if (typeof body === 'string') {
     try {
@@ -51,20 +143,19 @@ const parseBody = (body: unknown): AiRequest | null => {
 };
 
 const getAdminServices = async () => {
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (!serviceAccountJson) {
-    throw new Error('Missing Firebase Admin credentials.');
-  }
+  const credentials = parseFirebaseAdminCredentials(
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
+    process.env.FIREBASE_PROJECT_ID,
+  );
 
   const [appModule, authModule, firestoreModule] = await Promise.all([
     import('firebase-admin/app'),
     import('firebase-admin/auth'),
     import('firebase-admin/firestore'),
   ]);
-  const credentials = JSON.parse(serviceAccountJson);
   const app = appModule.getApps()[0] ?? appModule.initializeApp({
     credential: appModule.cert(credentials),
-    projectId: process.env.FIREBASE_PROJECT_ID || credentials.project_id,
+    projectId: credentials.projectId,
   });
 
   return {
@@ -207,7 +298,7 @@ export default {
       return sendError(413, 'La solicitud supera el tamaño permitido.');
     }
     const body = parseBody(rawBody);
-    if (!process.env.GROQ_API_KEY || !process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    if (!process.env.GROQ_API_KEY) {
       return sendError(503, 'El servicio de IA aún no está configurado.');
     }
 
@@ -215,10 +306,14 @@ export default {
     try {
       services = await getAdminServices();
     } catch (error) {
-      console.error('AI service initialization failed:', error instanceof Error ? error.name : 'UnknownError');
+      if (error instanceof FirebaseAdminConfigurationError) {
+        console.error('AI service configuration failed:', error.code);
+        return sendError(503, error.message);
+      }
+      console.error('AI service initialization failed:', getSafeErrorCode(error));
       return sendError(
         503,
-        'No se pudo inicializar Firebase Admin. Verifica FIREBASE_SERVICE_ACCOUNT_JSON y FIREBASE_PROJECT_ID en Vercel.',
+        'No se pudo iniciar Firebase Admin. Revisa los logs de la función en Vercel; no compartas claves ni credenciales.',
       );
     }
 
@@ -233,8 +328,13 @@ export default {
     let uid: string;
     try {
       uid = (await services.auth.verifyIdToken(token, true)).uid;
-    } catch {
-      return sendError(401, 'La sesión no es válida. Inicia sesión nuevamente.');
+    } catch (error) {
+      const errorCode = getSafeErrorCode(error);
+      if (/^auth\/(argument-error|id-token-expired|invalid-id-token|id-token-revoked|user-disabled|user-not-found)$/.test(errorCode)) {
+        return sendError(401, 'La sesión no es válida. Inicia sesión nuevamente.');
+      }
+      console.error('AI authentication service failed:', errorCode);
+      return sendError(503, 'No se pudo validar la sesión con Firebase Authentication.');
     }
 
     if (!body || !['chat', 'journal-analysis', 'mood-analysis'].includes(String(body.task))) {
@@ -246,17 +346,28 @@ export default {
       return sendError(400, 'Los datos enviados no son válidos o superan el límite permitido.');
     }
 
+    let hasQuota: boolean;
     try {
-      if (!(await consumeDailyQuota(uid, services.firestore, services.fieldValue))) {
-        return sendError(429, 'Alcanzaste el límite diario de solicitudes de IA. Inténtalo mañana.');
-      }
+      hasQuota = await consumeDailyQuota(uid, services.firestore, services.fieldValue);
+    } catch (error) {
+      console.error('AI quota check failed:', getSafeErrorCode(error));
+      return sendError(
+        503,
+        'No se pudo comprobar el límite de uso en Firestore. Verifica los permisos de Firestore de la cuenta de servicio.',
+      );
+    }
+    if (!hasQuota) {
+      return sendError(429, 'Alcanzaste el límite diario de solicitudes de IA. Inténtalo mañana.');
+    }
+
+    try {
       const result = await requestGroq(task, body);
       if (result === null) {
         return sendError(400, 'Los datos enviados no son válidos o superan el límite permitido.');
       }
       return jsonResponse(200, { result });
     } catch (error) {
-      console.error('AI request failed:', error instanceof Error ? error.name : 'UnknownError');
+      console.error('AI provider request failed:', getSafeErrorCode(error));
       return sendError(503, 'No fue posible completar el análisis de IA. Inténtalo de nuevo más tarde.');
     }
   }

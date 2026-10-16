@@ -36,6 +36,11 @@ jobs:
           cd frontend
           npm run test:rules
 
+      - name: Test Firebase Admin configuration parsing
+        run: |
+          cd frontend
+          npm run test:api
+
       - name: Typecheck application
         run: |
           cd frontend

@@ -1,4 +1,5 @@
 import {
+  Timestamp,
   addDoc,
   collection,
   deleteDoc,
@@ -15,7 +16,6 @@ import {
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import { requestAi } from './aiApi';
 import { db } from './firebase';
-import { initializeDefaultJournalData } from './journalDefaultData';
 
 // Journal Entry Service
 export const createJournalEntry = async (
@@ -150,7 +150,13 @@ export const getJournalEntriesByDateRange = async (
 ): Promise<JournalEntry[]> => {
   try {
     const journalRef = collection(db, 'journalEntries');
-    const journalQuery = query(journalRef, where('userId', '==', userId));
+    const journalQuery = query(
+      journalRef,
+      where('userId', '==', userId),
+      where('date', '>=', Timestamp.fromDate(startDate)),
+      where('date', '<=', Timestamp.fromDate(endDate)),
+      orderBy('date', 'desc'),
+    );
     const snapshot = await getDocs(journalQuery);
 
     return snapshot.docs
@@ -175,9 +181,7 @@ export const getJournalEntriesByDateRange = async (
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
         };
-      })
-      .filter((entry) => entry.date >= startDate && entry.date <= endDate)
-      .sort((first, second) => second.date.getTime() - first.date.getTime());
+      });
   } catch (error) {
     console.error('Error getting journal entries for the requested period:', error);
     throw error;
@@ -242,28 +246,7 @@ export const getJournalTemplates = async (): Promise<JournalTemplate[]> => {
       });
     });
 
-    // Si no hay plantillas, inicializar datos por defecto
-    if (templates.length === 0) {
-      await initializeDefaultJournalData();
-      // Recargar después de inicializar
-      const newQuerySnapshot = await getDocs(q);
-      newQuerySnapshot.forEach((doc) => {
-        const data = doc.data();
-        templates.push({
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          content: data.content,
-          tags: data.tags || [],
-          category: data.category,
-          isDefault: data.isDefault || false,
-          createdBy: data.createdBy,
-          createdAt: data.createdAt?.toDate() || new Date(),
-        });
-      });
-    }
-
-    return templates;
+    return templates.length ? templates : getDefaultTemplates();
   } catch (error) {
     console.error('Error getting journal templates:', error);
     throw error;
@@ -296,26 +279,10 @@ export const getJournalPrompts = async (category?: string): Promise<JournalPromp
       });
     });
 
-    // Si no hay prompts, inicializar datos por defecto
-    if (prompts.length === 0) {
-      await initializeDefaultJournalData();
-      // Recargar después de inicializar
-      const newQuerySnapshot = await getDocs(q);
-      newQuerySnapshot.forEach((doc) => {
-        const data = doc.data();
-        prompts.push({
-          id: doc.id,
-          title: data.title,
-          content: data.content,
-          category: data.category,
-          difficulty: data.difficulty,
-          estimatedTime: data.estimatedTime,
-          tags: data.tags || [],
-        });
-      });
-    }
-
-    return prompts;
+    const availablePrompts = prompts.length ? prompts : getDefaultPrompts();
+    return category
+      ? availablePrompts.filter((prompt) => prompt.category === category)
+      : availablePrompts;
   } catch (error) {
     console.error('Error getting journal prompts:', error);
     throw error;

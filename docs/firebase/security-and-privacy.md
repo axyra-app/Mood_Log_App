@@ -21,7 +21,7 @@ Esta página describe los archivos de reglas y el código local revisados. **No 
 
 1. Las reglas de propiedad/rol y creación de `statistics` tienen ahora cobertura automatizada en `frontend/tests/security/firestore-rules.test.mjs`; ejecuta `cd frontend && npm run test:rules`. Esto valida las reglas versionadas en el emulador, no las reglas desplegadas en Firebase.
 2. Las colecciones de chat persistente (`chats`, `messages`, `chatSessions` y `chatMessages`), `typing`, `crisisAssessments` y `crisisAlerts` no están permitidas por las reglas locales.
-3. La inicialización desde cliente de plantillas/prompts no está permitida: las reglas solo conceden lectura.
+3. Las plantillas y prompts solo se leen desde Firestore; cuando no hay documentos, los valores predeterminados se sirven localmente y no se intenta escribir desde el cliente.
 4. Las reglas no son un esquema completo: faltan validaciones de campos, tipos, límites y estados permitidos. Consultas Firestore también deben limitarse para que la regla pueda probar el propietario de cada documento.
 5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. Hay pruebas con UID propio/ajeno/anónimo, tipo no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
 
