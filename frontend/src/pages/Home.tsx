@@ -165,7 +165,7 @@ const Home: React.FC = () => {
               </div>
               <h3 className='text-xl font-bold text-gray-900 mb-2'>Privacidad No Negociable</h3>
               <p className='text-gray-600 text-sm sm:text-base leading-relaxed'>
-                Reglas de acceso cerradas: tus registros íntimos solo pueden ser leídos por ti. Tus datos no se comparten con terceros.
+                Tus registros están protegidos en tu cuenta. Al usar funciones de IA, el contenido necesario se envía a Groq; para analizar tus registros, la aplicación solicita tu consentimiento antes de enviarlos.
               </p>
             </div>
           </div>
