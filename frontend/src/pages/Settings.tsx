@@ -477,7 +477,7 @@ const Settings: React.FC = () => {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/edit-profile')}
+                onClick={() => navigate('/profile')}
                 className='px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2'
               >
                 <User className='w-4 h-4' />
