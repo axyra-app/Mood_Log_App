@@ -73,6 +73,8 @@ Estos asistentes no son profesionales de salud, no proporcionan atención clíni
 
 Rutas protegidas para información personal y preferencias. El correo de acceso se muestra como no editable en el perfil porque cambiarlo requiere una operación de Firebase Authentication distinta de actualizar el documento del perfil. Las pantallas cargan los datos de Firestore; si falla esa lectura, muestran un error y no permiten guardar formularios vacíos. Las preferencias se guardan en `users/{uid}`, pero las opciones de notificación push y correo aún no envían avisos ni mensajes. El cambio de contraseña aplica a cuentas de correo/contraseña; cuentas de Google se administran desde Google. Fotos y archivos siguen pendientes.
 
+En Configuración, **Exportar mis datos** descarga un JSON con los datos propios permitidos por las reglas actuales de Firestore. El historial de MIA no forma parte del archivo porque no se persiste en la cuenta.
+
 ### Privacidad y términos (`/privacy`, `/terms`)
 
 Páginas públicas de información legal. Su redacción debe revisarse contra el comportamiento real, proveedores y jurisdicciones antes de usar la aplicación con público.

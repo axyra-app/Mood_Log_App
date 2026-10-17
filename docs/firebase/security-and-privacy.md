@@ -18,6 +18,10 @@ Esta página describe los archivos de reglas y el código revisado. El propietar
 - `journalTemplates` y `journalPrompts`: lectura disponible para usuarios autenticados.
 - Cualquier colección no listada: denegada por la regla final.
 
+### Exportación de datos
+
+La pantalla `/settings` permite descargar un archivo JSON de los datos que las reglas actuales hacen legibles para el usuario autenticado: perfil, documento `userSettings` y documentos propios de `moodLogs`, `journalEntries`, `notifications`, `advancedReports`, `statistics` y `reminders`. Las consultas por colección filtran por UID y recorren páginas de 500 documentos; no modifican Firestore. Las marcas de tiempo se serializan como fechas ISO. La exportación no incluye el contador interno `aiUsage` (solo accesible al backend) ni historial de chat de MIA (no persistido). Las colecciones heredadas denegadas por las reglas, incluida `crisisAssessments`, no son exportables desde este flujo.
+
 ### Limitaciones y estado de validación
 
 1. La suite `frontend/tests/security/firestore-rules.test.mjs` contiene 22 pruebas de reglas para perfiles, ánimo, diario, notificaciones, ajustes, reportes/recordatorios, plantillas/prompts y Storage, con operaciones permitidas/denegadas y validaciones de campos. Ejecuta `cd frontend && npm run test:rules`. Esto valida las reglas versionadas en el emulador, no las reglas desplegadas en Firebase.

@@ -4,7 +4,7 @@ import {
   updatePassword,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { Bell, Clock, Eye, EyeOff, Globe, Info, Lock, Mail, Moon, Save, Shield, Sun, User } from 'lucide-react';
+import { Bell, Clock, Download, Eye, EyeOff, Globe, Info, Lock, Mail, Moon, Save, Shield, Sun, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { auth, db } from '../services/firebase';
+import { exportUserData } from '../services/userDataExportService';
 
 type SettingsState = {
   notifications: boolean;
@@ -36,6 +37,7 @@ const Settings: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [settingsLoadError, setSettingsLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
 
   const currentUser = auth.currentUser;
   const isGoogleUser = currentUser?.providerData?.some((p) => p.providerId === 'google.com') ?? false;
@@ -233,6 +235,33 @@ const Settings: React.FC = () => {
       navigate('/');
     } catch (error) {
       console.error('Error logging out:', error);
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para exportar tus datos.');
+      return;
+    }
+
+    setExportingData(true);
+    try {
+      const dataExport = await exportUserData(user.uid, user.email ?? null, user.displayName ?? null);
+      const file = new Blob([JSON.stringify(dataExport, null, 2)], { type: 'application/json' });
+      const downloadUrl = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `mood-log-datos-${dataExport.exportedAt.slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+      toast.success('Tus datos se descargaron correctamente.');
+    } catch (error) {
+      console.error('Error exporting user data:', error);
+      toast.error('No se pudieron exportar tus datos. Revisa tu conexión e inténtalo de nuevo.');
+    } finally {
+      setExportingData(false);
     }
   };
 
@@ -654,6 +683,35 @@ const Settings: React.FC = () => {
               </button>
             </div>
           </div>
+
+          <section className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className='flex items-center space-x-3 mb-4'>
+              <div className={`w-10 h-10 ${isDarkMode ? 'bg-emerald-900' : 'bg-emerald-100'} rounded-lg flex items-center justify-center`}>
+                <Download className={`w-5 h-5 ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`} />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Exportar mis datos
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Descarga una copia JSON de tu perfil, preferencias, registros de ánimo, diario y demás datos guardados.
+                </p>
+              </div>
+            </div>
+            <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              No incluye el historial de MIA, que no se guarda, datos técnicos internos ni colecciones que las reglas
+              actuales no permiten exportar.
+            </p>
+            <button
+              type='button'
+              onClick={handleExportData}
+              disabled={exportingData || !user}
+              className='inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50'
+            >
+              <Download className='h-4 w-4' />
+              <span>{exportingData ? 'Preparando exportación…' : 'Descargar mis datos'}</span>
+            </button>
+          </section>
 
           {/* Información del Sistema */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
