@@ -11,8 +11,12 @@ Esta guía describe la configuración versionada. No se verificó acceso a los p
 - Build: `npm run build`
 - Directorio de salida: `dist`
 - Reescritura de rutas SPA hacia `/index.html`
+- Cabeceras globales contra MIME sniffing, framing y filtración de referrer; deshabilita cámara, micrófono y geolocalización, y activa HSTS.
+- Una CSP en modo `Content-Security-Policy-Report-Only`, que **no bloquea** recursos mientras se comprueba compatibilidad con Firebase, Google Sign-In, Analytics y la PWA.
 
 El proyecto debe instalar dependencias desde `frontend/` y usar esa carpeta como raíz de aplicación si Vercel no está configurado ya para hacerlo. El archivo no prueba la configuración activa del panel ni que el sitio sea privado.
+
+Antes de pasar CSP a modo de bloqueo, publicar primero en un Preview de Vercel y revisar violaciones en la consola del navegador con los recorridos de login/Google, Firestore, Storage, IA, Analytics y PWA. El modo actual no envía reportes a un colector remoto; no se debe cambiar a `Content-Security-Policy` hasta validar los orígenes requeridos y decidir cómo recopilar reportes sin guardar datos sensibles.
 
 `.github/workflows/ci.yml` instala dependencias con Node.js 22 y Java 21, ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build. Aún no ejecuta pruebas de componentes/servicios. `.github/workflows/deploy.yml` se denomina Deploy to Production, pero su trabajo ejecuta build y termina indicando que Vercel realiza el despliegue; **no contiene un paso de despliegue a Vercel**. Confirma la integración GitHub–Vercel, rama de producción, previews y controles de acceso en el panel.
 
