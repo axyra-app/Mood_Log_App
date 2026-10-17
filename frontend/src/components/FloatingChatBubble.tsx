@@ -44,6 +44,20 @@ const FloatingChatBubble: React.FC = () => {
     if (isOpen && !isMinimized) inputRef.current?.focus();
   }, [isOpen, isMinimized]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        setIsMinimized(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
   const handleSendMessage = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     const userMessage = message.trim();
@@ -89,8 +103,16 @@ const FloatingChatBubble: React.FC = () => {
 
   if (!user) return null;
 
+  const isMobileSheetOpen = isOpen && !isMinimized;
+
   return (
-    <div className='fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 sm:right-6 z-40'>
+    <div
+      className={
+        isMobileSheetOpen
+          ? 'fixed inset-0 z-50 flex items-end bg-gray-950/35 sm:inset-auto sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:block sm:bg-transparent'
+          : 'fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 sm:right-6'
+      }
+    >
       {!isOpen ? (
         <button
           type='button'
@@ -108,14 +130,25 @@ const FloatingChatBubble: React.FC = () => {
           <MessageCircle className='ml-1 h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5' aria-hidden='true' />
         </button>
       ) : (
-        <section
-          aria-label='Chat con MIA'
-          className={`flex w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden rounded-3xl border shadow-2xl shadow-gray-950/20 ${
-            isMinimized ? 'h-auto' : 'h-[min(640px,calc(100dvh-6rem))]'
-          } ${
-            isDarkMode ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-white text-gray-900'
-          }`}
-        >
+        <>
+          {isMobileSheetOpen && (
+            <button
+              type='button'
+              aria-label='Cerrar chat'
+              onClick={() => setIsOpen(false)}
+              className='absolute inset-0 sm:hidden'
+            />
+          )}
+          <section
+            aria-label='Chat con MIA'
+            className={`relative z-10 flex w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden border shadow-2xl shadow-gray-950/20 ${
+              isMinimized
+                ? 'h-auto rounded-3xl'
+                : 'h-[min(78dvh,680px)] w-full max-w-none rounded-t-3xl rounded-b-none sm:h-[min(640px,calc(100dvh-6rem))] sm:w-[calc(100vw-2rem)] sm:max-w-[390px] sm:rounded-3xl'
+            } ${
+              isDarkMode ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-white text-gray-900'
+            }`}
+          >
           <header className='relative flex items-center justify-between bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-4 text-white'>
             <div className='absolute inset-x-0 top-0 h-px bg-white/30' />
             <div className='flex min-w-0 items-center gap-3'>
@@ -158,7 +191,7 @@ const FloatingChatBubble: React.FC = () => {
           {!isMinimized && (
             <>
               <div
-                className={`flex items-start gap-2 border-b px-4 py-2.5 text-[11px] leading-relaxed ${
+                className={`flex items-start gap-2 border-b px-4 py-2 text-[11px] leading-relaxed ${
                   isDarkMode
                     ? 'border-gray-800 bg-gray-950/60 text-gray-400'
                     : 'border-violet-100 bg-violet-50/70 text-gray-600'
@@ -244,7 +277,7 @@ const FloatingChatBubble: React.FC = () => {
 
               <form
                 onSubmit={(event) => void handleSendMessage(event)}
-                className={`border-t px-3 pb-3 pt-3 ${isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}
+                className={`border-t px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 ${isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}
               >
                 <div className={`flex items-end gap-2 rounded-2xl border p-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 ${
                   isDarkMode ? 'border-gray-700 bg-gray-800 focus-within:ring-violet-900/40' : 'border-gray-200 bg-gray-50'
@@ -277,7 +310,8 @@ const FloatingChatBubble: React.FC = () => {
               </form>
             </>
           )}
-        </section>
+          </section>
+        </>
       )}
     </div>
   );
