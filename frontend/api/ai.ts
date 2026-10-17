@@ -4,7 +4,7 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
 const MAX_REQUEST_BYTES = 24_000;
 const MAX_DAILY_REQUESTS = 40;
-const MODEL = 'llama-3.1-8b-instant';
+const MODEL = 'openai/gpt-oss-20b';
 
 type AssistantId = 'mia' | 'reflection';
 type AiTask = 'chat' | 'journal-analysis' | 'mood-analysis';
