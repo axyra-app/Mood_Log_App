@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { auth, db } from '../services/firebase';
 import { exportUserData } from '../services/userDataExportService';
+import { deleteCurrentAccount } from '../services/accountDeletionService';
 
 type SettingsState = {
   notifications: boolean;
@@ -30,6 +31,8 @@ type EmailSettingsState = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const accountDeletionEnabled = import.meta.env.VITE_ACCOUNT_DELETION_ENABLED === 'true';
+
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
   const { isDarkMode, setDarkMode } = useTheme();
@@ -38,9 +41,15 @@ const Settings: React.FC = () => {
   const [settingsLoadError, setSettingsLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [exportingData, setExportingData] = useState(false);
+  const [deletionDialogOpen, setDeletionDialogOpen] = useState(false);
+  const [deletionConfirmation, setDeletionConfirmation] = useState('');
+  const [deletionPassword, setDeletionPassword] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const currentUser = auth.currentUser;
   const isGoogleUser = currentUser?.providerData?.some((p) => p.providerId === 'google.com') ?? false;
+  const hasPasswordProvider = currentUser?.providerData.some((p) => p.providerId === 'password') ?? false;
+  const canReauthenticateForDeletion = isGoogleUser || hasPasswordProvider;
 
   // Estados para configuración
   const [settings, setSettings] = useState<SettingsState>({
@@ -262,6 +271,30 @@ const Settings: React.FC = () => {
       toast.error('No se pudieron exportar tus datos. Revisa tu conexión e inténtalo de nuevo.');
     } finally {
       setExportingData(false);
+    }
+  };
+
+  const handleDeleteAccount = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user || deletionConfirmation !== 'ELIMINAR') {
+      toast.error('Escribe ELIMINAR para confirmar la eliminación de la cuenta.');
+      return;
+    }
+    if (hasPasswordProvider && !deletionPassword) {
+      toast.error('Escribe tu contraseña actual para verificar tu identidad.');
+      return;
+    }
+
+    setDeletingAccount(true);
+    try {
+      await deleteCurrentAccount(deletionPassword || undefined);
+      toast.success('La cuenta y sus datos de Mood Log se eliminaron correctamente.');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error(error instanceof Error ? error.message : 'No se pudo eliminar la cuenta.');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -711,6 +744,109 @@ const Settings: React.FC = () => {
               <Download className='h-4 w-4' />
               <span>{exportingData ? 'Preparando exportación…' : 'Descargar mis datos'}</span>
             </button>
+          </section>
+
+          <section className={`${isDarkMode ? 'border-red-900 bg-gray-800' : 'border-red-200 bg-white'} rounded-xl border p-6 shadow-sm`}>
+            <div className='flex items-start gap-3'>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isDarkMode ? 'bg-red-950' : 'bg-red-50'}`}>
+                <Shield className={`h-5 w-5 ${isDarkMode ? 'text-red-300' : 'text-red-600'}`} />
+              </div>
+              <div className='min-w-0 flex-1'>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Eliminar cuenta y datos
+                </h3>
+                <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Borra permanentemente tu cuenta de Mood Log, perfil, registros, diario, preferencias y archivos privados guardados por la aplicación.
+                </p>
+                <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Esta acción no se puede deshacer. Los datos que hayas enviado a proveedores externos de IA pueden estar sujetos a sus propias políticas de conservación.
+                </p>
+                {!canReauthenticateForDeletion && (
+                  <p role='note' className={`mt-3 text-sm ${isDarkMode ? 'text-amber-200' : 'text-amber-800'}`}>
+                    La verificación segura para tu método de acceso aún no está disponible. Contacta soporte para eliminar tu cuenta.
+                  </p>
+                )}
+                {!accountDeletionEnabled && (
+                  <p role='note' className={`mt-3 text-sm ${isDarkMode ? 'text-amber-200' : 'text-amber-800'}`}>
+                    La eliminación está temporalmente deshabilitada mientras se valida la configuración segura del servicio.
+                  </p>
+                )}
+                {!deletionDialogOpen ? (
+                  <button
+                    type='button'
+                    onClick={() => setDeletionDialogOpen(true)}
+                    disabled={!accountDeletionEnabled || !user || !canReauthenticateForDeletion}
+                    className='mt-4 rounded-lg border border-red-600 px-4 py-2 font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-300 dark:hover:bg-red-950/40'
+                  >
+                    Eliminar mi cuenta
+                  </button>
+                ) : (
+                  <form onSubmit={handleDeleteAccount} className={`mt-5 space-y-4 rounded-lg border p-4 ${isDarkMode ? 'border-gray-700 bg-gray-900/60' : 'border-gray-200 bg-gray-50'}`}>
+                    <div role='alert' className={`text-sm font-medium ${isDarkMode ? 'text-red-200' : 'text-red-800'}`}>
+                      Se eliminarán de forma permanente tu cuenta y los datos de Mood Log. No podrás recuperarlos.
+                    </div>
+                    {hasPasswordProvider && (
+                      <div>
+                        <label htmlFor='delete-account-password' className={`mb-1 block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                          Confirma tu contraseña actual
+                        </label>
+                        <input
+                          id='delete-account-password'
+                          type='password'
+                          autoComplete='current-password'
+                          required
+                          value={deletionPassword}
+                          onChange={(event) => setDeletionPassword(event.target.value)}
+                          disabled={deletingAccount}
+                          className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'}`}
+                        />
+                      </div>
+                    )}
+                    {isGoogleUser && !hasPasswordProvider && (
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Al confirmar, Google te pedirá verificar tu identidad.
+                      </p>
+                    )}
+                    <div>
+                      <label htmlFor='delete-account-confirmation' className={`mb-1 block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                        Escribe <span className='font-bold'>ELIMINAR</span> para habilitar la acción
+                      </label>
+                      <input
+                        id='delete-account-confirmation'
+                        type='text'
+                        autoComplete='off'
+                        required
+                        value={deletionConfirmation}
+                        onChange={(event) => setDeletionConfirmation(event.target.value)}
+                        disabled={deletingAccount}
+                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'}`}
+                      />
+                    </div>
+                    <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setDeletionDialogOpen(false);
+                          setDeletionConfirmation('');
+                          setDeletionPassword('');
+                        }}
+                        disabled={deletingAccount}
+                        className={`rounded-lg px-4 py-2 font-medium ${isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'} disabled:opacity-50`}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type='submit'
+                        disabled={deletingAccount || deletionConfirmation !== 'ELIMINAR' || (hasPasswordProvider && !deletionPassword)}
+                        className='rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50'
+                      >
+                        {deletingAccount ? 'Eliminando datos…' : 'Verificar y eliminar definitivamente'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
           </section>
 
           {/* Información del Sistema */}

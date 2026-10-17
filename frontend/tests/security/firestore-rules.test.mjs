@@ -111,6 +111,41 @@ test("owners can create and update mood and journal documents without changing o
   await assertSucceeds(deleteDoc(doc(ownerDb, "journalEntries/journal-a")));
 });
 
+test("a pending account deletion blocks new writes while preserving read access", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, `accountDeletionRequests/${ownerId}`), { requestedAt: new Date() });
+    await setDoc(doc(db, `users/${ownerId}`), { role: "user", displayName: "Owner" });
+    await setDoc(doc(db, `userSettings/${ownerId}`), { userId: ownerId, version: 1 });
+    await setDoc(doc(db, "moodLogs/mood-a"), validMoodLog(ownerId));
+    await setDoc(doc(db, "journalEntries/journal-a"), validJournalEntry(ownerId));
+    await setDoc(doc(db, "notifications/notification-a"), {
+      userId: ownerId,
+      type: "general",
+      title: "Test",
+      message: "Test notification",
+      isRead: false,
+    });
+    await setDoc(doc(db, "advancedReports/report-a"), { userId: ownerId, status: "ready" });
+    await setDoc(doc(db, "statistics/stat-a"), { userId: ownerId, averageMood: 4 });
+    await setDoc(doc(db, "reminders/reminder-a"), { userId: ownerId, title: "Test" });
+  });
+
+  const ownerDb = authenticatedDb(ownerId);
+  await assertSucceeds(getDoc(doc(ownerDb, "moodLogs/mood-a")));
+  await assertFails(updateDoc(doc(ownerDb, `users/${ownerId}`), { displayName: "Changed" }));
+  await assertFails(updateDoc(doc(ownerDb, `userSettings/${ownerId}`), { version: 2 }));
+  await assertFails(setDoc(doc(ownerDb, "moodLogs/mood-new"), validMoodLog(ownerId)));
+  await assertFails(updateDoc(doc(ownerDb, "moodLogs/mood-a"), { mood: 6 }));
+  await assertFails(setDoc(doc(ownerDb, "journalEntries/journal-new"), validJournalEntry(ownerId)));
+  await assertFails(updateDoc(doc(ownerDb, "journalEntries/journal-a"), { content: "Changed" }));
+  await assertFails(updateDoc(doc(ownerDb, "notifications/notification-a"), { isRead: true }));
+  await assertFails(updateDoc(doc(ownerDb, "advancedReports/report-a"), { status: "changed" }));
+  await assertFails(updateDoc(doc(ownerDb, "statistics/stat-a"), { averageMood: 5 }));
+  await assertFails(updateDoc(doc(ownerDb, "reminders/reminder-a"), { title: "Changed" }));
+  await assertFails(setDoc(doc(ownerDb, "accountDeletionRequests/another-marker"), { requestedAt: new Date() }));
+});
+
 test("mood logs reject scores outside 1 through 10", async () => {
   const ownerDb = authenticatedDb(ownerId);
   await assertFails(setDoc(doc(ownerDb, "moodLogs/zero"), validMoodLog(ownerId, { mood: 0 })));

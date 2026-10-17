@@ -133,6 +133,14 @@ const getSafeErrorCode = (error: unknown): string => {
 export const isInvalidFirebaseIdTokenError = (errorCode: string): boolean =>
   /^auth\/(argument-error|id-token-expired|invalid-id-token|id-token-revoked|user-disabled|user-not-found)$/.test(errorCode);
 
+export const hasPendingAccountDeletion = async (
+  firestore: Awaited<ReturnType<typeof getAdminServices>>['firestore'],
+  uid: string,
+): Promise<boolean> => {
+  const deletionRequest = await firestore.collection('accountDeletionRequests').doc(uid).get();
+  return deletionRequest.exists;
+};
+
 const parseBody = (body: unknown): AiRequest | null => {
   if (typeof body === 'string') {
     try {
@@ -345,6 +353,15 @@ export default {
 
     if (!body || !['chat', 'journal-analysis', 'mood-analysis'].includes(String(body.task))) {
       return sendError(400, 'La solicitud de IA no es válida.');
+    }
+
+    try {
+      if (await hasPendingAccountDeletion(services.firestore, uid)) {
+        return sendError(403, 'La cuenta está en proceso de eliminación.');
+      }
+    } catch (error) {
+      console.error('AI account deletion status check failed:', getSafeErrorCode(error));
+      return sendError(503, 'No se pudo comprobar el estado de la cuenta. Inténtalo de nuevo.');
     }
 
     const task = body.task as AiTask;

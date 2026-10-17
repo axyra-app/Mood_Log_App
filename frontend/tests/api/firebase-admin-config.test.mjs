@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  hasPendingAccountDeletion,
   isInvalidFirebaseIdTokenError,
   parseFirebaseAdminCredentials,
 } from '../../api/ai.ts';
@@ -61,4 +62,25 @@ test('classifies invalid or expired Firebase ID tokens as client authentication 
 test('does not classify Firebase service permission failures as invalid user tokens', () => {
   assert.equal(isInvalidFirebaseIdTokenError('auth/insufficient-permission'), false);
   assert.equal(isInvalidFirebaseIdTokenError('auth/internal-error'), false);
+});
+
+test('checks the private deletion marker before allowing new AI work', async () => {
+  const reads = [];
+  const firestore = {
+    collection: (name) => ({
+      doc: (uid) => ({
+        get: async () => {
+          reads.push([name, uid]);
+          return { exists: uid === 'deleting-user' };
+        },
+      }),
+    }),
+  };
+
+  assert.equal(await hasPendingAccountDeletion(firestore, 'deleting-user'), true);
+  assert.equal(await hasPendingAccountDeletion(firestore, 'active-user'), false);
+  assert.deepEqual(reads, [
+    ['accountDeletionRequests', 'deleting-user'],
+    ['accountDeletionRequests', 'active-user'],
+  ]);
 });

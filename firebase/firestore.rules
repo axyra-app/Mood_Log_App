@@ -13,6 +13,11 @@ service cloud.firestore {
       return isSignedIn() && data.userId == request.auth.uid;
     }
 
+    function canWriteAccountData() {
+      return isSignedIn()
+        && !exists(/databases/$(database)/documents/accountDeletionRequests/$(request.auth.uid));
+    }
+
     function hasOnlyKeys(data, allowedKeys) {
       return data.keys().hasOnly(allowedKeys);
     }
@@ -136,8 +141,10 @@ service cloud.firestore {
 
       allow read, delete: if isOwner(userId);
       allow create: if isOwner(userId)
+        && canWriteAccountData()
         && hasValidUserProfile(request.resource.data);
       allow update: if isOwner(userId)
+        && canWriteAccountData()
         && (request.resource.data.role == resource.data.role
           || request.resource.data.role == 'user')
         && hasValidUserProfile(request.resource.data);
@@ -146,8 +153,10 @@ service cloud.firestore {
     match /moodLogs/{moodLogId} {
       allow read, delete: if isOwnerOf(resource.data);
       allow create: if isOwnerOf(request.resource.data)
+        && canWriteAccountData()
         && hasValidMoodLog(request.resource.data);
       allow update: if isOwnerOf(resource.data)
+        && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId
         && hasValidMoodLog(request.resource.data);
     }
@@ -155,8 +164,10 @@ service cloud.firestore {
     match /journalEntries/{entryId} {
       allow read, delete: if isOwnerOf(resource.data);
       allow create: if isOwnerOf(request.resource.data)
+        && canWriteAccountData()
         && hasValidJournalEntry(request.resource.data);
       allow update: if isOwnerOf(resource.data)
+        && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId
         && hasValidJournalEntry(request.resource.data);
     }
@@ -164,8 +175,10 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read, delete: if isOwnerOf(resource.data);
       allow create: if isOwnerOf(request.resource.data)
+        && canWriteAccountData()
         && hasValidNotification(request.resource.data);
       allow update: if isOwnerOf(resource.data)
+        && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId
         && hasValidNotification(request.resource.data)
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -190,28 +203,35 @@ service cloud.firestore {
 
       allow read: if isOwner(settingsId);
       allow create, update: if isOwner(settingsId)
+        && canWriteAccountData()
         && hasValidSettings(request.resource.data);
       allow delete: if isOwner(settingsId);
     }
 
     match /advancedReports/{reportId} {
       allow read, delete: if isOwnerOf(resource.data);
-      allow create: if isOwnerOf(request.resource.data);
+      allow create: if isOwnerOf(request.resource.data)
+        && canWriteAccountData();
       allow update: if isOwnerOf(resource.data)
+        && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId;
     }
 
     match /statistics/{statId} {
       allow read, delete: if isOwnerOf(resource.data);
-      allow create: if isOwnerOf(request.resource.data);
+      allow create: if isOwnerOf(request.resource.data)
+        && canWriteAccountData();
       allow update: if isOwnerOf(resource.data)
+        && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId;
     }
 
     match /reminders/{reminderId} {
       allow read, delete: if isOwnerOf(resource.data);
-      allow create: if isOwnerOf(request.resource.data);
+      allow create: if isOwnerOf(request.resource.data)
+        && canWriteAccountData();
       allow update: if isOwnerOf(resource.data)
+        && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId;
     }
 

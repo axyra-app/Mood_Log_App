@@ -73,7 +73,9 @@ Estos asistentes no son profesionales de salud, no proporcionan atención clíni
 
 Rutas protegidas para información personal y preferencias. El correo de acceso se muestra como no editable en el perfil porque cambiarlo requiere una operación de Firebase Authentication distinta de actualizar el documento del perfil. Las pantallas cargan los datos de Firestore; si falla esa lectura, muestran un error y no permiten guardar formularios vacíos. Las preferencias se guardan en `users/{uid}`, pero las opciones de notificación push y correo aún no envían avisos ni mensajes. El cambio de contraseña aplica a cuentas de correo/contraseña; cuentas de Google se administran desde Google. Fotos y archivos siguen pendientes.
 
-En Configuración, **Exportar mis datos** descarga un JSON con los datos propios permitidos por las reglas actuales de Firestore. El historial de MIA no forma parte del archivo porque no se persiste en la cuenta.
+En Configuración, **Exportar mis datos** descarga un JSON con los datos propios permitidos por las reglas actuales de Firestore. El historial de MIA no forma parte del archivo porque no se persiste en la cuenta. **Eliminar cuenta y datos** requiere volver a verificar la identidad y escribir `ELIMINAR`; borra de forma permanente los datos de Mood Log y la cuenta de acceso. Los envíos a proveedores externos y registros sujetos a sus políticas no se purgan con esta acción.
+
+El control de eliminación permanece apagado hasta validar las reglas e IAM del entorno. Cuando esté habilitado, si una eliminación no termina, sigue las indicaciones para reintentar o contactar soporte; las escrituras pueden permanecer pausadas mientras se resuelve.
 
 ### Privacidad y términos (`/privacy`, `/terms`)
 

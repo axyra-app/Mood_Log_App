@@ -168,6 +168,12 @@ const PrivacySimple: React.FC = () => {
                 <li>Oponerte al procesamiento</li>
                 <li>Retirar tu consentimiento</li>
               </ul>
+              <p className="mt-4 text-lg leading-relaxed">
+                Cuando esté habilitada en tu entorno, la opción de eliminación está en Configuración y requiere volver
+                a verificar tu identidad. El proceso elimina la cuenta y los datos gestionados por Mood Log. No elimina
+                necesariamente copias de seguridad, registros operativos ni información que un proveedor externo haya
+                procesado según sus propias políticas de retención.
+              </p>
             </section>
 
             <section>
