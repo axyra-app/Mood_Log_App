@@ -13,7 +13,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,9 +20,11 @@ import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
 import { MoodAnalysisResult, moodAnalyzerAgent } from '../services/specializedAgents';
 import { getMoodLogsByDateRange } from '../services/moodLogService';
+import { createStatisticsPdf, loadStatisticsPdfLogo } from '../services/statisticsPdfService';
 import { MoodLog } from '../types';
 import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
 import { toDate } from '../utils/moodMetrics';
+import logoUrl from '../assets/Logo_Mood_log_app.png';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ const Statistics: React.FC = () => {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     setAiAnalysis(null);
@@ -46,111 +48,43 @@ const Statistics: React.FC = () => {
 
   // Función para exportar estadísticas como PDF
   const exportStatistics = async () => {
+    if (periodError) {
+      toast.error('No se puede generar el reporte mientras haya un error al cargar los datos.');
+      return;
+    }
+
+    setExportingPdf(true);
     try {
       const periodMoodLogs = getLogsInPeriod();
-      const doc = new jsPDF();
-
-      // Configuración del documento
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      let yPosition = 20;
-
-      // Función para agregar texto con wrap
-      const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: string = '#000000') => {
-        doc.setFontSize(fontSize);
-        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-        doc.setTextColor(color);
-        
-        const lines = doc.splitTextToSize(text, pageWidth - 40);
-        doc.text(lines, 20, yPosition);
-        yPosition += lines.length * (fontSize * 0.4) + 5;
-      };
-
-      // Logo y título
-      doc.setFillColor(147, 51, 234); // Purple
-      doc.rect(0, 0, pageWidth, 30, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Mood Log App', 20, 20);
-      
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Reporte de Estadísticas de Bienestar', 20, 25);
-
-      yPosition = 40;
-
-      // Información del período
-      addText(`Período: ${timeRange === 'week' ? 'Semana' : timeRange === 'month' ? 'Mes' : 'Año'}`, 16, true, '#374151');
-      addText(`${formatDateColombian(getPeriodData().startDate)} - ${formatDateColombian(getPeriodData().endDate)}`, 12, false, '#6B7280');
-      yPosition += 10;
-
-      // Estadísticas principales
-      addText('Resumen Ejecutivo', 16, true, '#374151');
-      yPosition += 5;
-
-      const statsData = [
-        { label: 'Estado de Ánimo Promedio', value: `${periodStats.averageMood.toFixed(1)}/10 (${moodLevel.level})` },
-        { label: 'Registros de Ánimo', value: `${periodStats.totalMoodLogs} registros` },
-        { label: 'Racha Actual', value: `${periodStats.streak} días consecutivos` },
-        { label: 'Tendencia', value: getTrendText(periodStats.trend) },
-        { label: 'Entradas de Diario', value: `${periodStats.journalEntries} entradas` }
-      ];
-
-      statsData.forEach(stat => {
-        addText(`${stat.label}: ${stat.value}`, 12, false, '#374151');
-      });
-
-      yPosition += 10;
-
-      // Análisis de IA si está disponible
-      if (aiAnalysis) {
-        addText('Reflexión sobre tu bienestar con IA', 16, true, '#374151');
-        yPosition += 5;
-
-        if (aiAnalysis.summary) {
-          addText('Resumen:', 14, true, '#374151');
-          addText(aiAnalysis.summary, 12, false, '#6B7280');
-          yPosition += 5;
-        }
-
-        if (aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0) {
-          addText('Ideas para la autorreflexión:', 14, true, '#374151');
-          aiAnalysis.recommendations.forEach((rec: unknown) => {
-          addText(`• ${typeof rec === 'string' ? rec : JSON.stringify(rec)}`, 12, false, '#6B7280');
-          });
-          yPosition += 5;
-        }
-      }
-
-      // Actividad reciente
-      if (periodMoodLogs.length > 0) {
-        addText('Actividad Reciente', 16, true, '#374151');
-        yPosition += 5;
-
-        const recentLogs = periodMoodLogs.slice(0, 10);
-        recentLogs.forEach((log: any) => {
-          const date = toDate(log.createdAt)?.toLocaleDateString('es-CO') || 'Fecha inválida';
-          const moodLevel = getMoodLevel(log.mood);
-          addText(`${date}: ${moodLevel.level} (${log.mood}/10)`, 12, false, '#6B7280');
-        });
-      }
-
-      // Pie de página
-      yPosition = pageHeight - 20;
-      doc.setFontSize(10);
-      doc.setTextColor('#6B7280');
-      doc.text(`Generado el ${new Date().toLocaleDateString('es-CO')} por Mood Log App`, 20, yPosition);
-
-      // Guardar el PDF
-      const fileName = `estadisticas-mood-log-${timeRange}-${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
+      const { startDate, endDate } = getPeriodData();
+      const logo = await loadStatisticsPdfLogo(logoUrl);
+      const doc = createStatisticsPdf({
+        periodLabel: timeRange === 'week' ? 'Semana' : timeRange === 'month' ? 'Mes' : 'Año',
+        periodStart: startDate,
+        periodEnd: endDate,
+        generatedAt: new Date(),
+        userName: user?.displayName ?? undefined,
+        averageMood: periodStats.averageMood,
+        streak: periodStats.streak,
+        trend: getTrendText(periodStats.trend),
+        journalEntries: periodStats.journalEntries,
+        logs: periodMoodLogs,
+        analysis: aiAnalysis,
+      }, logo);
+      const now = new Date();
+      const localDate = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0'),
+      ].join('-');
+      doc.save(`mood-log-reporte-${timeRange}-${localDate}.pdf`);
 
       toast.success('Reporte PDF generado exitosamente');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Error al generar el reporte PDF');
+      toast.error(error instanceof Error ? error.message : 'Error al generar el reporte PDF');
+    } finally {
+      setExportingPdf(false);
     }
   };
 
@@ -356,10 +290,11 @@ const Statistics: React.FC = () => {
 
             <button 
               onClick={exportStatistics}
-              className='flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 text-sm text-white transition-colors hover:bg-purple-700 sm:min-h-10 sm:w-auto sm:text-base'
+              disabled={exportingPdf || periodLoading || Boolean(periodError)}
+              className='flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 text-sm text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 sm:w-auto sm:text-base'
             >
               <Download className='w-4 h-4' />
-              <span>Exportar</span>
+              <span>{exportingPdf ? 'Preparando PDF…' : 'Exportar'}</span>
             </button>
           </div>
         }
