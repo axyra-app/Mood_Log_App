@@ -39,6 +39,10 @@ La identidad/cuenta Firebase y los datos gestionados por esta aplicación se eli
 5. Las reglas de Storage limitan lectura/escritura/borrado a la carpeta del UID, restringen altas/cambios a imágenes JPEG/PNG/WebP o PDF y limitan archivos a 10 MiB. La suite cubre propietario/ajeno/anónimo, reemplazo válido, MIME no permitido y tamaño excesivo. Estas reglas no validan contenido real del archivo.
 6. Firebase CLI requiere JDK 21 o superior para los emuladores. La última ejecución local pasó las 22 pruebas usando temporalmente un JRE 21; no se cambió el Java instalado en el sistema.
 
+### Analítica y telemetría
+
+Los eventos de uso no deben incluir puntuaciones, notas, mensajes, texto de errores, rutas ni títulos que puedan contener información personal. Los eventos de registro de ánimo y error son agregados y no envían sus valores o mensajes; las vistas reportan únicamente el origen fijo de la aplicación. La prueba `frontend/tests/analytics.test.mjs` comprueba que esos campos no se envían. Esta minimización no reemplaza la revisión de consentimiento, retención ni configuración de Firebase Analytics y Google Analytics antes de ofrecer el servicio ampliamente.
+
 Revisa [database-schema.md](./database-schema.md) para el mapa de incompatibilidades. Las reglas reforzadas están versionadas y pasaron las pruebas locales; su publicación en `mood-log-app-01` fue confirmada por el propietario en Firebase Console. Aún falta probar los recorridos completos en el proyecto y revisar denegaciones inesperadas.
 
 ## Imágenes y archivos: próximamente

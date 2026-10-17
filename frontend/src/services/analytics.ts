@@ -11,29 +11,29 @@ export const isAnalyticsAvailable = (): boolean => {
 };
 
 // Función para enviar eventos a Google Analytics
-export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
+const trackEvent = (action: string, category: string, label?: string, value?: number) => {
   if (!isAnalyticsAvailable()) {
-    console.warn('Google Analytics no está disponible');
     return;
   }
 
-  window.gtag('event', action, {
+  const eventParameters: Record<string, string | number> = {
     event_category: category,
-    event_label: label,
-    value: value,
-  });
+  };
+  if (label !== undefined) eventParameters.event_label = label;
+  if (value !== undefined) eventParameters.value = value;
+
+  window.gtag('event', action, eventParameters);
 };
 
 // Función para trackear páginas vistas
-export const trackPageView = (pageName: string, pagePath: string) => {
+const trackPageView = () => {
   if (!isAnalyticsAvailable()) {
-    console.warn('Google Analytics no está disponible');
     return;
   }
 
   window.gtag('config', 'G-CY8FK7SXKQ', {
-    page_title: pageName,
-    page_location: pagePath,
+    page_title: 'Mood Log App',
+    page_location: window.location.origin,
   });
 };
 
@@ -53,8 +53,8 @@ export const analyticsEvents = {
   },
 
   // Eventos de mood logging
-  moodLogged: (mood: string) => {
-    trackEvent('mood_logged', 'Mood Tracking', mood);
+  moodLogged: () => {
+    trackEvent('mood_logged', 'Mood Tracking');
   },
 
   moodViewStats: () => {
@@ -71,8 +71,8 @@ export const analyticsEvents = {
   },
 
   // Eventos de navegación
-  pageView: (pageName: string, pagePath: string) => {
-    trackPageView(pageName, pagePath);
+  pageView: () => {
+    trackPageView();
   },
 
   // Eventos de PWA
@@ -85,8 +85,8 @@ export const analyticsEvents = {
   },
 
   // Eventos de errores
-  errorOccurred: (errorType: string, _errorMessage?: string) => {
-    trackEvent('error_occurred', 'Error', errorType, 1);
+  errorOccurred: () => {
+    trackEvent('error_occurred', 'Error', undefined, 1);
   },
 };
 
