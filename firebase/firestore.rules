@@ -102,7 +102,7 @@ service cloud.firestore {
           && request.resource.data.adultEligibility == resource.data.adultEligibility)
         || ('adultEligibility' in resource.data
           && 'adultEligibility' in request.resource.data
-          && resource.data.adultEligibility.version != 'co-18plus-v1'
+          && !isValidAdultEligibility(resource.data.adultEligibility)
           && isValidAdultEligibility(request.resource.data.adultEligibility)
           && request.resource.data.adultEligibility.attestedAt == request.time)
         || (!('adultEligibility' in resource.data)
