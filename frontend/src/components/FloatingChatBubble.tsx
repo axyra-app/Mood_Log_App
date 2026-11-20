@@ -1,9 +1,14 @@
 import { Heart, MessageCircle, Minimize2, Send, Sparkles, User, X } from 'lucide-react';
 import React, { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { useAuth } from '../contexts/AuthContext';
+import { hasCurrentAdultEligibility, useAuth } from '../contexts/AuthContext';
+import { hasCurrentLegalAcceptance } from '../services/legalAcceptanceService';
 import { useTheme } from '../contexts/ThemeContext';
+import { AI_FEATURES_ENABLED } from '../services/aiApi';
 import { empatheticCompanionAgent } from '../services/specializedAgents';
+import { AI_CONSENT_VERSION } from '../utils/legalVersions';
+import { GROQ_RETENTION_DISCLOSURE } from '../utils/aiProviderDisclosure';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 interface ChatMessage {
   id: string;
@@ -27,10 +32,13 @@ const suggestedMessages = [
 
 const FloatingChatBubble: React.FC = () => {
   const { user } = useAuth();
+  const adultEligible = hasCurrentAdultEligibility(user);
   const { isDarkMode } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
+  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [legalAcceptanceCurrent, setLegalAcceptanceCurrent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,6 +51,30 @@ const FloatingChatBubble: React.FC = () => {
   useEffect(() => {
     if (isOpen && !isMinimized) inputRef.current?.focus();
   }, [isOpen, isMinimized]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLegalAcceptanceCurrent(false);
+    if (!user || !adultEligible) return () => { cancelled = true; };
+
+    void hasCurrentLegalAcceptance()
+      .then((accepted) => {
+        if (!cancelled) setLegalAcceptanceCurrent(accepted);
+      })
+      .catch(() => {
+        if (!cancelled) setLegalAcceptanceCurrent(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [user?.uid, adultEligible]);
+
+  useEffect(() => {
+    setAiDataConsent(false);
+    setMessage('');
+    setMessages([welcomeMessage]);
+    setIsOpen(false);
+    setIsMinimized(false);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -62,6 +94,10 @@ const FloatingChatBubble: React.FC = () => {
     event?.preventDefault();
     const userMessage = message.trim();
     if (!userMessage || isLoading) return;
+    if (!aiDataConsent) {
+      toast.error('Confirma el envío de los mensajes a Groq antes de iniciar esta conversación.');
+      return;
+    }
 
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
@@ -75,7 +111,7 @@ const FloatingChatBubble: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await empatheticCompanionAgent.chat(userMessage);
+      const response = await empatheticCompanionAgent.chat(userMessage, AI_CONSENT_VERSION);
       setMessages((previous) => [
         ...previous,
         {
@@ -86,7 +122,7 @@ const FloatingChatBubble: React.FC = () => {
         },
       ]);
     } catch (error) {
-      console.error('Error sending message to MIA:', error);
+      logSanitizedClientError('MIA chat request failed', error);
       setMessage(userMessage);
       toast.error(error instanceof Error ? error.message : 'MIA no pudo responder. Inténtalo de nuevo.');
     } finally {
@@ -101,7 +137,7 @@ const FloatingChatBubble: React.FC = () => {
     }
   };
 
-  if (!user) return null;
+  if (!AI_FEATURES_ENABLED || !adultEligible || !legalAcceptanceCurrent) return null;
 
   const isMobileSheetOpen = isOpen && !isMinimized;
 
@@ -198,7 +234,7 @@ const FloatingChatBubble: React.FC = () => {
                 }`}
               >
                 <Sparkles className='mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500' aria-hidden='true' />
-                <p>MIA es una IA para autorreflexión, no atención clínica. Tus mensajes se envían a Groq y no se guardan aquí.</p>
+                <p>MIA es una IA para autorreflexión, no atención clínica. Tus mensajes se envían a Groq; Mood Log no guarda el historial de la conversación. {GROQ_RETENTION_DISCLOSURE}</p>
               </div>
 
               <div
@@ -279,6 +315,15 @@ const FloatingChatBubble: React.FC = () => {
                 onSubmit={(event) => void handleSendMessage(event)}
                 className={`border-t px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 ${isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}
               >
+                <label className={`mb-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <input
+                    type='checkbox'
+                    checked={aiDataConsent}
+                    onChange={(event) => setAiDataConsent(event.target.checked)}
+                    className='mt-0.5 h-4 w-4 shrink-0 accent-violet-600'
+                  />
+                  <span>Autorizo enviar cada mensaje de esta conversación a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo no usar esta función y evitar compartir información que no quiera enviar a un proveedor externo.</span>
+                </label>
                 <div className={`flex items-end gap-2 rounded-2xl border p-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 ${
                   isDarkMode ? 'border-gray-700 bg-gray-800 focus-within:ring-violet-900/40' : 'border-gray-200 bg-gray-50'
                 }`}>
@@ -297,7 +342,7 @@ const FloatingChatBubble: React.FC = () => {
                   />
                   <button
                     type='submit'
-                    disabled={!message.trim() || isLoading}
+                    disabled={!message.trim() || isLoading || !aiDataConsent}
                     aria-label='Enviar mensaje a MIA'
                     className='mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-500'
                   >

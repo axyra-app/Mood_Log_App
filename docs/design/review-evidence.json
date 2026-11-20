@@ -1,0 +1,65 @@
+{
+  "contract": "docs/design/mood-log-design-system.md; visual scope: the public Home entry screen and the initial Wear OS check-in screen, including responsive fit and visual hierarchy",
+  "targetViewports": ["320x640", "390x844", "1440x900", "384x384"],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Chrome accessibility snapshot exposes named headings, links, logo images, and a labelled theme toggle. Keyboard Tab reaches the toggle with a 2 px magenta focus outline. Header touch targets measured 44x44 px or larger. Physical VoiceOver and TalkBack validation remains outstanding."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Rendered at 320x640, 390x844, and 1440x900; document width matched viewport at both phone widths and there was no horizontal overflow at any tested width. The initial wearable screen rendered on the 384x384 round Wear OS 6/API 36 emulator and its content scrolls. Other watch sizes and physical devices remain unverified."
+  },
+  "contentStates": {
+    "loading": {
+      "status": "not-applicable",
+      "reason": "The reviewed scope is the static public Home entry screen and the initial wearable check-in screen; no records are loaded in either captured state."
+    },
+    "empty": {
+      "status": "not-applicable",
+      "reason": "The screenshots do not show a record list or history view."
+    },
+    "error": {
+      "status": "not-applicable",
+      "reason": "The captured public entry and initial watch screens do not display a service error; recovery flows are outside this visual review."
+    },
+    "partial": {
+      "status": "not-applicable",
+      "reason": "The captured screens contain no partially loaded records or reports."
+    },
+    "success": {
+      "status": "not-applicable",
+      "reason": "No mood check-in or pulse measurement was submitted during the visual review."
+    },
+    "permission": {
+      "status": "not-applicable",
+      "reason": "The watch measurement button was intentionally not activated; the review covers only the initial screen, with no sensor permission requested."
+    }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "320x640",
+      "artifact": "evidence/home-320x640.png",
+      "observation": "Compact header and wrapped landing content fit a narrow phone viewport without horizontal overflow."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "evidence/home-390x844.png",
+      "observation": "Phone entry screen shows the brand gradient, primary registration action, and responsive typography."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "evidence/home-1440x900.png",
+      "observation": "Desktop landing screen retains a centered content width and three-column feature layout without horizontal overflow."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "evidence/home-dark-390x844.png",
+      "observation": "Dark theme uses the charcoal canvas and preserves text and gradient CTA contrast; focus ring is visible on the theme control."
+    },
+    {
+      "viewport": "384x384",
+      "artifact": "evidence/wearos-384x384.png",
+      "observation": "Wear OS 6 round emulator shows the compact mood check-in with distinct pulso and ánimo messaging; lower controls continue below the fold."
+    }
+  ]
+}

@@ -64,7 +64,8 @@ export const prepareMoodAnalysis = (logs: MoodAnalysisSourceLog[], period: strin
     }));
 
   const moodData: MoodAnalysisRequestData = { period, moodLogs };
-  const serializedLength = (): number => JSON.stringify(moodData).length;
+  const serializedLength = (): number =>
+    new TextEncoder().encode(JSON.stringify(moodData)).byteLength;
 
   if (serializedLength() > MAX_ANALYSIS_PAYLOAD_LENGTH) {
     moodLogs.forEach((log) => {

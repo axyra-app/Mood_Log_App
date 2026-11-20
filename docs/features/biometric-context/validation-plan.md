@@ -1,6 +1,6 @@
 # Plan de validación: contexto biométrico
 
-**Estado:** plan propuesto; no hay implementación que validar todavía.
+**Estado:** existe un prototipo nativo Wear OS en `wearos/` con lectura puntual de `MeasureClient`; compiló e instaló en AVD Wear OS 6/API 36 el 20-11-2026. No se ha validado con un sensor físico ni persiste datos longitudinales.
 
 ## 1. Objetivos de calidad
 
@@ -70,6 +70,20 @@ No marcar una plataforma “compatible” hasta probarla en dispositivos represe
 - Consumo de batería, memoria y datos de red durante importación.
 - Períodos con volumen alto y ausencia de datos.
 
+### 3.7 Validación de asociaciones ánimo–fisiología (solo después del piloto técnico)
+
+La evidencia publicada muestra que algunas relaciones entre ánimo autoinformado y características de wearables pueden ser personales; no permite trasladar automáticamente una relación, un modelo o una cifra de rendimiento a Mood Log ni a usuarios colombianos. Antes de mostrar asociaciones calculadas por el producto:
+
+1. **Definir la pregunta antes de recoger datos:** especificar resultado de ánimo (autorreporte), métrica exacta, ventana temporal, población adulta objetivo, unidad de análisis, uso previsto y decisión de producto que podría cambiar. Mantener el pulso como contexto y no como etiqueta de emoción.
+2. **Diseñar el estudio con método y privacidad:** obtener revisión metodológica/estadística y privacidad; determinar consentimiento, tamaño y duración del estudio según hipótesis y precisión necesaria. No usar un mínimo genérico de puntos temporales o `n ≥ 10` como umbral de validez.
+3. **Caracterizar el dato por dispositivo:** registrar modelo, versión de SO, fuente que escribe en Health Connect, campos y frecuencia disponible, cobertura, errores y cambios de API. Probar la precisión del dispositivo contra una referencia adecuada si el producto pretende hacer afirmaciones de exactitud; no intercambiar modelos o fuentes sin anotarlo.
+4. **Recoger diarios manuales de ánimo por separado:** usar la escala vigente de Mood Log y prompts consistentes; no rellenar registros perdidos ni usar datos de sueño/pulso como sustituto del ánimo. Medir abandono, carga de registro, retrasos y posible reactividad a los prompts.
+5. **Analizar dentro de la persona:** separar asociación intraindividual de diferencias entre personas; registrar autocorrelación, tendencias temporales, actividad física, sueño, enfermedad/medicación u otros confusores autorizados, valores extremos y faltantes. Declarar análisis primarios y secundarios para reducir búsqueda oportunista de patrones.
+6. **Validar fuera del período usado para descubrir el patrón:** si se afirma estabilidad, evaluar en ventanas temporales posteriores no usadas para ajustar el análisis, reportar incertidumbre y calibración cuando aplique, e incluir el resultado “sin relación detectable”. No publicar métricas predictivas de una partición que comparta tiempo/personas con el ajuste.
+7. **Comprobar comprensión y daños:** participantes deben entender que la asociación es personal, observacional y no causal. Medir interpretaciones erróneas, preocupación, falsas inferencias, abandono y utilidad percibida; definir criterios de suspensión antes del piloto.
+
+Un resultado de un solo grupo o modelo no valida el producto. Cada nuevo país, dispositivo, versión de sensor, métrica o afirmación sobre predicción requiere una evaluación de transferibilidad antes de ampliar el uso. La comparación de estado de ánimo siempre debe conservarse como autoinforme.
+
 ## 4. Casos de prueba con identificadores
 
 | ID | Escenario | Resultado esperado |
@@ -93,6 +107,11 @@ No marcar una plataforma “compatible” hasta probarla en dispositivos represe
 | BIO-T-017 | Revisar tráfico y telemetría durante importación local | No se transmite contenido del archivo ni muestras ni se incluyen en logs/analytics. |
 | BIO-T-018 | Un registro combina ánimo manual y medida importada | Cada valor conserva su procedencia y calidad; ninguna fuente se atribuye al conjunto completo. |
 | BIO-T-019 | Dataset de correlación con n=10, datos atípicos o patrón temporal | No se muestra correlación como válida solo por superar el umbral; se aplica el método aprobado o se informa que aún no está habilitada. |
+| BIO-T-020 | Datos personales incompletos, retrasados o insuficientes para la ventana elegida | Se muestra falta de datos/cobertura; no se calcula ni interpreta una asociación como si fuera válida. |
+| BIO-T-021 | Métrica o dispositivo fuente no está en el conjunto de validación | No se presenta un resultado validado; la vista descriptiva identifica la fuente y mantiene separada la métrica. |
+| BIO-T-022 | Patrón exploratorio deja de aparecer en la ventana temporal de validación | No se comunica como patrón estable/predictivo; se informa incertidumbre o se retira el insight. |
+| BIO-T-023 | Una callback de pulso llega después de cancelar la lectura e iniciar otro intento | El dato tardío no aparece como lectura del intento nuevo; el callback anterior se descarta y desregistra. |
+| BIO-T-024 | Callback contiene muestras desordenadas, no finitas o con valores no positivos | Se muestra solo la muestra válida más reciente según su timestamp fuente; si no hay ninguna, continúa sin lectura. |
 
 ## 5. Criterios de salida por etapa
 
@@ -116,6 +135,7 @@ No marcar una plataforma “compatible” hasta probarla en dispositivos represe
 - Consentimiento y política reflejan exactamente procesamiento/retención.
 - No hay inferencias clínicas ni procesamiento semántico de diario por defecto.
 - Soporte, incident response, límites del piloto y rollback definidos.
+- Cualquier insight de asociación se habilita solo si existe un protocolo previo, evaluación intraindividual, ventana temporal independiente, revisión de comprensión/daños y resultados suficientes para la fuente y población de uso.
 
 ### Lanzamiento general
 

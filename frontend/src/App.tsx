@@ -8,9 +8,13 @@ import { ThemeProvider } from './contexts/ThemeContext';
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingChatBubble from './components/FloatingChatBubble';
+import MobileBottomNav from './components/MobileBottomNav';
 import ProtectedRoute from './components/ProtectedRoute';
+import { AI_FEATURES_ENABLED } from './services/aiApi';
 
 const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
+const AgeConfirmation = lazy(() => import('./pages/AgeConfirmation'));
+const AiPaused = lazy(() => import('./pages/AiPaused'));
 const AIChat = lazy(() => import('./pages/AIChat'));
 const ChatSelection = lazy(() => import('./pages/ChatSelection'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
@@ -18,6 +22,7 @@ const DashboardSimple = lazy(() => import('./pages/DashboardSimple'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const Home = lazy(() => import('./pages/Home'));
 const Journal = lazy(() => import('./pages/Journal'));
+const LegalAcceptance = lazy(() => import('./pages/LegalAcceptance'));
 const LoginSimple = lazy(() => import('./pages/LoginSimple'));
 const MoodFlowSimple = lazy(() => import('./pages/MoodFlowSimple'));
 const PrivacySimple = lazy(() => import('./pages/PrivacySimple'));
@@ -25,7 +30,11 @@ const Profile = lazy(() => import('./pages/Profile'));
 const RegisterSimple = lazy(() => import('./pages/RegisterSimple'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Statistics = lazy(() => import('./pages/Statistics'));
+const SensitiveDataConsent = lazy(() => import('./pages/SensitiveDataConsent'));
 const TermsSimple = lazy(() => import('./pages/TermsSimple'));
+const HealthContextPrototype = import.meta.env.DEV
+  ? lazy(() => import('./pages/dev/HealthContextPrototype'))
+  : null;
 
 function App() {
   return (
@@ -42,11 +51,21 @@ function App() {
                 }
               >
                 <Routes>
+                {HealthContextPrototype && (
+                  <Route path='/__dev/health-context' element={<HealthContextPrototype />} />
+                )}
                 {/* Public routes */}
                 <Route path='/' element={<Home />} />
                 <Route path='/login' element={<LoginSimple />} />
                 <Route path='/register' element={<RegisterSimple />} />
-                <Route path='/complete-profile' element={<CompleteProfile />} />
+                <Route path='/age-confirmation' element={<AgeConfirmation />} />
+                <Route path='/legal-acceptance' element={<LegalAcceptance />} />
+                <Route path='/sensitive-data-consent' element={<SensitiveDataConsent />} />
+                <Route path='/complete-profile' element={
+                  <ProtectedRoute allowIncompleteProfile>
+                    <CompleteProfile />
+                  </ProtectedRoute>
+                } />
                 <Route path='/forgot-password' element={<ForgotPassword />} />
                 <Route path='/terms' element={<TermsSimple />} />
                 <Route path='/privacy' element={<PrivacySimple />} />
@@ -88,7 +107,7 @@ function App() {
                   path='/reports'
                   element={
                     <ProtectedRoute>
-                      <AdvancedReports />
+                      {AI_FEATURES_ENABLED ? <AdvancedReports /> : <AiPaused />}
                     </ProtectedRoute>
                   }
                 />
@@ -98,7 +117,7 @@ function App() {
                   path='/chat/assistant/:assistantId'
                   element={
                     <ProtectedRoute>
-                      <AIChat />
+                      {AI_FEATURES_ENABLED ? <AIChat /> : <AiPaused />}
                     </ProtectedRoute>
                   }
                 />
@@ -106,7 +125,7 @@ function App() {
                   path='/chat'
                   element={
                     <ProtectedRoute>
-                      <ChatSelection />
+                      {AI_FEATURES_ENABLED ? <ChatSelection /> : <AiPaused />}
                     </ProtectedRoute>
                   }
                 />
@@ -150,6 +169,8 @@ function App() {
                 />
                 </Routes>
               </Suspense>
+
+              <MobileBottomNav />
 
               {/* Burbuja flotante de chat IA */}
               <FloatingChatBubble />

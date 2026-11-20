@@ -2,35 +2,38 @@
 
 **ID:** `FEAT-BIO-001`
 
-**Estado:** propuesta en descubrimiento
+**Estado:** propuesta en descubrimiento; el prototipo Wear OS compila e instala en un AVD Wear OS 6/API 36, sin validación de sensor físico ni persistencia longitudinal.
 **Propietario:** por asignar
-**Última revisión:** 14 de octubre de 2026
-**Plataformas consideradas:** iOS (Apple Health/HealthKit) y Android (Health Connect)
-**Persistencia de las muestras:** decisión abierta; alternativas documentadas en [Diseño técnico](technical-design.md) y [Registro de decisiones](decision-log.md).
+**Última revisión:** 20 de noviembre de 2026
+**Mercado inicial:** Colombia; primer lanzamiento dirigido a mayores de 18 años. Cualquier incorporación de menores requiere una fase y revisión independientes.
+**Prioridad indicada por el fundador:** app directa Wear OS/Android (Health Services); Health Connect en el teléfono es complementario; iOS (HealthKit) queda para una etapa posterior
+**Persistencia de la siguiente etapa longitudinal:** almacenamiento privado local solo en el reloj elegido; implementación y controles pendientes. Ver [Diseño técnico](technical-design.md) y [Registro de decisiones](decision-log.md).
 
 ## 1. Propósito
 
 Investigar y definir una capacidad opcional para que la persona pueda ver, en una línea de tiempo personal, sus registros de ánimo y diario junto con datos fisiológicos importados desde una fuente de salud autorizada. El objetivo es aportar contexto a la autoobservación, no identificar automáticamente emociones ni ofrecer evaluación clínica.
 
+**Alcance longitudinal acordado para la primera etapa:** el reloj conservará localmente solo las lecturas de pulso y los check-ins de ánimo capturados en ese mismo dispositivo. El historial de ánimo/diario de la app web no estará disponible en esa serie; no se sincroniza ni se copia al teléfono. La línea de tiempo combinada con otras fuentes sigue siendo una posibilidad futura sujeta a otro diseño y consentimiento.
+
 ## 2. Estado del documento
 
-Este conjunto de documentos es una **especificación de propuesta**, no una descripción de una función implementada. El repositorio actual no contiene una integración identificada con HealthKit, Health Connect ni un puente nativo. La app no debe anunciar ni recopilar estas mediciones hasta completar las decisiones, implementación, revisión y pruebas descritas aquí.
+Este conjunto de documentos es una **especificación de propuesta**, no una integración comercial validada. El repositorio incluye una vista interna de desarrollo en `/__dev/health-context` con fixtures sintéticos y normalizadores puros para Health Connect, y una app nativa separada en `wearos/` con check-in manual y una lectura puntual de pulso mediante Health Services. El scaffold muestra aviso antes del permiso y guarda localmente una constancia versionada de aceptar/rechazar por intento; conserva hasta 100 eventos y ofrece consultar/borrar el log y abrir ajustes de permisos. No lee en segundo plano, no sincroniza ni persiste la muestra. El log no identifica cuenta ni se exporta, así que no sirve como registro de consentimiento para un piloto. No se ha compilado ni probado en emulador/reloj; no debe usarse con participantes ni anunciarse hasta completar revisión legal, de producto y técnica.
 
-La expresión “análisis” en este paquete significa, salvo decisión posterior revisada, resumen descriptivo y exploración de asociaciones personales. No significa diagnóstico, causalidad, predicción o monitoreo de crisis.
+La dirección analítica elegida por el fundador es mostrar patrones personales de pulso y ánimo autoinformado a lo largo del tiempo. La salida futura se entiende como descriptiva y dentro de la persona; no implica diagnóstico, causalidad, predicción del ánimo actual ni monitoreo de crisis. El método, la retención final, el claim público y los gates de lanzamiento siguen por validar. El ADR-BIO-014 propone controles técnicos y un plazo inicial de 90 días, pero no están aprobados para datos reales.
 
 La propuesta recibida que motivó esta revisión asume una plantilla y un backend distintos del repositorio actual. Sus ideas de producto se conservan como opciones; no se adopta por ello una migración a Enter Cloud, un cambio de React, ni una sustitución de Firebase. La arquitectura efectiva debe decidirse antes de implementar.
 
 ## 3. Decisión de almacenamiento
 
-La persona responsable del producto ha indicado que la decisión entre **procesamiento exclusivamente en el dispositivo** y **persistencia/sincronización en Firebase** debe quedar abierta en esta etapa.
+Por recomendación delegada por el fundador, la siguiente etapa longitudinal debe conservar datos únicamente en almacenamiento privado local del reloj; no se ha aprobado sincronización con teléfono, Firebase ni proveedores externos. Esta decisión no cambia el scaffold actual, que sigue sin persistir muestras. Retención, borrado, cifrado, exportación y consentimiento para persistir deben definirse antes de implementarlo.
 
 Este paquete:
 
-- documenta ambos enfoques y sus costos en [Diseño técnico](technical-design.md);
+- documenta la decisión local inicial y las alternativas posteriores en [Diseño técnico](technical-design.md);
 - define controles comunes y riesgos en [Privacidad y seguridad](privacy-security.md);
-- registra la decisión pendiente y la opción recomendada para el primer piloto en [Registro de decisiones](decision-log.md).
+- registra la salida de producto elegida y las decisiones de datos/persistencia —incluida la propuesta técnica aún pendiente— en [Registro de decisiones](decision-log.md).
 
-No se ha aprobado aún almacenamiento remoto de datos biométricos.
+No se ha aprobado almacenamiento remoto de datos biométricos. La documentación Android advierte que los `DataItem` del Wear OS Data Layer pueden respaldarse en nube; no deben usarse para transferir muestras bajo una promesa “sin nube” sin revisión adicional.
 
 ## 4. Navegación
 
@@ -41,7 +44,7 @@ No se ha aprobado aún almacenamiento remoto de datos biométricos.
 | [Diseño técnico](technical-design.md) | Alternativas de almacenamiento, componentes, flujos, modelo conceptual, sincronización y fallos. |
 | [Privacidad y seguridad](privacy-security.md) | Inventario de datos, límites de confianza, amenazas, controles y ciclo de vida. |
 | [Plan de validación](validation-plan.md) | Estrategia de pruebas, gates de lanzamiento, métricas y rollout. |
-| [Registro de decisiones](decision-log.md) | Decisiones tomadas, abiertas y recomendación provisional. |
+| [Registro de decisiones](decision-log.md) | Decisiones acordadas, controles pendientes y decisiones abiertas. |
 
 ## 5. Dirección propuesta por etapas
 
@@ -65,7 +68,11 @@ La propuesta combina tres fuentes separadas:
 2. **Diario:** texto y metadatos escritos por la persona.
 3. **Biometría importada:** muestras con procedencia, hora, unidad y métrica originales.
 
-La primera experiencia candidata es una línea de tiempo y resúmenes descriptivos transparentes. Para datos de salud importados, se recomienda empezar con datos sintéticos y evaluar procesamiento local antes de considerar persistencia remota. El diario no se analiza semánticamente en el alcance inicial ni se envía a proveedores de IA por defecto. La persistencia sigue abierta.
+La primera experiencia candidata es una línea de tiempo y resúmenes descriptivos transparentes. La siguiente iteración longitudinal elegida se limita a check-ins de ánimo y mediciones de pulso capturados en el mismo reloj y persistidos allí localmente; la app nativa Wear OS ya permite check-in manual y lectura puntual, pero aún no persiste ni resume muestras. No incorpora historial web/Firestore ni diario, y no copia datos al teléfono. El diario no se analiza semánticamente ni se envía a proveedores de IA por defecto. Cualquier persistencia remota o copia al teléfono requiere otra decisión.
+
+La revisión de APIs oficiales confirma que iOS/HealthKit y Android/Health Connect requieren permisos de una app móvil; además, una app Wear OS propia accede a sensores mediante Health Services y permisos del reloj. HealthKit ofrece HRV SDNN; Health Connect, HRV RMSSD; los valores no son intercambiables. Android limita por defecto el historial leído de otras apps a 30 días previos al permiso. Ver [diseño técnico, compatibilidad](technical-design.md#21-compatibilidad-observada-en-documentación-oficial). La primera prueba priorizada es una app Wear OS directa con HR puntual y check-in manual; el prototipo en `wearos/` compiló e instaló en un AVD, sin validación física ni integración de producto longitudinal. Importar histórico desde Health Connect queda como complemento.
+
+El fundador ya priorizó Wear OS/Android y pidió que Mood Log llegue directamente al reloj. Health Connect en el teléfono podrá importar registros de otras fuentes en una etapa complementaria. Para una etapa longitudinal se eligió almacenamiento privado local solo en el reloj, sin sincronización al teléfono o a la nube; esto aún no está implementado. El 20-11-2026 el módulo `wearos/` compiló e instaló en el AVD Wear OS 6/API 36. El contenedor móvil Capacitor `com.moodlog.app` es otra app; al instalarlo en el reloj mostró que falta WebView. Ver [ADR-BIO-012](decision-log.md#adr-bio-012-secuencia-de-integración-androidwear-os) y [ADR-BIO-001](decision-log.md#adr-bio-001-persistencia-de-muestras-biometricas).
 
 ## 7. Exclusiones críticas
 
@@ -81,10 +88,10 @@ La primera experiencia candidata es una línea de tiempo y resúmenes descriptiv
 
 ## 8. Criterio para iniciar implementación
 
-No comenzar el desarrollo de integración real hasta que:
+No comenzar la persistencia de observaciones reales ni un piloto hasta que:
 
 - se apruebe el alcance del MVP y las métricas que se solicitarán;
-- se elija, o se autorice explícitamente un piloto comparativo para elegir, la política de persistencia;
+- se definan retención, cifrado, exportación, borrado y comportamiento de errores para la persistencia local ya elegida;
 - se defina el modelo de consentimiento, revocación y borrado;
 - se verifique la disponibilidad y el comportamiento de las APIs en dispositivos objetivo;
 - se realice revisión de seguridad, privacidad, producto y accesibilidad;

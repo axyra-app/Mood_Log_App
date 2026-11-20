@@ -6,6 +6,7 @@ import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useValidation } from '../hooks/useValidation';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 const CompleteProfile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
@@ -70,7 +71,7 @@ const CompleteProfile: React.FC = () => {
       toast.success('¡Perfil completado! Bienvenido a Mood Log');
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Profile completion error:', error);
+      logSanitizedClientError('Profile completion failed', error);
       toast.error(error.message || 'Error al completar el perfil');
     } finally {
       setLoading(false);

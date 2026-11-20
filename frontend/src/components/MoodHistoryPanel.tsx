@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useMood } from '../hooks/useMood';
 import MoodEditModal from './MoodEditModal';
 import MoodHistoryCard from './MoodHistoryCard';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 interface MoodHistoryPanelProps {
   isDarkMode?: boolean;
@@ -32,7 +33,7 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
       
       return dateB.getTime() - dateA.getTime();
     } catch (error) {
-      console.error('Error sorting mood logs:', error);
+      logSanitizedClientError('Mood history sorting failed', error);
       return 0;
     }
   });
@@ -65,7 +66,7 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
       setShowEditModal(false);
       setSelectedMoodLog(null);
     } catch (error) {
-      console.error('Error updating mood log:', error);
+      logSanitizedClientError('Mood history update failed', error);
       throw error;
     }
   };
@@ -76,7 +77,7 @@ const MoodHistoryPanel: React.FC<MoodHistoryPanelProps> = ({ isDarkMode = false 
       await deleteMoodLog(moodLog.id);
       toast.success('Registro eliminado.');
     } catch (error) {
-      console.error('Error deleting mood log:', error);
+      logSanitizedClientError('Mood history delete failed', error);
       toast.error(error instanceof Error ? error.message : 'No se pudo eliminar el registro.');
     }
   };

@@ -4,6 +4,9 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { JournalEntry, JournalTemplate, JournalPrompt } from '../types';
 import { useJournal } from '../hooks/useJournal';
+import { AI_CONSENT_VERSION } from '../utils/legalVersions';
+import { GROQ_RETENTION_DISCLOSURE } from '../utils/aiProviderDisclosure';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 interface JournalEditorProps {
   entry?: JournalEntry;
@@ -42,6 +45,10 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
       textareaRef.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    setAiDataConsent(false);
+  }, [user?.uid, entry?.id]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -93,7 +100,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
       
       onClose();
     } catch (error) {
-      console.error('Error saving entry:', error);
+      logSanitizedClientError('Journal save action failed', error);
       toast.error('Error al guardar la entrada');
     } finally {
       setIsSaving(false);
@@ -113,12 +120,12 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
 
     setIsAnalyzing(true);
     try {
-      const analysis = await analyzeEntry(content);
+      const analysis = await analyzeEntry(content, AI_CONSENT_VERSION);
       setAiAnalysis(analysis);
       setShowAIAnalysis(true);
       toast.success('Análisis completado');
     } catch (error) {
-      console.error('Error analyzing entry:', error);
+      logSanitizedClientError('Journal analysis request failed', error);
       toast.error(error instanceof Error ? error.message : 'Error al analizar la entrada');
     } finally {
       setIsAnalyzing(false);
@@ -231,7 +238,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                   className="mt-1 h-4 w-4 accent-purple-600"
                 />
                 <span>
-                  Entiendo que, si solicito el análisis, el contenido de esta entrada se enviará a Groq para procesarlo. No incluyo información que no quiera compartir con un proveedor externo.
+                  Autorizo enviar el contenido de esta entrada a Groq si solicito el análisis. Puede revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo guardar la entrada sin solicitar IA y evitar incluir información que no quiera compartir con un proveedor externo.
                 </span>
               </label>
 

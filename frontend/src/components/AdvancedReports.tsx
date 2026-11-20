@@ -1,4 +1,4 @@
-import { AlertTriangle, Calendar, CheckCircle, Clock, Download, FileText, TrendingUp } from 'lucide-react';
+import { Calendar, Download, FileText, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import Header from './Header';
@@ -9,17 +9,19 @@ import { getRealMoodData } from '../services/realDataService';
 import { moodAnalyzerAgent } from '../services/specializedAgents';
 import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
 import { analyzeJournalEntry, getJournalEntriesByDateRange } from '../services/journalService';
+import { AI_CONSENT_VERSION } from '../utils/legalVersions';
+import { GROQ_RETENTION_DISCLOSURE } from '../utils/aiProviderDisclosure';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 // Interfaces locales para evitar problemas de importación
 interface AdvancedReport {
   id?: string;
   userId: string;
-  reportType: 'mood_analysis' | 'diary_analysis' | 'chat_analysis' | 'crisis_assessment' | 'weekly_summary' | 'monthly_summary';
+  reportType: 'mood_analysis' | 'diary_analysis' | 'chat_analysis' | 'weekly_summary' | 'monthly_summary';
   title: string;
   content: string;
   insights: string[];
   recommendations: string[];
-  riskLevel?: 'low' | 'medium' | 'high';
   data?: any;
   period?: {
     start: Date;
@@ -61,6 +63,7 @@ const AdvancedReports: React.FC = () => {
       const lastReport = localStorage.getItem(`lastReportDate_${user.uid}`);
       setLastReportDate(lastReport);
     }
+    setAiDataConsent(false);
   }, [user]);
 
   const canGenerateReport = () => {
@@ -98,7 +101,7 @@ const AdvancedReports: React.FC = () => {
       // Simular carga de reportes por ahora
       setReports([]);
     } catch (error) {
-      console.error('Error loading reports:', error);
+      logSanitizedClientError('Report list load failed', error);
       toast.error('Error al cargar los reportes');
     }
   };
@@ -175,7 +178,7 @@ const AdvancedReports: React.FC = () => {
       const aiAnalysis = await moodAnalyzerAgent.analyzeMood(prepareMoodAnalysis(
         realMoodData.moodLogs,
         `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`,
-      ).moodData);
+      ).moodData, AI_CONSENT_VERSION);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -185,7 +188,6 @@ const AdvancedReports: React.FC = () => {
         content: aiAnalysis.summary || 'Análisis detallado de tu estado de ánimo durante el período seleccionado.',
         insights: aiAnalysis.insights || ['Tu estado de ánimo general es positivo'],
         recommendations: aiAnalysis.recommendations || ['Continúa con tu rutina de bienestar'],
-        riskLevel: aiAnalysis.riskLevel || 'low',
         period: { start, end },
         createdAt: new Date(),
         data: {
@@ -211,7 +213,7 @@ const AdvancedReports: React.FC = () => {
       
       toast.success(`Reporte generado exitosamente con ${realMoodData.moodLogs.length} registros reales`);
     } catch (error) {
-      console.error('Error generating mood report:', error);
+      logSanitizedClientError('Mood report generation failed', error);
       toast.error(
         error instanceof Error ? error.message : 'Error al generar el reporte de estado de ánimo.'
       );
@@ -266,7 +268,7 @@ const AdvancedReports: React.FC = () => {
         toast.error('Las entradas del período no contienen texto para analizar.');
         return;
       }
-      const aiAnalysis = await analyzeJournalEntry(journalContent);
+      const aiAnalysis = await analyzeJournalEntry(journalContent, AI_CONSENT_VERSION);
 
       // Crear reporte con análisis de IA
       const report: AdvancedReport = {
@@ -291,7 +293,7 @@ const AdvancedReports: React.FC = () => {
       setReports((prev) => [report, ...prev]);
       toast.success(`Reporte de diario generado con ${entries.length} entradas reales.`);
     } catch (error) {
-      console.error('Error generating diary report:', error);
+      logSanitizedClientError('Journal report generation failed', error);
       toast.error(
         error instanceof Error ? error.message : 'Error al generar el reporte de diario.'
       );
@@ -319,40 +321,15 @@ const AdvancedReports: React.FC = () => {
         period: report.period || { start: new Date(), end: new Date() },
         userId: user.uid,
         type: reportType,
+        aiConsentVersion: AI_CONSENT_VERSION,
       };
 
       await generateAndDownloadReport(reportType, reportData);
 
       toast.success('Reporte PDF generado exitosamente', { id: 'pdf-generation' });
     } catch (error) {
-      console.error('Error downloading report:', error);
+      logSanitizedClientError('Report download failed', error);
       toast.error('Error al generar el reporte PDF', { id: 'pdf-generation' });
-    }
-  };
-
-  const getRiskLevelColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high':
-        return 'text-red-600 bg-red-100';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'low':
-        return 'text-green-600 bg-green-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getRiskLevelIcon = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high':
-        return <AlertTriangle className='w-4 h-4' />;
-      case 'medium':
-        return <Clock className='w-4 h-4' />;
-      case 'low':
-        return <CheckCircle className='w-4 h-4' />;
-      default:
-        return <FileText className='w-4 h-4' />;
     }
   };
 
@@ -375,7 +352,7 @@ const AdvancedReports: React.FC = () => {
         <div className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 sm:mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Generar Nuevo Reporte</h2>
           <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Al generar un análisis con IA, se enviarán los registros del período seleccionado a Groq para procesarlos. No incluyas información que no quieras compartir con un proveedor externo.
+            Al generar un análisis con IA, se enviarán a Groq los registros o entradas del período seleccionado, que pueden revelar datos sensibles sobre tu salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} El consentimiento es opcional y se solicita antes de generar cada reporte.
           </p>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
@@ -470,7 +447,7 @@ const AdvancedReports: React.FC = () => {
               className='mt-1 h-4 w-4 shrink-0 accent-purple-600'
             />
             <span>
-              Acepto enviar los registros o entradas del período seleccionado a Groq mediante el servicio de IA para generar este análisis y su PDF.
+              Autorizo enviar a Groq los registros o entradas del período seleccionado, que pueden contener datos sensibles sobre mi salud, para generar este análisis y su PDF. {GROQ_RETENTION_DISCLOSURE} Puedo no generar el reporte.
             </span>
           </label>
         </div>
@@ -498,16 +475,6 @@ const AdvancedReports: React.FC = () => {
                     <div className='flex-1'>
                       <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2'>
                         <h3 className='text-base sm:text-lg font-semibold'>{report.title}</h3>
-                        {report.riskLevel && (
-                          <span
-                            className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(
-                              report.riskLevel
-                            )}`}
-                          >
-                            {getRiskLevelIcon(report.riskLevel)}
-                            <span className='ml-1'>{report.riskLevel.toUpperCase()}</span>
-                          </span>
-                        )}
                       </div>
 
                       <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-3`}>{report.content}</p>

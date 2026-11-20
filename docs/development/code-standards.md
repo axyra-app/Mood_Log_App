@@ -27,6 +27,7 @@ El proyecto usa Tailwind CSS y un contexto de tema. Conserva el estilo existente
 - No confíes roles, propietarios ni permisos enviados por el cliente.
 - En Firestore, deriva el `userId` de la sesión autenticada y manténlo inmutable.
 - No incluyas notas, mensajes, datos de salud, secretos o tokens en logs, analytics o errores visibles.
+- En cliente, registra errores de Firestore, IA y UI con `logSanitizedClientError` (`frontend/src/utils/safeClientLog.ts`); no imprimas objetos `Error`, `message`, stack, payloads, IDs personales ni `ErrorInfo` completo. En API, registra códigos normalizados y contexto operativo, nunca contenido del usuario.
 - No uses variables `VITE_*` para secretos de servidor.
 - Prueba las reglas para propietario, otro usuario y usuario anónimo antes de cambiar operaciones de datos.
 

@@ -1,4 +1,4 @@
-import { Brain, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
+import { Brain, CheckCircle, Lightbulb, TrendingUp } from 'lucide-react';
 import React from 'react';
 import Logo from './Logo';
 
@@ -7,9 +7,7 @@ interface MoodAnalysis {
   patterns: string[];
   insights: string[];
   recommendations: string[];
-  riskLevel: 'low' | 'medium' | 'high';
   nextSteps: string[];
-  moodTrend: 'improving' | 'stable' | 'declining';
   keyFactors: string[];
 }
 
@@ -40,39 +38,6 @@ const MoodAnalysisDisplay: React.FC<MoodAnalysisDisplayProps> = ({ analysis, ana
     return null;
   }
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'improving':
-        return <TrendingUp className="w-5 h-5 text-green-500" />;
-      case 'declining':
-        return <TrendingDown className="w-5 h-5 text-red-500" />;
-      default:
-        return <Minus className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'high':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default:
-        return 'text-green-600 bg-green-50 border-green-200';
-    }
-  };
-
-  const getRiskIcon = (risk: string) => {
-    switch (risk) {
-      case 'high':
-        return <AlertTriangle className="w-4 h-4" />;
-      case 'medium':
-        return <AlertTriangle className="w-4 h-4" />;
-      default:
-        return <CheckCircle className="w-4 h-4" />;
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 space-y-6">
       {/* Header */}
@@ -81,22 +46,6 @@ const MoodAnalysisDisplay: React.FC<MoodAnalysisDisplayProps> = ({ analysis, ana
           <Brain className="w-6 h-6 text-blue-500" />
           <h3 className="text-lg font-semibold text-gray-900">Análisis de Estado de Ánimo</h3>
         </div>
-        <div className="flex items-center space-x-2">
-          {getTrendIcon(analysis.moodTrend)}
-          <span className="text-sm font-medium text-gray-600 capitalize">
-            {analysis.moodTrend === 'improving' ? 'Mejorando' : 
-             analysis.moodTrend === 'declining' ? 'Declinando' : 'Estable'}
-          </span>
-        </div>
-      </div>
-
-      {/* Risk Level */}
-      <div className={`inline-flex items-center space-x-2 px-3 py-2 rounded-lg border ${getRiskColor(analysis.riskLevel)}`}>
-        {getRiskIcon(analysis.riskLevel)}
-        <span className="text-sm font-medium">
-          Riesgo: {analysis.riskLevel === 'high' ? 'Alto' : 
-                  analysis.riskLevel === 'medium' ? 'Medio' : 'Bajo'}
-        </span>
       </div>
 
       {/* Summary */}

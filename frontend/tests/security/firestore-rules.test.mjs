@@ -13,6 +13,7 @@ import {
   collection,
   getDoc,
   setLogLevel,
+  serverTimestamp,
   setDoc,
   updateDoc,
   where,
@@ -49,6 +50,22 @@ const validJournalEntry = (userId, overrides = {}) => ({
   updatedAt: new Date(),
   ...overrides,
 });
+const currentAdultEligibility = () => ({
+  isAdult: true,
+  version: "co-18plus-v1",
+  attestedAt: new Date(),
+});
+const currentLegalAcceptance = () => ({
+  termsVersion: "co-terms-draft-v2-sensitive-data",
+  privacyNoticeVersion: "co-privacy-draft-v4-groq-retention",
+  acceptedAt: new Date(),
+});
+const currentSensitiveConsent = (eventId) => ({
+  version: "co-sensitive-selfreport-draft-v1",
+  decision: "accepted",
+  eventId,
+  changedAt: new Date(),
+});
 setLogLevel("silent");
 
 const environment = await initializeTestEnvironment({
@@ -73,6 +90,24 @@ const anonymousStorage = () =>
 beforeEach(async () => {
   await environment.clearFirestore();
   await environment.clearStorage();
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    for (const uid of [ownerId, otherUserId]) {
+      await setDoc(doc(db, `users/${uid}`), {
+        role: "user",
+        displayName: uid,
+        adultEligibility: currentAdultEligibility(),
+        legalAcceptance: currentLegalAcceptance(),
+        sensitiveSelfReportConsent: currentSensitiveConsent(`sensitive-${uid}`),
+      });
+      await setDoc(doc(db, `sensitiveDataConsentEvents/sensitive-${uid}`), {
+        userId: uid,
+        version: "co-sensitive-selfreport-draft-v1",
+        decision: "accepted",
+        recordedAt: new Date(),
+      });
+    }
+  });
 });
 
 after(async () => {
@@ -98,6 +133,169 @@ test("mood and journal documents are isolated to their owner", async () => {
   await assertFails(getDoc(doc(anonymousDb(), "journalEntries/journal-a")));
 });
 
+test("AI quota export is owner-readable while all client writes and collection listing stay denied", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), `aiUsage/${ownerId}`), {
+      day: "2026-11-20",
+      count: 3,
+      minuteBucket: 29_925_000,
+      minuteCount: 2,
+      updatedAt: new Date(),
+    });
+  });
+
+  const ownerDb = authenticatedDb(ownerId);
+  await assertSucceeds(getDoc(doc(ownerDb, `aiUsage/${ownerId}`)));
+  await assertFails(getDoc(doc(authenticatedDb(otherUserId), `aiUsage/${ownerId}`)));
+  await assertFails(getDoc(doc(anonymousDb(), `aiUsage/${ownerId}`)));
+  await assertFails(getDocs(collection(ownerDb, "aiUsage")));
+  await assertFails(setDoc(doc(ownerDb, `aiUsage/${ownerId}`), { count: 999 }));
+  await assertFails(updateDoc(doc(ownerDb, `aiUsage/${ownerId}`), { count: 999 }));
+  await assertFails(deleteDoc(doc(ownerDb, `aiUsage/${ownerId}`)));
+});
+
+test("personal records require both adult eligibility and current legal acceptance", async () => {
+  const candidateId = "adult-candidate";
+  const candidateDb = authenticatedDb(candidateId);
+  const candidateStorage = authenticatedStorage(candidateId);
+  const candidateFile = ref(candidateStorage, `users/${candidateId}/attachments/test.png`);
+
+  await assertSucceeds(setDoc(doc(candidateDb, `users/${candidateId}`), {
+    role: "user",
+    displayName: "Candidate",
+  }));
+  await assertFails(setDoc(doc(candidateDb, "moodLogs/before-attestation"), validMoodLog(candidateId)));
+  await assertFails(setDoc(doc(candidateDb, "journalEntries/before-attestation"), validJournalEntry(candidateId)));
+  await assertFails(uploadBytes(candidateFile, new Uint8Array([1, 2, 3]), { contentType: "image/png" }));
+
+  await assertSucceeds(updateDoc(doc(candidateDb, `users/${candidateId}`), {
+    adultEligibility: {
+      isAdult: true,
+      version: "co-18plus-v1",
+      attestedAt: serverTimestamp(),
+    },
+  }));
+  await assertFails(setDoc(doc(candidateDb, "moodLogs/before-legal-acceptance"), validMoodLog(candidateId)));
+  await assertFails(uploadBytes(candidateFile, new Uint8Array([1, 2, 3]), { contentType: "image/png" }));
+  await assertFails(updateDoc(doc(candidateDb, `users/${candidateId}`), {
+    legalAcceptance: currentLegalAcceptance(),
+  }));
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await updateDoc(doc(context.firestore(), `users/${candidateId}`), {
+      legalAcceptance: currentLegalAcceptance(),
+    });
+    await setDoc(doc(context.firestore(), "legalAcceptanceEvents/legal-event-a"), {
+      userId: candidateId,
+      termsVersion: "co-terms-draft-v2-sensitive-data",
+      privacyNoticeVersion: "co-privacy-draft-v4-groq-retention",
+      acceptedAt: new Date(),
+    });
+  });
+  await assertFails(setDoc(doc(candidateDb, "moodLogs/before-sensitive-consent"), validMoodLog(candidateId)));
+  await assertFails(updateDoc(doc(candidateDb, `users/${candidateId}`), {
+    sensitiveSelfReportConsent: currentSensitiveConsent("forged-marker"),
+  }));
+
+  const malformedAttestationId = "adult-malformed-attestation";
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, `users/${malformedAttestationId}`), {
+      role: "user",
+      adultEligibility: {
+        isAdult: true,
+        version: "co-18plus-v1",
+        attestedAt: "not-a-timestamp",
+      },
+      legalAcceptance: currentLegalAcceptance(),
+      sensitiveSelfReportConsent: currentSensitiveConsent("malformed-attestation-consent"),
+    });
+    await setDoc(doc(db, "sensitiveDataConsentEvents/malformed-attestation-consent"), {
+      userId: malformedAttestationId,
+      version: "co-sensitive-selfreport-draft-v1",
+      decision: "accepted",
+      recordedAt: new Date(),
+    });
+  });
+  const malformedDb = authenticatedDb(malformedAttestationId);
+  const malformedStorage = authenticatedStorage(malformedAttestationId);
+  await assertFails(setDoc(
+    doc(malformedDb, "moodLogs/malformed-attestation"),
+    validMoodLog(malformedAttestationId),
+  ));
+  await assertFails(uploadBytes(
+    ref(malformedStorage, `users/${malformedAttestationId}/attachments/malformed.png`),
+    new Uint8Array([1, 2, 3]),
+    { contentType: "image/png" },
+  ));
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const adminDb = context.firestore();
+    await updateDoc(doc(adminDb, `users/${candidateId}`), {
+      sensitiveSelfReportConsent: currentSensitiveConsent("sensitive-event-a"),
+    });
+    await setDoc(doc(adminDb, "sensitiveDataConsentEvents/sensitive-event-a"), {
+      userId: candidateId,
+      version: "co-sensitive-selfreport-draft-v1",
+      decision: "accepted",
+      recordedAt: new Date(),
+    });
+  });
+
+  await assertSucceeds(setDoc(doc(candidateDb, "moodLogs/after-attestation"), validMoodLog(candidateId)));
+  await assertSucceeds(uploadBytes(candidateFile, new Uint8Array([1, 2, 3]), { contentType: "image/png" }));
+  await assertSucceeds(getDoc(doc(candidateDb, "legalAcceptanceEvents/legal-event-a")));
+  await assertSucceeds(getDoc(doc(candidateDb, "sensitiveDataConsentEvents/sensitive-event-a")));
+  await assertFails(getDoc(doc(authenticatedDb(otherUserId), "legalAcceptanceEvents/legal-event-a")));
+  await assertFails(getDoc(doc(authenticatedDb(otherUserId), "sensitiveDataConsentEvents/sensitive-event-a")));
+  await assertFails(setDoc(doc(candidateDb, "legalAcceptanceEvents/client-event"), {
+    userId: candidateId,
+    termsVersion: "co-terms-draft-v2-sensitive-data",
+    privacyNoticeVersion: "co-privacy-draft-v4-groq-retention",
+    acceptedAt: new Date(),
+  }));
+  await assertFails(setDoc(doc(candidateDb, "sensitiveDataConsentEvents/client-event"), {
+    userId: candidateId,
+    version: "co-sensitive-selfreport-draft-v1",
+    decision: "accepted",
+    recordedAt: new Date(),
+  }));
+  await assertFails(updateDoc(doc(candidateDb, `users/${candidateId}`), {
+    adultEligibility: { isAdult: false, version: "co-18plus-v1", attestedAt: new Date() },
+  }));
+
+  const staleAcceptanceId = "stale-acceptance-user";
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), `users/${staleAcceptanceId}`), {
+      role: "user",
+      adultEligibility: currentAdultEligibility(),
+      legalAcceptance: {
+        ...currentLegalAcceptance(),
+        termsVersion: "co-terms-draft-v0",
+      },
+    });
+  });
+  await assertFails(setDoc(
+    doc(authenticatedDb(staleAcceptanceId), "moodLogs/stale-acceptance"),
+    validMoodLog(staleAcceptanceId),
+  ));
+
+  const legacyId = "legacy-attestation-user";
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), `users/${legacyId}`), {
+      role: "user",
+      adultEligibility: { isAdult: true, version: "co-17plus-v0", attestedAt: new Date() },
+    });
+  });
+  await assertSucceeds(updateDoc(doc(authenticatedDb(legacyId), `users/${legacyId}`), {
+    adultEligibility: {
+      isAdult: true,
+      version: "co-18plus-v1",
+      attestedAt: serverTimestamp(),
+    },
+  }));
+});
+
 test("owners can create and update mood and journal documents without changing ownership", async () => {
   const ownerDb = authenticatedDb(ownerId);
 
@@ -111,11 +309,46 @@ test("owners can create and update mood and journal documents without changing o
   await assertSucceeds(deleteDoc(doc(ownerDb, "journalEntries/journal-a")));
 });
 
+test("revoking the sensitive-data consent blocks new writes but preserves access to remove saved records", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "moodLogs/revocation-record"), validMoodLog(ownerId));
+    await setDoc(doc(db, "journalEntries/revocation-entry"), validJournalEntry(ownerId));
+    await updateDoc(doc(db, `users/${ownerId}`), {
+      sensitiveSelfReportConsent: {
+        version: "co-sensitive-selfreport-draft-v1",
+        decision: "revoked",
+        eventId: "sensitive-revoked-owner-a",
+        changedAt: new Date(),
+      },
+    });
+    await setDoc(doc(db, "sensitiveDataConsentEvents/sensitive-revoked-owner-a"), {
+      userId: ownerId,
+      version: "co-sensitive-selfreport-draft-v1",
+      decision: "revoked",
+      recordedAt: new Date(),
+    });
+  });
+
+  const ownerDb = authenticatedDb(ownerId);
+  await assertFails(setDoc(doc(ownerDb, "moodLogs/after-revocation"), validMoodLog(ownerId)));
+  await assertFails(updateDoc(doc(ownerDb, "moodLogs/revocation-record"), { mood: 6 }));
+  await assertFails(setDoc(doc(ownerDb, "journalEntries/after-revocation"), validJournalEntry(ownerId)));
+  await assertFails(updateDoc(doc(ownerDb, "journalEntries/revocation-entry"), { content: "Changed" }));
+  await assertSucceeds(getDoc(doc(ownerDb, "moodLogs/revocation-record")));
+  await assertSucceeds(deleteDoc(doc(ownerDb, "moodLogs/revocation-record")));
+  await assertSucceeds(deleteDoc(doc(ownerDb, "journalEntries/revocation-entry")));
+});
+
 test("a pending account deletion blocks new writes while preserving read access", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
     await setDoc(doc(db, `accountDeletionRequests/${ownerId}`), { requestedAt: new Date() });
-    await setDoc(doc(db, `users/${ownerId}`), { role: "user", displayName: "Owner" });
+    await setDoc(doc(db, `users/${ownerId}`), {
+      role: "user",
+      displayName: "Owner",
+      adultEligibility: currentAdultEligibility(),
+    });
     await setDoc(doc(db, `userSettings/${ownerId}`), { userId: ownerId, version: 1 });
     await setDoc(doc(db, "moodLogs/mood-a"), validMoodLog(ownerId));
     await setDoc(doc(db, "journalEntries/journal-a"), validJournalEntry(ownerId));
@@ -296,12 +529,11 @@ test("users cannot assign or change their own privileged role", async () => {
   const ownerDb = authenticatedDb(ownerId);
   const otherUserDb = authenticatedDb(otherUserId);
 
-  await assertSucceeds(setDoc(doc(ownerDb, `users/${ownerId}`), {
+  await assertSucceeds(updateDoc(doc(ownerDb, `users/${ownerId}`), {
     displayName: "Owner",
     email: null,
     location: "Bogota",
     bio: "A short profile bio",
-    role: "user",
   }));
   await assertSucceeds(updateDoc(doc(ownerDb, `users/${ownerId}`), {
     displayName: "Updated owner",
@@ -317,7 +549,7 @@ test("users cannot assign or change their own privileged role", async () => {
   await assertFails(setDoc(doc(otherUserDb, `users/${otherUserId}`), { displayName: "No role" }));
   await assertFails(setDoc(doc(anonymousDb(), `users/${ownerId}`), { role: "user" }));
   await assertFails(deleteDoc(doc(otherUserDb, `users/${ownerId}`)));
-  await assertSucceeds(deleteDoc(doc(ownerDb, `users/${ownerId}`)));
+  await assertFails(deleteDoc(doc(ownerDb, `users/${ownerId}`)));
 });
 
 test("notification documents are owner-scoped and only read status can be updated", async () => {
@@ -424,6 +656,29 @@ test("advanced reports and reminders support owner-only CRUD operations", async 
     }));
     await assertSucceeds(deleteDoc(ownerRef));
   }
+});
+
+test("AI consent audit events are readable by their owner and server-managed", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "aiConsentEvents/consent-a"), {
+      userId: ownerId,
+      task: "chat",
+      consentVersion: "co-ai-groq-v3-retention-and-location",
+      agreedAt: new Date(),
+    });
+  });
+
+  const ownerDb = authenticatedDb(ownerId);
+  const eventRef = doc(ownerDb, "aiConsentEvents/consent-a");
+  await assertSucceeds(getDoc(eventRef));
+  await assertFails(getDoc(doc(authenticatedDb(otherUserId), "aiConsentEvents/consent-a")));
+  await assertFails(setDoc(doc(ownerDb, "aiConsentEvents/client-write"), {
+    userId: ownerId,
+    task: "chat",
+    consentVersion: "co-ai-groq-v3-retention-and-location",
+  }));
+  await assertFails(updateDoc(eventRef, { task: "journal-analysis" }));
+  await assertFails(deleteDoc(eventRef));
 });
 
 test("journal templates and prompts are readable only by authenticated users", async () => {

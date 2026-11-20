@@ -20,10 +20,13 @@ import { useJournal } from '../hooks/useJournal';
 import { useMood } from '../hooks/useMood';
 import { MoodAnalysisResult, moodAnalyzerAgent } from '../services/specializedAgents';
 import { getMoodLogsByDateRange } from '../services/moodLogService';
+import { AI_CONSENT_VERSION } from '../utils/legalVersions';
+import { GROQ_RETENTION_DISCLOSURE } from '../utils/aiProviderDisclosure';
 import { createStatisticsPdf, loadStatisticsPdfLogo } from '../services/statisticsPdfService';
 import { MoodLog } from '../types';
 import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
 import { toDate } from '../utils/moodMetrics';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 import logoUrl from '../assets/Logo_Mood_log_app.png';
 
 const Statistics: React.FC = () => {
@@ -44,7 +47,7 @@ const Statistics: React.FC = () => {
     setAiAnalysis(null);
     setAnalysisError(null);
     setAiDataConsent(false);
-  }, [timeRange]);
+  }, [timeRange, user?.uid]);
 
   // Función para exportar estadísticas como PDF
   const exportStatistics = async () => {
@@ -81,7 +84,7 @@ const Statistics: React.FC = () => {
 
       toast.success('Reporte PDF generado exitosamente');
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      logSanitizedClientError('Statistics PDF generation failed', error);
       toast.error(error instanceof Error ? error.message : 'Error al generar el reporte PDF');
     } finally {
       setExportingPdf(false);
@@ -176,14 +179,14 @@ const Statistics: React.FC = () => {
     setAnalyzing(true);
     try {
       const preparedAnalysis = prepareMoodAnalysis(periodLogs, timeRange);
-      const analysis = await moodAnalyzerAgent.analyzeMood(preparedAnalysis.moodData);
+      const analysis = await moodAnalyzerAgent.analyzeMood(preparedAnalysis.moodData, AI_CONSENT_VERSION);
       setAiAnalysis(analysis);
       const countMessage = preparedAnalysis.includedCount < preparedAnalysis.totalCount
         ? ` (${preparedAnalysis.includedCount} de ${preparedAnalysis.totalCount} registros más recientes)`
         : '';
       toast.success(`Análisis generado${countMessage}.`);
     } catch (error) {
-      console.error('Error generating AI analysis:', error);
+      logSanitizedClientError('Mood analysis request failed', error);
       const message = error instanceof Error ? error.message : 'No se pudo generar el análisis.';
       setAnalysisError(message);
       toast.error(message);
@@ -414,7 +417,7 @@ const Statistics: React.FC = () => {
               onChange={(event) => setAiDataConsent(event.target.checked)}
               className='mt-0.5 h-5 w-5 shrink-0 accent-purple-600'
             />
-            <span>Entiendo que se enviarán a Groq mis registros de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período. El análisis usará como máximo 60 registros recientes.</span>
+            <span>Autorizo enviar a Groq mis registros de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período; pueden revelar datos sensibles de salud. El análisis usará como máximo 60 registros recientes. {GROQ_RETENTION_DISCLOSURE} Puedo no solicitarlo.</span>
           </label>
 
           {analysisError && (
@@ -531,56 +534,6 @@ const Statistics: React.FC = () => {
                 </div>
               )}
 
-              {aiAnalysis.interventionStrategies.length > 0 && (
-                <div>
-                  <h3 className='mb-3 font-semibold text-gray-900 dark:text-white'>Estrategias cotidianas mencionadas</h3>
-                  <ul className='space-y-2'>
-                    {aiAnalysis.interventionStrategies.map((strategy, index) => (
-                      <li key={`${index}-${strategy}`} className='flex items-start gap-2 text-sm leading-relaxed text-gray-700 dark:text-gray-200'>
-                        <span className='mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500' />
-                        {strategy}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {aiAnalysis.wellnessPlan.length > 0 && (
-                <div className='rounded-lg border border-teal-200 bg-teal-50 p-4 dark:border-teal-900 dark:bg-teal-950/30'>
-                  <h3 className='mb-2 font-semibold text-teal-900 dark:text-teal-200'>Ideas de autocuidado</h3>
-                  <ul className='space-y-2'>
-                    {aiAnalysis.wellnessPlan.map((idea, index) => (
-                      <li key={`${index}-${idea}`} className='text-sm leading-relaxed text-teal-900 dark:text-teal-200'>{idea}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Clasificación no clínica */}
-              {aiAnalysis.riskLevel && (
-                <div className='rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50'>
-                  <h3 className='mb-2 flex items-center font-semibold text-gray-900 dark:text-white'>
-                    <AlertTriangle className='w-5 h-5 mr-2 text-orange-500' />
-                    Clasificación informativa generada por IA
-                  </h3>
-                  <div
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      aiAnalysis.riskLevel === 'high'
-                        ? 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200'
-                        : aiAnalysis.riskLevel === 'medium'
-                        ? 'bg-yellow-100 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-200'
-                        : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                    }`}
-                  >
-                    {aiAnalysis.riskLevel === 'high'
-                      ? 'Nivel indicado: alto'
-                      : aiAnalysis.riskLevel === 'medium'
-                      ? 'Nivel indicado: medio'
-                      : 'Nivel indicado: bajo'}
-                  </div>
-                  <p className='mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400'>Esta clasificación puede equivocarse. No es un diagnóstico ni una evaluación clínica.</p>
-                </div>
-              )}
             </div>
           ) : (
             <div className='rounded-lg bg-gray-50 px-4 py-9 text-center text-gray-600 dark:bg-gray-900/50 dark:text-gray-300 sm:py-10'>

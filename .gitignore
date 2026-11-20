@@ -84,6 +84,9 @@ dist
 # Gatsby files
 .cache/
 public
+# Vite static assets belong in source control for this frontend.
+!frontend/public/
+!frontend/public/**
 
 # Vuepress build output
 .vuepress/dist
@@ -240,3 +243,20 @@ workbox-*.js
 # Local improvement plans (keep private; do not publish)
 /docs/plan/PLAN-DE-MEJORAS.md
 /docs/plan/PLAN DE MEJORA ANTIGRAVITY.md
+
+# Android / Wear OS local state and machine-specific SDK paths
+/wearos/.gradle/
+/wearos/**/build/
+/wearos/local.properties
+/wearos/.kotlin/
+
+# Capacitor generated native build state (keep Android and iOS project sources)
+/frontend/android/.gradle/
+/frontend/android/local.properties
+/frontend/android/**/build/
+/frontend/icons/
+/frontend/ios/App/Pods/
+/frontend/ios/App/DerivedData/
+/frontend/ios/App/build/
+/frontend/ios/App/CapApp-SPM/.build/
+.env*

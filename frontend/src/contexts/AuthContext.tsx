@@ -1,8 +1,8 @@
 import {
   User as FirebaseUser,
+  browserPopupRedirectResolver,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
-  getAdditionalUserInfo,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -10,8 +10,13 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { analyticsEvents } from '../services/analytics';
+import { analyticsEvents, hasCurrentAnalyticsConsent, setAnalyticsConsent } from '../services/analytics';
 import { auth, db } from '../services/firebase';
+import { recordCurrentLegalAcceptance } from '../services/legalAcceptanceService';
+import { ADULT_ELIGIBILITY_VERSION } from '../utils/legalVersions';
+import { hasCurrentLegalAcceptanceMarker } from '../utils/legalAcceptanceMarker';
+import { hasCurrentAdultEligibilityMarker } from '../utils/adultEligibility';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 import { getAuthErrorMessage, getGoogleSignInErrorMessage, getRegistrationErrorMessage } from '../utils/errorMessages';
 
 interface User {
@@ -26,7 +31,15 @@ interface User {
   lastName?: string;
   phone?: string;
   photoURL?: string;
+  adultEligibility?: {
+    isAdult: true;
+    version: string;
+    attestedAt: any;
+  };
 }
+
+export const hasCurrentAdultEligibility = (user: User | null): boolean =>
+  hasCurrentAdultEligibilityMarker(user?.adultEligibility);
 
 type UserProfileUpdates = {
   displayName?: string;
@@ -46,14 +59,27 @@ interface AuthContextType {
   loading: boolean;
   profileLoaded: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    confirmedAdult: boolean,
+    acceptedLegalDocuments: boolean,
+  ) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUpWithGoogle: () => Promise<void>;
+  signUpWithGoogle: (confirmedAdult: boolean, acceptedLegalDocuments: boolean) => Promise<void>;
+  retryLegalAcceptance: () => Promise<void>;
+  confirmAdultEligibility: (confirmedAdult: boolean) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: UserProfileUpdates) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const getSafeAuthErrorCode = (error: unknown): string => {
+  if (!error || typeof error !== 'object' || !('code' in error)) return 'unknown';
+  const code = error.code;
+  return typeof code === 'string' && /^auth\/[a-z-]+$/.test(code) ? code : 'unknown';
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -85,8 +111,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let authRevision = 0;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      const currentRevision = ++authRevision;
+      // Never carry a previous account's choice across an auth transition.
+      void setAnalyticsConsent(false);
       
       if (!isMounted) {
         return;
@@ -100,6 +130,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             if (userDoc.exists()) {
               const userData = userDoc.data();
+              if (
+                isMounted
+                && currentRevision === authRevision
+                && hasCurrentLegalAcceptanceMarker(userData.legalAcceptance)
+                && hasCurrentAnalyticsConsent(userData.settings)
+              ) {
+                void setAnalyticsConsent(true);
+              }
               const userDataWithAuth: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -111,6 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 phone: userData.phone,
                 firstName: userData.firstName,
                 lastName: userData.lastName,
+                adultEligibility: userData.adultEligibility,
               };
 
               // Verificar si necesita completar perfil
@@ -129,6 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || null,
                   username: firebaseUser.email?.split('@')[0],
                   role: 'user',
+                  adultEligibility: userData.adultEligibility,
                 };
                 if (isMounted) {
                   setUser(basicUserData);
@@ -152,10 +192,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               };
 
               try {
-                await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData);
+                await setDoc(doc(db, 'users', firebaseUser.uid), basicUserData, { merge: true });
                 
               } catch (error) {
-                console.error('❌ Error creando perfil básico:', error);
+                console.error('Error creating basic profile:', getSafeAuthErrorCode(error));
               }
 
               // Crear usuario básico para el estado - siempre necesita completar perfil
@@ -172,7 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             }
           } catch (error) {
-            console.error('Error loading user profile:', error);
+            logSanitizedClientError('User profile load failed', error);
             // En caso de error, usar datos básicos de Firebase Auth
             const userData: User = {
               uid: firebaseUser.uid,
@@ -193,7 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error('Error in auth state change:', error);
+        logSanitizedClientError('Authentication state update failed', error);
         if (isMounted) setUser(null);
       } finally {
         if (isMounted) {
@@ -220,7 +260,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    confirmedAdult: boolean,
+    acceptedLegalDocuments: boolean,
+  ) => {
+    if (!confirmedAdult) {
+      throw new Error('Confirma que tienes 18 años o más para crear una cuenta.');
+    }
+    if (!acceptedLegalDocuments) {
+      throw new Error('Confirma la aceptación de los términos y el aviso de privacidad.');
+    }
+
     try {
       setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -231,11 +283,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         displayName: email.split('@')[0],
         username: email.split('@')[0],
         role: 'user',
+        adultEligibility: {
+          isAdult: true,
+          version: ADULT_ELIGIBILITY_VERSION,
+          attestedAt: serverTimestamp(),
+        },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData, { merge: true });
+      await recordCurrentLegalAcceptance();
+      const attestedAt = new Date();
+      setUser((currentUser) => currentUser ? {
+        ...currentUser,
+        adultEligibility: {
+          isAdult: true,
+          version: ADULT_ELIGIBILITY_VERSION,
+          attestedAt,
+        },
+      } : currentUser);
 
       // Trackear registro exitoso
       analyticsEvents.userSignUp('email');
@@ -247,6 +314,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('Ya existe una cuenta con este email. ¿Quieres iniciar sesión?');
       }
+      if (error instanceof Error && !('code' in error)) throw error;
       throw new Error(getRegistrationErrorMessage(error));
     }
   };
@@ -264,13 +332,93 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       popup.close();
       
-      await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, provider, browserPopupRedirectResolver);
       
       // La lógica de verificación de perfil se maneja en onAuthStateChanged
     } catch (error: any) {
-      console.error('❌ Google Sign-In Error:', error);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error message:', error.message);
+      console.error('Google sign-in failed:', getSafeAuthErrorCode(error));
+      setLoading(false);
+      
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('El popup fue bloqueado. Por favor, permite popups para este sitio y vuelve a intentar.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('El popup fue cerrado. Por favor, completa el proceso de autenticación.');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        throw new Error('Solicitud cancelada. Por favor, intenta de nuevo.');
+      }
+
+      if (error instanceof Error && !('code' in error)) throw error;
+      
+      throw new Error(getGoogleSignInErrorMessage(error));
+    }
+  };
+
+  const signUpWithGoogle = async (confirmedAdult: boolean, acceptedLegalDocuments: boolean) => {
+    if (!confirmedAdult) {
+      throw new Error('Confirma que tienes 18 años o más para crear una cuenta.');
+    }
+    if (!acceptedLegalDocuments) {
+      throw new Error('Confirma la aceptación de los términos y el aviso de privacidad.');
+    }
+
+    try {
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      
+      // Verificar si el popup está bloqueado
+      const popup = window.open('', '_blank', 'width=500,height=600');
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        throw new Error('Popup bloqueado. Por favor, permite popups para este sitio.');
+      }
+      popup.close();
+      
+      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
+      
+      const profileRef = doc(db, 'users', result.user.uid);
+      const userDoc = await getDoc(profileRef);
+      const existingAdultEligibility = userDoc.data()?.adultEligibility;
+
+      if (!userDoc.exists()) {
+        await setDoc(profileRef, {
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
+          username: result.user.email?.split('@')[0],
+          role: 'user',
+          adultEligibility: {
+            isAdult: true,
+            version: ADULT_ELIGIBILITY_VERSION,
+            attestedAt: serverTimestamp(),
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      } else if (!existingAdultEligibility) {
+        await setDoc(profileRef, {
+          adultEligibility: {
+            isAdult: true,
+            version: ADULT_ELIGIBILITY_VERSION,
+            attestedAt: serverTimestamp(),
+          },
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
+
+      await recordCurrentLegalAcceptance();
+
+      if (!existingAdultEligibility) {
+        setUser((currentUser) => currentUser ? {
+          ...currentUser,
+          adultEligibility: {
+            isAdult: true,
+            version: ADULT_ELIGIBILITY_VERSION,
+            attestedAt: new Date(),
+          },
+        } : currentUser);
+      }
+      
+      // La lógica de verificación de perfil se maneja en onAuthStateChanged
+    } catch (error: any) {
+      console.error('Google sign-up failed:', getSafeAuthErrorCode(error));
       setLoading(false);
       
       if (error.code === 'auth/popup-blocked') {
@@ -285,68 +433,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUpWithGoogle = async () => {
-    try {
-      setLoading(true);
-      const provider = new GoogleAuthProvider();
-      
-      // Verificar si el popup está bloqueado
-      const popup = window.open('', '_blank', 'width=500,height=600');
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        throw new Error('Popup bloqueado. Por favor, permite popups para este sitio.');
-      }
-      popup.close();
-      
-      const result = await signInWithPopup(auth, provider);
-      
-      // Verificar si es un usuario nuevo
-      const additionalInfo = getAdditionalUserInfo(result);
-      const isNewUser = additionalInfo?.isNewUser;
-      
-      if (isNewUser) {
-        
-        // El perfil se creará automáticamente en onAuthStateChanged
-      } else {
-        
-        // Verificar si realmente existe en Firestore
-        try {
-          const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-          if (!userDoc.exists()) {
-            
-            // Crear perfil básico para usuario que existe en Auth pero no en Firestore
-            const basicUserData = {
-              email: result.user.email,
-              displayName: result.user.displayName || result.user.email?.split('@')[0],
-              username: result.user.email?.split('@')[0],
-              role: 'user',
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            };
-            await setDoc(doc(db, 'users', result.user.uid), basicUserData);
-            
-          }
-        } catch (error) {
-          console.error('Error verificando usuario existente:', error);
-        }
-      }
-      
-      // La lógica de verificación de perfil se maneja en onAuthStateChanged
-    } catch (error: any) {
-      console.error('❌ Google Sign-Up Error:', error);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error message:', error.message);
-      setLoading(false);
-      
-      if (error.code === 'auth/popup-blocked') {
-        throw new Error('El popup fue bloqueado. Por favor, permite popups para este sitio y vuelve a intentar.');
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        throw new Error('El popup fue cerrado. Por favor, completa el proceso de autenticación.');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        throw new Error('Solicitud cancelada. Por favor, intenta de nuevo.');
-      }
-      
-      throw new Error(getGoogleSignInErrorMessage(error));
+  const retryLegalAcceptance = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('Inicia sesión nuevamente para reintentar.');
+
+    const profileRef = doc(db, 'users', currentUser.uid);
+    const profileSnapshot = await getDoc(profileRef);
+    const existingEligibility = profileSnapshot.data()?.adultEligibility;
+    if (!profileSnapshot.exists() || existingEligibility?.version !== ADULT_ELIGIBILITY_VERSION) {
+      await setDoc(profileRef, {
+        email: currentUser.email,
+        displayName: currentUser.displayName || currentUser.email?.split('@')[0],
+        username: currentUser.email?.split('@')[0],
+        role: 'user',
+        adultEligibility: {
+          isAdult: true,
+          version: ADULT_ELIGIBILITY_VERSION,
+          attestedAt: serverTimestamp(),
+        },
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
     }
+    await recordCurrentLegalAcceptance();
+  };
+
+  const confirmAdultEligibility = async (confirmedAdult: boolean) => {
+    if (!confirmedAdult) {
+      throw new Error('Confirma que tienes 18 años o más para continuar.');
+    }
+    if (!user) {
+      throw new Error('Inicia sesión para confirmar tu elegibilidad.');
+    }
+    if (hasCurrentAdultEligibility(user)) return;
+
+    const attestedAt = new Date();
+    await setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      displayName: user.displayName,
+      username: user.username || user.email?.split('@')[0],
+      role: 'user',
+      adultEligibility: {
+        isAdult: true,
+        version: ADULT_ELIGIBILITY_VERSION,
+        attestedAt: serverTimestamp(),
+      },
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
+    setUser((currentUser) => currentUser ? {
+      ...currentUser,
+      adultEligibility: {
+        isAdult: true,
+        version: ADULT_ELIGIBILITY_VERSION,
+        attestedAt,
+      },
+    } : currentUser);
   };
 
   const logout = async () => {
@@ -395,12 +536,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // User profile updated
     } catch (error: any) {
-      console.error('❌ Error updating user profile:', error);
-      console.error('❌ Error details:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack
-      });
+      console.error('Updating user profile failed:', getSafeAuthErrorCode(error));
       throw new Error(getAuthErrorMessage(error));
     }
   };
@@ -426,6 +562,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           firstName: userData.firstName,
           lastName: userData.lastName,
           phone: userData.phone,
+          adultEligibility: userData.adultEligibility,
         };
         
         
@@ -433,7 +570,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfileLoaded(true);
       }
     } catch (error) {
-      console.error('❌ Error refreshing user state:', error);
+      console.error('Refreshing user state failed:', getSafeAuthErrorCode(error));
     }
   };
 
@@ -448,6 +585,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     signInWithGoogle,
     signUpWithGoogle,
+    retryLegalAcceptance,
+    confirmAdultEligibility,
     logout,
     updateUserProfile,
   };

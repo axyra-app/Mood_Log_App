@@ -1,8 +1,13 @@
-import { getAnalytics } from 'firebase/analytics';
 import { FirebaseError, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import {
+  browserLocalPersistence,
+  connectAuthEmulator,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import { connectStorageEmulator, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import { getFirebaseClientConfig } from '../utils/firebaseClientConfig';
 
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_UPLOAD_TYPES = new Set([
@@ -37,27 +42,18 @@ const getUploadErrorMessage = (error: unknown): string => {
     : 'Ocurrió un error inesperado al subir el archivo.';
 };
 
-// Firebase configuration - Production ready
-const firebaseConfig = {
-  apiKey: "AIzaSyA-C1BT_zMxuYc9KijrjwJvQ7q6HambXhc",
-  authDomain: "mood-log-app-01.firebaseapp.com",
-  projectId: "mood-log-app-01",
-  storageBucket: "mood-log-app-01.firebasestorage.app",
-  messagingSenderId: "49395788789",
-  appId: "1:49395788789:web:0d09416d660b75d1820ebc",
-  measurementId: "G-2T3QQ2ESWM"
-};
-
-// Debug: Log configuration (only in development)
-if (import.meta.env.DEV) {
-  
-}
+// Client config is public by design, but must point at the explicitly selected environment.
+const firebaseConfig = getFirebaseClientConfig(import.meta.env);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
+// Load the browser OAuth popup resolver only when Google sign-in is requested.
+// Initializing it here eagerly loads Google's iframe helper on the public landing page.
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+});
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
@@ -65,8 +61,24 @@ export const db = getFirestore(app);
 // Initialize Firebase Storage and get a reference to the service
 export const storage = getStorage(app);
 
-// Initialize Analytics (only in browser environment)
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+const useFirebaseEmulators = import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true';
+if (
+  import.meta.env.DEV
+  && firebaseConfig.projectId === 'demo-mood-log-local'
+  && !useFirebaseEmulators
+) {
+  throw new Error('The local demo project must connect to Firebase emulators.');
+}
+
+if (useFirebaseEmulators) {
+  if (!import.meta.env.DEV || firebaseConfig.projectId !== 'demo-mood-log-local') {
+    throw new Error('Firebase emulators are restricted to local development and the demo project.');
+  }
+
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectStorageEmulator(storage, '127.0.0.1', 9199);
+}
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
   const userId = auth.currentUser?.uid;

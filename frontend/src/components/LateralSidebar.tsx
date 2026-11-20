@@ -1,6 +1,7 @@
 import { BarChart3, BookOpen, FileText, Heart, MessageCircle, X } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AI_FEATURES_ENABLED } from '../services/aiApi';
 import Logo from './Logo';
 
 interface LateralSidebarProps {
@@ -48,7 +49,7 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
       description: 'Análisis detallados',
       color: 'bg-gradient-to-r from-orange-500 to-amber-500',
     },
-  ];
+  ].filter((item) => AI_FEATURES_ENABLED || !['/chat', '/reports'].includes(item.path));
 
   return (
     <>

@@ -5,16 +5,30 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "dev:api:emulator": "node --experimental-strip-types scripts/devApiEmulator.mjs",
+    "emulators:local": "firebase emulators:start --only auth,firestore,storage --project demo-mood-log-local --config ../firebase.json",
+    "build": "vite build && npm run verify:pwa",
+    "build:mobile": "vite build --mode mobile && npm run verify:pwa",
+    "mobile:pwa-icons": "node scripts/preparePwaIcons.mjs",
+    "mobile:sync": "npm run mobile:pwa-icons && npm run build:mobile && cap sync",
+    "mobile:sync:android": "npm run mobile:pwa-icons && npm run build:mobile && cap sync android",
+    "mobile:sync:ios": "npm run mobile:pwa-icons && npm run build:mobile && cap sync ios",
+    "mobile:assets": "capacitor-assets generate --android --ios --iconBackgroundColor #101414 --iconBackgroundColorDark #101414 --splashBackgroundColor #101414 --splashBackgroundColorDark #101414",
+    "mobile:open:android": "cap open android",
+    "mobile:open:ios": "cap open ios",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-mood-log-rules --config ../firebase.json \"node --test tests/security/*.test.mjs\"",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-mood-log-rules --config ../firebase.json \"node --test --test-concurrency=1 tests/security/*.test.mjs\"",
     "test:api": "node --experimental-strip-types --test tests/api/*.test.mjs",
     "test:config": "node --test tests/config/*.test.mjs",
-    "test:unit": "node --experimental-strip-types --test tests/moodMetrics.test.mjs tests/analytics.test.mjs",
-    "vercel-build": "vite build"
+    "test:unit": "node --experimental-strip-types --test tests/moodMetrics.test.mjs tests/analytics.test.mjs tests/healthContext.test.mjs tests/protectedRouteDecision.test.mjs tests/adultEligibility.test.mjs",
+    "verify:pwa": "node scripts/verifyPwaBuild.mjs",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
     "date-fns": "^2.29.3",
     "firebase": "^13.0.0",
     "firebase-admin": "13.10.0",
@@ -30,6 +44,8 @@
     "recharts": "^2.5.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2",
     "@firebase/rules-unit-testing": "^6.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^18.0.28",
@@ -38,6 +54,7 @@
     "autoprefixer": "^10.4.14",
     "firebase-tools": "15.34.0",
     "postcss": "^8.4.21",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.0.2",
     "vite": "^6.4.4",
@@ -47,9 +64,10 @@
     "@grpc/grpc-js": "^1.14.6",
     "@opentelemetry/core": "^2.8.0",
     "chokidar": "^4.0.3",
+    "glob": "^14.0.6",
     "uuid": "^11.1.1"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": "24.x"
   }
 }

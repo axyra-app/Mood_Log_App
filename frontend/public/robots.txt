@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /mood-flow
+Disallow: /journal
+Disallow: /statistics
+Disallow: /reports
+Disallow: /chat
+Disallow: /chat/
+Disallow: /profile
+Disallow: /settings
+Disallow: /age-confirmation
+Disallow: /legal-acceptance
+Disallow: /sensitive-data-consent
+Disallow: /__dev/

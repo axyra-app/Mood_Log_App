@@ -12,6 +12,7 @@ import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { toDate } from '../utils/moodMetrics';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export const useJournal = (userId: string) => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -66,7 +67,7 @@ export const useJournal = (userId: string) => {
           setLoading(false);
         },
         (error) => {
-          console.error('Error in journal entries listener:', error);
+          logSanitizedClientError('Journal entries listener failed', error);
           setError(error.message || 'No se pudo cargar el diario.');
           setLoading(false);
         }
@@ -99,7 +100,7 @@ export const useJournal = (userId: string) => {
       // No need to manually update state - the listener will handle it
       return newEntry;
     } catch (err) {
-      console.error('❌ Error creating journal entry:', err);
+      logSanitizedClientError('Journal create action failed', err);
       setError(err instanceof Error ? err.message : 'Error creating journal entry');
       throw err;
     } finally {
@@ -119,7 +120,7 @@ export const useJournal = (userId: string) => {
 
       // No need to manually update state - the listener will handle it
     } catch (err) {
-      console.error('❌ Error updating journal entry:', err);
+      logSanitizedClientError('Journal update action failed', err);
       setError(err instanceof Error ? err.message : 'Error updating journal entry');
       throw err;
     } finally {
@@ -136,7 +137,7 @@ export const useJournal = (userId: string) => {
       await deleteJournalEntry(entryId);
       // No need to manually update state - the listener will handle it
     } catch (err) {
-      console.error('❌ Error deleting journal entry:', err);
+      logSanitizedClientError('Journal delete action failed', err);
       setError(err instanceof Error ? err.message : 'Error deleting journal entry');
       throw err;
     } finally {
@@ -159,11 +160,11 @@ export const useJournal = (userId: string) => {
   }, []);
 
   // Analyze journal entry content
-  const analyzeEntry = useCallback(async (content: string) => {
+  const analyzeEntry = useCallback(async (content: string, consentVersion: string) => {
     try {
       setLoading(true);
       setError(null);
-      return await analyzeJournalEntry(content);
+      return await analyzeJournalEntry(content, consentVersion);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error analyzing journal entry');
       throw err;

@@ -3,12 +3,13 @@ import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Logo from '../components/Logo';
-import { useAuth } from '../contexts/AuthContext';
+import { hasCurrentAdultEligibility, useAuth } from '../contexts/AuthContext';
+import { auth } from '../services/firebase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useValidation } from '../hooks/useValidation';
 
 const RegisterSimple: React.FC = () => {
-  const { signUp, signUpWithGoogle, user } = useAuth();
+  const { signUp, signUpWithGoogle, retryLegalAcceptance, user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { setError, hasError, getError, clearError } = useValidation();
   const [formData, setFormData] = useState({
@@ -19,8 +20,10 @@ const RegisterSimple: React.FC = () => {
     confirmPassword: '',
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [confirmedAdult, setConfirmedAdult] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [registrationState, setRegistrationState] = useState<'idle' | 'pending' | 'acceptance_failed'>('idle');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,16 +32,16 @@ const RegisterSimple: React.FC = () => {
 
   // Redirigir usuarios autenticados
   useEffect(() => {
-    if (user) {
+    if (user && registrationState === 'idle') {
       // Solo redirigir si estamos en la página de registro
       const currentPath = window.location.pathname;
       if (currentPath !== '/register') {
         return; // No redirigir si ya estamos en otra página
       }
 
-      navigate('/dashboard');
+      navigate(hasCurrentAdultEligibility(user) ? '/dashboard' : '/age-confirmation');
     }
-  }, [user, navigate]);
+  }, [user, navigate, registrationState]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -102,6 +105,11 @@ const RegisterSimple: React.FC = () => {
       isValid = false;
     }
 
+    if (!confirmedAdult) {
+      toast.error('Confirma que tienes 18 años o más para crear una cuenta.');
+      isValid = false;
+    }
+
     return isValid;
   };
 
@@ -112,11 +120,14 @@ const RegisterSimple: React.FC = () => {
 
     try {
       setLoading(true);
-      await signUp(formData.email, formData.password);
+      setRegistrationState('pending');
+      await signUp(formData.email, formData.password, confirmedAdult, agreedToTerms);
+      setRegistrationState('idle');
       toast.success('¡Cuenta creada! Bienvenido a Mood Log');
       // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Registration failed');
+      setRegistrationState(auth.currentUser ? 'acceptance_failed' : 'idle');
       toast.error(error.message || 'Error al crear la cuenta');
     } finally {
       setLoading(false);
@@ -124,15 +135,36 @@ const RegisterSimple: React.FC = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    if (!agreedToTerms || !confirmedAdult) {
+      toast.error('Acepta los términos y confirma que tienes 18 años o más para continuar.');
+      return;
+    }
+
     try {
       setLoading(true);
-      await signUpWithGoogle();
+      setRegistrationState('pending');
+      await signUpWithGoogle(confirmedAdult, agreedToTerms);
+      setRegistrationState('idle');
       toast.success('¡Cuenta creada con Google! Completa tu perfil para continuar');
 
       // No navegar manualmente, dejar que onAuthStateChanged maneje la navegación
     } catch (error: any) {
-      console.error('Google registration error:', error);
+      console.error('Google registration failed');
+      setRegistrationState(auth.currentUser ? 'acceptance_failed' : 'idle');
       toast.error(error.message || 'Error al registrarse con Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const retryAcceptance = async () => {
+    try {
+      setLoading(true);
+      await retryLegalAcceptance();
+      setRegistrationState('idle');
+      toast.success('La aceptación quedó registrada. Continuando…');
+    } catch (error: any) {
+      toast.error(error.message || 'No fue posible registrar la aceptación.');
     } finally {
       setLoading(false);
     }
@@ -184,7 +216,7 @@ const RegisterSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className='min-h-screen flex items-center justify-center mobile-padding'>
+      <main className='min-h-screen flex items-center justify-center mobile-padding'>
         <div className='w-full max-w-2xl'>
           <div
             className={`backdrop-blur-lg rounded-2xl shadow-2xl border transition-all duration-500 ${
@@ -209,11 +241,31 @@ const RegisterSimple: React.FC = () => {
                 </p>
               </div>
 
+              {registrationState === 'pending' && (
+                <p role='status' className='mx-6 mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800'>
+                  Guardando la versión aceptada. Espera antes de continuar.
+                </p>
+              )}
+              {registrationState === 'acceptance_failed' && (
+                <div role='alert' className='mx-6 mb-4 rounded-lg bg-amber-50 px-4 py-4 text-sm text-amber-900'>
+                  <p>La cuenta puede haberse creado, pero no se confirmó el registro de aceptación. Reinténtalo antes de usar Mood Log.</p>
+                  <button
+                    type='button'
+                    onClick={retryAcceptance}
+                    disabled={loading}
+                    className='mt-3 rounded-lg bg-amber-800 px-4 py-2 font-semibold text-white disabled:opacity-50'
+                  >
+                    {loading ? 'Reintentando…' : 'Reintentar registro'}
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className='space-y-6'>
 
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label
+                      htmlFor='firstName'
                       className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
@@ -222,7 +274,12 @@ const RegisterSimple: React.FC = () => {
                     </label>
                     <input
                       type='text'
+                      id='firstName'
                       name='firstName'
+                      autoComplete='given-name'
+                      required
+                      aria-invalid={hasError('firstName')}
+                      aria-describedby={hasError('firstName') ? 'firstName-error' : undefined}
                       value={formData.firstName}
                       onChange={handleInputChange}
                       maxLength={100}
@@ -235,11 +292,12 @@ const RegisterSimple: React.FC = () => {
                       }`}
                       placeholder='Tu nombre'
                     />
-                    {hasError('firstName') && <p className='text-red-500 text-sm mt-1'>{getError('firstName')}</p>}
+                    {hasError('firstName') && <p id='firstName-error' className='text-red-500 text-sm mt-1'>{getError('firstName')}</p>}
                   </div>
 
                   <div>
                     <label
+                      htmlFor='lastName'
                       className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
@@ -248,7 +306,12 @@ const RegisterSimple: React.FC = () => {
                     </label>
                     <input
                       type='text'
+                      id='lastName'
                       name='lastName'
+                      autoComplete='family-name'
+                      required
+                      aria-invalid={hasError('lastName')}
+                      aria-describedby={hasError('lastName') ? 'lastName-error' : undefined}
                       value={formData.lastName}
                       onChange={handleInputChange}
                       maxLength={100}
@@ -261,12 +324,13 @@ const RegisterSimple: React.FC = () => {
                       }`}
                       placeholder='Tu apellido'
                     />
-                    {hasError('lastName') && <p className='text-red-500 text-sm mt-1'>{getError('lastName')}</p>}
+                    {hasError('lastName') && <p id='lastName-error' className='text-red-500 text-sm mt-1'>{getError('lastName')}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label
+                    htmlFor='email'
                     className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}
@@ -275,7 +339,12 @@ const RegisterSimple: React.FC = () => {
                   </label>
                   <input
                     type='email'
+                    id='email'
                     name='email'
+                    autoComplete='email'
+                    required
+                    aria-invalid={hasError('email')}
+                    aria-describedby={hasError('email') ? 'email-error' : undefined}
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
@@ -287,12 +356,13 @@ const RegisterSimple: React.FC = () => {
                     }`}
                     placeholder='tu@email.com'
                   />
-                  {hasError('email') && <p className='text-red-500 text-sm mt-1'>{getError('email')}</p>}
+                  {hasError('email') && <p id='email-error' className='text-red-500 text-sm mt-1'>{getError('email')}</p>}
                 </div>
 
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label
+                      htmlFor='password'
                       className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
@@ -301,7 +371,12 @@ const RegisterSimple: React.FC = () => {
                     </label>
                     <input
                       type='password'
+                      id='password'
                       name='password'
+                      autoComplete='new-password'
+                      required
+                      aria-invalid={hasError('password')}
+                      aria-describedby={hasError('password') ? 'password-error' : undefined}
                       value={formData.password}
                       onChange={handleInputChange}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
@@ -313,11 +388,12 @@ const RegisterSimple: React.FC = () => {
                       }`}
                       placeholder='Mínimo 6 caracteres'
                     />
-                    {hasError('password') && <p className='text-red-500 text-sm mt-1'>{getError('password')}</p>}
+                    {hasError('password') && <p id='password-error' className='text-red-500 text-sm mt-1'>{getError('password')}</p>}
                   </div>
 
                   <div>
                     <label
+                      htmlFor='confirmPassword'
                       className={`block text-sm font-bold mb-2 transition-colors duration-500 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
@@ -326,7 +402,12 @@ const RegisterSimple: React.FC = () => {
                     </label>
                     <input
                       type='password'
+                      id='confirmPassword'
                       name='confirmPassword'
+                      autoComplete='new-password'
+                      required
+                      aria-invalid={hasError('confirmPassword')}
+                      aria-describedby={hasError('confirmPassword') ? 'confirmPassword-error' : undefined}
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 ${
@@ -339,7 +420,7 @@ const RegisterSimple: React.FC = () => {
                       placeholder='Repite tu contraseña'
                     />
                     {hasError('confirmPassword') && (
-                      <p className='text-red-500 text-sm mt-1'>{getError('confirmPassword')}</p>
+                      <p id='confirmPassword-error' className='text-red-500 text-sm mt-1'>{getError('confirmPassword')}</p>
                     )}
                   </div>
                 </div>
@@ -368,10 +449,28 @@ const RegisterSimple: React.FC = () => {
                   </label>
                 </div>
 
+                <div className='flex items-start space-x-3'>
+                  <input
+                    type='checkbox'
+                    id='adult-eligibility'
+                    checked={confirmedAdult}
+                    onChange={(event) => setConfirmedAdult(event.target.checked)}
+                    className='mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                  />
+                  <label
+                    htmlFor='adult-eligibility'
+                    className={`text-sm transition-colors duration-500 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}
+                  >
+                    Confirmo que tengo 18 años o más. Mood Log está disponible inicialmente para personas adultas.
+                  </label>
+                </div>
+
                 <div className='space-y-4'>
                   <button
                     type='submit'
-                    disabled={loading || !agreedToTerms}
+                    disabled={loading || registrationState !== 'idle' || !agreedToTerms || !confirmedAdult}
                     className='w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg'
                   >
                     {loading ? (
@@ -402,7 +501,7 @@ const RegisterSimple: React.FC = () => {
                   <button
                     type='button'
                     onClick={handleGoogleSignUp}
-                    disabled={loading}
+                    disabled={loading || registrationState !== 'idle' || !agreedToTerms || !confirmedAdult}
                     className='w-full px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2'
                   >
                     <svg className='w-5 h-5' viewBox='0 0 24 24'>
@@ -446,7 +545,7 @@ const RegisterSimple: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -7,7 +7,9 @@ import JournalEditor from '../components/JournalEditor';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useJournal } from '../hooks/useJournal';
+import { hasCurrentSensitiveSelfReportConsent } from '../services/sensitiveDataConsentService';
 import { JournalEntry, JournalTemplate } from '../types';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 const Journal: React.FC = () => {
   const { user } = useAuth();
@@ -22,6 +24,15 @@ const Journal: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
+  const [sensitiveConsentStatus, setSensitiveConsentStatus] = useState<'checking' | 'allowed' | 'missing' | 'error'>('checking');
+
+  useEffect(() => {
+    let cancelled = false;
+    void hasCurrentSensitiveSelfReportConsent()
+      .then((accepted) => { if (!cancelled) setSensitiveConsentStatus(accepted ? 'allowed' : 'missing'); })
+      .catch(() => { if (!cancelled) setSensitiveConsentStatus('error'); });
+    return () => { cancelled = true; };
+  }, [user?.uid]);
 
   // Manejar estado de ánimo seleccionado desde el historial
   const selectedMoodLog = location.state?.selectedMoodLog;
@@ -71,6 +82,10 @@ const Journal: React.FC = () => {
   });
 
   const handleCreateEntry = () => {
+    if (sensitiveConsentStatus !== 'allowed') {
+      navigate('/sensitive-data-consent', { state: { returnTo: '/journal' } });
+      return;
+    }
     setEditingEntry(undefined);
     setSelectedTemplate(undefined);
     setShowEditor(true);
@@ -78,6 +93,10 @@ const Journal: React.FC = () => {
   };
 
   const handleEditEntry = (entry: JournalEntry) => {
+    if (sensitiveConsentStatus !== 'allowed') {
+      navigate('/sensitive-data-consent', { state: { returnTo: '/journal' } });
+      return;
+    }
     setEditingEntry(entry);
     setSelectedTemplate(undefined);
     setShowEditor(true);
@@ -90,7 +109,7 @@ const Journal: React.FC = () => {
         await deleteEntry(entryId);
         toast.success('Entrada eliminada exitosamente');
       } catch (error) {
-        console.error('Error deleting entry:', error);
+        logSanitizedClientError('Journal delete action failed', error);
         toast.error('Error al eliminar la entrada');
       }
     }
@@ -144,6 +163,19 @@ const Journal: React.FC = () => {
 
       {/* Contenido Principal */}
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 sm:py-8'>
+        {sensitiveConsentStatus !== 'allowed' && (
+          <div className='mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30'>
+            <p className='text-sm leading-6 text-amber-950 dark:text-amber-100'>
+              {sensitiveConsentStatus === 'checking'
+                ? 'Comprobando autorización para crear o editar entradas…'
+                : sensitiveConsentStatus === 'error'
+                  ? 'No se pudo comprobar tu autorización. Tus entradas existentes siguen disponibles; inténtalo de nuevo.'
+                  : 'Tus entradas existentes siguen disponibles. Para crear o editar una, revisa primero la autorización opcional para ánimo y diario.'}
+            </p>
+            <button type='button' onClick={() => navigate('/sensitive-data-consent', { state: { returnTo: '/journal' } })} className='mt-2 text-sm font-semibold text-purple-800 underline dark:text-purple-200'>Gestionar autorización</button>
+            {sensitiveConsentStatus === 'error' && <button type='button' onClick={() => { setSensitiveConsentStatus('checking'); void hasCurrentSensitiveSelfReportConsent().then((accepted) => setSensitiveConsentStatus(accepted ? 'allowed' : 'missing')).catch(() => setSensitiveConsentStatus('error')); }} className='ml-4 text-sm font-semibold underline'>Reintentar</button>}
+          </div>
+        )}
         {/* Barra de herramientas */}
         <div className='mb-6 sm:mb-8'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0'>

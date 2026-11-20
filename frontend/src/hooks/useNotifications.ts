@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseConnectionManager } from '../services/firebaseConnectionManager';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export interface Notification {
   id: string;
@@ -95,14 +96,14 @@ export const useNotifications = (userId: string) => {
           setNotifications(allNotifications);
           setError(null);
         } catch (err) {
-          console.error('Error processing notifications:', err);
+          logSanitizedClientError('Notification processing failed', err);
           setError('Error al cargar las notificaciones');
         } finally {
           setLoading(false);
         }
       },
       (err) => {
-        console.error('Error in notifications listener:', err);
+        logSanitizedClientError('Notification listener failed', err);
         firebaseConnectionManager.handleConnectionError(listenerKey, err, () => {
           // Retry logic handled by connection manager
         });
@@ -126,7 +127,7 @@ export const useNotifications = (userId: string) => {
         readAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      logSanitizedClientError('Notification read update failed', error);
     }
   };
 
@@ -141,7 +142,7 @@ export const useNotifications = (userId: string) => {
       );
       await Promise.all(updatePromises);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      logSanitizedClientError('Notification read-all update failed', error);
     }
   };
 
@@ -154,7 +155,7 @@ export const useNotifications = (userId: string) => {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error creating notification:', error);
+      logSanitizedClientError('Notification create failed', error);
       throw error;
     }
   };
@@ -163,7 +164,7 @@ export const useNotifications = (userId: string) => {
     try {
       await deleteDoc(doc(db, 'notifications', notificationId));
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logSanitizedClientError('Notification delete failed', error);
       throw error;
     }
   };

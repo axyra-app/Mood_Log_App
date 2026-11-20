@@ -13,6 +13,40 @@ service cloud.firestore {
       return isSignedIn() && data.userId == request.auth.uid;
     }
 
+    function hasCurrentAdultEligibility(userId) {
+      let profilePath = /databases/$(database)/documents/users/$(userId);
+      return isOwner(userId)
+        && exists(profilePath)
+        && 'adultEligibility' in get(profilePath).data
+        && get(profilePath).data.adultEligibility.isAdult == true
+        && get(profilePath).data.adultEligibility.version == 'co-18plus-v1'
+        && get(profilePath).data.adultEligibility.attestedAt is timestamp;
+    }
+
+    function hasCurrentLegalAcceptance(userId) {
+      let profilePath = /databases/$(database)/documents/users/$(userId);
+      return isOwner(userId)
+        && exists(profilePath)
+        && 'legalAcceptance' in get(profilePath).data
+        && get(profilePath).data.legalAcceptance.termsVersion == 'co-terms-draft-v2-sensitive-data'
+        && get(profilePath).data.legalAcceptance.privacyNoticeVersion == 'co-privacy-draft-v4-groq-retention'
+        && get(profilePath).data.legalAcceptance.acceptedAt is timestamp;
+    }
+
+    function hasCurrentSensitiveSelfReportConsent(userId) {
+      let profilePath = /databases/$(database)/documents/users/$(userId);
+      return isOwner(userId)
+        && exists(profilePath)
+        && 'sensitiveSelfReportConsent' in get(profilePath).data
+        && get(profilePath).data.sensitiveSelfReportConsent.version == 'co-sensitive-selfreport-draft-v1'
+        && get(profilePath).data.sensitiveSelfReportConsent.decision == 'accepted'
+        && get(profilePath).data.sensitiveSelfReportConsent.eventId is string
+        && exists(/databases/$(database)/documents/sensitiveDataConsentEvents/$(get(profilePath).data.sensitiveSelfReportConsent.eventId))
+        && get(/databases/$(database)/documents/sensitiveDataConsentEvents/$(get(profilePath).data.sensitiveSelfReportConsent.eventId)).data.userId == userId
+        && get(/databases/$(database)/documents/sensitiveDataConsentEvents/$(get(profilePath).data.sensitiveSelfReportConsent.eventId)).data.version == 'co-sensitive-selfreport-draft-v1'
+        && get(/databases/$(database)/documents/sensitiveDataConsentEvents/$(get(profilePath).data.sensitiveSelfReportConsent.eventId)).data.decision == 'accepted';
+    }
+
     function canWriteAccountData() {
       return isSignedIn()
         && !exists(/databases/$(database)/documents/accountDeletionRequests/$(request.auth.uid));
@@ -38,6 +72,61 @@ service cloud.firestore {
       return !(field in data)
         || data[field] == null
         || (data[field] is string && data[field].size() <= maxLength);
+    }
+
+    function isValidAdultEligibility(data) {
+      return data is map
+        && data.keys().hasOnly(['isAdult', 'version', 'attestedAt'])
+        && data.isAdult == true
+        && data.version == 'co-18plus-v1'
+        && data.attestedAt is timestamp;
+    }
+
+    function isValidSensitiveSelfReportConsent(data) {
+      return data is map
+        && data.keys().hasOnly(['version', 'decision', 'eventId', 'changedAt'])
+        && data.version == 'co-sensitive-selfreport-draft-v1'
+        && data.decision in ['accepted', 'revoked']
+        && data.eventId is string
+        && data.changedAt is timestamp;
+    }
+
+    function hasValidOptionalAdultEligibility(data) {
+      return !('adultEligibility' in data)
+        || isValidAdultEligibility(data.adultEligibility);
+    }
+
+    function canPreserveOrAddAdultEligibility() {
+      return ('adultEligibility' in resource.data
+          && 'adultEligibility' in request.resource.data
+          && request.resource.data.adultEligibility == resource.data.adultEligibility)
+        || ('adultEligibility' in resource.data
+          && 'adultEligibility' in request.resource.data
+          && resource.data.adultEligibility.version != 'co-18plus-v1'
+          && isValidAdultEligibility(request.resource.data.adultEligibility)
+          && request.resource.data.adultEligibility.attestedAt == request.time)
+        || (!('adultEligibility' in resource.data)
+          && !('adultEligibility' in request.resource.data))
+        || (!('adultEligibility' in resource.data)
+          && 'adultEligibility' in request.resource.data
+          && isValidAdultEligibility(request.resource.data.adultEligibility)
+          && request.resource.data.adultEligibility.attestedAt == request.time);
+    }
+
+    function canPreserveLegalAcceptance() {
+      return ('legalAcceptance' in resource.data
+          && 'legalAcceptance' in request.resource.data
+          && request.resource.data.legalAcceptance == resource.data.legalAcceptance)
+        || (!('legalAcceptance' in resource.data)
+          && !('legalAcceptance' in request.resource.data));
+    }
+
+    function canPreserveSensitiveSelfReportConsent() {
+      return ('sensitiveSelfReportConsent' in resource.data
+          && 'sensitiveSelfReportConsent' in request.resource.data
+          && request.resource.data.sensitiveSelfReportConsent == resource.data.sensitiveSelfReportConsent)
+        || (!('sensitiveSelfReportConsent' in resource.data)
+          && !('sensitiveSelfReportConsent' in request.resource.data));
     }
 
     function isOptionalList(data, field, maxItems) {
@@ -119,7 +208,8 @@ service cloud.firestore {
         return hasOnlyKeys(data, [
             'email', 'displayName', 'username', 'role', 'createdAt',
             'updatedAt', 'firstName', 'lastName', 'phone', 'photoURL',
-            'dateOfBirth', 'gender', 'location', 'bio', 'emergencyContact', 'settings'
+            'dateOfBirth', 'gender', 'location', 'bio', 'emergencyContact', 'settings',
+            'adultEligibility', 'legalAcceptance', 'sensitiveSelfReportConsent'
           ])
           && data.role == 'user'
           && isOptionalString(data, 'email', 254)
@@ -136,48 +226,83 @@ service cloud.firestore {
           && (!('createdAt' in data) || data.createdAt is timestamp)
           && (!('updatedAt' in data) || data.updatedAt is timestamp)
           && (!('emergencyContact' in data) || data.emergencyContact is map)
-          && (!('settings' in data) || data.settings is map);
+          && (!('settings' in data) || data.settings is map)
+          && hasValidOptionalAdultEligibility(data)
+          && (!('sensitiveSelfReportConsent' in data)
+            || isValidSensitiveSelfReportConsent(data.sensitiveSelfReportConsent))
+          && (!('legalAcceptance' in data)
+            || (data.legalAcceptance is map
+              && data.legalAcceptance.keys().hasOnly(['termsVersion', 'privacyNoticeVersion', 'acceptedAt'])
+              && data.legalAcceptance.termsVersion is string
+              && data.legalAcceptance.privacyNoticeVersion is string
+              && data.legalAcceptance.acceptedAt is timestamp));
       }
 
-      allow read, delete: if isOwner(userId);
+      allow read: if isOwner(userId);
       allow create: if isOwner(userId)
         && canWriteAccountData()
+        && !('legalAcceptance' in request.resource.data)
+        && !('sensitiveSelfReportConsent' in request.resource.data)
+        && (!('adultEligibility' in request.resource.data)
+          || request.resource.data.adultEligibility.attestedAt == request.time)
         && hasValidUserProfile(request.resource.data);
       allow update: if isOwner(userId)
         && canWriteAccountData()
         && (request.resource.data.role == resource.data.role
           || request.resource.data.role == 'user')
+        && canPreserveOrAddAdultEligibility()
+        && canPreserveLegalAcceptance()
+        && canPreserveSensitiveSelfReportConsent()
         && hasValidUserProfile(request.resource.data);
     }
 
     match /moodLogs/{moodLogId} {
-      allow read, delete: if isOwnerOf(resource.data);
+      allow read, delete: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
       allow create: if isOwnerOf(request.resource.data)
+        && hasCurrentAdultEligibility(request.resource.data.userId)
+        && hasCurrentLegalAcceptance(request.resource.data.userId)
+        && hasCurrentSensitiveSelfReportConsent(request.resource.data.userId)
         && canWriteAccountData()
         && hasValidMoodLog(request.resource.data);
       allow update: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId)
+        && hasCurrentLegalAcceptance(resource.data.userId)
+        && hasCurrentSensitiveSelfReportConsent(resource.data.userId)
         && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId
         && hasValidMoodLog(request.resource.data);
     }
 
     match /journalEntries/{entryId} {
-      allow read, delete: if isOwnerOf(resource.data);
+      allow read, delete: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
       allow create: if isOwnerOf(request.resource.data)
+        && hasCurrentAdultEligibility(request.resource.data.userId)
+        && hasCurrentLegalAcceptance(request.resource.data.userId)
+        && hasCurrentSensitiveSelfReportConsent(request.resource.data.userId)
         && canWriteAccountData()
         && hasValidJournalEntry(request.resource.data);
       allow update: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId)
+        && hasCurrentLegalAcceptance(resource.data.userId)
+        && hasCurrentSensitiveSelfReportConsent(resource.data.userId)
         && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId
         && hasValidJournalEntry(request.resource.data);
     }
 
     match /notifications/{notificationId} {
-      allow read, delete: if isOwnerOf(resource.data);
+      allow read, delete: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
       allow create: if isOwnerOf(request.resource.data)
+        && hasCurrentAdultEligibility(request.resource.data.userId)
+        && hasCurrentLegalAcceptance(request.resource.data.userId)
         && canWriteAccountData()
         && hasValidNotification(request.resource.data);
       allow update: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId)
+        && hasCurrentLegalAcceptance(resource.data.userId)
         && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId
         && hasValidNotification(request.resource.data)
@@ -201,38 +326,79 @@ service cloud.firestore {
           && (!('version' in data) || data.version is int);
       }
 
-      allow read: if isOwner(settingsId);
+      allow read: if isOwner(settingsId) && hasCurrentAdultEligibility(settingsId);
       allow create, update: if isOwner(settingsId)
+        && hasCurrentAdultEligibility(settingsId)
+        && hasCurrentLegalAcceptance(settingsId)
         && canWriteAccountData()
         && hasValidSettings(request.resource.data);
-      allow delete: if isOwner(settingsId);
+      allow delete: if isOwner(settingsId) && hasCurrentAdultEligibility(settingsId);
     }
 
     match /advancedReports/{reportId} {
-      allow read, delete: if isOwnerOf(resource.data);
+      allow read, delete: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
       allow create: if isOwnerOf(request.resource.data)
+        && hasCurrentAdultEligibility(request.resource.data.userId)
+        && hasCurrentLegalAcceptance(request.resource.data.userId)
         && canWriteAccountData();
       allow update: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId)
+        && hasCurrentLegalAcceptance(resource.data.userId)
         && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId;
     }
 
     match /statistics/{statId} {
-      allow read, delete: if isOwnerOf(resource.data);
+      allow read, delete: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
       allow create: if isOwnerOf(request.resource.data)
+        && hasCurrentAdultEligibility(request.resource.data.userId)
+        && hasCurrentLegalAcceptance(request.resource.data.userId)
         && canWriteAccountData();
       allow update: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId)
+        && hasCurrentLegalAcceptance(resource.data.userId)
         && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId;
     }
 
     match /reminders/{reminderId} {
-      allow read, delete: if isOwnerOf(resource.data);
+      allow read, delete: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
       allow create: if isOwnerOf(request.resource.data)
+        && hasCurrentAdultEligibility(request.resource.data.userId)
+        && hasCurrentLegalAcceptance(request.resource.data.userId)
         && canWriteAccountData();
       allow update: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId)
+        && hasCurrentLegalAcceptance(resource.data.userId)
         && canWriteAccountData()
         && request.resource.data.userId == resource.data.userId;
+    }
+
+    match /aiConsentEvents/{eventId} {
+      allow read: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
+      allow create, update, delete: if false;
+    }
+
+    match /aiUsage/{userId} {
+      // Let each account include its own quota record in a data export.
+      // The server remains the only writer of rate-limit state.
+      allow get: if isOwner(userId);
+      allow list, create, update, delete: if false;
+    }
+
+    match /legalAcceptanceEvents/{eventId} {
+      allow read: if isOwnerOf(resource.data);
+      allow create, update, delete: if false;
+    }
+
+    match /sensitiveDataConsentEvents/{eventId} {
+      allow read: if isOwnerOf(resource.data)
+        && hasCurrentAdultEligibility(resource.data.userId);
+      allow create, update, delete: if false;
     }
 
     match /journalTemplates/{templateId} {

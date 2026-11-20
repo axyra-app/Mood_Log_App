@@ -1,38 +1,24 @@
 import type { Auth } from 'firebase-admin/auth';
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
+import {
+  LEGACY_UID_OWNED_COLLECTIONS,
+  USER_DATA_COLLECTIONS,
+} from '../../src/utils/userDataCollections.ts';
 
 const FIRESTORE_PAGE_SIZE = 400;
+const FIRESTORE_DELETE_CONCURRENCY = 20;
 const STORAGE_PAGE_SIZE = 500;
 const STORAGE_DELETE_CONCURRENCY = 20;
 type StorageBucket = ReturnType<ReturnType<typeof getStorage>['bucket']>;
+type FirestoreBulkWriter = ReturnType<Firestore['bulkWriter']>;
 
-const USER_DATA_COLLECTIONS = [
-  'moodLogs',
-  'journalEntries',
-  'notifications',
-  'advancedReports',
-  'statistics',
-  'reminders',
-  'crisisAssessments',
-  'crisisAlerts',
-  'chats',
-  'messages',
-  'chatSessions',
-  'chatMessages',
-  'typing',
-] as const;
-
-const LEGACY_UID_OWNED_COLLECTIONS = new Set([
-  'chats',
-  'messages',
-  'chatSessions',
-  'chatMessages',
-  'typing',
-]);
-const COLLECTIONS_WITH_POSSIBLE_SUBCOLLECTIONS = new Set(['chats', 'chatSessions']);
-
-const deleteOwnedDocuments = async (firestore: Firestore, collectionName: string, uid: string) => {
+const deleteOwnedDocuments = async (
+  firestore: Firestore,
+  bulkWriter: FirestoreBulkWriter,
+  collectionName: string,
+  uid: string,
+) => {
   const collection = firestore.collection(collectionName);
   const ownershipFields = LEGACY_UID_OWNED_COLLECTIONS.has(collectionName)
     ? ['userId', 'uid']
@@ -51,17 +37,11 @@ const deleteOwnedDocuments = async (firestore: Firestore, collectionName: string
     if (documents.size === 0) return;
 
     const page = [...documents.values()].slice(0, FIRESTORE_PAGE_SIZE);
-    if (COLLECTIONS_WITH_POSSIBLE_SUBCOLLECTIONS.has(collectionName)) {
-      for (let index = 0; index < page.length; index += STORAGE_DELETE_CONCURRENCY) {
-        await Promise.all(
-          page.slice(index, index + STORAGE_DELETE_CONCURRENCY)
-            .map((document) => firestore.recursiveDelete(document.ref))
-        );
-      }
-    } else {
-      const batch = firestore.batch();
-      page.forEach((document) => batch.delete(document.ref));
-      await batch.commit();
+    for (let index = 0; index < page.length; index += FIRESTORE_DELETE_CONCURRENCY) {
+      await Promise.all(
+        page.slice(index, index + FIRESTORE_DELETE_CONCURRENCY)
+          .map((document) => firestore.recursiveDelete(document.ref, bulkWriter))
+      );
     }
   }
 };
@@ -102,14 +82,57 @@ export const deleteUserOwnedData = async (
   const deletionRequestRef = firestore.collection('accountDeletionRequests').doc(uid);
   await deletionRequestRef.set({ requestedAt: FieldValue.serverTimestamp() }, { merge: true });
 
-  for (const collectionName of USER_DATA_COLLECTIONS) {
-    await deleteOwnedDocuments(firestore, collectionName, uid);
+  while (true) {
+    const activeRequestSnapshot = await firestore.collection('activeAiRequests')
+      .where('userId', '==', uid)
+      .limit(400)
+      .get();
+    if (activeRequestSnapshot.empty) break;
+
+    const now = Date.now();
+    const activeRequest = activeRequestSnapshot.docs.find((document) => {
+      const leaseExpiresAt = document.data().leaseExpiresAt;
+      return leaseExpiresAt && typeof leaseExpiresAt.toMillis === 'function'
+        && leaseExpiresAt.toMillis() > now;
+    });
+    if (activeRequest) {
+      throw Object.assign(
+        new Error('An AI request is still in progress; retry account deletion after it finishes.'),
+        { code: 'account/ai-request-in-progress' },
+      );
+    }
+
+    const staleRequestsBatch = firestore.batch();
+    activeRequestSnapshot.docs.forEach((document) => staleRequestsBatch.delete(document.ref));
+    await staleRequestsBatch.commit();
+  }
+
+  const bulkWriter = firestore.bulkWriter();
+  let bulkWriterClose: Promise<void> | undefined;
+  const closeBulkWriter = () => {
+    bulkWriterClose ??= bulkWriter.close();
+    return bulkWriterClose;
+  };
+  try {
+    for (const collectionName of USER_DATA_COLLECTIONS) {
+      await deleteOwnedDocuments(firestore, bulkWriter, collectionName, uid);
+    }
+
+    await bulkWriter.delete(firestore.collection('aiUsage').doc(uid));
+    await closeBulkWriter();
+  } catch (error) {
+    try {
+      await closeBulkWriter();
+    } catch (closeError) {
+      const closeErrorCode = closeError && typeof closeError === 'object' && 'code' in closeError
+        ? closeError.code
+        : 'UnknownError';
+      console.error('Account deletion Firestore writer cleanup failed:', closeErrorCode);
+    }
+    throw error;
   }
 
   await deleteUserStorageFiles(bucket, uid);
-
-  const quotaRef = firestore.collection('aiUsage').doc(uid);
-  await quotaRef.delete();
 
   const profileRef = firestore.collection('users').doc(uid);
   const settingsRef = firestore.collection('userSettings').doc(uid);

@@ -1,11 +1,9 @@
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import {
-  isInvalidFirebaseIdTokenError,
-  parseFirebaseAdminCredentials,
-} from './ai.ts';
+import { withApiCors } from './_lib/apiCors.ts';
+import { getFirebaseAdminApp } from './_lib/firebaseAdmin.ts';
+import { isInvalidFirebaseIdTokenError } from './_lib/requestUtils.ts';
 import { deleteUserOwnedData } from './_lib/accountDataDeletion.ts';
 
 const MAX_AUTH_AGE_SECONDS = 10 * 60;
@@ -62,19 +60,16 @@ export const isRecentAuthentication = (
   && nowSeconds - authTime <= MAX_AUTH_AGE_SECONDS;
 
 const getAdminServices = async (): Promise<AccountDeletionServices> => {
-  const credentials = parseFirebaseAdminCredentials(
-    process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
-    process.env.FIREBASE_PROJECT_ID,
-  );
-  const app = getApps()[0] ?? initializeApp({
-    credential: cert(credentials),
-    projectId: credentials.projectId,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
-      || `${credentials.projectId}.firebasestorage.app`,
-  });
-
-  const bucketName = process.env.FIREBASE_STORAGE_BUCKET
-    || `${credentials.projectId}.firebasestorage.app`;
+  const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+  const bucketName = process.env.FIREBASE_STORAGE_BUCKET?.trim();
+  const clientBucketName = process.env.VITE_FIREBASE_STORAGE_BUCKET?.trim();
+  if (!projectId || !bucketName || !clientBucketName || bucketName !== clientBucketName) {
+    throw Object.assign(
+      new Error('Account deletion requires a Firebase project and matching server/client Storage buckets.'),
+      { code: 'app/incomplete-firebase-deletion-config' },
+    );
+  }
+  const app = getFirebaseAdminApp(bucketName);
   return {
     auth: getAuth(app),
     firestore: getFirestore(app),
@@ -132,7 +127,14 @@ export const createDeleteAccountHandler = (
 
     return jsonResponse(200, { success: true });
   } catch (error) {
-    console.error('Account deletion failed:', getSafeErrorCode(error));
+    const errorCode = getSafeErrorCode(error);
+    console.error('Account deletion failed:', errorCode);
+    if (errorCode === 'account/ai-request-in-progress') {
+      return jsonResponse(409, {
+        error: 'Hay una solicitud de IA en curso. Espera a que termine y vuelve a confirmar la eliminación.',
+        code: 'AI_REQUEST_IN_PROGRESS',
+      });
+    }
     return jsonResponse(503, {
       error: 'No pudimos confirmar la eliminación. Si ya había comenzado, las escrituras de la cuenta pueden estar pausadas. Inténtalo de nuevo o contacta soporte.',
     });
@@ -144,11 +146,13 @@ const deleteAccountHandler = createDeleteAccountHandler({
   deleteOwnedData: deleteUserOwnedData,
 });
 
-export default async (request: Request): Promise<Response> => {
-  if (process.env.ACCOUNT_DELETION_ENABLED !== 'true') {
-    return jsonResponse(503, {
-      error: 'La eliminación de cuenta aún no está habilitada para este entorno.',
-    });
-  }
-  return deleteAccountHandler(request);
+export default {
+  fetch: withApiCors(async (request: Request): Promise<Response> => {
+    if (process.env.ACCOUNT_DELETION_ENABLED !== 'true') {
+      return jsonResponse(503, {
+        error: 'La eliminación de cuenta aún no está habilitada para este entorno.',
+      });
+    }
+    return deleteAccountHandler(request);
+  }),
 };

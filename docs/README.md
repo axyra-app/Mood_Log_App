@@ -10,8 +10,17 @@ Este índice organiza la documentación del producto, su arquitectura y los proc
 | [Guía de pantallas](product/user-guide.md) | Rutas de la aplicación y capacidades observadas con sus limitaciones. |
 | [Flujos de usuario](product/user-flows.md) | Recorridos de ánimo, diario, chat, estadísticas y brechas conocidas. |
 | [Glosario](product/glossary.md) | Definiciones de términos emocionales y técnicos utilizados por el proyecto. |
-| [Seguridad ante crisis](product/crisis-protocol.md) | Límites actuales y requisitos para considerar una futura función de apoyo. |
-| [Wearables y biometría](product/wearables-and-biometrics.md) | Exploración futura; no hay integración implementada identificada. |
+| [Seguridad ante crisis](product/crisis-protocol.md) | Límites actuales, borrador de actuación para entrevistas de producto en Colombia y requisitos para una futura función de apoyo. |
+| [Wearables y biometría](product/wearables-and-biometrics.md) | Estado del scaffold Wear OS, límites del prototipo y requisitos antes de datos reales. |
+| [Consentimiento Wear OS (borrador)](privacy/wearos-consent-draft.md) | Copia versionada, evidencia local y puertas pendientes para el permiso puntual de pulso. |
+| [Revisión legal para lanzamiento en Colombia](legal/colombia-launch-readiness.md) | Matriz P0/P1/P2 de privacidad, datos sensibles, proveedores internacionales, INVIMA, edad, investigación y gates de lanzamiento con fuentes oficiales. |
+| [Procedimiento de derechos e incidentes](legal/colombia-rights-and-incident-runbook.md) | Flujo operativo para consultas/reclamos, plazos de Ley 1581, ejecución de derechos, respuesta a incidentes y prueba de mesa. |
+| [Plan integral de mejora y lanzamiento](plan-integral-mejora-lanzamiento.md) | Hoja de ejecución para producto, seguridad, privacidad, cumplimiento, IA, wearables y lanzamiento comercial. |
+| [Plantilla de modelo económico](product/plantilla-modelo-economico.md) | Escenarios editables de precio, conversión, costos, equilibrio, CAC y sensibilidad; sin tarifas ni ventas inventadas. |
+| [Análisis competitivo inicial](product/analisis-competitivo-inicial.md) | Benchmark documental de apps de ánimo y wearables; separa capacidades declaradas de la validación de mercado pendiente en Colombia. |
+| [Guía de descubrimiento de usuarios](product/guia-descubrimiento-usuarios.md) | Protocolo de entrevistas adultas con muestra por edades, aviso/retención de notas, demo sintética y límites para no generalizar resultados. |
+| [Inventario y trazabilidad de datos](privacy/inventario-y-trazabilidad-de-datos.md) | Flujos observados en código, destinos, avisos/consentimientos, dudas y acciones antes del lanzamiento. |
+| [Diseño del registro de aceptación legal](privacy/consent-ledger-design.md) | Flujo técnico para vincular aceptación/versiones con cuenta, exportación, fallos y renovación; pendiente de textos legales aprobados. |
 
 ## Especificaciones de funcionalidades
 
@@ -19,7 +28,7 @@ Las propuestas de mejora con requisitos, diseño técnico, privacidad y validaci
 
 | Feature | Contenido |
 |---|---|
-| [Contexto biométrico para ánimo y diario](features/biometric-context/README.md) | Brief, requisitos, metodología analítica, diseño técnico, privacidad/seguridad, validación y decisiones abiertas para Apple Health/Health Connect. |
+| [Contexto biométrico para ánimo y diario](features/biometric-context/README.md) | Brief, requisitos, metodología analítica, diseño técnico, privacidad/seguridad, validación y decisiones abiertas para Wear OS/Health Services; Health Connect e iOS son etapas complementarias/futuras. |
 
 ## Arquitectura
 
@@ -47,11 +56,11 @@ La documentación específica de Firebase se agrupa en [`firebase/`](firebase/RE
 ## Estado técnico resumido
 
 - El frontend es una SPA React/Vite que se conecta directamente a Firebase desde el navegador.
-- Conviven modelos B2C y código heredado; las colecciones de chat y la escala de ánimo requieren consolidación.
-- Las reglas locales no cubren todas las colecciones usadas por el frontend y no se ha confirmado su estado remoto.
-- El diario se almacena como texto legible. El cifrado local y la sincronización offline completa no están implementados.
-- Las solicitudes activas de IA pasan por una función serverless autenticada; las variables `VITE_*` son públicas y no deben contener secretos.
-- CI ejecuta pruebas de reglas Firestore/Storage, typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes/servicios. Consulta las guías para comandos y validaciones.
-- La existencia de un workflow de build no demuestra que Vercel despliegue automáticamente ni que el sitio sea privado.
+- La escala 1–10 y los registros múltiples por día están confirmados para el flujo activo; permanecen modelos/servicios heredados que requieren decisión y cobertura.
+- Las reglas locales tienen pruebas de aislamiento y gates de edad, aceptación legal y consentimiento sensible; las colecciones heredadas sin regla explícita siguen denegadas. Falta auditar el entorno remoto.
+- El diario se almacena legible en Firestore. No hay cifrado de extremo a extremo ni sincronización offline completa.
+- Las solicitudes activas de IA pasan por una función serverless autenticada; las variables `VITE_*` son públicas y no deben contener secretos. Se aplica cuota por UID y producción exige un limitador compartido de solicitudes configurable en Firestore; sus valores reales y consistencia entre despliegues aún deben verificarse. No hay cuota global de tokens ni límite presupuestario de IA.
+- El workflow de CI versionado ejecuta reglas Firestore/Storage, API, configuración, unidades, typecheck, auditoría, build/PWA y compilación del prototipo Wear OS; antes verifica la presencia de Android SDK Platform 36, Build Tools 36.0.0 y Platform-Tools. El runner Ubuntu 24.04 sigue siendo una imagen administrada con paquetes preinstalados, no una imagen reproducible fijada por digest. El cambio actual del checkout aún no tiene corrida remota; tampoco hay recorrido autenticado integral probado en staging.
+- La aplicación no está lista para lanzamiento comercial: los textos legales son borradores, faltan revisiones colombiana/regulatoria, configuración remota y validación completa de Wear OS. Consulta el [estado de preparación para lanzamiento](analysis/production-readiness-audit.md).
 
-Para una lectura ejecutiva, consulta el [análisis técnico](analysis/project-analysis.md) y la [visión y arquitectura del producto](product/vision-and-architecture.md). Antes de utilizar información real, revisa [seguridad y privacidad de Firebase](firebase/security-and-privacy.md) y confirma el proyecto y los servicios en sus paneles.
+Para una lectura ejecutiva, consulta el [análisis técnico](analysis/project-analysis.md), el [estado de preparación](analysis/production-readiness-audit.md) y la [visión y arquitectura del producto](product/vision-and-architecture.md). Antes de utilizar información real, revisa [seguridad y privacidad de Firebase](firebase/security-and-privacy.md) y confirma el proyecto y los servicios en sus paneles.

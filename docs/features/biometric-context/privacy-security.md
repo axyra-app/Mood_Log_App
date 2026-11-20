@@ -1,6 +1,6 @@
 # Privacidad y seguridad: contexto biométrico
 
-**Estado:** análisis inicial; requiere revisión del responsable de privacidad/seguridad antes de un piloto.
+**Estado:** análisis inicial; persistencia privada local solo en el reloj elegida para la siguiente etapa longitudinal, con controles pendientes y revisión de privacidad/seguridad necesaria antes de implementarla o iniciar un piloto.
 
 ## 1. Principio
 
@@ -33,7 +33,7 @@ flowchart LR
     Client -. "no permitido por defecto" .-> Provider
 ```
 
-El usuario controla permisos del sistema operativo, pero Mood Log no debe asumir que puede conocer con exactitud toda revocación en tiempo real ni borrar automáticamente registros copiados. El diseño debe detectar y comunicar cambios cuando la plataforma lo permita.
+El usuario controla permisos del sistema operativo, pero Mood Log no debe asumir que puede conocer con exactitud toda revocación en tiempo real ni borrar automáticamente registros copiados. El diseño debe detectar y comunicar cambios cuando la plataforma lo permita. La decisión actual es persistir observaciones únicamente en almacenamiento privado de la app Wear OS; no incluye copia al teléfono ni nube. El prototipo actual aún no persiste pulso ni ánimo.
 
 ## 4. Amenazas iniciales
 
@@ -54,7 +54,7 @@ El usuario controla permisos del sistema operativo, pero Mood Log no debe asumir
 
 Este listado inicial no sustituye modelado formal de amenazas ni una evaluación legal/regulatoria.
 
-## 5. Controles mínimos comunes a ambas opciones
+## 5. Controles mínimos para la opción elegida
 
 - Consentimiento propio de Mood Log antes de solicitar el permiso nativo.
 - Solicitud granular de categorías necesarias y comunicación de permisos parciales.
@@ -68,6 +68,15 @@ Este listado inicial no sustituye modelado formal de amenazas ni una evaluación
 - Retención definida antes de piloto; no conservar “por si acaso”.
 - Explicación de límites y alternativa sin wearables.
 - No adoptar un segundo backend ni migrar el existente sin decisión arquitectónica y plan independiente.
+
+### Controles específicos de almacenamiento en el reloj
+
+- Guardar solo en el espacio privado de la app; no escribir muestras en `SharedPreferences`, logs, analytics, notificaciones, archivos compartidos, exports temporales ni `Wear OS Data Layer`.
+- Mantener desactivados backup en nube y transferencia de dispositivo para los datos de salud; verificar la configuración en el APK final y en los flujos reales de actualización/restauración. La configuración fuente no es evidencia de comportamiento hasta compilar y probarla.
+- Definir cifrado en reposo y gestión de claves antes de persistir. El directorio privado y `allowBackup="false"` son capas de reducción de exposición, no una promesa de cifrado.
+- Limitar datos y granularidad: no registrar pulso continuamente en segundo plano; guardar únicamente observaciones iniciadas por la persona y necesarias para el patrón acordado, con fuente, valor/unidad, timestamp y calidad/cobertura.
+- Definir cierre de sesión, cambio de titular, reloj compartido, pérdida/venta del dispositivo, revocación, exportación y borrado local; explicar que borrar la app o restablecer el reloj puede tener efectos distintos a borrar una cuenta en la app web.
+- El aviso y la autorización específica deben aclarar que la muestra se conserva en el reloj, por cuánto tiempo, cómo se elimina y que aún no se sincroniza con la cuenta Mood Log.
 
 ### Importación de archivos
 

@@ -57,9 +57,9 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
     >
       <defs>
         <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8B5CF6" />
-          <stop offset="50%" stopColor="#EC4899" />
-          <stop offset="100%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#D65EE8" />
+          <stop offset="58%" stopColor="#FF7B9C" />
+          <stop offset="100%" stopColor="#FFB83F" />
         </linearGradient>
       </defs>
       <rect width="100" height="100" rx="20" fill="url(#logoGradient)" />
@@ -86,8 +86,8 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '
 
       {/* Logo Text */}
       {showText && (
-        <div className='flex flex-col'>
-          <span className={`${sizes.text} font-bold text-purple-600 leading-tight`}>Mood Log</span>
+        <div className='logo-copy flex flex-col'>
+          <span className={`${sizes.text} font-bold text-purple-600 leading-tight dark:text-purple-300`}>Mood Log</span>
           <span
             className={`${
               sizes.text === 'text-sm'

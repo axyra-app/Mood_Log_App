@@ -7,6 +7,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export interface RealMoodData {
   moodLogs: Array<{
@@ -53,7 +54,7 @@ export const getRealMoodData = async (
       period: { start: startDate, end: endDate },
     };
   } catch (error) {
-    console.error('Error loading mood data for the requested period:', error);
+    logSanitizedClientError('Mood report data load failed', error);
     throw error;
   }
 };

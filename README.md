@@ -9,8 +9,15 @@ Mood Log App es un proyecto web para registrar estados de ánimo, escribir refle
 Empieza por el [índice de documentación](docs/README.md). Las guías cubren:
 
 - [Plan de trabajo y estado de ejecución](docs/work-plan.md)
+- [Plan integral de mejora y lanzamiento](docs/plan-integral-mejora-lanzamiento.md)
+- [Auditoría de preparación para lanzamiento](docs/analysis/production-readiness-audit.md)
+- [Revisión legal para lanzamiento en Colombia](docs/legal/colombia-launch-readiness.md)
+- [Inventario y trazabilidad de datos](docs/privacy/inventario-y-trazabilidad-de-datos.md)
 - [Visión de producto y hoja de ruta](docs/product/vision-and-roadmap.md)
 - [Especificación de mejora: contexto biométrico](docs/features/biometric-context/README.md)
+- [Prototipo Wear OS](wearos/README.md)
+- [Estrategia móvil Android/iOS](docs/mobile/mobile-strategy.md)
+- [Sistema visual Mood Log](docs/design/mood-log-design-system.md)
 - [Guía de pantallas y estado funcional](docs/product/user-guide.md)
 - [Flujos de usuario](docs/product/user-flows.md)
 - [Firebase: seguridad y privacidad](docs/firebase/security-and-privacy.md)
@@ -28,12 +35,14 @@ La aplicación tiene rutas y pantallas para autenticación, dashboard, registro 
 
 Estado conocido a partir del código del repositorio:
 
+- Mercado inicial confirmado: Colombia; primera salida para personas adultas (18+). Wear OS/Android es la primera plataforma de reloj priorizada.
 - Frontend React 18, TypeScript y Vite; conexión cliente a Firebase Authentication, Firestore y Storage.
-- La configuración de PWA genera service worker y manifiesto; no implementa por sí sola sincronización offline de registros.
-- Los modelos de datos, especialmente chat y escala de ánimo, todavía requieren consolidación.
+- PWA con manifiesto, service worker e iconos de marca. Capacitor 8 empaqueta las mismas pantallas en proyectos nativos Android e iOS; la app Android debug compila y el proyecto iOS está generado, pero requiere macOS/Xcode para compilar y firmar.
+- La escala activa de ánimo es 1–10, pero permanecen modelos y servicios heredados que requieren consolidación; consulta el [esquema observado de Firestore](docs/firebase/database-schema.md).
 - Las solicitudes activas de IA pasan por una función de servidor en `frontend/api/ai.ts`; sus secretos no se deben exponer mediante variables `VITE_*`.
+- El prototipo Wear OS compila y se abrió en un emulador Wear OS 6/API 36. Su lectura de pulso es puntual y opcional; no guarda ni sincroniza pulso o check-in y no estima emociones a partir del sensor. Falta validación en relojes físicos.
 - El diario se almacena como texto legible; el cifrado de extremo a extremo descrito en ideas de producto no está implementado.
-- CI ejecuta pruebas de reglas Firestore/Storage, API, configuración de índices y métricas, además de typecheck, auditoría de dependencias de producción y build; aún no ejecuta pruebas generales de componentes de interfaz. Consulta la [guía de desarrollo](docs/development/getting-started.md).
+- El workflow de CI incluye pruebas de reglas Firestore/Storage, API, configuración de índices y métricas, typecheck, auditoría de dependencias, build web y compilación Wear OS; todavía no hay una corrida remota que valide este checkout y faltan pruebas generales de interfaz. Consulta la [guía de desarrollo](docs/development/getting-started.md) y la [auditoría de lanzamiento](docs/analysis/production-readiness-audit.md).
 - Las reglas y configuración versionadas no confirman qué está desplegado en Firebase o en el proveedor de hosting.
 
 Consulta el [análisis técnico del proyecto](docs/analysis/project-analysis.md) para el estado y la priorización de trabajo.
@@ -41,6 +50,7 @@ Consulta el [análisis técnico del proyecto](docs/analysis/project-analysis.md)
 ## Tecnología
 
 - **Interfaz:** React 18, TypeScript, Vite, Tailwind CSS
+- **Apps móviles:** Capacitor 8, con proyectos nativos Android e iOS en `frontend/`
 - **Navegación:** React Router
 - **Servicios de datos:** Firebase Authentication, Cloud Firestore y Cloud Storage
 - **Gráficos:** Recharts

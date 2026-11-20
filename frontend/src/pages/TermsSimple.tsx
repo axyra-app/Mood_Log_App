@@ -37,6 +37,8 @@ const TermsSimple: React.FC = () => {
           </Link>
           
           <button
+            type='button'
+            aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             onClick={toggleDarkMode}
             className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
               isDarkMode 
@@ -50,7 +52,7 @@ const TermsSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-8">
           <Link
             to="/"
@@ -72,9 +74,17 @@ const TermsSimple: React.FC = () => {
           <p className={`text-xl transition-colors duration-500 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Última actualización: 18 de octubre de 2025
+            Borrador de trabajo: 19 de noviembre de 2026
           </p>
         </div>
+
+        <p role='note' className={`mb-8 rounded-xl border p-4 text-sm ${
+          isDarkMode
+            ? 'border-amber-700 bg-amber-950/40 text-amber-100'
+            : 'border-amber-300 bg-amber-50 text-amber-900'
+        }`}>
+          Este texto requiere aprobación jurídica colombiana y validación contra la configuración desplegada antes de ofrecer Mood Log comercialmente.
+        </p>
 
         <div className={`prose prose-lg max-w-none ${
           isDarkMode ? 'prose-invert' : ''
@@ -105,7 +115,7 @@ const TermsSimple: React.FC = () => {
                 Mood Log App es una aplicación personal de seguimiento del estado de ánimo y escritura reflexiva. Sus funciones incluyen:
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Análisis de emociones mediante IA</li>
+                <li>Resúmenes descriptivos de registros que guardas y análisis de texto con IA cuando lo solicitas</li>
                 <li>Conversaciones de autorreflexión generadas por inteligencia artificial</li>
                 <li>Estadísticas y reportes personalizados</li>
                 <li>Herramientas de bienestar emocional</li>
@@ -113,6 +123,12 @@ const TermsSimple: React.FC = () => {
               <p className="text-lg leading-relaxed mt-4">
                 Las funciones de inteligencia artificial ofrecen contenido informativo y de autorreflexión; no proporcionan
                 atención clínica, asesoría médica, diagnósticos ni servicios de emergencia.
+              </p>
+              <p className="text-lg leading-relaxed mt-4">
+                La primera versión está dirigida a personas de 18 años o más y utiliza una autodeclaración; Mood Log no verifica la edad real. La conexión con relojes y la importación de datos fisiológicos no están disponibles actualmente.
+              </p>
+              <p className="text-lg leading-relaxed mt-4">
+                Guardar o modificar registros de ánimo y diario requiere una autorización opcional separada. Sin ella, no podrás crear o editar esos registros. Si luego revocas la autorización, se bloquean nuevas escrituras, pero las entradas anteriores permanecen hasta que las elimines; revocar no las borra automáticamente. Cada envío de contenido a IA requiere una confirmación independiente. El contenido enviado puede incluir datos sensibles de salud y será procesado por Groq; su documentación pública describe posibles registros temporales de entrada/salida de hasta 30 días para confiabilidad o abuso. Mood Log no ha verificado el estado del control ZDR de su organización. El servicio de IA no es atención clínica.
               </p>
             </section>
 
@@ -135,8 +151,7 @@ const TermsSimple: React.FC = () => {
                 4. PRIVACIDAD Y PROTECCIÓN DE DATOS
               </h2>
               <p className="text-lg leading-relaxed">
-                Respetamos tu privacidad y protegemos tus datos personales de acuerdo con nuestra Política de Privacidad. 
-                Consulta la Política de Privacidad para conocer cómo se procesan y protegen tus datos.
+                Consulta el borrador de la Política de Privacidad para conocer las categorías de información y los proveedores observados en el código. La autorización para guardar registros sensibles y la confirmación para enviar contenido a IA son separadas. Al solicitar IA, confirmas qué contenido se enviará a Groq, que puede incluir información sensible de salud. Guardar registros no inicia por sí mismo un análisis.
               </p>
             </section>
 
@@ -147,18 +162,15 @@ const TermsSimple: React.FC = () => {
                 5. RETENCIÓN Y ELIMINACIÓN DE DATOS
               </h2>
               <p className="text-lg leading-relaxed">
-                Los datos que guardas se utilizan para ofrecer las funciones de la aplicación. No ofrecemos actualmente
-                citas médicas ni conversaciones persistentes con profesionales. La disponibilidad de controles de
-                eliminación puede variar según la función y el proveedor de almacenamiento.
+                Los registros de ánimo y diario se guardan en la cuenta mientras no los elimines. Revocar la autorización de almacenamiento detiene nuevas escrituras, pero no borra lo existente. La opción de eliminar cuenta depende de la configuración del entorno y requiere verificación de identidad; consulta Configuración para comprobar si está habilitada. La eliminación desde Mood Log no implica que copias de seguridad, logs o proveedores externos se borren al mismo tiempo.
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Los registros de estado de ánimo y las entradas del diario se guardan en tu cuenta para mostrar el historial y generar análisis.</li>
+                <li>Los registros de estado de ánimo y las entradas del diario se guardan en tu cuenta con la autorización separada correspondiente.</li>
                 <li>El contenido que envías a una función de IA puede procesarse mediante proveedores externos para generar una respuesta.</li>
                 <li>Los periodos de conservación también pueden depender de los servicios de infraestructura utilizados.</li>
               </ul>
               <p className="text-lg leading-relaxed mt-4">
-                Antes de guardar información sensible, revisa la Política de Privacidad y evita incluir datos que no sean
-                necesarios para la función que estás utilizando.
+                La analítica es opcional y está apagada por defecto. Los datos fisiológicos de relojes no se recopilan en la versión actual. Revisa la información disponible antes de enviar contenido a IA y evita incluir datos innecesarios.
               </p>
             </section>
 
@@ -227,10 +239,10 @@ const TermsSimple: React.FC = () => {
             to="/register"
             className={`inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-lg uppercase tracking-wider py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50`}
           >
-            ACEPTAR TÉRMINOS Y CONTINUAR
+            CONTINUAR AL REGISTRO
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { Calendar, Edit, Heart, Smile, Trash2, TrendingUp } from 'lucide-react';
 import React from 'react';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 interface MoodLog {
   id: string;
@@ -78,7 +79,7 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
         });
       }
     } catch (error) {
-      console.error('Error formatting date:', error);
+      logSanitizedClientError('Mood history date formatting failed', error);
       return 'Fecha inválida';
     }
   };
@@ -106,7 +107,7 @@ const MoodHistoryCard: React.FC<MoodHistoryCardProps> = ({ moodLog, isDarkMode =
         minute: '2-digit',
       });
     } catch (error) {
-      console.error('Error formatting time:', error);
+      logSanitizedClientError('Mood history time formatting failed', error);
       return 'Hora inválida';
     }
   };

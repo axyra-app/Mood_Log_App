@@ -1,0 +1,30 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'app.moodlog.wear'
+    compileSdk 36
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        applicationId 'app.moodlog.wear'
+        minSdk 30
+        targetSdk 36
+        versionCode 1
+        versionName '0.1.0-prototype'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.health:health-services-client:1.1.0'
+    implementation 'com.google.guava:guava:32.0.1-android'
+}

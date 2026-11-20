@@ -6,12 +6,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useMood } from '../hooks/useMood';
 import { moodAnalyzerAgent } from '../services/specializedAgents';
-import type { AIRecommendation, MoodAnalysisResult } from '../types/ai';
+import type { MoodAnalysisResult } from '../types/ai';
 import { prepareMoodAnalysis } from '../utils/moodAnalysisPayload';
+import { AI_CONSENT_VERSION } from '../utils/legalVersions';
+import { hasCurrentSensitiveSelfReportConsent } from '../services/sensitiveDataConsentService';
 import Logo from '../components/Logo';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 const MoodFlowSimple: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { createMoodLog } = useMood();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -31,6 +34,24 @@ const MoodFlowSimple: React.FC = () => {
   const [aiAnalysis, setAiAnalysis] = useState<MoodAnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [sensitiveConsentStatus, setSensitiveConsentStatus] = useState<'checking' | 'allowed' | 'missing' | 'error'>('checking');
+
+  const refreshSensitiveConsent = async () => {
+    setSensitiveConsentStatus('checking');
+    try {
+      setSensitiveConsentStatus(await hasCurrentSensitiveSelfReportConsent() ? 'allowed' : 'missing');
+    } catch {
+      setSensitiveConsentStatus('error');
+    }
+  };
+
+  useEffect(() => {
+    void refreshSensitiveConsent();
+  }, [user?.uid]);
+
+  useEffect(() => {
+    setAiDataConsent(false);
+  }, [user?.uid]);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😔', '😐', '🙂', '😊', '😄', '🤩', '🥰', '😍', '🌟'];
@@ -112,7 +133,7 @@ const MoodFlowSimple: React.FC = () => {
       setShowAnalysis(true);
       toast.success('Estado de ánimo guardado.');
     } catch (error) {
-      console.error('Error creating mood log:', error);
+      logSanitizedClientError('Mood check-in save failed', error);
       toast.error(error instanceof Error ? error.message : 'No se pudo guardar el estado de ánimo.');
     } finally {
       setLoading(false);
@@ -137,46 +158,21 @@ const MoodFlowSimple: React.FC = () => {
           emotions,
           notes: feelings,
           createdAt: new Date().toISOString(),
-        }], 'registro actual').moodData);
-      const recommendations: AIRecommendation[] = response.recommendations.map((description) => ({
-        type: 'general',
-        priority: 'medium',
-        title: 'Sugerencia para reflexionar',
-        description,
-        actionable: description,
-        category: 'Autorreflexión',
-      }));
-
+        }], 'registro actual').moodData, AI_CONSENT_VERSION);
       setAiAnalysis({
         summary: response.summary,
         insights: response.insights,
-        recommendations,
-        moodTrend: response.moodTrend,
-        riskLevel: response.riskLevel,
-        ...(response.interventionStrategies.length > 0 ? {
-          emotionalRegulation: {
-            title: 'Ideas para regular emociones',
-            description: 'Opciones cotidianas para considerar, no indicaciones clínicas.',
-            strategies: response.interventionStrategies,
-          },
-        } : {}),
-        ...(response.wellnessPlan.length > 0 ? {
-          wellBeingMaintenance: {
-            title: 'Ideas de autocuidado',
-            description: 'Sugerencias generales para tu bienestar cotidiano.',
-            strategies: response.wellnessPlan,
-          },
-        } : {}),
+        recommendations: response.recommendations,
         textualAnalysis: {
           title: 'Reflexión sobre tu registro',
           description: response.summary,
           insights: response.insights,
-          recommendations: response.nextSteps,
+          recommendations: [...response.recommendations, ...response.nextSteps],
         },
       });
       toast.success('Reflexión generada.');
     } catch (error) {
-      console.error('Error generating mood analysis:', error);
+      logSanitizedClientError('Mood analysis request failed', error);
       toast.error(error instanceof Error ? error.message : 'No se pudo generar el análisis.');
     } finally {
       setAnalyzing(false);
@@ -189,7 +185,7 @@ const MoodFlowSimple: React.FC = () => {
       await logout();
       navigate('/');
     } catch (error) {
-      console.error('Error logging out:', error);
+      logSanitizedClientError('Mood flow sign-out failed', error);
     } finally {
       setLogoutLoading(false);
       setShowLogoutModal(false);
@@ -216,6 +212,28 @@ const MoodFlowSimple: React.FC = () => {
           <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Cargando...</p>
         </div>
       </div>
+    );
+  }
+
+  if (sensitiveConsentStatus === 'checking') {
+    return <div className='min-h-screen flex items-center justify-center text-gray-600'>Comprobando autorización…</div>;
+  }
+
+  if (sensitiveConsentStatus !== 'allowed') {
+    return (
+      <main className='min-h-screen bg-gray-50 px-5 py-12 dark:bg-gray-950'>
+        <section className='mx-auto max-w-xl rounded-2xl bg-white p-7 shadow-sm dark:bg-gray-900'>
+          <Logo size='sm' />
+          <h1 className='mt-6 text-2xl font-bold text-gray-900 dark:text-white'>Antes de registrar tu ánimo</h1>
+          <p className='mt-3 text-sm leading-6 text-gray-700 dark:text-gray-300'>Guardar registros requiere una autorización opcional separada. Puedes leer los detalles, decidir y retirarla más adelante desde Ajustes.</p>
+          {sensitiveConsentStatus === 'error' && <p role='alert' className='mt-3 text-sm text-red-700'>No pudimos comprobar el estado. Comprueba tu conexión e inténtalo otra vez.</p>}
+          <div className='mt-6 flex flex-wrap gap-3'>
+            <button type='button' onClick={() => navigate('/sensitive-data-consent', { state: { returnTo: '/mood-flow' } })} className='rounded-lg bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white'>Revisar autorización</button>
+            {sensitiveConsentStatus === 'error' && <button type='button' onClick={() => void refreshSensitiveConsent()} className='rounded-lg border px-4 py-2.5 text-sm'>Reintentar</button>}
+            <button type='button' onClick={() => navigate('/dashboard')} className='rounded-lg border px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200'>Volver</button>
+          </div>
+        </section>
+      </main>
     );
   }
 
@@ -640,7 +658,7 @@ const MoodFlowSimple: React.FC = () => {
                   onChange={(event) => setAiDataConsent(event.target.checked)}
                   className='mt-1'
                 />
-                <span>Si solicito una reflexión, entiendo que mi estado de ánimo, medidas, actividades, emociones y notas se enviarán a Groq.</span>
+                <span>Si solicito una reflexión, autorizo enviar a Groq mis datos de estado de ánimo, medidas, actividades, emociones y notas, que pueden revelar datos sensibles de salud. Puedo guardar el registro sin solicitar IA.</span>
               </label>
               {!aiAnalysis && (
                 <button
@@ -651,56 +669,6 @@ const MoodFlowSimple: React.FC = () => {
                 >
                   {analyzing ? 'Analizando...' : 'Solicitar reflexión con IA'}
                 </button>
-              )}
-
-              {/* Análisis 1: Estrategias de Regulación Emocional */}
-              {aiAnalysis?.emotionalRegulation && (
-                <div
-                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-purple-900/20' : 'bg-purple-50'} border ${
-                    isDarkMode ? 'border-purple-800' : 'border-purple-200'
-                  }`}
-                >
-                  <h4 className={`font-semibold text-base mb-2 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
-                    🧘 {aiAnalysis.emotionalRegulation.title}
-                  </h4>
-                  <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {aiAnalysis.emotionalRegulation.description}
-                  </p>
-                  <div className="space-y-2">
-                    {aiAnalysis.emotionalRegulation.strategies.map((strategy, index) => (
-                      <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-white'} border-l-2 border-purple-400`}>
-                        <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {index + 1}. {strategy}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Análisis 2: Estrategia de Mantenimiento del Bienestar */}
-              {aiAnalysis?.wellBeingMaintenance && (
-                <div
-                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-green-900/20' : 'bg-green-50'} border ${
-                    isDarkMode ? 'border-green-800' : 'border-green-200'
-                  }`}
-                >
-                  <h4 className={`font-semibold text-base mb-2 ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>
-                    💚 {aiAnalysis.wellBeingMaintenance.title}
-                  </h4>
-                  <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {aiAnalysis.wellBeingMaintenance.description}
-                  </p>
-                  <div className="space-y-2">
-                    {aiAnalysis.wellBeingMaintenance.strategies.map((strategy, index) => (
-                      <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-white'} border-l-2 border-green-400`}>
-                        <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {index + 1}. {strategy}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               )}
 
               {/* Análisis 3: Análisis de Reflexión Personal (Texto) */}
@@ -772,33 +740,6 @@ const MoodFlowSimple: React.FC = () => {
               )}
 
               {/* Fallback si no hay análisis pero hay recomendaciones generales */}
-              {!analyzing && aiAnalysis && !aiAnalysis.emotionalRegulation && !aiAnalysis.wellBeingMaintenance && !aiAnalysis.textualAnalysis && aiAnalysis.recommendations && (
-                <div
-                  className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${
-                    isDarkMode ? 'border-blue-800' : 'border-blue-200'
-                  }`}
-                >
-                  <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>💡 Recomendaciones Generales</h4>
-                  <div className="mt-2 space-y-2">
-                    {aiAnalysis.recommendations.map((rec, index) => (
-                      <div key={index} className={`p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border-l-4 ${
-                        rec.priority === 'high' ? 'border-red-500' : 
-                        rec.priority === 'medium' ? 'border-yellow-500' : 'border-green-500'
-                      }`}>
-                        <h5 className={`font-medium text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {rec.title}
-                        </h5>
-                        <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
-                          {rec.description}
-                        </p>
-                        <p className={`text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'} mt-1 whitespace-pre-line`}>
-                          💡 {rec.actionable}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className='flex justify-center pt-4'>
                 <button

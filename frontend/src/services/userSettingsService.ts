@@ -1,5 +1,6 @@
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export interface UserSettings {
   userId: string;
@@ -10,7 +11,6 @@ export interface UserSettings {
     sms: boolean;
     moodReminders: boolean;
     achievementNotifications: boolean;
-    crisisAlerts: boolean;
     quietHours: {
       enabled: boolean;
       start: string; // HH:MM format
@@ -52,7 +52,6 @@ export const DEFAULT_USER_SETTINGS: Omit<UserSettings, 'userId' | 'createdAt' | 
     sms: false,
     moodReminders: true,
     achievementNotifications: true,
-    crisisAlerts: true,
     quietHours: {
       enabled: false,
       start: '22:00',
@@ -62,7 +61,7 @@ export const DEFAULT_USER_SETTINGS: Omit<UserSettings, 'userId' | 'createdAt' | 
   privacy: {
     profileVisibility: 'private',
     dataSharing: false,
-    analyticsOptIn: true,
+    analyticsOptIn: false,
     marketingEmails: false,
   },
   app: {
@@ -99,7 +98,7 @@ class UserSettingsService {
         return await this.createDefaultSettings(userId);
       }
     } catch (error) {
-      console.error('Error getting user settings:', error);
+      logSanitizedClientError('User settings read failed', error);
       throw error;
     }
   }
@@ -122,7 +121,7 @@ class UserSettingsService {
 
       return defaultSettings;
     } catch (error) {
-      console.error('Error creating default settings:', error);
+      logSanitizedClientError('Default settings creation failed', error);
       throw error;
     }
   }
@@ -137,7 +136,7 @@ class UserSettingsService {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error updating user settings:', error);
+      logSanitizedClientError('User settings update failed', error);
       throw error;
     }
   }
@@ -155,7 +154,7 @@ class UserSettingsService {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error updating notification settings:', error);
+      logSanitizedClientError('Notification settings update failed', error);
       throw error;
     }
   }
@@ -170,7 +169,7 @@ class UserSettingsService {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error updating privacy settings:', error);
+      logSanitizedClientError('Privacy settings update failed', error);
       throw error;
     }
   }
@@ -185,7 +184,7 @@ class UserSettingsService {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error updating app settings:', error);
+      logSanitizedClientError('App settings update failed', error);
       throw error;
     }
   }
@@ -203,7 +202,7 @@ class UserSettingsService {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Error updating mood logging settings:', error);
+      logSanitizedClientError('Mood logging settings update failed', error);
       throw error;
     }
   }
@@ -218,7 +217,7 @@ class UserSettingsService {
 
       await setDoc(doc(db, 'userSettings', userId), defaultSettings, { merge: true });
     } catch (error) {
-      console.error('Error resetting settings to defaults:', error);
+      logSanitizedClientError('User settings reset failed', error);
       throw error;
     }
   }
@@ -243,7 +242,7 @@ class UserSettingsService {
         { merge: true }
       );
     } catch (error) {
-      console.error('Error importing settings:', error);
+      logSanitizedClientError('User settings import failed', error);
       throw error;
     }
   }

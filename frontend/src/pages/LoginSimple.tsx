@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 const LoginSimple: React.FC = () => {
   const { signIn, signInWithGoogle, user, logout } = useAuth();
@@ -83,7 +84,7 @@ const LoginSimple: React.FC = () => {
       await signInWithGoogle();
       // La redirección se maneja en el useEffect
     } catch (error: any) {
-      console.error('Google Sign-In Error:', error);
+      logSanitizedClientError('Google sign-in failed', error);
       setGoogleError(error.message);
     } finally {
       setLoading(false);
@@ -120,6 +121,8 @@ const LoginSimple: React.FC = () => {
           </Link>
 
           <button
+            type='button'
+            aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             onClick={toggleDarkMode}
             className={`p-2 sm:p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
               isDarkMode
@@ -133,7 +136,7 @@ const LoginSimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className='flex min-h-[calc(100vh-80px)]'>
+      <main className='flex min-h-[calc(100vh-80px)]'>
         {/* Centered Form */}
         <div className='flex-1 flex items-center justify-center mobile-padding'>
           <div className='w-full max-w-md sm:max-w-lg md:max-w-xl'>
@@ -193,6 +196,7 @@ const LoginSimple: React.FC = () => {
               {/* Email */}
               <div>
                 <label
+                  htmlFor='login-email'
                   className={`block text-xs sm:text-sm font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}
@@ -200,9 +204,11 @@ const LoginSimple: React.FC = () => {
                   EMAIL
                 </label>
                 <input
+                  id='login-email'
                   type='email'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete='email'
                   className={`w-full mobile-button rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 mobile-text ${
                     isDarkMode
                       ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
@@ -215,6 +221,7 @@ const LoginSimple: React.FC = () => {
               {/* Password */}
               <div>
                 <label
+                  htmlFor='login-password'
                   className={`block text-xs sm:text-sm font-bold mb-2 transition-colors duration-500 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}
@@ -223,10 +230,12 @@ const LoginSimple: React.FC = () => {
                 </label>
                 <div className='relative'>
                   <input
+                    id='login-password'
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full mobile-button pr-10 sm:pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 mobile-text ${
+                    autoComplete='current-password'
+                    className={`w-full mobile-button pr-14 sm:pr-16 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-4 mobile-text ${
                       isDarkMode
                         ? 'bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/20'
                         : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500/20'
@@ -236,7 +245,9 @@ const LoginSimple: React.FC = () => {
                   <button
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-pressed={showPassword}
+                    className={`absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md transition-colors duration-300 ${
                       isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -337,7 +348,7 @@ const LoginSimple: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

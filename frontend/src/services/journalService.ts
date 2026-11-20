@@ -16,12 +16,22 @@ import {
 import { JournalEntry, JournalPrompt, JournalTemplate } from '../types';
 import { requestAi } from './aiApi';
 import { db } from './firebase';
+import { hasCurrentSensitiveSelfReportConsent } from './sensitiveDataConsentService';
+import { JournalAnalysisResult, normalizeJournalAnalysis } from '../utils/journalAnalysisResult';
+import { logSanitizedClientError } from '../utils/safeClientLog';
+
+const requireSensitiveConsent = async () => {
+  if (!await hasCurrentSensitiveSelfReportConsent()) {
+    throw new Error('Autoriza el tratamiento opcional de registros del diario en Ajustes antes de guardar.');
+  }
+};
 
 // Journal Entry Service
 export const createJournalEntry = async (
   entryData: Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<JournalEntry> => {
   try {
+    await requireSensitiveConsent();
     const journalRef = collection(db, 'journalEntries');
     
     // Clean data to remove undefined values
@@ -62,13 +72,14 @@ export const createJournalEntry = async (
 
     return newEntry;
   } catch (error) {
-    console.error('Error creating journal entry:', error);
+    logSanitizedClientError('Journal create failed', error);
     throw error;
   }
 };
 
 export const updateJournalEntry = async (entryId: string, updates: Partial<JournalEntry>): Promise<void> => {
   try {
+    await requireSensitiveConsent();
     const entryRef = doc(db, 'journalEntries', entryId);
     
     // Clean data to remove undefined values
@@ -86,7 +97,7 @@ export const updateJournalEntry = async (entryId: string, updates: Partial<Journ
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error updating journal entry:', error);
+    logSanitizedClientError('Journal update failed', error);
     throw error;
   }
 };
@@ -96,7 +107,7 @@ export const deleteJournalEntry = async (entryId: string): Promise<void> => {
     const entryRef = doc(db, 'journalEntries', entryId);
     await deleteDoc(entryRef);
   } catch (error) {
-    console.error('Error deleting journal entry:', error);
+    logSanitizedClientError('Journal delete failed', error);
     throw error;
   }
 };
@@ -138,7 +149,7 @@ export const getJournalEntries = async (userId: string, limitCount: number = 10)
 
     return entries;
   } catch (error) {
-    console.error('Error getting journal entries:', error);
+    logSanitizedClientError('Journal list read failed', error);
     throw error;
   }
 };
@@ -183,7 +194,7 @@ export const getJournalEntriesByDateRange = async (
         };
       });
   } catch (error) {
-    console.error('Error getting journal entries for the requested period:', error);
+    logSanitizedClientError('Journal period read failed', error);
     throw error;
   }
 };
@@ -218,7 +229,7 @@ export const getJournalEntryById = async (entryId: string): Promise<JournalEntry
 
     return null;
   } catch (error) {
-    console.error('Error getting journal entry:', error);
+    logSanitizedClientError('Journal entry read failed', error);
     throw error;
   }
 };
@@ -248,7 +259,7 @@ export const getJournalTemplates = async (): Promise<JournalTemplate[]> => {
 
     return templates.length ? templates : getDefaultTemplates();
   } catch (error) {
-    console.error('Error getting journal templates:', error);
+    logSanitizedClientError('Journal template read failed', error);
     throw error;
   }
 };
@@ -284,24 +295,20 @@ export const getJournalPrompts = async (category?: string): Promise<JournalPromp
       ? availablePrompts.filter((prompt) => prompt.category === category)
       : availablePrompts;
   } catch (error) {
-    console.error('Error getting journal prompts:', error);
+    logSanitizedClientError('Journal prompt read failed', error);
     throw error;
   }
 };
 
 // AI Analysis Service for Journal Entries
 export const analyzeJournalEntry = async (
-  content: string
-): Promise<{
-  sentiment: 'positive' | 'negative' | 'neutral';
-  themes: string[];
-  insights: string[];
-  recommendations: string[];
-  summary: string;
-}> => requestAi({
+  content: string,
+  consentVersion: string
+): Promise<JournalAnalysisResult> => normalizeJournalAnalysis(await requestAi<unknown>({
   task: 'journal-analysis',
   content,
-});
+  consentVersion,
+}));
 
 // Default Journal Templates
 export const getDefaultTemplates = (): JournalTemplate[] => [

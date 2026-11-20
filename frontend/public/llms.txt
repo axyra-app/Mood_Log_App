@@ -1,0 +1,14 @@
+# Mood Log App
+
+> Mood Log is a personal mood journaling and self-reflection app. Its initial market is Colombia and its first target users are adults aged 18 and older.
+
+Mood Log lets people record their own mood and journal entries, review descriptive summaries of their own records, and optionally ask an AI assistant reflective questions. The app does not diagnose, treat, predict, or provide emergency care. Mood Log does not currently connect to smartwatches or collect pulse data in the public web app.
+
+## Public information
+
+- [Terms of use](/terms)
+- [Privacy information](/privacy)
+
+## Privacy
+
+Do not crawl or index authenticated account routes or API routes. Personal mood records and journal content are private user data and are not public documentation.

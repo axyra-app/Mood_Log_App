@@ -1,8 +1,62 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { analyticsEvents } from '../src/services/analytics.ts';
+import {
+  analyticsEvents,
+  hasCurrentAnalyticsConsent,
+  isAnalyticsAvailable,
+} from '../src/services/analytics.ts';
+import { Timestamp } from 'firebase/firestore';
+import {
+  ANALYTICS_CONSENT_VERSION,
+  PRIVACY_NOTICE_VERSION,
+  TERMS_VERSION,
+} from '../src/utils/legalVersions.ts';
+import { hasCurrentLegalAcceptanceMarker } from '../src/utils/legalAcceptanceMarker.ts';
 
-test('analytics events omit mood scores and error details', () => {
+test('analytics consent requires an explicit choice, current version, and timestamp', () => {
+  assert.equal(hasCurrentAnalyticsConsent(undefined), false);
+  assert.equal(hasCurrentAnalyticsConsent({ analyticsOptIn: true }), false);
+  assert.equal(hasCurrentAnalyticsConsent({
+    analyticsOptIn: true,
+    analyticsConsentVersion: 'old-version',
+    analyticsConsentAt: new Date(),
+  }), false);
+  assert.equal(hasCurrentAnalyticsConsent({
+    analyticsOptIn: true,
+    analyticsConsentVersion: ANALYTICS_CONSENT_VERSION,
+  }), false);
+  assert.equal(hasCurrentAnalyticsConsent({
+    analyticsOptIn: true,
+    analyticsConsentVersion: ANALYTICS_CONSENT_VERSION,
+    analyticsConsentAt: new Date(),
+  }), true);
+  assert.equal(hasCurrentAnalyticsConsent({
+    analyticsOptIn: false,
+    analyticsConsentVersion: ANALYTICS_CONSENT_VERSION,
+    analyticsConsentAt: new Date(),
+  }), false);
+});
+
+test('legal acceptance marker requires current versions and a Firestore timestamp', () => {
+  assert.equal(hasCurrentLegalAcceptanceMarker(undefined), false);
+  assert.equal(hasCurrentLegalAcceptanceMarker({
+    termsVersion: TERMS_VERSION,
+    privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+    acceptedAt: new Date(),
+  }), false);
+  assert.equal(hasCurrentLegalAcceptanceMarker({
+    termsVersion: 'old-terms',
+    privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+    acceptedAt: Timestamp.now(),
+  }), false);
+  assert.equal(hasCurrentLegalAcceptanceMarker({
+    termsVersion: TERMS_VERSION,
+    privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+    acceptedAt: Timestamp.now(),
+  }), true);
+});
+
+test('analytics events remain disabled by default even if a gtag global exists', () => {
   const calls = [];
   globalThis.window = {
     gtag: (...args) => calls.push(args),
@@ -10,59 +64,12 @@ test('analytics events omit mood scores and error details', () => {
   };
 
   try {
-    analyticsEvents.moodLogged('very-low-mood-note');
-    analyticsEvents.errorOccurred('private-error-detail', 'private message');
+    analyticsEvents.moodLogged('private mood content');
+    analyticsEvents.errorOccurred('private error', 'private message');
+    analyticsEvents.pageView('private page', '/private-path?secret=value');
 
-    assert.deepEqual(calls, [
-      ['event', 'mood_logged', { event_category: 'Mood Tracking' }],
-      ['event', 'error_occurred', { event_category: 'Error', value: 1 }],
-    ]);
-  } finally {
-    delete globalThis.window;
-  }
-});
-
-test('analytics page views omit paths and query parameters', () => {
-  const calls = [];
-  globalThis.window = {
-    gtag: (...args) => calls.push(args),
-    location: {
-      origin: 'https://mood-log-app-main.vercel.app',
-      pathname: '/private-path',
-      search: '?private=value',
-    },
-  };
-
-  try {
-    analyticsEvents.pageView('private page title', '/private-path?private=value');
-
-    assert.deepEqual(calls, [[
-      'config',
-      'G-CY8FK7SXKQ',
-      {
-        page_title: 'Mood Log App',
-        page_location: 'https://mood-log-app-main.vercel.app',
-      },
-    ]]);
-  } finally {
-    delete globalThis.window;
-  }
-});
-
-test('authentication analytics retain only the fixed sign-in method', () => {
-  const calls = [];
-  globalThis.window = {
-    gtag: (...args) => calls.push(args),
-    location: { origin: 'https://mood-log-app-main.vercel.app' },
-  };
-
-  try {
-    analyticsEvents.userLogin('google');
-    assert.deepEqual(calls, [[
-      'event',
-      'login',
-      { event_category: 'Authentication', event_label: 'google' },
-    ]]);
+    assert.equal(isAnalyticsAvailable(), false);
+    assert.deepEqual(calls, []);
   } finally {
     delete globalThis.window;
   }

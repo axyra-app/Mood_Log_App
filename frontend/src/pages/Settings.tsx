@@ -12,8 +12,11 @@ import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { auth, db } from '../services/firebase';
+import { setAnalyticsConsent } from '../services/analytics';
+import { ANALYTICS_CONSENT_VERSION } from '../utils/legalVersions';
 import { exportUserData } from '../services/userDataExportService';
 import { deleteCurrentAccount } from '../services/accountDeletionService';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 type SettingsState = {
   notifications: boolean;
@@ -21,6 +24,7 @@ type SettingsState = {
   weeklyReports: boolean;
   language: string;
   timezone: string;
+  analyticsOptIn: boolean;
 };
 
 type EmailSettingsState = {
@@ -45,6 +49,12 @@ const Settings: React.FC = () => {
   const [deletionConfirmation, setDeletionConfirmation] = useState('');
   const [deletionPassword, setDeletionPassword] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [analyticsConsentChanged, setAnalyticsConsentChanged] = useState(false);
+  const [analyticsConsentMetadata, setAnalyticsConsentMetadata] = useState<{
+    version: string | null;
+    consentAt: unknown;
+    revokedAt: unknown;
+  }>({ version: null, consentAt: null, revokedAt: null });
 
   const currentUser = auth.currentUser;
   const isGoogleUser = currentUser?.providerData?.some((p) => p.providerId === 'google.com') ?? false;
@@ -58,6 +68,7 @@ const Settings: React.FC = () => {
     weeklyReports: true,
     language: 'es',
     timezone: 'America/Bogota',
+    analyticsOptIn: false,
   });
 
   // Estados para cambiar contraseña
@@ -84,6 +95,9 @@ const Settings: React.FC = () => {
     const loadSettings = async () => {
       setIsLoaded(false);
       setSettingsLoadError(false);
+      setSettings((current) => ({ ...current, analyticsOptIn: false }));
+      setAnalyticsConsentChanged(false);
+      setAnalyticsConsentMetadata({ version: null, consentAt: null, revokedAt: null });
 
       if (!user) {
         setSettingsLoadError(true);
@@ -119,7 +133,16 @@ const Settings: React.FC = () => {
             timezone: typeof savedSettings.timezone === 'string'
               ? savedSettings.timezone
               : current.timezone,
+            analyticsOptIn: savedSettings.analyticsOptIn === true
+              && savedSettings.analyticsConsentVersion === ANALYTICS_CONSENT_VERSION
+              && savedSettings.analyticsConsentAt != null,
           }));
+          setAnalyticsConsentMetadata({
+            version: typeof savedSettings.analyticsConsentVersion === 'string'
+              ? savedSettings.analyticsConsentVersion : null,
+            consentAt: savedSettings.analyticsConsentAt ?? null,
+            revokedAt: savedSettings.analyticsConsentRevokedAt ?? null,
+          });
 
           const savedEmailSettings = savedSettings.emailSettings;
           if (isRecord(savedEmailSettings)) {
@@ -134,7 +157,7 @@ const Settings: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error loading settings:', error);
+        logSanitizedClientError('Settings load failed', error);
         if (isCurrent) {
           setSettingsLoadError(true);
           toast.error('No se pudo cargar tu configuración. Inténtalo de nuevo.');
@@ -154,6 +177,10 @@ const Settings: React.FC = () => {
 
   const handleSettingsChange = <K extends keyof SettingsState,>(key: K, value: SettingsState[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
+    if (key === 'analyticsOptIn') {
+      setAnalyticsConsentChanged(true);
+      if (value === false) void setAnalyticsConsent(false);
+    }
   };
 
   const handleEmailSettingsChange = (key: keyof EmailSettingsState, value: boolean) => {
@@ -168,16 +195,35 @@ const Settings: React.FC = () => {
 
     setLoading(true);
     try {
+      const consentMetadata = settings.analyticsOptIn
+        ? {
+            analyticsConsentVersion: ANALYTICS_CONSENT_VERSION,
+            analyticsConsentAt: analyticsConsentChanged ? serverTimestamp() : analyticsConsentMetadata.consentAt,
+            analyticsConsentRevokedAt: null,
+          }
+        : {
+            analyticsConsentVersion: analyticsConsentMetadata.version,
+            analyticsConsentAt: analyticsConsentMetadata.consentAt,
+            analyticsConsentRevokedAt: analyticsConsentChanged ? serverTimestamp() : analyticsConsentMetadata.revokedAt,
+          };
       await updateDoc(doc(db, 'users', user.uid), {
         settings: {
           ...settings,
           emailSettings,
+          ...consentMetadata,
         },
         updatedAt: serverTimestamp(),
       });
+      setAnalyticsConsentMetadata({
+        version: settings.analyticsOptIn ? ANALYTICS_CONSENT_VERSION : analyticsConsentMetadata.version,
+        consentAt: settings.analyticsOptIn && analyticsConsentChanged ? new Date() : analyticsConsentMetadata.consentAt,
+        revokedAt: settings.analyticsOptIn ? null : analyticsConsentChanged ? new Date() : analyticsConsentMetadata.revokedAt,
+      });
+      setAnalyticsConsentChanged(false);
+      await setAnalyticsConsent(settings.analyticsOptIn);
       toast.success('Configuración guardada exitosamente');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      logSanitizedClientError('Settings save failed', error);
       toast.error('Error al guardar la configuración');
     } finally {
       setLoading(false);
@@ -223,7 +269,7 @@ const Settings: React.FC = () => {
         confirmPassword: '',
       });
     } catch (error: any) {
-      console.error('Error changing password:', error);
+      logSanitizedClientError('Password change failed', error);
       if (error.code === 'auth/wrong-password') {
         toast.error('La contraseña actual es incorrecta');
       } else if (error.code === 'auth/weak-password') {
@@ -243,7 +289,7 @@ const Settings: React.FC = () => {
       await logout();
       navigate('/');
     } catch (error) {
-      console.error('Error logging out:', error);
+      logSanitizedClientError('Settings sign-out failed', error);
     }
   };
 
@@ -267,7 +313,7 @@ const Settings: React.FC = () => {
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
       toast.success('Tus datos se descargaron correctamente.');
     } catch (error) {
-      console.error('Error exporting user data:', error);
+      logSanitizedClientError('User data export action failed', error);
       toast.error('No se pudieron exportar tus datos. Revisa tu conexión e inténtalo de nuevo.');
     } finally {
       setExportingData(false);
@@ -291,7 +337,7 @@ const Settings: React.FC = () => {
       toast.success('La cuenta y sus datos de Mood Log se eliminaron correctamente.');
       navigate('/', { replace: true });
     } catch (error) {
-      console.error('Error deleting account:', error);
+      logSanitizedClientError('Account deletion action failed', error);
       toast.error(error instanceof Error ? error.message : 'No se pudo eliminar la cuenta.');
     } finally {
       setDeletingAccount(false);
@@ -440,6 +486,39 @@ const Settings: React.FC = () => {
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Analítica opcional */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className='flex items-center space-x-3 mb-4'>
+              <div className={`w-10 h-10 ${isDarkMode ? 'bg-purple-900' : 'bg-purple-100'} rounded-lg flex items-center justify-center`}>
+                <Info className={`w-5 h-5 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`} />
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Analítica opcional</h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Desactivada por defecto</p>
+              </div>
+            </div>
+            <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Si la activas, Firebase Analytics de Google procesa eventos de uso y algunos datos técnicos del dispositivo.
+              Los eventos definidos por Mood Log no incluyen el contenido de tus diarios ni tus puntuaciones de ánimo.
+              Puedes cambiar esta opción cuando quieras; se aplica al guardar.
+            </p>
+            <label className='flex items-center justify-between gap-4 cursor-pointer'>
+              <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Permitir analítica de uso</span>
+              <input
+                type='checkbox'
+                checked={settings.analyticsOptIn}
+                onChange={(event) => handleSettingsChange('analyticsOptIn', event.target.checked)}
+                aria-label='Permitir analítica de uso de Firebase'
+                className='h-5 w-5 accent-purple-600'
+              />
+            </label>
+            {analyticsConsentChanged && (
+              <p role='status' className={`mt-3 text-sm ${isDarkMode ? 'text-amber-200' : 'text-amber-800'}`}>
+                Guarda la configuración para aplicar este cambio.
+              </p>
+            )}
           </div>
 
           {/* Configuración de Email */}
@@ -718,6 +797,18 @@ const Settings: React.FC = () => {
           </div>
 
           <section className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+            <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+              <div>
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Autorización para ánimo y diario</h3>
+                <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Consulta, otorga o retira el permiso opcional para guardar estos registros.</p>
+              </div>
+              <button type='button' onClick={() => navigate('/sensitive-data-consent')} className='rounded-lg border border-purple-300 px-4 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950/40'>
+                Gestionar autorización
+              </button>
+            </div>
+          </section>
+
+          <section className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center space-x-3 mb-4'>
               <div className={`w-10 h-10 ${isDarkMode ? 'bg-emerald-900' : 'bg-emerald-100'} rounded-lg flex items-center justify-center`}>
                 <Download className={`w-5 h-5 ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`} />
@@ -732,8 +823,9 @@ const Settings: React.FC = () => {
               </div>
             </div>
             <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              No incluye el historial de MIA, que no se guarda, datos técnicos internos ni colecciones que las reglas
-              actuales no permiten exportar.
+              Incluye los registros propios, también los datos heredados y subcolecciones guardados en Firestore, y una
+              proyección de los contadores de uso de IA. No incluye archivos binarios de Storage, decisiones locales del
+              prototipo Wear OS ni logs de infraestructura/proveedores. La sección de cobertura del JSON detalla el alcance.
             </p>
             <button
               type='button'

@@ -1,7 +1,8 @@
 /**
  * Logger utility for Mood Log App
- * Provides structured logging with different levels
+ * Provides content-free client logging with different levels
  */
+import { logSanitizedClientError } from './safeClientLog';
 
 export enum LogLevel {
   DEBUG = 0,
@@ -25,37 +26,34 @@ class Logger {
     return level >= this.currentLevel;
   }
 
-  private formatMessage(level: string, message: string, data?: any): string {
+  private formatMessage(level: string, message: string): string {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level}]`;
-    
-    if (data) {
-      return `${prefix} ${message} ${JSON.stringify(data)}`;
-    }
-    return `${prefix} ${message}`;
+    const safeMessage = /^[A-Za-z0-9 _./:-]{1,120}$/.test(message) ? message : 'Log event';
+    return `${prefix} ${safeMessage}`;
   }
 
-  debug(message: string, data?: any): void {
+  debug(message: string, _data?: unknown): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      console.debug(this.formatMessage('DEBUG', message, data));
+      console.debug(this.formatMessage('DEBUG', message));
     }
   }
 
-  info(message: string, data?: any): void {
+  info(message: string, _data?: unknown): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.info(this.formatMessage('INFO', message, data));
+      console.info(this.formatMessage('INFO', message));
     }
   }
 
-  warn(message: string, data?: any): void {
+  warn(message: string, _data?: unknown): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(this.formatMessage('WARN', message, data));
+      console.warn(this.formatMessage('WARN', message));
     }
   }
 
-  error(message: string, error?: Error | any): void {
+  error(message: string, error?: unknown): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      console.error(this.formatMessage('ERROR', message, error));
+      logSanitizedClientError(this.formatMessage('ERROR', message), error);
     }
   }
 

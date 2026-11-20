@@ -6,6 +6,8 @@ const indexesPath = new URL('../../../firebase/firestore.indexes.json', import.m
 const config = JSON.parse(await readFile(indexesPath, 'utf8'));
 const vercelConfigPath = new URL('../../vercel.json', import.meta.url);
 const vercelConfig = JSON.parse(await readFile(vercelConfigPath, 'utf8'));
+const indexHtmlPath = new URL('../../index.html', import.meta.url);
+const indexHtml = await readFile(indexHtmlPath, 'utf8');
 
 test('Firestore composite indexes do not repeat field paths', () => {
   for (const index of config.indexes) {
@@ -41,7 +43,15 @@ test('Vercel config applies security headers to all routes', () => {
   assert.equal(headers.has('content-security-policy'), false, 'CSP must remain report-only until reviewed');
 });
 
-test('report-only CSP allows required Firebase, Google sign-in, and app resources', () => {
+test('Vercel installs exactly the dependency tree recorded in the lockfile', () => {
+  assert.equal(vercelConfig.installCommand, 'npm ci');
+});
+
+test('HTML does not request a nonexistent hand-authored PWA manifest', () => {
+  assert.equal(indexHtml.includes('href=\"/manifest.json\"'), false);
+});
+
+test('report-only CSP allows required Firebase, Google sign-in, and app resources without removed hosts', () => {
   const globalHeaders = vercelConfig.headers.find(({ source }) => source === '/(.*)')?.headers ?? [];
   const policy = globalHeaders.find(
     ({ key }) => key.toLowerCase() === 'content-security-policy-report-only',
@@ -54,9 +64,9 @@ test('report-only CSP allows required Firebase, Google sign-in, and app resource
     'https://*.googleapis.com',
     'https://*.firebaseapp.com',
     'https://accounts.google.com',
-    'https://i.postimg.cc',
     "worker-src 'self' blob:",
   ]) {
     assert.ok(policy.includes(directive), `CSP is missing ${directive}`);
   }
+  assert.equal(policy.includes('https://i.postimg.cc'), false);
 });

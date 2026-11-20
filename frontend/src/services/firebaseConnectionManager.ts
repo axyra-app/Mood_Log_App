@@ -1,6 +1,8 @@
 /**
  * Gestor de conexiones Firebase para evitar errores 400 y problemas de conexión
  */
+import { logSanitizedClientError } from '../utils/safeClientLog';
+
 class FirebaseConnectionManager {
   private activeListeners: Map<string, () => void> = new Map();
   private connectionRetryCount: Map<string, number> = new Map();
@@ -49,7 +51,7 @@ class FirebaseConnectionManager {
   handleConnectionError(key: string, error: any, retryCallback: () => void): void {
     const retryCount = this.connectionRetryCount.get(key) || 0;
     
-    console.error(`❌ Error de conexión en ${key} (intento ${retryCount + 1}/${this.MAX_RETRIES}):`, error);
+    logSanitizedClientError('Firebase connection attempt failed', error);
     
     if (retryCount < this.MAX_RETRIES) {
       this.connectionRetryCount.set(key, retryCount + 1);
@@ -59,7 +61,7 @@ class FirebaseConnectionManager {
         retryCallback();
       }, this.RETRY_DELAY * (retryCount + 1));
     } else {
-      console.error(`❌ Máximo de reintentos alcanzado para ${key}`);
+      console.error('Firebase listener retry limit reached.');
       this.unregisterListener(key);
     }
   }

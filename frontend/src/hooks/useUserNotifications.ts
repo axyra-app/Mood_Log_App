@@ -4,6 +4,7 @@ import {
   markNotificationAsRead, 
   Notification 
 } from '../services/notificationService';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export const useUserNotifications = (userId: string) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -35,7 +36,7 @@ export const useUserNotifications = (userId: string) => {
     try {
       await markNotificationAsRead(notificationId);
     } catch (error) {
-      console.error('Error marcando notificación como leída:', error);
+      logSanitizedClientError('User notification read update failed', error);
     }
   };
 
@@ -44,7 +45,7 @@ export const useUserNotifications = (userId: string) => {
       const unreadNotifications = notifications.filter(n => !n.isRead);
       await Promise.all(unreadNotifications.map(n => markNotificationAsRead(n.id)));
     } catch (error) {
-      console.error('Error marcando todas las notificaciones como leídas:', error);
+      logSanitizedClientError('User notifications read-all update failed', error);
     }
   };
 

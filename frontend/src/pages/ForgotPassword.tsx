@@ -207,7 +207,7 @@ const ForgotPassword: React.FC = () => {
                       <li>• ⏰ El enlace expira en 24 horas</li>
                       <li>• 🔗 Haz clic en el enlace para restablecer tu contraseña</li>
                       <li>• ✅ Si está en spam, márcalo como "No es spam"</li>
-                      <li>• 📱 El email viene de: noreply@mood-log-app-01.firebaseapp.com</li>
+                      <li>• 📱 El email viene del servicio de autenticación de Firebase</li>
                     </ul>
                   </div>
 

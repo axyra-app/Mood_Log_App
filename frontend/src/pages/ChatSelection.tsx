@@ -94,7 +94,7 @@ const ChatSelection: React.FC = () => {
         >
           <ShieldCheck className='mt-0.5 h-5 w-5 shrink-0 text-violet-500' aria-hidden='true' />
           <p>
-            MIA es una IA para autorreflexión, no atención clínica ni un servicio de emergencia. Tus mensajes se envían a Groq para generar respuestas y no se guardan como historial en Mood Log. Evita compartir información que no quieras enviar a un proveedor externo. Si existe peligro inmediato, contacta los servicios de emergencia locales o a una persona de confianza.
+            MIA es una IA para autorreflexión, no atención clínica ni un servicio de emergencia. Tus mensajes se envían a Groq para generar respuestas y no se guardan como historial en Mood Log; pueden revelar datos sensibles de salud o estado de ánimo. El proveedor o el hosting pueden conservar registros técnicos según sus condiciones y configuración. En el chat deberás autorizar el envío antes de empezar. Evita compartir información que no quieras enviar a un proveedor externo. Si existe peligro inmediato, contacta los servicios de emergencia locales o a una persona de confianza.
           </p>
         </aside>
       </main>

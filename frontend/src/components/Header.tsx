@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../hooks/useNotifications';
 import Logo from './Logo';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 interface HeaderProps {
   title?: string;
@@ -43,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({
       navigate('/');
       toast.success('Sesión cerrada exitosamente');
     } catch (error) {
-      console.error('Error logging out:', error);
+      logSanitizedClientError('Header sign-out failed', error);
       toast.error('Error al cerrar sesión');
     }
   };

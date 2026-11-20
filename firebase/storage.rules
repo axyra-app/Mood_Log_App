@@ -5,6 +5,22 @@ service firebase.storage {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    function hasCurrentAdultEligibility(userId) {
+      let profile = firestore.get(/databases/(default)/documents/users/$(userId));
+      return 'adultEligibility' in profile.data
+        && profile.data.adultEligibility.isAdult == true
+        && profile.data.adultEligibility.version == 'co-18plus-v1'
+        && profile.data.adultEligibility.attestedAt is timestamp;
+    }
+
+    function hasCurrentLegalAcceptance(userId) {
+      let profile = firestore.get(/databases/(default)/documents/users/$(userId));
+      return 'legalAcceptance' in profile.data
+        && profile.data.legalAcceptance.termsVersion == 'co-terms-draft-v2-sensitive-data'
+        && profile.data.legalAcceptance.privacyNoticeVersion == 'co-privacy-draft-v4-groq-retention'
+        && profile.data.legalAcceptance.acceptedAt is timestamp;
+    }
+
     function isAllowedUpload() {
       return request.resource.size <= 10 * 1024 * 1024
         && request.resource.contentType in [
@@ -16,8 +32,11 @@ service firebase.storage {
     }
 
     match /users/{userId}/{allPaths=**} {
-      allow read, delete: if isOwner(userId);
-      allow create, update: if isOwner(userId) && isAllowedUpload();
+      allow read, delete: if isOwner(userId) && hasCurrentAdultEligibility(userId);
+      allow create, update: if isOwner(userId)
+        && hasCurrentAdultEligibility(userId)
+        && hasCurrentLegalAcceptance(userId)
+        && isAllowedUpload();
     }
     
     // Denegar cualquier otro acceso por defecto

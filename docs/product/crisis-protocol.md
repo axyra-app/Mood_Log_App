@@ -2,7 +2,7 @@
 
 ## Estado y alcance
 
-Este documento define principios y requisitos para cualquier futura función de apoyo. **No describe un servicio actualmente operativo.** El repositorio contiene reglas heurísticas en `frontend/src/services/crisisDetection.ts`, pero no se encontró su integración con los recorridos de check-in, diario o chat. Tampoco se encontró un sistema de atención humana, monitoreo continuo o escalamiento a emergencias.
+Este documento define principios y requisitos para cualquier futura función de apoyo. **No describe un servicio actualmente operativo.** Se retiró del código activo el detector heurístico heredado porque asignaba niveles de riesgo y sugería acciones sin validación ni un flujo de atención asociado. Tampoco existe un sistema de atención humana, monitoreo continuo o escalamiento a emergencias.
 
 No presentar Mood Log como detector fiable de suicidio/autolesión, servicio de urgencias, línea de crisis ni sustituto de atención profesional.
 
@@ -17,17 +17,33 @@ Si se habilita una experiencia de IA o bienestar, debe comunicar claramente que:
 
 La información debe mostrarse antes de que la persona comparta texto sensible y estar disponible desde el flujo de conversación.
 
-## Límites del detector heurístico actual
+## Límite de la versión actual
 
-El servicio existente contiene listas de términos y reglas para asignar niveles de señal. Este enfoque puede:
+Mood Log no clasifica riesgo ni ofrece detección o atención de crisis. La IA puede no reconocer una situación urgente; su aviso de emergencia no equivale a monitoreo ni respuesta inmediata. Las colecciones heredadas de evaluaciones permanecen en las rutinas de eliminación para cubrir datos antiguos, pero no se crean desde el código activo revisado.
 
-- No detectar expresiones indirectas, idioma, contexto, negación, ironía o errores ortográficos.
-- Marcar contenido no relacionado con una emergencia.
-- Producir niveles de riesgo sin validación clínica.
-- Depender de notificaciones o flujos heredados que no estén implementados y verificados.
-- Intentar persistir en colecciones no habilitadas por las reglas locales.
+## Borrador operativo para entrevistas de producto en Colombia
 
-No se deben usar sus niveles, confianza o puntuación para afirmar una evaluación válida. No se deben guardar ni transmitir estos análisis sin una decisión de privacidad, finalidad y retención.
+**Estado:** borrador al 20 de noviembre de 2026. Guía interna para moderadores; requiere aprobación del responsable del proyecto y revisión profesional antes de usarla. No crea una función de crisis en Mood Log ni sustituye un protocolo clínico.
+
+### Antes de una sesión
+
+- Nombrar un moderador responsable y un contacto de respaldo que pueda atender una pausa por seguridad durante la sesión.
+- Dar el aviso de privacidad de investigación de producto, explicar quién tendrá acceso a las notas codificadas y su fecha de borrado. No registrar en las notas diagnósticos, tratamientos, ideación, métodos ni relatos de crisis.
+- Mantener el guion fuera de evaluación clínica: no preguntar por síntomas, ideación, autolesión, diagnósticos ni tratamientos; trabajar con pantallas, cuentas y mediciones sintéticas.
+- Tener a mano una hoja de recursos aprobada. La línea de emergencia 123 se identifica oficialmente como línea única nacional; confirmar en cada revisión operativa que el dato y su disponibilidad sigan vigentes ([Función Pública](https://www1.funcionpublica.gov.co/preguntas-frecuentes/-/asset_publisher/sqxafjubsrEu/content/linea-unica-de-emergencias-nacional-123/28585938)).
+- La búsqueda local de recursos devolvió la **Línea de Atención para la Salud Mental** con este contacto: [+57 (606) 7359950](tel:+576067359950?oai_link_source=model_response_hotline), [https://construyendonos.org/](https://construyendonos.org/?oai_link_source=model_response_hotline). La fuente consultada no especifica cobertura territorial ni horario; no ofrecerla como nacional hasta confirmar directamente ambos datos y volver a verificarla antes de cada ciclo.
+- Si el equipo no tiene un responsable disponible, la hoja de recursos no está verificada o el aviso/retención no están listos, no empezar sesiones que traten sobre ánimo.
+
+### Si alguien revela malestar o una situación urgente
+
+1. Pausar la tarea y la toma de notas. Agradecer la confianza y decir: “No necesitas contarme detalles para esta entrevista. Podemos parar ahora; si quieres, puedo ayudarte a buscar un recurso de apoyo”.
+2. No investigar, diagnosticar, debatir, prometer confidencialidad absoluta ni decir que Mood Log vigila o notificará a alguien.
+3. Si la persona indica que existe peligro inmediato, terminar la entrevista y priorizar conectarla con servicios de emergencia o una persona de confianza que ella elija. Para una emergencia en Colombia, ofrecer llamar al 123; si la sesión es remota, animar a que contacte los servicios locales y al responsable de sesión, sin inventar ubicación ni cobertura. La orientación del [Instituto Nacional de Salud](https://www.ins.gov.co/Noticias/Paginas/Prevenir-el-suicidio-es-posible%2C-reconoce-las-señales%2C-pregunta-y-busca-ayuda-a-tiempo.aspx) recomienda acudir de forma urgente a atención especializada ante peligro inmediato.
+4. No dejar sola a una persona en peligro inmediato durante una sesión presencial; mantener la compañía mientras se activa ayuda con su participación, conforme a la orientación del Instituto Nacional de Salud enlazada arriba. El moderador no sustituye al profesional de salud ni realiza una evaluación de riesgo.
+5. No copiar el relato a la matriz de hallazgos. Registrar únicamente, si hace falta para seguimiento operativo, el código aleatorio de sesión, que se pausó por seguridad, fecha, acción logística acordada y responsable; mantener esa nota separada y eliminarla en el plazo aprobado.
+6. Si se requiere recolectar identidad o ubicación para activar ayuda, explicar el motivo y compartir solo el mínimo necesario con el servicio/contacto elegido; no reutilizar esa información para el producto o investigación.
+
+Esta guía debe revisarse por un profesional de salud mental y asesoría jurídica antes del primer reclutamiento. Si no se puede ofrecer una ruta humana adecuada con los recursos efectivamente disponibles en la ubicación de la persona, cerrar la sesión sin pedir más detalles y activar el proceso local que el equipo haya aprobado previamente.
 
 ## Requisitos antes de considerar una función de crisis
 

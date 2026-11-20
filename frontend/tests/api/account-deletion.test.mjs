@@ -43,7 +43,7 @@ test('keeps account deletion disabled by default in deployed environments', asyn
   const priorValue = process.env.ACCOUNT_DELETION_ENABLED;
   delete process.env.ACCOUNT_DELETION_ENABLED;
   try {
-    const response = await deleteAccountApi(new Request('https://example.test/api/delete-account', {
+    const response = await deleteAccountApi.fetch(new Request('https://example.test/api/delete-account', {
       method: 'POST',
       headers: { Authorization: 'Bearer token' },
     }));
@@ -126,23 +126,48 @@ test('keeps Auth available when data deletion fails so the user can retry', asyn
   assert.match((await response.json()).error, /contacta soporte/);
 });
 
+test('returns a retryable conflict while an AI request lease is active', async () => {
+  const deleteError = Object.assign(new Error('AI request in progress'), {
+    code: 'account/ai-request-in-progress',
+  });
+  const { handler, calls } = responseWith(NOW_SECONDS - 20, { deleteError });
+  const response = await handler(new Request('https://example.test/api/delete-account', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer token' },
+  }));
+
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).code, 'AI_REQUEST_IN_PROGRESS');
+  assert.deepEqual(calls.deletedAuthFor, []);
+});
+
 class FakeFirestore {
   documents = new Map();
-  maxBatchSize = 0;
+  recursiveDeleteCalls = 0;
+  bulkWriterInstances = 0;
+  bulkWriterCloseCalls = 0;
+  bulkWriter() {
+    this.bulkWriterInstances += 1;
+    return {
+      delete: async (ref) => { this.documents.delete(ref.path); },
+      close: async () => { this.bulkWriterCloseCalls += 1; },
+    };
+  }
   collection(name) {
     return {
       where: (field, _operator, value) => ({
         limit: () => ({
-          get: async () => ({
-            docs: [...this.documents.entries()]
-                      .filter(([path, document]) =>
-                        path.startsWith(`${name}/`)
-                        && path.split('/').length === 2
-                        && document[field] === value
-                      )
+          get: async () => {
+            const docs = [...this.documents.entries()]
+              .filter(([path, document]) =>
+                path.startsWith(`${name}/`)
+                && path.split('/').length === 2
+                && document[field] === value
+              )
               .slice(0, 400)
-              .map(([path, document]) => ({ ref: { path }, data: () => document })),
-          }),
+              .map(([path, document]) => ({ ref: { path }, data: () => document }));
+            return { docs, empty: docs.length === 0 };
+          },
         }),
       }),
       doc: (id) => this.doc(`${name}/${id}`),
@@ -160,6 +185,7 @@ class FakeFirestore {
     };
   }
   recursiveDelete = async (ref) => {
+    this.recursiveDeleteCalls += 1;
     for (const path of this.documents.keys()) {
       if (path === ref.path || path.startsWith(`${ref.path}/`)) this.documents.delete(path);
     }
@@ -168,10 +194,7 @@ class FakeFirestore {
     const paths = [];
     return {
       delete: (ref) => paths.push(ref.path),
-      commit: async () => {
-        this.maxBatchSize = Math.max(this.maxBatchSize, paths.length);
-        paths.forEach((path) => this.documents.delete(path));
-      },
+      commit: async () => paths.forEach((path) => this.documents.delete(path)),
     };
   }
   runTransaction() {
@@ -185,6 +208,8 @@ const makeDeletionFixture = () => {
   firestore.documents.set('users/other', { uid: 'other', displayName: 'Other' });
   firestore.documents.set('userSettings/owner', { userId: 'owner', privacy: { shareData: false } });
   firestore.documents.set('aiUsage/owner', { count: 9 });
+  firestore.documents.set('aiConsentEvents/consent-owner', { userId: 'owner', task: 'chat' });
+  firestore.documents.set('aiConsentEvents/consent-other', { userId: 'other', task: 'chat' });
   firestore.documents.set('moodLogs/owner-log', { userId: 'owner', mood: 8 });
   firestore.documents.set('moodLogs/other-log', { userId: 'other', mood: 3 });
   firestore.documents.set('chatSessions/owner-chat', { uid: 'owner', transcript: 'private' });
@@ -218,14 +243,70 @@ test('deletes only the verified account documents, storage prefix, and internal 
   assert.equal(fixture.firestore.documents.has('users/owner'), false);
   assert.equal(fixture.firestore.documents.has('userSettings/owner'), false);
   assert.equal(fixture.firestore.documents.has('aiUsage/owner'), false);
+  assert.equal(fixture.firestore.documents.has('aiConsentEvents/consent-owner'), false);
+  assert.equal(fixture.firestore.documents.has('aiConsentEvents/consent-other'), true);
   assert.equal(fixture.firestore.documents.has('accountDeletionRequests/owner'), false);
-  assert.ok(fixture.firestore.maxBatchSize <= 400);
   assert.deepEqual(fixture.deletedFiles, ['users/owner/journal.pdf']);
+  assert.deepEqual(fixture.deletedAuth, ['owner']);
+  assert.equal(fixture.firestore.bulkWriterInstances, 1);
+  assert.equal(fixture.firestore.bulkWriterCloseCalls, 1);
+});
+
+test('keeps user data and Auth intact while an AI lease is still active', async () => {
+  const fixture = makeDeletionFixture();
+  fixture.firestore.documents.set('activeAiRequests/request-active', {
+    userId: 'owner',
+    leaseExpiresAt: { toMillis: () => Date.now() + 30_000 },
+  });
+
+  await assert.rejects(
+    deleteUserOwnedData(fixture.firestore, fixture.bucket, fixture.auth, 'owner'),
+    (error) => error.code === 'account/ai-request-in-progress',
+  );
+
+  assert.equal(fixture.firestore.documents.has('accountDeletionRequests/owner'), true);
+  assert.equal(fixture.firestore.documents.has('activeAiRequests/request-active'), true);
+  assert.equal(fixture.firestore.documents.has('moodLogs/owner-log'), true);
+  assert.equal(fixture.firestore.documents.has('users/owner'), true);
+  assert.deepEqual(fixture.deletedAuth, []);
+});
+
+test('cleans expired AI request leases before deleting account data', async () => {
+  const fixture = makeDeletionFixture();
+  fixture.firestore.documents.set('activeAiRequests/request-expired', {
+    userId: 'owner',
+    leaseExpiresAt: { toMillis: () => Date.now() - 30_000 },
+  });
+
+  await deleteUserOwnedData(fixture.firestore, fixture.bucket, fixture.auth, 'owner');
+
+  assert.equal(fixture.firestore.documents.has('activeAiRequests/request-expired'), false);
+  assert.equal(fixture.firestore.documents.has('moodLogs/owner-log'), false);
   assert.deepEqual(fixture.deletedAuth, ['owner']);
 });
 
-test('deletes more than one page of legacy documents without exceeding Firestore batch limits', async () => {
+test('closes the shared Firestore writer and keeps Auth when recursive deletion fails', async () => {
   const fixture = makeDeletionFixture();
+  fixture.firestore.recursiveDelete = async () => {
+    throw Object.assign(new Error('Firestore failed'), { code: 'firestore/unavailable' });
+  };
+
+  await assert.rejects(
+    deleteUserOwnedData(fixture.firestore, fixture.bucket, fixture.auth, 'owner'),
+    /Firestore failed/,
+  );
+
+  assert.equal(fixture.firestore.bulkWriterInstances, 1);
+  assert.equal(fixture.firestore.bulkWriterCloseCalls, 1);
+  assert.equal(fixture.firestore.documents.has('accountDeletionRequests/owner'), true);
+  assert.equal(fixture.firestore.documents.has('users/owner'), true);
+  assert.deepEqual(fixture.deletedAuth, []);
+});
+
+test('recursively deletes owned documents and nested data across multiple pages', async () => {
+  const fixture = makeDeletionFixture();
+  fixture.firestore.documents.set('journalEntries/owner-entry', { userId: 'owner', content: 'private' });
+  fixture.firestore.documents.set('journalEntries/owner-entry/attachments/attachment-a', { storagePath: 'private' });
   for (let index = 0; index < 300; index += 1) {
     fixture.firestore.documents.set(`chatSessions/by-user-${index}`, { userId: 'owner' });
     fixture.firestore.documents.set(`chatSessions/by-uid-${index}`, { uid: 'owner' });
@@ -239,10 +320,14 @@ test('deletes more than one page of legacy documents without exceeding Firestore
   );
 
   assert.equal(
-    [...fixture.firestore.documents.keys()].filter((path) => path.startsWith('chatSessions/')).length,
+    [...fixture.firestore.documents.keys()].filter((path) =>
+      path.startsWith('chatSessions/') || path.startsWith('journalEntries/owner-entry')
+    ).length,
     0,
   );
-  assert.ok(fixture.firestore.maxBatchSize <= 400);
+  assert.ok(fixture.firestore.recursiveDeleteCalls > 400);
+  assert.equal(fixture.firestore.bulkWriterInstances, 1);
+  assert.equal(fixture.firestore.bulkWriterCloseCalls, 1);
 });
 
 test('restores profile and settings if Auth deletion fails, allowing safe retry', async () => {

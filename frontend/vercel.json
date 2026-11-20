@@ -2,8 +2,27 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "framework": null,
+  "functions": {
+    "api/ai.ts": {
+      "maxDuration": 45,
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    },
+    "api/user-data-export.ts": {
+      "maxDuration": 60,
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    },
+    "api/delete-account.ts": {
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    },
+    "api/legal-acceptance.ts": {
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    },
+    "api/sensitive-data-consent.ts": {
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    }
+  },
   "rewrites": [
     {
       "source": "/:path((?!assets/|api/|.*\\\\.).*)",
@@ -36,7 +55,7 @@
         },
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://*.firebaseapp.com https://accounts.google.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com https://apis.google.com https://www.googletagmanager.com https://recaptcha.net https://www.recaptcha.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://i.postimg.cc https://*.googleusercontent.com https://firebasestorage.googleapis.com https://storage.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://*.firebasestorage.app https://firebasestorage.googleapis.com https://storage.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.ingest.sentry.io; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://www.google.com https://recaptcha.net https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'"
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://*.firebaseapp.com https://accounts.google.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com https://apis.google.com https://www.googletagmanager.com https://recaptcha.net https://www.recaptcha.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com https://firebasestorage.googleapis.com https://storage.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://*.firebasestorage.app https://firebasestorage.googleapis.com https://storage.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.ingest.sentry.io; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://www.google.com https://recaptcha.net https://www.recaptcha.net; worker-src 'self' blob:; manifest-src 'self'"
         }
       ]
     }

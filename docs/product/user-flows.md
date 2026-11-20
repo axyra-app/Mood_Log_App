@@ -96,7 +96,7 @@ La exportación se genera en el dispositivo según la implementación revisada. 
 
 ## 5. Crisis y ayuda inmediata: no es un flujo operativo
 
-El repositorio contiene lógica heurística de detección y menciona colecciones para evaluaciones, pero no se encontró una llamada a `detectCrisisSignals` desde las páginas de registro, diario o chat, ni un flujo integrado que garantice respuesta inmediata. Las reglas locales tampoco autorizan las colecciones de crisis mencionadas por ese servicio.
+El detector heurístico desconectado fue retirado del código activo: asignaba niveles de riesgo y acciones sin evaluación ni respuesta humana. Las colecciones heredadas de evaluaciones aún se incluyen en el proceso de eliminación de cuenta, pero el producto no las crea. No existe un flujo de detección, monitoreo o respuesta inmediata.
 
 Por lo tanto, no presentar actualmente esta secuencia como función disponible:
 

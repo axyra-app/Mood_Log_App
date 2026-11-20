@@ -15,10 +15,19 @@ import {
 } from 'firebase/firestore';
 import { MoodLog } from '../types';
 import { db } from './firebase';
+import { hasCurrentSensitiveSelfReportConsent } from './sensitiveDataConsentService';
+import { logSanitizedClientError } from '../utils/safeClientLog';
+
+const requireSensitiveConsent = async () => {
+  if (!await hasCurrentSensitiveSelfReportConsent()) {
+    throw new Error('Autoriza el tratamiento opcional de registros de ánimo en Ajustes antes de guardar.');
+  }
+};
 
 // Mood Log Management Functions
 export const createMoodLog = async (moodData: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   try {
+    await requireSensitiveConsent();
     const moodLogsRef = collection(db, 'moodLogs');
     const docRef = await addDoc(moodLogsRef, {
       ...moodData,
@@ -27,7 +36,7 @@ export const createMoodLog = async (moodData: Omit<MoodLog, 'id' | 'createdAt' |
     });
     return docRef.id;
   } catch (error) {
-    console.error('Error creating mood log:', error);
+    logSanitizedClientError('Mood log create failed', error);
     throw error;
   }
 };
@@ -42,7 +51,7 @@ export const getMoodLog = async (moodLogId: string): Promise<MoodLog | null> => 
     }
     return null;
   } catch (error) {
-    console.error('Error getting mood log:', error);
+    logSanitizedClientError('Mood log read failed', error);
     throw error;
   }
 };
@@ -58,7 +67,7 @@ export const getMoodLogsByUser = async (userId: string, limitCount: number = 50)
       ...doc.data(),
     })) as MoodLog[];
   } catch (error) {
-    console.error('Error getting mood logs by user:', error);
+    logSanitizedClientError('Mood log list read failed', error);
     throw error;
   }
 };
@@ -80,20 +89,21 @@ export const getMoodLogsByDateRange = async (userId: string, startDate: Date, en
       ...doc.data(),
     })) as MoodLog[];
   } catch (error) {
-    console.error('Error getting mood logs by date range:', error);
+    logSanitizedClientError('Mood log date-range read failed', error);
     throw error;
   }
 };
 
 export const updateMoodLog = async (moodLogId: string, updates: Partial<MoodLog>): Promise<void> => {
   try {
+    await requireSensitiveConsent();
     const moodLogRef = doc(db, 'moodLogs', moodLogId);
     await updateDoc(moodLogRef, {
       ...updates,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error updating mood log:', error);
+    logSanitizedClientError('Mood log update failed', error);
     throw error;
   }
 };
@@ -103,7 +113,7 @@ export const deleteMoodLog = async (moodLogId: string): Promise<void> => {
     const moodLogRef = doc(db, 'moodLogs', moodLogId);
     await deleteDoc(moodLogRef);
   } catch (error) {
-    console.error('Error deleting mood log:', error);
+    logSanitizedClientError('Mood log delete failed', error);
     throw error;
   }
 };
@@ -125,11 +135,11 @@ export const subscribeToMoodLogs = (
       })) as MoodLog[];
       callback(moodLogs);
     }, (error) => {
-      console.error('Error in mood logs subscription:', error);
+      logSanitizedClientError('Mood log subscription failed', error);
       onError(error);
     });
   } catch (error) {
-    console.error('Error setting up mood logs subscription:', error);
+    logSanitizedClientError('Mood log subscription setup failed', error);
     onError(error instanceof Error ? error : new Error('Unable to subscribe to mood logs.'));
     return () => {};
   }
@@ -287,7 +297,7 @@ export const getMoodStatistics = async (userId: string, days: number = 30) => {
       aiInsights,
     };
   } catch (error) {
-    console.error('Error getting mood statistics:', error);
+    logSanitizedClientError('Mood statistics read failed', error);
     throw error;
   }
 };
@@ -320,7 +330,7 @@ export const searchMoodLogs = async (
 
     return moodLogs;
   } catch (error) {
-    console.error('Error searching mood logs:', error);
+    logSanitizedClientError('Mood log search failed', error);
     throw error;
   }
 };
@@ -356,7 +366,7 @@ export const exportMoodData = async (userId: string, format: 'json' | 'csv' = 'j
       return csvRows.join('\n');
     }
   } catch (error) {
-    console.error('Error exporting mood data:', error);
+    logSanitizedClientError('Mood data export failed', error);
     throw error;
   }
 };

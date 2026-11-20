@@ -10,6 +10,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export interface Notification {
   id: string;
@@ -28,7 +29,7 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    logSanitizedClientError('Notification read update failed', error);
     throw error;
   }
 };

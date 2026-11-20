@@ -37,6 +37,8 @@ const PrivacySimple: React.FC = () => {
           </Link>
           
           <button
+            type='button'
+            aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             onClick={toggleDarkMode}
             className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
               isDarkMode 
@@ -50,7 +52,7 @@ const PrivacySimple: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-8">
           <Link
             to="/"
@@ -72,9 +74,17 @@ const PrivacySimple: React.FC = () => {
           <p className={`text-xl transition-colors duration-500 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Última actualización: 18 de octubre de 2025
+            Borrador de trabajo: 19 de noviembre de 2026
           </p>
         </div>
+
+        <p role='note' className={`mb-8 rounded-xl border p-4 text-sm ${
+          isDarkMode
+            ? 'border-amber-700 bg-amber-950/40 text-amber-100'
+            : 'border-amber-300 bg-amber-50 text-amber-900'
+        }`}>
+          Este texto está en revisión y requiere aprobación jurídica y validación contra la configuración desplegada antes de ofrecer Mood Log comercialmente.
+        </p>
 
         <div className={`prose prose-lg max-w-none ${
           isDarkMode ? 'prose-invert' : ''
@@ -95,10 +105,16 @@ const PrivacySimple: React.FC = () => {
               <ul className="list-disc list-inside space-y-2 mt-4">
                 <li>Información de cuenta, como nombre y correo electrónico (las credenciales de acceso son gestionadas por el proveedor de autenticación)</li>
                 <li>Datos de estado de ánimo y emociones</li>
-                <li>Entradas del diario y contenido que envías a funciones de inteligencia artificial</li>
-                <li>Información de uso de la aplicación</li>
-                <li>Datos técnicos que puedan procesar los proveedores de infraestructura, como información del dispositivo o registros de diagnóstico</li>
+                <li>Entradas del diario y contenido que decides enviar a una función de inteligencia artificial</li>
+                <li>Preferencias de la cuenta, incluida la opción voluntaria de analítica</li>
+                <li>Datos técnicos que los servicios de infraestructura puedan procesar para prestar la aplicación</li>
               </ul>
+              <p className="mt-4 text-lg leading-relaxed">
+                Mood Log no ofrece actualmente conexión con relojes ni recopila frecuencia cardíaca o HRV. Los registros de ánimo y cualquier futura medición de salud pueden ser información sensible; conectar una fuente de salud deberá ser opcional y contar con información y autorización separadas.
+              </p>
+              <p className="mt-4 text-lg leading-relaxed">
+                Guardar nuevos registros de ánimo o diario requiere una autorización opcional y separada en Configuración &gt; Autorización para ánimo y diario. Si no la otorgas, no podrás crear ni modificar esos registros; puedes seguir usando las demás funciones de cuenta disponibles. Al retirarla se bloquean nuevos registros, cambios y solicitudes de análisis con IA. Los registros existentes no se eliminan automáticamente y siguen disponibles en tu historial y estadísticas hasta que los elimines; puedes hacerlo desde la aplicación o ejercer tus derechos por los canales habilitados. Este tratamiento de registros existentes después del retiro requiere validación jurídica antes del lanzamiento.
+              </p>
             </section>
 
             <section>
@@ -111,11 +127,10 @@ const PrivacySimple: React.FC = () => {
                 Utilizamos tu información para:
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Proporcionar y mejorar nuestros servicios</li>
-                <li>Generar análisis y respuestas de autorreflexión mediante funciones de inteligencia artificial</li>
-                <li>Personalizar tu experiencia</li>
-                <li>Comunicarnos contigo</li>
-                <li>Cumplir con obligaciones legales</li>
+                <li>Crear y mantener tu cuenta y mostrar los registros que guardas</li>
+                <li>Mostrar los registros que autorizas guardar y, cuando lo solicitas, generar resúmenes o respuestas de autorreflexión con IA</li>
+                <li>Procesar analítica de uso solo si activas esa opción en Configuración</li>
+                <li>Atender solicitudes de soporte y obligaciones aplicables</li>
               </ul>
             </section>
 
@@ -129,9 +144,16 @@ const PrivacySimple: React.FC = () => {
                 No vendemos tu información personal. La información puede procesarse o compartirse en estos casos:
               </p>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Con proveedores de infraestructura y de inteligencia artificial cuando sea necesario para prestar la función que solicitas. El contenido enviado a una función de IA puede transmitirse a ese proveedor.</li>
+                <li>Firebase/Google proporciona autenticación y almacenamiento; Vercel aloja la aplicación y sus funciones; Groq procesa el contenido que eliges enviar a una tarea de IA, con una confirmación separada para cada tarea.</li>
+                <li>Una nota, registro, mensaje o dato de ánimo puede revelar información sensible sobre tu salud. Si solicitas una función de IA, el contenido indicado en esa confirmación se envía a Groq; no tienes que usar IA para guardar tus registros.</li>
+                <li>Groq informa públicamente que por defecto no retiene entradas ni respuestas de inferencia, pero puede registrar temporalmente datos de entrada y salida hasta 30 días para confiabilidad o abuso. Ofrece un control Zero Data Retention (ZDR), pero Mood Log no ha verificado si está activo para su organización. Groq ubica en Estados Unidos los datos de cliente que retiene; su DPA contempla operaciones de subprocesadores en otros países.</li>
+                <li>Para operar la IA y estimar su uso, Mood Log guarda en Firebase Firestore un resumen diario vinculado a tu cuenta con el número de tokens de entrada y salida por modelo y tarea. No contiene tus mensajes ni respuestas; se reemplaza cuando usas la IA en otro día y se elimina al borrar la cuenta. También puedes obtenerlo en tu exportación de datos.</li>
+                <li>La analítica de Firebase/Google se activa solo si la habilitas y guardas esa preferencia. Los eventos definidos por Mood Log no incluyen intencionalmente el texto del diario o las puntuaciones de ánimo; el proveedor puede procesar datos técnicos bajo la configuración efectiva del servicio.</li>
                 <li>Cuando es requerido por ley o necesario para proteger derechos y seguridad</li>
               </ul>
+              <p className="mt-4 text-lg leading-relaxed">
+                Los proveedores y países donde se procesa información, sus funciones contractuales y las condiciones de transferencia internacional están pendientes de verificación para el entorno de lanzamiento. Los textos y consentimientos de esta versión son borradores sujetos a revisión jurídica colombiana.
+              </p>
             </section>
 
             <section>
@@ -141,14 +163,8 @@ const PrivacySimple: React.FC = () => {
                 4. SEGURIDAD DE DATOS
               </h2>
               <p className="text-lg leading-relaxed">
-                Implementamos medidas de seguridad técnicas y organizacionales para proteger tu información:
+                El código aplica controles de acceso por cuenta y comunica con servicios de Firebase. El diario se guarda como texto en Firestore. Mood Log no implementa cifrado de extremo a extremo; las reglas y controles desplegados deben verificarse antes del lanzamiento.
               </p>
-              <ul className="list-disc list-inside space-y-2 mt-4">
-                <li>Encriptación de datos en tránsito y en reposo</li>
-                <li>Acceso restringido a información personal</li>
-                <li>Monitoreo regular de seguridad</li>
-                <li>Capacitación del personal en privacidad</li>
-              </ul>
             </section>
 
             <section>
@@ -164,9 +180,9 @@ const PrivacySimple: React.FC = () => {
                 <li>Acceder a tu información personal</li>
                 <li>Corregir información inexacta</li>
                 <li>Eliminar tu cuenta y datos</li>
-                <li>Portabilidad de datos</li>
-                <li>Oponerte al procesamiento</li>
-                <li>Retirar tu consentimiento</li>
+                <li>Solicitar información sobre el uso de tus datos y copia de la autorización cuando corresponda</li>
+                <li>Revocar autorizaciones y pedir supresión en los casos previstos por la ley aplicable</li>
+                <li>Presentar consultas o reclamos por los canales que se habiliten</li>
               </ul>
               <p className="mt-4 text-lg leading-relaxed">
                 Cuando esté habilitada en tu entorno, la opción de eliminación está en Configuración y requiere volver
@@ -183,8 +199,7 @@ const PrivacySimple: React.FC = () => {
                 6. COOKIES Y TECNOLOGÍAS SIMILARES
               </h2>
               <p className="text-lg leading-relaxed">
-                Utilizamos cookies y tecnologías similares para mejorar tu experiencia, analizar el uso y personalizar contenido. 
-                Puedes controlar las cookies a través de la configuración de tu navegador.
+                La aplicación usa tecnologías del navegador y Firebase para mantener la sesión y funcionar. Firebase Analytics permanece apagado por defecto y solo se activa si lo habilitas en Configuración. Las cookies, identificadores y solicitudes reales deben verificarse en staging; no se afirma que la analítica esté activa sin esa elección.
               </p>
             </section>
 
@@ -195,8 +210,7 @@ const PrivacySimple: React.FC = () => {
                 7. RETENCIÓN DE DATOS
               </h2>
               <p className="text-lg leading-relaxed">
-                Conservamos tu información personal solo durante el tiempo necesario para cumplir con los propósitos 
-                descritos en esta política, a menos que la ley requiera un período de retención más largo.
+                Los plazos por categoría y la retención efectiva en el hosting/proveedores siguen pendientes de verificar. La información pública de Groq describe posibles logs de inferencia de hasta 30 días salvo que ZDR u otras condiciones aplicables cambien el tratamiento; Mood Log no ha verificado la configuración de su cuenta. La eliminación desde Mood Log no demuestra que el proveedor haya borrado logs operativos. No lanzar comercialmente hasta confirmar los ajustes/contrato y publicar plazos concretos, excepciones y el proceso de eliminación aplicable.
               </p>
             </section>
 
@@ -239,7 +253,7 @@ const PrivacySimple: React.FC = () => {
             CONTINUAR CON REGISTRO
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

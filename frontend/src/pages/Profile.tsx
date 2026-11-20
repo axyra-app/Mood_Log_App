@@ -6,6 +6,7 @@ import { db } from '../services/firebase';
 import { User, Edit, Save, X, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 const Profile: React.FC = () => {
   const { user, updateUserProfile } = useAuth();
@@ -57,7 +58,7 @@ const Profile: React.FC = () => {
         setProfileData(loadedProfileData);
         setOriginalProfileData(loadedProfileData);
       } catch (error) {
-        console.error('Error loading user data:', error);
+        logSanitizedClientError('Profile data load failed', error);
         if (isCurrent) {
           setProfileLoadError(true);
           toast.error('No se pudo cargar tu perfil. Inténtalo de nuevo.');
@@ -94,7 +95,7 @@ const Profile: React.FC = () => {
       setIsEditing(false);
       toast.success('Perfil actualizado exitosamente');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logSanitizedClientError('Profile update failed', error);
       toast.error('Error al actualizar el perfil');
     } finally {
       setLoading(false);

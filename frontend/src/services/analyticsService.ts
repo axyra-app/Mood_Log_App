@@ -1,5 +1,6 @@
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { db } from './firebase';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 export interface ReportData {
   id?: string;
@@ -29,42 +30,28 @@ export interface AnalyticsData {
   activityPatterns: {
     activity: string;
     frequency: number;
-    correlation: number;
-    impact: 'positive' | 'negative' | 'neutral';
+    averageMood: number | null;
+    sampleCount: number;
   }[];
   emotionalPatterns: {
     emotion: string;
     frequency: number;
-    intensity: number;
-    triggers: string[];
+    averageMood: number | null;
+    sampleCount: number;
   }[];
   wellnessMetrics: {
     sleep: {
-      average: number;
-      trend: 'up' | 'down' | 'stable';
-      quality: 'poor' | 'fair' | 'good' | 'excellent';
+      average: number | null;
+      sampleCount: number;
     };
     energy: {
-      average: number;
-      trend: 'up' | 'down' | 'stable';
-      peakHours: string[];
+      average: number | null;
+      sampleCount: number;
     };
     stress: {
-      average: number;
-      trend: 'up' | 'down' | 'stable';
-      triggers: string[];
+      average: number | null;
+      sampleCount: number;
     };
-  };
-  crisisIndicators: {
-    totalAlerts: number;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    trend: 'up' | 'down' | 'stable';
-    commonTriggers: string[];
-  };
-  achievements: {
-    total: number;
-    recent: any[];
-    categories: Record<string, number>;
   };
 }
 
@@ -106,7 +93,7 @@ class AnalyticsService {
 
       return report;
     } catch (error) {
-      console.error('Error generating mood trends report:', error);
+      logSanitizedClientError('Mood trends report generation failed', error);
       throw error;
     }
   }
@@ -124,12 +111,26 @@ class AnalyticsService {
       };
     }
 
-    const totalMood = moodLogs.reduce((sum, log) => sum + log.mood, 0);
+    const chronologicalLogs = [...moodLogs].sort(
+      (left, right) => left.createdAt.getTime() - right.createdAt.getTime(),
+    );
+    const totalMood = chronologicalLogs.reduce((sum, log) => sum + log.mood, 0);
     const average = totalMood / moodLogs.length;
 
+    if (chronologicalLogs.length < 2) {
+      return {
+        average,
+        trend: 'stable',
+        change: 0,
+        dataPoints: chronologicalLogs.length,
+        weeklyTrends: this.calculateWeeklyTrends(chronologicalLogs),
+        dailyPatterns: this.calculateDailyPatterns(chronologicalLogs),
+      };
+    }
+
     // Calcular tendencia general
-    const firstHalf = moodLogs.slice(0, Math.floor(moodLogs.length / 2));
-    const secondHalf = moodLogs.slice(Math.floor(moodLogs.length / 2));
+    const firstHalf = chronologicalLogs.slice(0, Math.floor(chronologicalLogs.length / 2));
+    const secondHalf = chronologicalLogs.slice(Math.floor(chronologicalLogs.length / 2));
 
     const firstHalfAvg = firstHalf.reduce((sum, log) => sum + log.mood, 0) / firstHalf.length;
     const secondHalfAvg = secondHalf.reduce((sum, log) => sum + log.mood, 0) / secondHalf.length;
@@ -194,18 +195,20 @@ class AnalyticsService {
   private generateMoodInsights(analytics: any): string[] {
     const insights: string[] = [];
 
+    if (analytics.dataPoints === 0) {
+      return ['Aún no hay autorregistros suficientes para resumir este período.'];
+    }
+
     if (analytics.trend === 'up') {
-      insights.push('Tu estado de ánimo ha mejorado significativamente en el período analizado.');
+      insights.push(`El promedio de la segunda parte fue ${analytics.change.toFixed(1)} puntos mayor que en la primera parte. Es una comparación descriptiva de tus registros, no una evaluación clínica ni una explicación de causas.`);
     } else if (analytics.trend === 'down') {
-      insights.push('Se observa una tendencia descendente en tu estado de ánimo que requiere atención.');
+      insights.push(`El promedio de la segunda parte fue ${analytics.change.toFixed(1)} puntos menor que en la primera parte. Es una comparación descriptiva de tus registros, no una evaluación clínica ni una explicación de causas.`);
     } else {
-      insights.push('Tu estado de ánimo se mantiene estable, lo cual es positivo.');
+      insights.push('Los promedios de ambas partes fueron similares. Esto describe los registros disponibles y no evalúa tu salud mental.');
     }
 
     if (analytics.dataPoints < 7) {
-      insights.push(
-        'Se recomienda registrar tu estado de ánimo más frecuentemente para obtener análisis más precisos.'
-      );
+      insights.push(`Este resumen se basa en ${analytics.dataPoints} autorregistro${analytics.dataPoints === 1 ? '' : 's'}; puede representar poco contexto del período.`);
     }
 
     return insights;
@@ -215,15 +218,14 @@ class AnalyticsService {
   private generateMoodRecommendations(analytics: any): string[] {
     const recommendations: string[] = [];
 
-    if (analytics.trend === 'down') {
-      recommendations.push('Considera aumentar las actividades que te generan bienestar.');
-      recommendations.push('Considera hablar con una persona de confianza o un profesional cualificado si los cambios te preocupan.');
+    if (analytics.dataPoints === 0) {
+      return recommendations;
     }
 
-    if (analytics.average < 3) {
-      recommendations.push('Se sugiere implementar técnicas de relajación y mindfulness.');
-      recommendations.push('Mantén una rutina de sueño regular y ejercicio moderado.');
+    if (analytics.trend === 'down') {
+      recommendations.push('Si te sirve, anota qué estaba pasando durante esos registros y qué apoyo o actividades te gustaría explorar.');
     }
+    recommendations.push('Puedes revisar este resumen junto con tus propias observaciones; tú decides qué significado tiene para ti.');
 
     return recommendations;
   }
@@ -250,7 +252,7 @@ class AnalyticsService {
 
       return this.calculateAnalyticsData(moodLogs);
     } catch (error) {
-      console.error('Error getting real-time analytics:', error);
+      logSanitizedClientError('Realtime mood analytics read failed', error);
       throw error;
     }
   }
@@ -267,45 +269,35 @@ class AnalyticsService {
       activityPatterns,
       emotionalPatterns,
       wellnessMetrics,
-      crisisIndicators: {
-        totalAlerts: 0,
-        severity: 'low',
-        trend: 'stable',
-        commonTriggers: [],
-      },
-      achievements: {
-        total: 0,
-        recent: [],
-        categories: {},
-      },
     };
   }
 
   // Calcular patrones de actividad
   private calculateActivityPatterns(moodLogs: any[]): any[] {
     const activityCount: { [key: string]: number } = {};
-    const activityMoodCorrelation: { [key: string]: number[] } = {};
+    const activityMoodObservations: { [key: string]: number[] } = {};
 
     moodLogs.forEach((log) => {
       log.activities?.forEach((activity: string) => {
         activityCount[activity] = (activityCount[activity] || 0) + 1;
-        if (!activityMoodCorrelation[activity]) {
-          activityMoodCorrelation[activity] = [];
+        if (!activityMoodObservations[activity]) {
+          activityMoodObservations[activity] = [];
         }
-        activityMoodCorrelation[activity].push(log.mood);
+        if (Number.isFinite(log.mood)) activityMoodObservations[activity].push(log.mood);
       });
     });
 
     return Object.entries(activityCount).map(([activity, frequency]) => {
-      const moods = activityMoodCorrelation[activity];
-      const avgMood = moods.reduce((sum, mood) => sum + mood, 0) / moods.length;
-      const correlation = avgMood > 3.5 ? 1 : avgMood < 2.5 ? -1 : 0;
+      const moods = activityMoodObservations[activity];
+      const averageMood = moods.length > 0
+        ? moods.reduce((sum, mood) => sum + mood, 0) / moods.length
+        : null;
 
       return {
         activity,
         frequency,
-        correlation,
-        impact: correlation > 0 ? 'positive' : correlation < 0 ? 'negative' : 'neutral',
+        averageMood,
+        sampleCount: moods.length,
       };
     });
   }
@@ -327,44 +319,37 @@ class AnalyticsService {
 
     return Object.entries(emotionCount).map(([emotion, frequency]) => {
       const intensities = emotionIntensity[emotion];
-      const avgIntensity = intensities.reduce((sum, intensity) => sum + intensity, 0) / intensities.length;
+      const averageMood = intensities.length > 0
+        ? intensities.reduce((sum, mood) => sum + mood, 0) / intensities.length
+        : null;
 
       return {
         emotion,
         frequency,
-        intensity: avgIntensity,
-        triggers: [],
+        averageMood,
+        sampleCount: intensities.length,
       };
     });
   }
 
   // Calcular métricas de bienestar
   private calculateWellnessMetrics(moodLogs: any[]): any {
-    const sleepValues = moodLogs.map((log) => log.sleep).filter((sleep) => sleep !== undefined);
-    const energyValues = moodLogs.map((log) => log.energy).filter((energy) => energy !== undefined);
-    const stressValues = moodLogs.map((log) => log.stress).filter((stress) => stress !== undefined);
+    const getSummary = (key: 'sleep' | 'energy' | 'stress') => {
+      const values = moodLogs
+        .map((log) => log[key])
+        .filter((value): value is number => Number.isFinite(value));
+      return {
+        average: values.length > 0
+          ? values.reduce((sum, value) => sum + value, 0) / values.length
+          : null,
+        sampleCount: values.length,
+      };
+    };
 
     return {
-      sleep: {
-        average: sleepValues.length > 0 ? sleepValues.reduce((sum, sleep) => sum + sleep, 0) / sleepValues.length : 0,
-        trend: 'stable',
-        quality:
-          sleepValues.length > 0 && sleepValues.reduce((sum, sleep) => sum + sleep, 0) / sleepValues.length > 3.5
-            ? 'good'
-            : 'fair',
-      },
-      energy: {
-        average:
-          energyValues.length > 0 ? energyValues.reduce((sum, energy) => sum + energy, 0) / energyValues.length : 0,
-        trend: 'stable',
-        peakHours: [],
-      },
-      stress: {
-        average:
-          stressValues.length > 0 ? stressValues.reduce((sum, stress) => sum + stress, 0) / stressValues.length : 0,
-        trend: 'stable',
-        triggers: [],
-      },
+      sleep: getSummary('sleep'),
+      energy: getSummary('energy'),
+      stress: getSummary('stress'),
     };
   }
 }

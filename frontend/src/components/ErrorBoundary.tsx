@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 
 interface Props {
   children: ReactNode;
@@ -18,8 +19,8 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  public componentDidCatch(error: Error, _errorInfo: ErrorInfo) {
+    logSanitizedClientError('UI error boundary caught an error', error);
     // Versión actualizada con supresión mejorada de errores
     
     // Suprimir errores específicos que no deberían mostrar el error boundary
@@ -50,7 +51,7 @@ class ErrorBoundary extends Component<Props, State> {
         error.message.includes('Moon is not defined') ||
         error.message.includes('ReferenceError: Moon is not defined') ||
         (error.message.includes('reading') && error.message.includes('add'))) {
-      console.warn('Suppressed error in ErrorBoundary:', error.message);
+      logSanitizedClientError('UI error boundary suppressed a known error', error);
       this.setState({ hasError: false });
       return;
     }

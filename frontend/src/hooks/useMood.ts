@@ -9,6 +9,7 @@ import {
   updateMoodLog,
 } from '../services/moodLogService';
 import { MoodLog } from '../types';
+import { logSanitizedClientError } from '../utils/safeClientLog';
 import {
   getAverageMoodForDays,
   getMoodStreak as calculateMoodStreak,
@@ -47,7 +48,7 @@ export const useMood = () => {
       const stats = await getMoodStatistics(user.uid);
       setStatistics(stats);
     } catch (err) {
-      console.error('Error loading statistics:', err);
+      logSanitizedClientError('Mood statistics load failed', err);
     }
   }, [user?.uid]);
 
@@ -160,7 +161,7 @@ export const useMood = () => {
         await loadMoodLogs();
         await loadStatistics();
       } catch (error) {
-        console.error('Error initializing mood data:', error);
+        logSanitizedClientError('Mood data initialization failed', error);
       }
     };
 

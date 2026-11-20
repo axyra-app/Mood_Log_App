@@ -5,20 +5,42 @@
 @layer base {
   :root {
     color-scheme: light;
-    --primary-50: #eff6ff;
-    --primary-100: #dbeafe;
-    --primary-200: #bfdbfe;
-    --primary-300: #93c5fd;
-    --primary-400: #60a5fa;
-    --primary-500: #3b82f6;
-    --primary-600: #2563eb;
-    --primary-700: #1d4ed8;
-    --primary-800: #1e40af;
-    --primary-900: #1e3a8a;
+    --mood-ink: #101414;
+    --mood-canvas: #f7f6f2;
+    --mood-surface: #ffffff;
+    --mood-surface-muted: #efeee9;
+    --mood-text: #202522;
+    --mood-text-muted: #686e69;
+    --mood-border: #e4e4dc;
+    --mood-magenta: #d65ee8;
+    --mood-coral: #ff7b9c;
+    --mood-amber: #ffb83f;
+    --mood-action: #913a9d;
+    --mood-action-text: #ffffff;
+    --mood-gradient: linear-gradient(118deg, #d65ee8 0%, #ff7b9c 58%, #ffb83f 100%);
+    --primary-50: #fff5ff;
+    --primary-100: #ffe8fe;
+    --primary-200: #fbd0fa;
+    --primary-300: #f5b0f1;
+    --primary-400: #e985e8;
+    --primary-500: #d65ee8;
+    --primary-600: #b64bc5;
+    --primary-700: #913a9d;
+    --primary-800: #702d78;
+    --primary-900: #4f2055;
+    --mobile-nav-height: 68px;
   }
 
   :root.dark {
     color-scheme: dark;
+    --mood-canvas: #101414;
+    --mood-surface: #191e1c;
+    --mood-surface-muted: #222825;
+    --mood-text: #f6f3ed;
+    --mood-text-muted: #c2c4bd;
+    --mood-border: #343b36;
+    --mood-action: #e985e8;
+    --mood-action-text: #101414;
   }
 }
 
@@ -45,18 +67,50 @@
   }
 }
 
+@media (max-width: 360px) {
+  .home-brand .logo-copy {
+    display: none;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--mood-magenta);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-gray-200;
   }
 
   body {
-    @apply bg-white text-gray-900 font-sans;
+    background-color: var(--mood-canvas);
+    color: var(--mood-text);
+    @apply font-sans;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .dark body {
-    @apply bg-gray-900 text-gray-100;
+    background-color: var(--mood-canvas);
+    color: var(--mood-text);
   }
 
   html {
@@ -66,7 +120,25 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+    background: var(--mood-action);
+    color: var(--mood-action-text);
+    @apply font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+  }
+
+  .brand-gradient {
+    background-image: var(--mood-gradient);
+  }
+
+  .mood-canvas {
+    background-color: var(--mood-canvas);
+    color: var(--mood-text);
+  }
+
+  .mood-header {
+    background-color: var(--mood-surface);
+    background-color: color-mix(in srgb, var(--mood-surface) 90%, transparent);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
   }
 
   .btn-secondary {
@@ -74,11 +146,17 @@
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6 transition-all duration-200 hover:shadow-xl;
+    background-color: var(--mood-surface);
+    border-color: var(--mood-border);
+    color: var(--mood-text);
+    @apply rounded-2xl shadow-sm border p-5 transition-shadow duration-200 hover:shadow-md;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white;
+    background-color: var(--mood-surface);
+    color: var(--mood-text);
+    border-color: var(--mood-border);
+    @apply w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
   }
 
   .gradient-bg {
@@ -86,17 +164,18 @@
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent;
+    background-image: var(--mood-gradient);
+    @apply bg-clip-text text-transparent;
   }
 }
 
 @layer utilities {
   .dark .bg-white {
-    background-color: #1f2937;
+    background-color: var(--mood-surface);
   }
 
   .dark .bg-gray-50 {
-    background-color: #111827;
+    background-color: var(--mood-canvas);
   }
 
   .dark .bg-gray-100 {
@@ -130,7 +209,7 @@
   .dark .border-gray-100,
   .dark .border-gray-200,
   .dark .border-gray-300 {
-    border-color: #374151;
+    border-color: var(--mood-border);
   }
 
   .dark input:not([type='checkbox']):not([type='radio']),
@@ -189,6 +268,26 @@
 
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mobile-bottom-nav {
+    min-height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--mood-surface);
+    background: color-mix(in srgb, var(--mood-surface) 94%, transparent);
+    border-top: 1px solid var(--mood-border);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+
+  body.has-mobile-bottom-nav .App {
+    padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    body.has-mobile-bottom-nav .App {
+      padding-bottom: 0;
+    }
   }
 
   .safe-area-left {

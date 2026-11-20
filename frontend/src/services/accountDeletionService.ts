@@ -1,11 +1,13 @@
 import {
   EmailAuthProvider,
+  browserPopupRedirectResolver,
   GoogleAuthProvider,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
   signOut,
 } from 'firebase/auth';
 import { auth } from './firebase';
+import { apiUrl } from './apiUrl';
 
 const getErrorCode = (error: unknown): string | undefined =>
   error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
@@ -25,6 +27,9 @@ const getDeletionErrorMessage = (error: unknown): string => {
   }
   if (code === 'auth/requires-recent-login' || code === 'RECENT_LOGIN_REQUIRED') {
     return 'Por seguridad, verifica tu identidad de nuevo e inténtalo otra vez.';
+  }
+  if (code === 'AI_REQUEST_IN_PROGRESS') {
+    return 'Hay una solicitud de IA en curso. Espera a que termine y vuelve a confirmar la eliminación.';
   }
   if (code === 'auth/network-request-failed') {
     return 'No se pudo conectar con el servicio de autenticación. Revisa tu conexión.';
@@ -51,13 +56,13 @@ export const deleteCurrentAccount = async (password?: string): Promise<void> => 
         EmailAuthProvider.credential(currentUser.email, password)
       );
     } else if (providers.includes('google.com')) {
-      await reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
+      await reauthenticateWithPopup(currentUser, new GoogleAuthProvider(), browserPopupRedirectResolver);
     } else {
       throw new Error('Este método de acceso aún no admite la verificación necesaria para eliminar la cuenta.');
     }
 
     const token = await currentUser.getIdToken(true);
-    const response = await fetch('/api/delete-account', {
+    const response = await fetch(apiUrl('/api/delete-account'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

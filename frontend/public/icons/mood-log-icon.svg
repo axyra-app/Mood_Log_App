@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mood Log">
+  <defs>
+    <linearGradient id="mood-log-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d65ee8"/>
+      <stop offset="0.52" stop-color="#ff7b9c"/>
+      <stop offset="1" stop-color="#ffb83f"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="#101414"/>
+  <rect x="34" y="34" width="444" height="444" rx="88" fill="url(#mood-log-gradient)"/>
+  <g fill="#101414">
+    <circle cx="176" cy="202" r="25"/>
+    <circle cx="336" cy="202" r="25"/>
+  </g>
+  <path
+    d="M143 292c29 52 67 77 113 77s84-25 113-77"
+    fill="none"
+    stroke="#101414"
+    stroke-linecap="round"
+    stroke-width="27"
+  />
+</svg>
