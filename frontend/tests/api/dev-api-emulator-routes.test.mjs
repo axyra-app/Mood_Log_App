@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createDevApiEmulatorHandlers } from '../../scripts/devApiEmulatorRoutes.mjs';
 
 const routeCases = [
+  ['/api/age-eligibility', 'POST', 401],
   ['/api/ai', 'POST', 503],
   ['/api/delete-account', 'POST', 503],
   ['/api/legal-acceptance', 'GET', 401],

@@ -12,8 +12,12 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
+const readTheme = (): string | null => {
+  try { return localStorage.getItem('theme'); } catch { return null; }
+};
+
 const getInitialTheme = (): boolean => {
-  const savedTheme = localStorage.getItem('theme');
+  const savedTheme = readTheme();
   if (savedTheme === 'dark' || savedTheme === 'light') {
     return savedTheme === 'dark';
   }
@@ -33,7 +37,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   }, [isDarkMode]);
 
   const setDarkMode = useCallback((isDark: boolean) => {
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch { /* Keep the choice for this session. */ }
     setIsDarkMode(isDark);
   }, []);
 
@@ -54,7 +58,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const handleSystemThemeChange = (event: MediaQueryListEvent) => {
-      if (localStorage.getItem('theme') === null) {
+      if (readTheme() === null) {
         setIsDarkMode(event.matches);
       }
     };

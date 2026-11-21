@@ -1,5 +1,6 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -170,6 +171,10 @@ function App() {
                 </Routes>
               </Suspense>
 
+              <Toaster position='top-center' toastOptions={{
+                duration: 6000,
+                style: { background: 'var(--mood-surface)', color: 'var(--mood-text)', border: '1px solid var(--mood-border)', maxWidth: 'min(420px, calc(100vw - 32px))' },
+              }} />
               <MobileBottomNav />
 
               {/* Burbuja flotante de chat IA */}

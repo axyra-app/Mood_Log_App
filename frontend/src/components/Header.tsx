@@ -103,6 +103,8 @@ const Header: React.FC<HeaderProps> = ({
             {/* Notificaciones */}
             <div className='relative'>
               <button
+                aria-label='Notificaciones'
+                aria-expanded={showNotifications}
                 onClick={() => setShowNotifications(!showNotifications)}
                 className={`touch-target p-2 rounded-lg transition-colors relative ${
                   isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
@@ -118,13 +120,14 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* Panel de Notificaciones */}
               {showNotifications && (
-                <div className='absolute right-0 mt-2 w-72 sm:w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50'>
+                <div className='fixed inset-x-4 top-20 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-2 sm:w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50'>
                   <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
                     <div className='flex items-center justify-between'>
                       <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                         Notificaciones
                       </h3>
                       <button
+                        aria-label='Cerrar notificaciones'
                         onClick={() => setShowNotifications(false)}
                         className={`p-1 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                       >

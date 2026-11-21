@@ -825,9 +825,8 @@ const Settings: React.FC = () => {
               </div>
             </div>
             <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Incluye los registros propios, también los datos heredados y subcolecciones guardados en Firestore, y una
-              proyección de los contadores de uso de IA. No incluye archivos binarios de Storage, decisiones locales del
-              prototipo Wear OS ni logs de infraestructura/proveedores. La sección de cobertura del JSON detalla el alcance.
+              Incluye tus registros actuales y anteriores y un resumen del uso de IA. No incluye archivos adjuntos ni datos
+              guardados solo en el reloj. El archivo indica qué información incluye.
             </p>
             <button
               type='button'

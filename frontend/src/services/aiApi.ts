@@ -49,6 +49,7 @@ export const requestAi = async <T>(payload: Record<string, unknown>): Promise<T>
   const token = await user.getIdToken();
   const response = await fetch(apiUrl('/api/ai'), {
     method: 'POST',
+    signal: AbortSignal.timeout(50000),
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',

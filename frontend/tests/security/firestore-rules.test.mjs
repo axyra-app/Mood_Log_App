@@ -744,3 +744,11 @@ test("Storage access is owner-only and upload size/type are restricted", async (
   ));
   await assertFails(getBytes(ref(anonymous, `users/${ownerId}/attachments/test.png`)));
 });
+
+test('Storage rejects new uploads while account deletion is pending', async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), `accountDeletionRequests/${ownerId}`), { requestedAt: new Date() });
+  });
+  await assertFails(uploadBytes(ref(authenticatedStorage(ownerId), `users/${ownerId}/attachments/late.png`),
+    new Uint8Array([1]), { contentType: 'image/png' }));
+});

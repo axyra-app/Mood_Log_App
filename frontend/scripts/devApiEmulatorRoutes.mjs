@@ -1,6 +1,7 @@
 export const createDevApiEmulatorHandlers = async () => {
   const aiHandler = (await import('../api/ai.ts')).default;
   return new Map([
+    ['/api/age-eligibility', (await import('../api/age-eligibility.ts')).default.fetch],
     ['/api/ai', (request) => aiHandler.fetch(request)],
     ['/api/delete-account', (await import('../api/delete-account.ts')).default.fetch],
     ['/api/legal-acceptance', (await import('../api/legal-acceptance.ts')).default.fetch],

@@ -9,6 +9,7 @@ export const saveAdultEligibility = async (): Promise<void> => {
   const token = await currentUser.getIdToken();
   const response = await fetch(apiUrl('/api/age-eligibility'), {
     method: 'POST',
+    signal: AbortSignal.timeout(20000),
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -26,7 +27,7 @@ export const saveAdultEligibility = async (): Promise<void> => {
     throw new Error(`El servidor respondió con HTTP ${response.status}. Reintenta.`);
   }
 
-  if (!response.ok || body.confirmed !== true) {
-    throw new Error(typeof body.error === 'string' ? body.error : 'No se pudo guardar la confirmación.');
+  if (!body || typeof body !== 'object' || !response.ok || body.confirmed !== true) {
+    throw new Error(typeof body?.error === 'string' ? body.error : 'No se pudo guardar la confirmación.');
   }
 };

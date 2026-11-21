@@ -11,6 +11,7 @@ const AgeConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const [confirmedAdult, setConfirmedAdult] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   if (loading) {
     return (
@@ -30,12 +31,13 @@ const AgeConfirmation: React.FC = () => {
     }
 
     try {
+      setSaveError('');
       setSaving(true);
       await confirmAdultEligibility(confirmedAdult);
       toast.success('Confirmación guardada.');
       navigate('/dashboard', { replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo guardar la confirmación.');
+      setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la confirmación.');
     } finally {
       setSaving(false);
     }
@@ -63,6 +65,7 @@ const AgeConfirmation: React.FC = () => {
           />
           <span>Confirmo que tengo 18 años o más.</span>
         </label>
+        {saveError && <p role='alert' className='mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'>{saveError}</p>}
         <button
           type='button'
           onClick={handleContinue}

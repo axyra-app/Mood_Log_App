@@ -129,6 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Intentar cargar el perfil del usuario desde Firestore
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
 
+            if (!isMounted || currentRevision !== authRevision) return;
             if (userDoc.exists()) {
               const userData = userDoc.data();
               if (
@@ -171,12 +172,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   role: 'user',
                   adultEligibility: userData.adultEligibility,
                 };
-                if (isMounted) {
+                if (isMounted && currentRevision === authRevision) {
                   setUser(basicUserData);
                   setProfileLoaded(true);
                 }
               } else {
-                if (isMounted) {
+                if (isMounted && currentRevision === authRevision) {
                   setUser(userDataWithAuth);
                   setProfileLoaded(true);
                 }
@@ -207,7 +208,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 username: firebaseUser.email?.split('@')[0],
                 role: 'user',
               };
-              if (isMounted) {
+              if (isMounted && currentRevision === authRevision) {
                 setUser(userDataWithAuth);
                 setProfileLoaded(true);
               }
@@ -221,23 +222,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               displayName: firebaseUser.displayName,
               role: 'user',
             };
-            if (isMounted) {
+            if (isMounted && currentRevision === authRevision) {
               setUser(userData);
               setProfileLoaded(true);
             }
           }
         } else {
           // Usuario no autenticado
-          if (isMounted) {
+          if (isMounted && currentRevision === authRevision) {
             setUser(null);
             setProfileLoaded(false);
           }
         }
       } catch (error) {
         logSanitizedClientError('Authentication state update failed', error);
-        if (isMounted) setUser(null);
+        if (isMounted && currentRevision === authRevision) setUser(null);
       } finally {
-        if (isMounted) {
+        if (isMounted && currentRevision === authRevision) {
           setLoading(false);
         }
       }
@@ -440,20 +441,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const profileRef = doc(db, 'users', currentUser.uid);
     const profileSnapshot = await getDoc(profileRef);
-    const existingEligibility = profileSnapshot.data()?.adultEligibility;
-    if (!profileSnapshot.exists() || existingEligibility?.version !== ADULT_ELIGIBILITY_VERSION) {
-      await setDoc(profileRef, {
-        email: currentUser.email,
-        displayName: currentUser.displayName || currentUser.email?.split('@')[0],
-        username: currentUser.email?.split('@')[0],
-        role: 'user',
-        adultEligibility: {
-          isAdult: true,
-          version: ADULT_ELIGIBILITY_VERSION,
-          attestedAt: serverTimestamp(),
-        },
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+    if (!hasCurrentAdultEligibilityMarker(profileSnapshot.data()?.adultEligibility)) {
+      throw new Error('Confirma tu edad en la pantalla correspondiente antes de aceptar los documentos.');
     }
     await recordCurrentLegalAcceptance();
   };
