@@ -677,6 +677,7 @@ const Settings: React.FC = () => {
               </div>
             )}
 
+            {hasPasswordProvider && <form onSubmit={(event) => { event.preventDefault(); void changePassword(); }}>
             <div className='space-y-4'>
               <div>
                 <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
@@ -780,7 +781,7 @@ const Settings: React.FC = () => {
 
             <div className='mt-6'>
               <button
-                onClick={changePassword}
+                type='submit'
                 disabled={
                   loading ||
                   !passwordData.currentPassword ||
@@ -794,6 +795,7 @@ const Settings: React.FC = () => {
                 <span>Cambiar Contraseña</span>
               </button>
             </div>
+            </form>}
           </div>
 
           <section className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>

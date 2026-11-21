@@ -296,6 +296,20 @@ test("personal records require both adult eligibility and current legal acceptan
   }));
 });
 
+test("legacy profiles can save preferences without changing protected profile fields", async () => {
+  const uid = 'legacy-settings-user';
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), `users/${uid}`), {
+      role: 'user', legacyField: 'preserve', settings: {},
+    });
+  });
+  const profile = doc(authenticatedDb(uid), `users/${uid}`);
+  await assertSucceeds(updateDoc(profile, { settings: { notifications: false }, updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(profile, { settings: {}, role: 'admin', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(authenticatedDb(otherUserId), `users/${uid}`), { settings: {}, updatedAt: serverTimestamp() }));
+  assert.equal((await getDoc(profile)).data().legacyField, 'preserve');
+});
+
 test("owners can create and update mood and journal documents without changing ownership", async () => {
   const ownerDb = authenticatedDb(ownerId);
 

@@ -248,6 +248,11 @@ service cloud.firestore {
         && hasValidUserProfile(request.resource.data);
       allow update: if isOwner(userId)
         && canWriteAccountData()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings', 'updatedAt'])
+        && request.resource.data.settings is map
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isOwner(userId)
+        && canWriteAccountData()
         && (request.resource.data.role == resource.data.role
           || request.resource.data.role == 'user')
         && canPreserveOrAddAdultEligibility()
