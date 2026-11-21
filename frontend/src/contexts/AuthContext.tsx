@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { saveAdultEligibility } from '../services/ageEligibilityService';
 import { analyticsEvents, hasCurrentAnalyticsConsent, setAnalyticsConsent } from '../services/analytics';
 import { auth, db } from '../services/firebase';
 import { recordCurrentLegalAcceptance } from '../services/legalAcceptanceService';
@@ -467,18 +468,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (hasCurrentAdultEligibility(user)) return;
 
     const attestedAt = new Date();
-    await setDoc(doc(db, 'users', user.uid), {
-      email: user.email,
-      displayName: user.displayName,
-      username: user.username || user.email?.split('@')[0],
-      role: 'user',
-      adultEligibility: {
-        isAdult: true,
-        version: ADULT_ELIGIBILITY_VERSION,
-        attestedAt: serverTimestamp(),
-      },
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
+    await saveAdultEligibility();
 
     setUser((currentUser) => currentUser ? {
       ...currentUser,

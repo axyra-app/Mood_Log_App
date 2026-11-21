@@ -5,6 +5,9 @@
   "installCommand": "npm ci",
   "framework": null,
   "functions": {
+    "api/age-eligibility.ts": {
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    },
     "api/ai.ts": {
       "maxDuration": 45,
       "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
