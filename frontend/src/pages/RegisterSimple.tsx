@@ -194,6 +194,7 @@ const RegisterSimple: React.FC = () => {
           <div className='flex items-center space-x-3 sm:space-x-4'>
             <button
               onClick={toggleDarkMode}
+              aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               className={`p-2 sm:p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
                 isDarkMode
                   ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
