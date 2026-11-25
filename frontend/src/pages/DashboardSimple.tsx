@@ -1,10 +1,10 @@
 import { BarChart3, BookOpen, Calendar, Menu, Moon, Settings, Sun, X } from 'lucide-react';
+import { downloadDailyReminder } from '../utils/dailyReminder';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LateralSidebar from '../components/LateralSidebar';
 import Logo from '../components/Logo';
 import MoodHistoryPanel from '../components/MoodHistoryPanel';
-import NotificationsPanel from '../components/NotificationsPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useJournal } from '../hooks/useJournal';
@@ -70,25 +70,25 @@ const DashboardSimple: React.FC = () => {
               </h1>
             </div>
 
-            <div className='flex items-center space-x-2 sm:space-x-4'>
-              {/* Notificaciones */}
-              <NotificationsPanel isDarkMode={isDarkMode} />
+            <div className='flex shrink-0 items-center gap-2 [&>button]:grid [&>button]:size-11 [&>button]:place-items-center [&>button]:rounded-xl [&>button]:bg-[var(--mood-surface-muted)] [&>button]:text-[var(--mood-text)] [&>button>svg]:size-5'>
 
               {/* Botón del menú */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`touch-target p-2 rounded-lg transition-colors shadow-md ${
+                className={`touch-target p-2 rounded-lg transition-colors ${
                   isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
                 } ${isMenuOpen ? 'ring-2 ring-purple-500' : ''}`}
                 title='Más herramientas'
+                aria-expanded={isMenuOpen}
               >
                 {isMenuOpen ? <X className='w-4 h-4 sm:w-5 sm:h-5' /> : <Menu className='w-4 h-4 sm:w-5 sm:h-5' />}
               </button>
 
               <button
                 onClick={toggleDarkMode}
+                aria-label={isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
                 className={`touch-target p-2 rounded-lg transition-colors ${
                   isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
@@ -133,8 +133,16 @@ const DashboardSimple: React.FC = () => {
             ¡Hola, {user?.displayName || user?.email?.split('@')[0] || 'Usuario'}! 👋
           </h2>
           <p className={`mobile-text ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            ¿Cómo te sientes hoy? Reflexiona sobre tu día y mantén un seguimiento de tu bienestar emocional.
+            ¿Cómo va tu día? Tómate un momento para registrar cómo te sientes.
           </p>
+        </div>
+
+        <div className='mb-6 flex flex-wrap items-center gap-3'>
+          <button type='button' className='btn-primary' onClick={() => navigate('/mood-flow')}>Registrar mi ánimo</button>
+          <button type='button' className='min-h-11 rounded-xl border border-[var(--mood-border)] px-4 text-sm font-semibold' onClick={downloadDailyReminder}>
+            Agregar recordatorio al calendario
+          </button>
+          <p className='basis-full text-xs text-[var(--mood-text-muted)]'>Todos los días a las 7 p. m. Abre el archivo y guarda el recordatorio en tu calendario.</p>
         </div>
 
         {/* Journal Section - Destacado como función principal */}
