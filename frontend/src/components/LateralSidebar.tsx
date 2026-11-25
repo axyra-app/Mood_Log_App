@@ -1,5 +1,5 @@
 import { BarChart3, BookOpen, FileText, Heart, MessageCircle, X } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AI_FEATURES_ENABLED } from '../services/aiApi';
 import Logo from './Logo';
@@ -12,6 +12,14 @@ interface LateralSidebarProps {
 
 const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const panel = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = panel.current;
+    if (!dialog) return;
+    if (isOpen && !dialog.open) dialog.showModal();
+    if (!isOpen && dialog.open) dialog.close();
+  }, [isOpen]);
 
   const menuItems = [
     {
@@ -52,58 +60,44 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
   ].filter((item) => AI_FEATURES_ENABLED || !['/chat', '/reports'].includes(item.path));
 
   return (
-    <>
-      {/* Overlay */}
-      {isOpen && <div className='fixed inset-0 bg-black bg-opacity-50 z-40' onClick={onClose} />}
-
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } w-72 sm:w-80 md:w-96 flex flex-col safe-area-left`}
-      >
-        {/* Header */}
-        <div className='flex items-center justify-between mobile-card border-b border-gray-700 flex-shrink-0'>
-          <Logo size='md' showText={true} className='text-white' />
-          <button onClick={onClose} className='touch-target p-2 hover:bg-gray-700 rounded-lg transition-colors'>
-            <X className='w-5 h-5' />
+    <dialog
+      ref={panel}
+      aria-labelledby='tools-heading'
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+      className='fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-none w-[min(22rem,calc(100%-3rem))] max-w-none overflow-hidden border-r border-[var(--mood-border)] bg-transparent p-0 text-[var(--mood-text)] shadow-2xl backdrop:bg-slate-900/20 dark:backdrop:bg-black/25'
+    >
+      <div className='flex h-full flex-col bg-[color-mix(in_srgb,var(--mood-surface)_92%,transparent)] backdrop-blur-md'>
+        <header className='flex shrink-0 items-center justify-between border-b border-[var(--mood-border)] px-4 py-3 sm:px-5'>
+          <Logo size='md' />
+          <button type='button' aria-label='Cerrar herramientas' autoFocus onClick={onClose} className='touch-target grid place-items-center rounded-xl hover:bg-[var(--mood-surface-muted)]'>
+            <X className='size-5' aria-hidden='true' />
           </button>
-        </div>
-
-        {/* Menu Items - Scrollable */}
-        <div className='flex-1 overflow-hidden flex flex-col'>
-          <div className='mobile-padding py-4 flex-shrink-0'>
-            <h3 className='mobile-heading font-semibold text-gray-300 mb-4'>Más Herramientas</h3>
-          </div>
-          <div
-            className='flex-1 mobile-padding pb-6 overflow-y-auto overflow-x-hidden'
-            style={{ maxHeight: 'calc(100vh - 120px)' }}
-          >
-            <div className='space-y-3'>
-              {menuItems.map((item, index) => {
-                const IconComponent = item.icon;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      navigate(item.path);
-                      onClose();
-                    }}
-                    className={`${item.color} w-full mobile-card rounded-xl text-white hover:scale-105 transition-transform duration-200 shadow-lg text-left touch-target p-4`}
-                  >
-                    <div className='flex items-center space-x-3 mb-2'>
-                      <IconComponent className='w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0' />
-                      <h4 className='font-semibold mobile-text text-base sm:text-lg'>{item.label}</h4>
-                    </div>
-                    <p className='text-xs sm:text-sm opacity-90'>{item.description}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        </header>
+        <nav aria-labelledby='tools-heading' className='min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5'>
+          <h2 id='tools-heading' className='mb-3 text-lg font-semibold'>Más herramientas</h2>
+          <ul className='space-y-2'>
+            {menuItems.map(({ icon: Icon, label, path, description, color }) => (
+              <li key={path}>
+                <button
+                  type='button'
+                  onClick={() => { onClose(); navigate(path); }}
+                  className='flex min-h-16 w-full items-center gap-3 rounded-xl border border-[var(--mood-border)] bg-[var(--mood-surface)] px-3 py-2 text-left transition-colors hover:bg-[var(--mood-surface-muted)]'
+                >
+                  <span className={`grid size-9 shrink-0 place-items-center rounded-lg text-white ${color}`}>
+                    <Icon className='size-5' aria-hidden='true' />
+                  </span>
+                  <span className='min-w-0'>
+                    <span className='block text-sm font-semibold'>{label}</span>
+                    <span className='block text-xs text-[var(--mood-text-muted)]'>{description}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
-    </>
+    </dialog>
   );
 };
 
