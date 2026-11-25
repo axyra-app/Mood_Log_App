@@ -22,6 +22,7 @@ const ChatSelection = lazy(() => import('./pages/ChatSelection'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
 const DashboardSimple = lazy(() => import('./pages/DashboardSimple'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const AccountAction = lazy(() => import('./pages/AccountAction'));
 const Home = lazy(() => import('./pages/Home'));
 const Journal = lazy(() => import('./pages/Journal'));
 const LegalAcceptance = lazy(() => import('./pages/LegalAcceptance'));
@@ -69,6 +70,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path='/forgot-password' element={<ForgotPassword />} />
+                <Route path='/account-action' element={<AccountAction />} />
                 <Route path='/terms' element={<TermsSimple />} />
                 <Route path='/privacy' element={<PrivacySimple />} />
 

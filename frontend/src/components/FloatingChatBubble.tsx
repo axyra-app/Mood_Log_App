@@ -234,7 +234,7 @@ const FloatingChatBubble: React.FC = () => {
                 }`}
               >
                 <Sparkles className='mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500' aria-hidden='true' />
-                <p>MIA es una IA para autorreflexión, no atención clínica. Tus mensajes se envían a Groq; Mood Log no guarda el historial de la conversación. {GROQ_RETENTION_DISCLOSURE}</p>
+                <p>MIA es una IA para autorreflexión, no atención clínica. Mood Log no guarda el historial de esta conversación.</p>
               </div>
 
               <div
@@ -315,7 +315,15 @@ const FloatingChatBubble: React.FC = () => {
                 onSubmit={(event) => void handleSendMessage(event)}
                 className={`border-t px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 ${isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}
               >
-                <label className={`mb-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                {aiDataConsent ? (
+                  <div className='mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300'>
+                    <span role='status'>Envío a Groq autorizado para este chat</span>
+                    <button type='button' className='min-h-8 underline underline-offset-2' onClick={() => setAiDataConsent(false)}>
+                      Retirar permiso
+                    </button>
+                  </div>
+                ) : (
+                  <label className={`mb-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   <input
                     type='checkbox'
                     checked={aiDataConsent}
@@ -324,6 +332,7 @@ const FloatingChatBubble: React.FC = () => {
                   />
                   <span>Autorizo enviar cada mensaje de esta conversación a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo no usar esta función y evitar compartir información que no quiera enviar a un proveedor externo.</span>
                 </label>
+                )}
                 <div className={`flex items-end gap-2 rounded-2xl border p-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 ${
                   isDarkMode ? 'border-gray-700 bg-gray-800 focus-within:ring-violet-900/40' : 'border-gray-200 bg-gray-50'
                 }`}>

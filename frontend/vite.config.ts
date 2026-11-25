@@ -33,7 +33,7 @@ export default defineConfig(({ command, mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         workbox: {
-          navigateFallbackDenylist: [/^\/api(?:\/|$)/],
+          navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/account-action(?:\/|\?|$)/],
         },
         includeAssets: [
           'icons/mood-log-icon.svg',

@@ -252,7 +252,15 @@ const AIChat: React.FC = () => {
 
         {/* Input Area */}
         <div className="mt-4 bg-white rounded-lg shadow-sm border p-4">
-          <label className="mb-3 flex cursor-pointer items-start gap-2 text-sm leading-relaxed text-gray-700">
+          {aiDataConsent ? (
+                  <div className='mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300'>
+                    <span role='status'>Envío a Groq autorizado para este chat</span>
+                    <button type='button' className='min-h-8 underline underline-offset-2' onClick={() => setAiDataConsent(false)}>
+                      Retirar permiso
+                    </button>
+                  </div>
+                ) : (
+                  <label className="mb-3 flex cursor-pointer items-start gap-2 text-sm leading-relaxed text-gray-700">
             <input
               type="checkbox"
               checked={aiDataConsent}
@@ -261,6 +269,7 @@ const AIChat: React.FC = () => {
             />
             <span>Autorizo enviar cada mensaje de esta conversación a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. Mood Log no guarda el historial de esta conversación. {GROQ_RETENTION_DISCLOSURE} Puedo no usar esta función.</span>
           </label>
+                )}
           <div className="flex space-x-3">
             <div className="flex-1">
               <textarea
