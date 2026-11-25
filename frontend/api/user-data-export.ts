@@ -92,11 +92,17 @@ const getExportStream = (
           const profileRef = firestore.collection('users').doc(uid);
           const settingsRef = firestore.collection('userSettings').doc(uid);
           const aiUsageRef = firestore.collection('aiUsage').doc(uid);
-          const [profile, settings, aiUsage] = await Promise.all([
+          const pushReminderRef = firestore.collection('dailyPushReminders').doc(uid);
+          const [profile, settings, aiUsage, pushReminder] = await Promise.all([
             profileRef.get(),
             settingsRef.get(),
             aiUsageRef.get(),
+            pushReminderRef.get(),
           ]);
+          const reminder = pushReminder.data();
+          if (typeof reminder?.time === 'string' && typeof reminder.timeZone === 'string') {
+            send({ type: 'document', path: pushReminderRef.path, data: { time: reminder.time, timeZone: reminder.timeZone } });
+          }
 
           if (profile.exists) {
             send({

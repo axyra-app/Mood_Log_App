@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({
   subtitle,
   showBackButton = true,
   backTo = '/dashboard',
-  backLabel = 'Volver al Dashboard',
+  backLabel = 'Volver al tablero',
   actions,
 }) => {
   const { user, logout } = useAuth();
@@ -70,8 +70,8 @@ const Header: React.FC<HeaderProps> = ({
                 className={`touch-target rounded-lg p-2 transition-colors ${
                   isDarkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
-                title='Ir al Dashboard'
-                aria-label='Ir al Dashboard'
+                title='Ir al tablero'
+                aria-label='Ir al tablero'
               >
                 <Home className='h-5 w-5' />
               </button>
