@@ -119,6 +119,7 @@ export const deleteUserOwnedData = async (
     }
 
     await bulkWriter.delete(firestore.collection('aiUsage').doc(uid));
+    await bulkWriter.delete(firestore.collection('dailyPushReminders').doc(uid));
     await closeBulkWriter();
   } catch (error) {
     try {

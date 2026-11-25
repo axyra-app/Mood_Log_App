@@ -1,0 +1,28 @@
+name: Daily push reminders
+
+on:
+  schedule:
+    - cron: '3-58/5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: mood-log-push-reminders
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Dispatch due reminders
+        env:
+          PUSH_SCHEDULER_SECRET: ${{ secrets.PUSH_SCHEDULER_SECRET }}
+        run: |
+          if [ -z "$PUSH_SCHEDULER_SECRET" ]; then
+            echo 'Push delivery is not configured.'
+            exit 0
+          fi
+          curl --silent --show-error --fail --max-time 50 --output /dev/null \
+            --request POST --header "Authorization: Bearer $PUSH_SCHEDULER_SECRET" \
+            https://mood-log-app-main.vercel.app/api/push-reminders

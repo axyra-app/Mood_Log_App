@@ -33,6 +33,7 @@ export default defineConfig(({ command, mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         workbox: {
+          importScripts: ['/push-events.js'],
           navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/account-action(?:\/|\?|$)/],
         },
         includeAssets: [

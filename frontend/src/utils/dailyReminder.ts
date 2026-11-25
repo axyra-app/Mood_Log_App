@@ -1,7 +1,9 @@
-export function downloadDailyReminder() {
+export function downloadDailyReminder(time = '19:00') {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return;
+  const [hour, minute] = time.split(':').map(Number);
   const now = new Date();
   const start = new Date(now);
-  start.setHours(19, 0, 0, 0);
+  start.setHours(hour, minute, 0, 0);
   if (start <= now) start.setDate(start.getDate() + 1);
   const date = [start.getFullYear(), start.getMonth() + 1, start.getDate()]
     .map((value) => String(value).padStart(2, '0')).join('');
@@ -9,7 +11,7 @@ export function downloadDailyReminder() {
   const lines = [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mood Log//Daily Reminder//ES',
     'BEGIN:VEVENT', 'UID:daily-mood-reminder@mood-log-app-main.vercel.app',
-    `DTSTAMP:${stamp}`, `DTSTART:${date}T190000`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY',
+    `DTSTAMP:${stamp}`, `DTSTART:${date}T${time.replace(':', '')}00`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY',
     'SUMMARY:Mood Log · ¿Cómo va tu día?',
     'URL:https://mood-log-app-main.vercel.app/mood-flow',
     'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:PT0M',

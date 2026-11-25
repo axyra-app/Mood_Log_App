@@ -8,7 +8,7 @@ import { Bell, Clock, Download, Eye, EyeOff, Globe, Info, Lock, Mail, Moon, Save
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { downloadDailyReminder } from '../utils/dailyReminder';
+import DailyReminderSettings from '../components/DailyReminderSettings';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -391,10 +391,7 @@ const Settings: React.FC = () => {
           <section id='recordatorio-diario' aria-labelledby='recordatorio-titulo' className='card scroll-mt-24 space-y-3' ref={(section) => {
             if (section && hash === '#recordatorio-diario') section.scrollIntoView({ block: 'start' });
           }}>
-            <h2 id='recordatorio-titulo' className='text-lg font-semibold'>Recordatorio diario</h2>
-            <p className='text-sm text-[var(--mood-text-muted)]'>Recibe «¿Cómo va tu día?» a las 7 p. m. a través de tu calendario.</p>
-            <button type='button' className='btn-primary' onClick={downloadDailyReminder}>Descargar recordatorio</button>
-            <p className='text-sm text-[var(--mood-text-muted)]'>Para activarlo, abre el archivo y guarda el evento. Para desactivarlo, busca «Mood Log» en tu calendario y elimina toda la serie.</p>
+            <DailyReminderSettings key={user?.uid} />
           </section>
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
             <div className='flex items-center justify-between gap-4'>
