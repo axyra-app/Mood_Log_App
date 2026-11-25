@@ -1,5 +1,4 @@
 import { BarChart3, BookOpen, Calendar, Menu, Moon, Settings, Sun, X } from 'lucide-react';
-import { downloadDailyReminder } from '../utils/dailyReminder';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LateralSidebar from '../components/LateralSidebar';
@@ -139,10 +138,9 @@ const DashboardSimple: React.FC = () => {
 
         <div className='mb-6 flex flex-wrap items-center gap-3'>
           <button type='button' className='btn-primary' onClick={() => navigate('/mood-flow')}>Registrar mi ánimo</button>
-          <button type='button' className='min-h-11 rounded-xl border border-[var(--mood-border)] px-4 text-sm font-semibold' onClick={downloadDailyReminder}>
-            Agregar recordatorio al calendario
+          <button type='button' className='min-h-11 rounded-xl border border-[var(--mood-border)] px-4 text-sm font-semibold' onClick={() => navigate('/settings#recordatorio-diario')}>
+            Configurar recordatorio
           </button>
-          <p className='basis-full text-xs text-[var(--mood-text-muted)]'>Todos los días a las 7 p. m. Abre el archivo y guarda el recordatorio en tu calendario.</p>
         </div>
 
         {/* Journal Section - Destacado como función principal */}
