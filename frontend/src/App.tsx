@@ -10,6 +10,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingChatBubble from './components/FloatingChatBubble';
 import MobileBottomNav from './components/MobileBottomNav';
+import InstallNotice from './components/InstallNotice';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AI_FEATURES_ENABLED } from './services/aiApi';
 
@@ -176,6 +177,7 @@ function App() {
                 style: { background: 'var(--mood-surface)', color: 'var(--mood-text)', border: '1px solid var(--mood-border)', maxWidth: 'min(420px, calc(100vw - 32px))' },
               }} />
               <MobileBottomNav />
+              <InstallNotice />
 
               {/* Burbuja flotante de chat IA */}
               <FloatingChatBubble />

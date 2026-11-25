@@ -457,9 +457,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (hasCurrentAdultEligibility(user)) return;
 
     const attestedAt = new Date();
-    await saveAdultEligibility();
+    await saveAdultEligibility(user.uid);
 
-    setUser((currentUser) => currentUser ? {
+    if (auth.currentUser?.uid !== user.uid) throw new Error('La sesión cambió. Vuelve a intentarlo.');
+    setUser((currentUser) => currentUser?.uid === user.uid ? {
       ...currentUser,
       adultEligibility: {
         isAdult: true,

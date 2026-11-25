@@ -2,9 +2,9 @@ import { auth } from './firebase';
 import { ADULT_ELIGIBILITY_VERSION } from '../utils/legalVersions';
 import { apiUrl } from './apiUrl';
 
-export const saveAdultEligibility = async (): Promise<void> => {
+export const saveAdultEligibility = async (expectedUid: string): Promise<void> => {
   const currentUser = auth.currentUser;
-  if (!currentUser) throw new Error('Inicia sesión nuevamente para confirmar tu edad.');
+  if (currentUser?.uid !== expectedUid) throw new Error('Inicia sesión nuevamente para confirmar tu edad.');
 
   const token = await currentUser.getIdToken();
   const response = await fetch(apiUrl('/api/age-eligibility'), {

@@ -32,6 +32,9 @@ export default defineConfig(({ command, mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        workbox: {
+          navigateFallbackDenylist: [/^\/api(?:\/|$)/],
+        },
         includeAssets: [
           'icons/mood-log-icon.svg',
           'icons/mood-log-app-192.png',
