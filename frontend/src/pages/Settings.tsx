@@ -1,13 +1,8 @@
-import {
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-} from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { Bell, Clock, Download, Eye, EyeOff, Globe, Info, Lock, Mail, Moon, Save, Shield, Sun, User } from 'lucide-react';
+import { Clock, Download, Globe, Info, Moon, Save, Shield, Sun, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import DailyReminderSettings from '../components/DailyReminderSettings';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,17 +15,9 @@ import { deleteCurrentAccount } from '../services/accountDeletionService';
 import { logSanitizedClientError } from '../utils/safeClientLog';
 
 type SettingsState = {
-  notifications: boolean;
-  emailUpdates: boolean;
-  weeklyReports: boolean;
   language: string;
   timezone: string;
   analyticsOptIn: boolean;
-};
-
-type EmailSettingsState = {
-  weeklyReports: boolean;
-  moodInsights: boolean;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -65,30 +52,9 @@ const Settings: React.FC = () => {
 
   // Estados para configuración
   const [settings, setSettings] = useState<SettingsState>({
-    notifications: true,
-    emailUpdates: true,
-    weeklyReports: true,
     language: 'es',
     timezone: 'America/Bogota',
     analyticsOptIn: false,
-  });
-
-  // Estados para cambiar contraseña
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
-
-  // Estados para notificaciones por Gmail
-  const [emailSettings, setEmailSettings] = useState<EmailSettingsState>({
-    weeklyReports: true,
-    moodInsights: true,
   });
 
   useEffect(() => {
@@ -120,15 +86,6 @@ const Settings: React.FC = () => {
         if (isRecord(savedSettings)) {
           setSettings((current) => ({
             ...current,
-            notifications: typeof savedSettings.notifications === 'boolean'
-              ? savedSettings.notifications
-              : current.notifications,
-            emailUpdates: typeof savedSettings.emailUpdates === 'boolean'
-              ? savedSettings.emailUpdates
-              : current.emailUpdates,
-            weeklyReports: typeof savedSettings.weeklyReports === 'boolean'
-              ? savedSettings.weeklyReports
-              : current.weeklyReports,
             language: typeof savedSettings.language === 'string'
               ? savedSettings.language
               : current.language,
@@ -146,17 +103,6 @@ const Settings: React.FC = () => {
             revokedAt: savedSettings.analyticsConsentRevokedAt ?? null,
           });
 
-          const savedEmailSettings = savedSettings.emailSettings;
-          if (isRecord(savedEmailSettings)) {
-            setEmailSettings((current) => ({
-              weeklyReports: typeof savedEmailSettings.weeklyReports === 'boolean'
-                ? savedEmailSettings.weeklyReports
-                : current.weeklyReports,
-              moodInsights: typeof savedEmailSettings.moodInsights === 'boolean'
-                ? savedEmailSettings.moodInsights
-                : current.moodInsights,
-            }));
-          }
         }
       } catch (error) {
         logSanitizedClientError('Settings load failed', error);
@@ -185,10 +131,6 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleEmailSettingsChange = (key: keyof EmailSettingsState, value: boolean) => {
-    setEmailSettings((prev) => ({ ...prev, [key]: value }));
-  };
-
   const saveSettings = async () => {
     if (!user) {
       toast.error('Debes iniciar sesión para guardar tu configuración.');
@@ -209,11 +151,10 @@ const Settings: React.FC = () => {
             analyticsConsentRevokedAt: analyticsConsentChanged ? serverTimestamp() : analyticsConsentMetadata.revokedAt,
           };
       await updateDoc(doc(db, 'users', user.uid), {
-        settings: {
-          ...settings,
-          emailSettings,
-          ...consentMetadata,
-        },
+        'settings.analyticsOptIn': settings.analyticsOptIn,
+        'settings.analyticsConsentVersion': consentMetadata.analyticsConsentVersion,
+        'settings.analyticsConsentAt': consentMetadata.analyticsConsentAt,
+        'settings.analyticsConsentRevokedAt': consentMetadata.analyticsConsentRevokedAt,
         updatedAt: serverTimestamp(),
       });
       setAnalyticsConsentMetadata({
@@ -227,60 +168,6 @@ const Settings: React.FC = () => {
     } catch (error) {
       logSanitizedClientError('Settings save failed', error);
       toast.error('Error al guardar la configuración');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const changePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Las contraseñas nuevas no coinciden');
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
-    if (!currentUser || !currentUser.email) {
-      toast.error('Usuario no autenticado');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (isGoogleUser) {
-        toast.error(
-          'No puedes cambiar la contraseña porque te registraste con Google. Tu contraseña se gestiona a través de tu cuenta de Google.'
-        );
-        return;
-      }
-
-      // Reautenticar usuario con email/contraseña
-      const credential = EmailAuthProvider.credential(currentUser.email, passwordData.currentPassword);
-      await reauthenticateWithCredential(currentUser, credential);
-
-      // Cambiar contraseña
-      await updatePassword(currentUser, passwordData.newPassword);
-
-      toast.success('Contraseña cambiada exitosamente');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch (error: any) {
-      logSanitizedClientError('Password change failed', error);
-      if (error.code === 'auth/wrong-password') {
-        toast.error('La contraseña actual es incorrecta');
-      } else if (error.code === 'auth/weak-password') {
-        toast.error('La nueva contraseña es muy débil');
-      } else if (error.code === 'auth/requires-recent-login') {
-        toast.error('Por seguridad, necesitas iniciar sesión nuevamente antes de cambiar la contraseña');
-      } else {
-        toast.error('Error al cambiar la contraseña');
-      }
     } finally {
       setLoading(false);
     }
@@ -348,7 +235,7 @@ const Settings: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen mood-canvas flex items-center justify-center'>
         <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500'></div>
       </div>
     );
@@ -356,7 +243,7 @@ const Settings: React.FC = () => {
 
   if (settingsLoadError) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className='min-h-screen mood-canvas'>
         <Header title='Configuración' subtitle='Gestiona tu perfil y preferencias' backTo='/dashboard' />
         <main className='mx-auto max-w-xl px-4 py-16 text-center'>
           <p role='alert' className={`mb-5 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
@@ -376,7 +263,7 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className='min-h-screen mood-canvas'>
       <Header title='Configuración' subtitle='Gestiona tu perfil y preferencias' backTo='/dashboard' />
 
       <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
@@ -393,7 +280,7 @@ const Settings: React.FC = () => {
           }}>
             <DailyReminderSettings key={user?.uid} />
           </section>
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+          <div className='card'>
             <div className='flex items-center justify-between gap-4'>
               <div className='flex items-center space-x-3'>
                 <div className={`w-10 h-10 ${isDarkMode ? 'bg-indigo-900' : 'bg-indigo-100'} rounded-lg flex items-center justify-center`}>
@@ -427,76 +314,8 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          {/* Notificaciones */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
-            <div className='flex items-center space-x-3 mb-6'>
-              <div
-                className={`w-10 h-10 ${
-                  isDarkMode ? 'bg-blue-900' : 'bg-blue-100'
-                } rounded-lg flex items-center justify-center`}
-              >
-                <Bell className={`w-5 h-5 ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`} />
-              </div>
-              <div>
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Notificaciones
-                </h3>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Configura tus preferencias para futuras notificaciones
-                </p>
-              </div>
-            </div>
-
-            <p role='note' className={`mb-4 rounded-lg p-3 text-sm ${
-              isDarkMode ? 'bg-amber-900/20 text-amber-200' : 'bg-amber-50 text-amber-800'
-            }`}>
-              Las notificaciones push aún no están conectadas. Este ajuste se guarda como preferencia, pero no enviará
-              avisos al dispositivo.
-            </p>
-
-            <div className='space-y-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notificaciones Push</p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Recibe avisos relacionados con tu actividad en la aplicación
-                  </p>
-                </div>
-                <label className='relative inline-flex items-center cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={settings.notifications}
-                    onChange={(e) => handleSettingsChange('notifications', e.target.checked)}
-                    className='sr-only peer'
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Actualizaciones por Email
-                  </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Recibe resúmenes semanales por correo
-                  </p>
-                </div>
-                <label className='relative inline-flex items-center cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={settings.emailUpdates}
-                    onChange={(e) => handleSettingsChange('emailUpdates', e.target.checked)}
-                    className='sr-only peer'
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
           {/* Analítica opcional */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+          <div className='card'>
             <div className='flex items-center space-x-3 mb-4'>
               <div className={`w-10 h-10 ${isDarkMode ? 'bg-purple-900' : 'bg-purple-100'} rounded-lg flex items-center justify-center`}>
                 <Info className={`w-5 h-5 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`} />
@@ -528,77 +347,8 @@ const Settings: React.FC = () => {
             )}
           </div>
 
-          {/* Configuración de Email */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
-            <div className='flex items-center space-x-3 mb-6'>
-              <div
-                className={`w-10 h-10 ${
-                  isDarkMode ? 'bg-green-900' : 'bg-green-100'
-                } rounded-lg flex items-center justify-center`}
-              >
-                <Mail className={`w-5 h-5 ${isDarkMode ? 'text-green-300' : 'text-green-600'}`} />
-              </div>
-              <div>
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Preferencias de correo
-                </h3>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Configura tus preferencias para futuras funciones de correo
-                </p>
-              </div>
-            </div>
-
-            <p role='note' className={`mb-4 rounded-lg p-3 text-sm ${
-              isDarkMode ? 'bg-amber-900/20 text-amber-200' : 'bg-amber-50 text-amber-800'
-            }`}>
-              Mood Log todavía no envía reportes ni insights por correo. Estas preferencias se guardan, pero no activan
-              envíos.
-            </p>
-
-            <div className='space-y-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Reportes Semanales</p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Resumen de tu bienestar emocional semanal
-                  </p>
-                </div>
-                <label className='relative inline-flex items-center cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={emailSettings.weeklyReports}
-                    onChange={(e) => handleEmailSettingsChange('weeklyReports', e.target.checked)}
-                    className='sr-only peer'
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Insights de Estado de Ánimo
-                  </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Análisis y recomendaciones personalizadas
-                  </p>
-                </div>
-                <label className='relative inline-flex items-center cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={emailSettings.moodInsights}
-                    onChange={(e) => handleEmailSettingsChange('moodInsights', e.target.checked)}
-                    className='sr-only peer'
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-
-            </div>
-          </div>
-
           {/* Información Personal */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+          <div className='card'>
             <div className='flex items-center space-x-3 mb-6'>
               <div
                 className={`w-10 h-10 ${
@@ -634,178 +384,17 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          {/* Cambiar Contraseña */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
-            <div className='flex items-center space-x-3 mb-6'>
-              <div
-                className={`w-10 h-10 ${
-                  isDarkMode ? 'bg-red-900' : 'bg-red-100'
-                } rounded-lg flex items-center justify-center`}
-              >
-                <Lock className={`w-5 h-5 ${isDarkMode ? 'text-red-300' : 'text-red-600'}`} />
-              </div>
-              <div>
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Cambiar Contraseña
-                </h3>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Actualiza tu contraseña de acceso
-                </p>
-              </div>
+          <section className='card flex flex-wrap items-center justify-between gap-4'>
+            <div>
+              <h2 className='text-lg font-semibold'>Contraseña</h2>
+              <p className='text-sm text-[var(--mood-text-muted)]'>
+                {hasPasswordProvider ? 'Confirma el cambio desde el correo de tu cuenta.' : 'Tu proveedor de inicio de sesión gestiona la contraseña.'}
+              </p>
             </div>
+            {hasPasswordProvider && <Link className='btn-primary' to='/settings/password'>Cambiar contraseña</Link>}
+          </section>
 
-            {/* Información para usuarios de Google */}
-            {isGoogleUser && (
-              <div
-                className={`p-4 rounded-lg border-l-4 border-blue-500 ${
-                  isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'
-                } mb-6`}
-              >
-                <div className='flex items-start space-x-3'>
-                  <Info className='w-5 h-5 text-blue-500 mt-0.5' />
-                  <div>
-                    <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>
-                      Usuario de Google
-                    </h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-blue-200' : 'text-blue-700'} mt-1`}>
-                      Te registraste con Google, por lo que tu contraseña se gestiona a través de tu cuenta de Google.
-                      Para cambiar tu contraseña, ve a{' '}
-                      <a
-                        href='https://myaccount.google.com/security'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='underline hover:no-underline'
-                      >
-                        Configuración de seguridad de Google
-                      </a>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {hasPasswordProvider && <form onSubmit={(event) => { event.preventDefault(); void changePassword(); }}>
-            <div className='space-y-4'>
-              <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Contraseña Actual
-                </label>
-                <div className='relative'>
-                  <input
-                    type={showPasswords.current ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                    disabled={isGoogleUser}
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    } ${
-                      isGoogleUser
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
-                  />
-                  <button
-                    type='button'
-                    onClick={() => setShowPasswords((prev) => ({ ...prev, current: !prev.current }))}
-                    disabled={isGoogleUser}
-                    className='absolute right-3 top-1/2 transform -translate-y-1/2'
-                  >
-                    {showPasswords.current ? (
-                      <EyeOff className='w-4 h-4 text-gray-400' />
-                    ) : (
-                      <Eye className='w-4 h-4 text-gray-400' />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Nueva Contraseña
-                </label>
-                <div className='relative'>
-                  <input
-                    type={showPasswords.new ? 'text' : 'password'}
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData((prev) => ({ ...prev, newPassword: e.target.value }))}
-                    disabled={isGoogleUser}
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    } ${
-                      isGoogleUser
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
-                  />
-                  <button
-                    type='button'
-                    onClick={() => setShowPasswords((prev) => ({ ...prev, new: !prev.new }))}
-                    disabled={isGoogleUser}
-                    className='absolute right-3 top-1/2 transform -translate-y-1/2'
-                  >
-                    {showPasswords.new ? (
-                      <EyeOff className='w-4 h-4 text-gray-400' />
-                    ) : (
-                      <Eye className='w-4 h-4 text-gray-400' />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                  Confirmar Nueva Contraseña
-                </label>
-                <div className='relative'>
-                  <input
-                    type={showPasswords.confirm ? 'text' : 'password'}
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                    disabled={isGoogleUser}
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    } ${
-                      isGoogleUser
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
-                  />
-                  <button
-                    type='button'
-                    onClick={() => setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))}
-                    disabled={isGoogleUser}
-                    className='absolute right-3 top-1/2 transform -translate-y-1/2'
-                  >
-                    {showPasswords.confirm ? (
-                      <EyeOff className='w-4 h-4 text-gray-400' />
-                    ) : (
-                      <Eye className='w-4 h-4 text-gray-400' />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className='mt-6'>
-              <button
-                type='submit'
-                disabled={
-                  loading ||
-                  !passwordData.currentPassword ||
-                  !passwordData.newPassword ||
-                  !passwordData.confirmPassword ||
-                  isGoogleUser
-                }
-                className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2'
-              >
-                <Lock className='w-4 h-4' />
-                <span>Cambiar Contraseña</span>
-              </button>
-            </div>
-            </form>}
-          </div>
-
-          <section className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+          <section className='card'>
             <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
               <div>
                 <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Autorización para ánimo y diario</h3>
@@ -817,7 +406,7 @@ const Settings: React.FC = () => {
             </div>
           </section>
 
-          <section className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+          <section className='card'>
             <div className='flex items-center space-x-3 mb-4'>
               <div className={`w-10 h-10 ${isDarkMode ? 'bg-emerald-900' : 'bg-emerald-100'} rounded-lg flex items-center justify-center`}>
                 <Download className={`w-5 h-5 ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`} />
@@ -950,7 +539,7 @@ const Settings: React.FC = () => {
           </section>
 
           {/* Información del Sistema */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm border p-6`}>
+          <div className='card'>
             <div className='flex items-center space-x-3 mb-6'>
               <div
                 className={`w-10 h-10 ${
@@ -1000,7 +589,7 @@ const Settings: React.FC = () => {
                 <Info className='w-5 h-5 text-gray-400' />
                 <div>
                   <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Versión</p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Mood Log v1.0</p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Mood Log v1.1</p>
                 </div>
               </div>
             </div>

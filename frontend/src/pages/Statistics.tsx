@@ -257,7 +257,7 @@ const Statistics: React.FC = () => {
 
   if (loading || periodLoading) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen mood-canvas flex items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4'></div>
           <p className='text-gray-600'>Cargando estadísticas...</p>
@@ -267,7 +267,7 @@ const Statistics: React.FC = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
+    <div className='min-h-screen mood-canvas'>
       <Header 
         title="Estadísticas de Bienestar"
         subtitle="Análisis de tu progreso emocional"

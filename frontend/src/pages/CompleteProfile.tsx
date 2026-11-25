@@ -88,7 +88,7 @@ const CompleteProfile: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+    <div className={`min-h-screen transition-colors duration-500 mood-canvas`}>
       <div className='min-h-screen flex items-center justify-center p-4'>
         <div className='w-full max-w-md'>
           <div

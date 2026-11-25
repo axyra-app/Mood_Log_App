@@ -75,7 +75,7 @@ const LegalAcceptance: React.FC = () => {
   };
 
   return (
-    <main className='min-h-screen bg-gray-50 px-5 py-12'>
+    <main className='min-h-screen mood-canvas px-5 py-12'>
       <section className='mx-auto max-w-xl rounded-2xl bg-white p-7 shadow-lg sm:p-9'>
         <h1 className='mb-3 text-2xl font-bold text-gray-900'>Revisa los documentos vigentes</h1>
         <p className='mb-6 text-gray-700'>Actualizamos los documentos de Mood Log. Revisa los textos antes de continuar. Puedes cerrar sesión si no deseas aceptarlos.</p>

@@ -32,6 +32,7 @@ const PrivacySimple = lazy(() => import('./pages/PrivacySimple'));
 const Profile = lazy(() => import('./pages/Profile'));
 const RegisterSimple = lazy(() => import('./pages/RegisterSimple'));
 const Settings = lazy(() => import('./pages/Settings'));
+const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const Statistics = lazy(() => import('./pages/Statistics'));
 const SensitiveDataConsent = lazy(() => import('./pages/SensitiveDataConsent'));
 const TermsSimple = lazy(() => import('./pages/TermsSimple'));
@@ -142,6 +143,10 @@ function App() {
                       <Profile />
                     </ProtectedRoute>
                   }
+                />
+                <Route
+                  path='/settings/password'
+                  element={<ProtectedRoute><ChangePassword /></ProtectedRoute>}
                 />
                 <Route
                   path='/settings'

@@ -206,7 +206,7 @@ const MoodFlowSimple: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center mood-canvas`}>
         <div className='flex flex-col items-center space-y-4'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600'></div>
           <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Cargando...</p>
@@ -221,7 +221,7 @@ const MoodFlowSimple: React.FC = () => {
 
   if (sensitiveConsentStatus !== 'allowed') {
     return (
-      <main className='min-h-screen bg-gray-50 px-5 py-12 dark:bg-gray-950'>
+      <main className='min-h-screen mood-canvas px-5 py-12'>
         <section className='mx-auto max-w-xl rounded-2xl bg-white p-7 shadow-sm dark:bg-gray-900'>
           <Logo size='sm' />
           <h1 className='mt-6 text-2xl font-bold text-gray-900 dark:text-white'>Antes de registrar tu ánimo</h1>
@@ -238,7 +238,7 @@ const MoodFlowSimple: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen mood-canvas`}>
 
       {/* Header */}
       <header

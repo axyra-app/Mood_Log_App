@@ -109,7 +109,7 @@ const Profile: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen mood-canvas flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
@@ -117,7 +117,7 @@ const Profile: React.FC = () => {
 
   if (profileLoadError) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen mood-canvas`}>
         <Header
           title="Mi Perfil"
           subtitle="Gestiona tu información personal"
@@ -141,7 +141,7 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen mood-canvas`}>
       <Header 
         title="Mi Perfil"
         subtitle="Gestiona tu información personal"

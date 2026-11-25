@@ -55,7 +55,11 @@ const ForgotPassword: React.FC = () => {
       });
       setSuccess(true);
     } catch (error: any) {
-      setError(getPasswordResetErrorMessage(error));
+      if (error?.code === 'auth/user-not-found') {
+        setSuccess(true);
+      } else {
+        setError(getPasswordResetErrorMessage(error));
+      }
     } finally {
       setLoading(false);
     }
@@ -64,7 +68,7 @@ const ForgotPassword: React.FC = () => {
   if (success) {
     return (
       <>
-        <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className={`min-h-screen transition-all duration-500 mood-canvas`}>
           {/* Header */}
           <header
             className={`relative z-10 border-b transition-all duration-500 ${
@@ -128,7 +132,7 @@ const ForgotPassword: React.FC = () => {
                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
-                    Te hemos enviado un enlace seguro para restablecer tu contraseña
+                    Si hay una cuenta asociada a ese correo, recibirás un enlace para restablecer tu contraseña
                   </p>
                   <p
                     className={`text-lg font-medium mt-4 transition-colors duration-500 ${
@@ -249,7 +253,7 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <>
-      <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+      <div className={`min-h-screen transition-all duration-500 mood-canvas`}>
         {/* Header */}
         <header
           className={`relative z-10 border-b transition-all duration-500 ${

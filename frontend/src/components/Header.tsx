@@ -58,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b sticky top-0 z-50 safe-area-top`}>
+    <header className='mood-header sticky top-0 z-50 border-b border-[var(--mood-border)] shadow-sm safe-area-top'>
       <div className='max-w-7xl mx-auto mobile-padding'>
         <div className='flex flex-col gap-2 py-2 md:min-h-16 md:flex-row md:items-center md:justify-between md:gap-4 md:py-0'>
           <div className='flex min-w-0 items-center justify-between gap-2'>

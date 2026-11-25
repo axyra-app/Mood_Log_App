@@ -86,7 +86,7 @@ const SensitiveDataConsent: React.FC = () => {
   };
 
   return (
-    <main className='min-h-screen bg-gray-50 px-5 py-10 text-gray-900 dark:bg-gray-950 dark:text-gray-100'>
+    <main className='min-h-screen mood-canvas px-5 py-10'>
       <section className='mx-auto max-w-2xl rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-900 sm:p-9'>
         <Link to={returnTo} className='text-sm font-medium text-purple-700 hover:underline dark:text-purple-300'>← Volver a {returnLabel}</Link>
         <h1 className='mb-3 mt-5 text-2xl font-bold'>Autorización opcional para registros personales</h1>
