@@ -84,6 +84,7 @@ const ForgotPassword: React.FC = () => {
                 <div className='flex items-center space-x-4'>
                   <button
                     onClick={toggleDarkMode}
+                    aria-label={isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
                     className={`p-3 rounded-xl transition-all duration-500 hover:scale-110 ${
                       isDarkMode
                         ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
@@ -269,6 +270,7 @@ const ForgotPassword: React.FC = () => {
               <div className='flex items-center space-x-4'>
                 <button
                   onClick={toggleDarkMode}
+                  aria-label={isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
                   className={`p-3 rounded-xl transition-all duration-500 hover:scale-110 ${
                     isDarkMode
                       ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
@@ -307,7 +309,7 @@ const ForgotPassword: React.FC = () => {
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >
-                  RECUPERAR
+                  RECUPERAR{' '}
                   <span className='block bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent'>
                     CONTRASEÑA
                   </span>

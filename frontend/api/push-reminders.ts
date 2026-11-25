@@ -1,7 +1,7 @@
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { timingSafeEqual } from 'node:crypto';
-import { sendNotification, type PushSubscription } from 'web-push';
+import type { PushSubscription } from 'web-push';
 import { getFirebaseAdminApp } from './_lib/firebaseAdmin.ts';
 import { readRequestBodyWithinLimit } from './_lib/requestUtils.ts';
 
@@ -48,9 +48,10 @@ export default {
       const db = getFirestore(app);
       const reminders = db.collection(collection);
       if (scheduler && request.method === 'POST') {
+        const { sendNotification } = await import('web-push');
         const batch = await reminders.get();
         const now = new Date();
-        await Promise.all(batch.docs.map(async ({ ref }) => {
+        const dispatch = async ({ ref }: (typeof batch.docs)[number]) => {
           const due = await db.runTransaction(async (tx) => {
             const snapshot = await tx.get(ref);
             const value = snapshot.data();
@@ -71,10 +72,21 @@ export default {
               TTL: 900, timeout: 4000,
               vapidDetails: { subject: 'https://mood-log-app-main.vercel.app', publicKey, privateKey },
             });
-          } catch {
-            // A failed push is never retried blindly within the same day.
+          } catch (error) {
+            const status = (error as { statusCode?: number } | null)?.statusCode;
+            if (status !== 404 && status !== 410) {
+              console.warn('Push delivery failed', status || 'unknown');
+              return;
+            }
+            await db.runTransaction(async (tx) => {
+              const current = (await tx.get(ref)).data();
+              if (current?.subscription?.endpoint === due.endpoint) tx.delete(ref);
+            });
           }
-        }));
+        };
+        for (let offset = 0; offset < batch.docs.length; offset += 10) {
+          await Promise.all(batch.docs.slice(offset, offset + 10).map(dispatch));
+        }
         return json({ ok: true });
       }
 

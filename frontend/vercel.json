@@ -5,6 +5,10 @@
   "installCommand": "npm ci",
   "framework": null,
   "functions": {
+    "api/push-reminders.ts": {
+      "maxDuration": 45,
+      "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
+    },
     "api/age-eligibility.ts": {
       "includeFiles": "{api/**/*.ts,src/utils/**/*.ts}"
     },
