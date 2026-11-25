@@ -79,7 +79,8 @@ export default function DailyReminderSettings() {
       Hora del recordatorio
       <input type='time' value={time} onChange={(event) => setTime(event.target.value)} className='input-field mt-1 block max-w-48' />
     </label>
-    <p className='text-xs text-[var(--mood-text-muted)]'>{timeZone}</p>
+    <p className='text-xs text-[var(--mood-text-muted)]'>Zona horaria de este dispositivo: {timeZone}</p>
+    {savedTime && <p className='text-sm text-[var(--mood-text-muted)]'>Hora guardada: {savedTime}. Si guardas desde otro dispositivo, los avisos llegarán al último que guardes.</p>}
     <div className='flex flex-wrap gap-2'>
       <button type='button' className='btn-primary disabled:opacity-50' onClick={() => void save()} disabled={busy || !time || !supported || !publicKey}>
         {savedTime ? 'Guardar hora en este dispositivo' : 'Activar notificaciones'}

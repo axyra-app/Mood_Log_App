@@ -31,6 +31,20 @@ function localClock(timeZone: string, now = new Date()) {
   return { day: values.year + '-' + values.month + '-' + values.day, time: values.hour + ':' + values.minute };
 }
 
+const minuteOfDay = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+
+function dueDay(timeZone: string, scheduledTime: string, now: Date): string | null {
+  const current = localClock(timeZone, now);
+  const scheduled = minuteOfDay(scheduledTime);
+  const elapsed = minuteOfDay(current.time) - scheduled;
+  if (elapsed >= 0 && elapsed <= 29) return current.day;
+  if (elapsed + 1440 <= 29 && elapsed < 0) {
+    const earlier = localClock(timeZone, new Date(now.getTime() - 29 * 60_000));
+    if (earlier.day !== current.day && minuteOfDay(earlier.time) <= scheduled) return earlier.day;
+  }
+  return null;
+}
+
 export default {
   async fetch(request: Request) {
     const publicKey = process.env.PUSH_PUBLIC_KEY;
@@ -56,14 +70,12 @@ export default {
             const snapshot = await tx.get(ref);
             const value = snapshot.data();
             if (!value || !validSubscription(value.subscription)) return null;
-            const clock = localClock(value.timeZone, now);
-            if (value.lastDay === clock.day || value.time > clock.time) return null;
-            const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
-            if (minutes(clock.time) - minutes(value.time) > 29) return null;
+            const day = dueDay(value.timeZone, value.time, now);
+            if (!day || (value.lastDay && value.lastDay >= day)) return null;
             const deletion = await tx.get(db.collection('accountDeletionRequests').doc(ref.id));
             const profile = await tx.get(db.collection('users').doc(ref.id));
             if (deletion.exists || !profile.exists) return null;
-            tx.update(ref, { lastDay: clock.day });
+            tx.update(ref, { lastDay: day });
             return value.subscription;
           });
           if (!due) return;
