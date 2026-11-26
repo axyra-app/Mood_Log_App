@@ -166,7 +166,7 @@ const Home: React.FC = () => {
               </div>
               <h3 className='text-xl font-bold text-gray-900 mb-2'>Control y transparencia</h3>
               <p className='text-gray-600 text-sm sm:text-base leading-relaxed'>
-                Cuando autorizas guardar registros, se asocian a tu cuenta. Solo si solicitas una tarea de IA, Mood Log muestra qué contenido se enviará y pide una confirmación separada; guardar registros no los envía a Groq.
+                Cuando autorizas guardar registros, se asocian a tu cuenta. Solo si solicitas una tarea de IA, Mood Log indica qué contenido se enviará y recuerda tu permiso por función en este dispositivo; guardar registros no los envía a Groq.
               </p>
             </div>
           </div>

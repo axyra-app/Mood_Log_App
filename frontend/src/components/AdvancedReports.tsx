@@ -1,3 +1,4 @@
+import { useAiPermission } from '../hooks/useAiPermission';
 import { Calendar, Download, FileText, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -40,7 +41,7 @@ const AdvancedReports: React.FC = () => {
   const [customEndDate, setCustomEndDate] = useState('');
   const [lastReportDate, setLastReportDate] = useState<string | null>(null);
   const [timeUntilNext, setTimeUntilNext] = useState<{hours: number, minutes: number} | null>(null);
-  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useAiPermission('reports');
 
 
   // Actualizar contador de tiempo cada minuto
@@ -63,7 +64,6 @@ const AdvancedReports: React.FC = () => {
       const lastReport = localStorage.getItem(`lastReportDate_${user.uid}`);
       setLastReportDate(lastReport);
     }
-    setAiDataConsent(false);
   }, [user]);
 
   const canGenerateReport = () => {
@@ -352,7 +352,7 @@ const AdvancedReports: React.FC = () => {
         <div className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 sm:mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <h2 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Generar Nuevo Reporte</h2>
           <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Al generar un análisis con IA, se enviarán a Groq los registros o entradas del período seleccionado, que pueden revelar datos sensibles sobre tu salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} El consentimiento es opcional y se solicita antes de generar cada reporte.
+            Al generar un análisis con IA, se enviarán a Groq los registros o entradas del período seleccionado, que pueden revelar datos sensibles sobre tu salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedes recordar este permiso en este dispositivo y retirarlo en Configuración.
           </p>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
@@ -448,8 +448,8 @@ const AdvancedReports: React.FC = () => {
             />
             <span>
               Autorizo enviar a Groq los registros o entradas del período seleccionado, que pueden contener datos sensibles sobre mi salud, para generar este análisis y su PDF. {GROQ_RETENTION_DISCLOSURE} Puedo no generar el reporte.
-            </span>
-          </label>
+             Este permiso se recuerda en este dispositivo.</span>
+              </label>
         </div>
 
         {/* Reports List */}

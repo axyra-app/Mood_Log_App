@@ -1,3 +1,4 @@
+import { useAiPermission } from '../hooks/useAiPermission';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -33,7 +34,7 @@ const MoodFlowSimple: React.FC = () => {
   const [moodData, setMoodData] = useState<any>(null);
   const [aiAnalysis, setAiAnalysis] = useState<MoodAnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useAiPermission('mood');
   const [sensitiveConsentStatus, setSensitiveConsentStatus] = useState<'checking' | 'allowed' | 'missing' | 'error'>('checking');
 
   const refreshSensitiveConsent = async () => {
@@ -49,9 +50,6 @@ const MoodFlowSimple: React.FC = () => {
     void refreshSensitiveConsent();
   }, [user?.uid]);
 
-  useEffect(() => {
-    setAiDataConsent(false);
-  }, [user?.uid]);
   const navigate = useNavigate();
 
   const moodEmojis = ['😢', '😔', '😐', '🙂', '😊', '😄', '🤩', '🥰', '😍', '🌟'];
@@ -658,7 +656,7 @@ const MoodFlowSimple: React.FC = () => {
                   onChange={(event) => setAiDataConsent(event.target.checked)}
                   className='mt-1'
                 />
-                <span>Si solicito una reflexión, autorizo enviar a Groq mis datos de estado de ánimo, medidas, actividades, emociones y notas, que pueden revelar datos sensibles de salud. Puedo guardar el registro sin solicitar IA.</span>
+                <span>Si solicito una reflexión, autorizo enviar a Groq mis datos de estado de ánimo, medidas, actividades, emociones y notas, que pueden revelar datos sensibles de salud. Puedo guardar el registro sin solicitar IA. Este permiso se recuerda en este dispositivo.</span>
               </label>
               {!aiAnalysis && (
                 <button

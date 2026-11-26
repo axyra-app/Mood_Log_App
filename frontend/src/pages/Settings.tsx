@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import DailyReminderSettings from '../components/DailyReminderSettings';
+import { revokeAiPermissions } from '../hooks/useAiPermission';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -383,6 +384,18 @@ const Settings: React.FC = () => {
               </button>
             </div>
           </div>
+
+          <section className='card flex flex-wrap items-center justify-between gap-4'>
+            <div>
+              <h2 className='text-lg font-semibold'>Permisos de IA</h2>
+              <p className='text-sm text-[var(--mood-text-muted)]'>Mood Log recuerda en este dispositivo los permisos de envío a Groq que aceptas al usar cada función.</p>
+            </div>
+            <button type='button' className='min-h-11 rounded-xl border border-[var(--mood-border)] px-4 text-sm font-semibold' onClick={() => {
+              if (!user) return;
+              revokeAiPermissions(user.uid);
+              toast.success('Permisos de IA retirados en este dispositivo.');
+            }}>Retirar permisos de IA</button>
+          </section>
 
           <section className='card flex flex-wrap items-center justify-between gap-4'>
             <div>

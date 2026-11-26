@@ -95,7 +95,7 @@ const SensitiveDataConsent: React.FC = () => {
         </p>
         <div className='space-y-3 rounded-xl border border-gray-200 p-4 text-sm leading-6 dark:border-gray-700'>
           <p><strong>Almacenamiento:</strong> los registros se guardan en la base de datos de Mood Log provista por Firebase y se asocian a tu cuenta.</p>
-          <p><strong>IA:</strong> esta autorización no permite enviar texto a Groq. Para cada tarea de IA se solicita una autorización adicional.</p>
+          <p><strong>IA:</strong> esta autorización no permite enviar texto a Groq. Cada función de IA tiene su propio permiso de envío a Groq. Puedes retirarlo en Configuración.</p>
           <p><strong>Wearables:</strong> esta autorización no incluye pulsaciones ni otros datos del reloj; se solicitará por separado si se incorpora esa función.</p>
           <p><strong>Opcionalidad:</strong> puedes usar tu cuenta sin autorizar esta función. Mientras no esté activa, no podrás crear ni modificar registros de ánimo o diario.</p>
           <p><strong>Retiro:</strong> puedes retirarla en cualquier momento. El retiro bloquea nuevos guardados, cambios y solicitudes de análisis con IA. Los registros existentes no se borran automáticamente y siguen disponibles en tu historial y estadísticas hasta que los elimines. Puedes exportarlos o solicitar su eliminación en Ajustes. El tratamiento de registros existentes después del retiro requiere validación jurídica antes del lanzamiento.</p>

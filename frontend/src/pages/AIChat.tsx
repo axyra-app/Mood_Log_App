@@ -1,3 +1,4 @@
+import { useAiPermission } from '../hooks/useAiPermission';
 import { ArrowLeft, Send, Bot, Clock, Shield, Star } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -34,13 +35,12 @@ const AIChat: React.FC = () => {
   const params = useParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useAiPermission('chat');
   const [isLoading, setIsLoading] = useState(false);
   const [assistant, setAssistant] = useState<AssistantProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setAiDataConsent(false);
     setInputMessage('');
     setMessages([]);
   }, [user?.uid]);
@@ -254,7 +254,7 @@ const AIChat: React.FC = () => {
         <div className="mt-4 bg-white rounded-lg shadow-sm border p-4">
           {aiDataConsent ? (
                   <div className='mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300'>
-                    <span role='status'>Envío a Groq autorizado para este chat</span>
+                    <span role='status'>Envío a Groq autorizado en este dispositivo</span>
                     <button type='button' className='min-h-8 underline underline-offset-2' onClick={() => setAiDataConsent(false)}>
                       Retirar permiso
                     </button>
@@ -267,7 +267,7 @@ const AIChat: React.FC = () => {
               onChange={(event) => setAiDataConsent(event.target.checked)}
               className="mt-1 h-4 w-4 shrink-0 accent-blue-600"
             />
-            <span>Autorizo enviar cada mensaje de esta conversación a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. Mood Log no guarda el historial de esta conversación. {GROQ_RETENTION_DISCLOSURE} Puedo no usar esta función.</span>
+            <span>Autorizo enviar los mensajes que decida enviar en MIA a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. Mood Log no guarda el historial de esta conversación. {GROQ_RETENTION_DISCLOSURE} Este dispositivo recuerda mi permiso y puedo retirarlo en Configuración.</span>
           </label>
                 )}
           <div className="flex space-x-3">

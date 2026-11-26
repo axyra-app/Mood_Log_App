@@ -1,3 +1,4 @@
+import { useAiPermission } from '../hooks/useAiPermission';
 import { BookOpen, Lightbulb, Plus, Save, Sparkles, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -30,7 +31,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
   const [emotions, setEmotions] = useState<string[]>(entry?.emotions || []);
   const [aiAnalysis, setAiAnalysis] = useState<any>(entry?.aiAnalysis || null);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
-  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useAiPermission('journal');
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
@@ -46,9 +47,6 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
     }
   }, []);
 
-  useEffect(() => {
-    setAiDataConsent(false);
-  }, [user?.uid, entry?.id]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -238,8 +236,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                   className="mt-1 h-4 w-4 accent-purple-600"
                 />
                 <span>
-                  Autorizo enviar el contenido de esta entrada a Groq si solicito el análisis. Puede revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo guardar la entrada sin solicitar IA y evitar incluir información que no quiera compartir con un proveedor externo.
-                </span>
+                  Autorizo enviar el contenido de esta entrada a Groq si solicito el análisis. Puede revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo guardar la entrada sin solicitar IA y evitar incluir información que no quiera compartir con un proveedor externo. Este permiso se recuerda en este dispositivo.</span>
               </label>
 
               {/* Title */}

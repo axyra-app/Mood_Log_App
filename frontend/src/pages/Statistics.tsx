@@ -1,3 +1,4 @@
+import { useAiPermission } from '../hooks/useAiPermission';
 import {
   Activity,
   AlertTriangle,
@@ -40,13 +41,12 @@ const Statistics: React.FC = () => {
   const [aiAnalysis, setAiAnalysis] = useState<MoodAnalysisResult | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useAiPermission('statistics');
   const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     setAiAnalysis(null);
     setAnalysisError(null);
-    setAiDataConsent(false);
   }, [timeRange, user?.uid]);
 
   // Función para exportar estadísticas como PDF
@@ -417,8 +417,8 @@ const Statistics: React.FC = () => {
               onChange={(event) => setAiDataConsent(event.target.checked)}
               className='mt-0.5 h-5 w-5 shrink-0 accent-purple-600'
             />
-            <span>Autorizo enviar a Groq mis registros de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período; pueden revelar datos sensibles de salud. El análisis usará como máximo 60 registros recientes. {GROQ_RETENTION_DISCLOSURE} Puedo no solicitarlo.</span>
-          </label>
+            <span>Autorizo enviar a Groq mis registros de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período; pueden revelar datos sensibles de salud. El análisis usará como máximo 60 registros recientes. {GROQ_RETENTION_DISCLOSURE} Puedo no solicitarlo. Este permiso se recuerda en este dispositivo.</span>
+              </label>
 
           {analysisError && (
             <div role='alert' className='mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>

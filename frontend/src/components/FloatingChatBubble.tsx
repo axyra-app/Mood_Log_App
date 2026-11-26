@@ -1,3 +1,4 @@
+import { useAiPermission } from '../hooks/useAiPermission';
 import { Heart, MessageCircle, Minimize2, Send, Sparkles, User, X } from 'lucide-react';
 import React, { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -37,7 +38,7 @@ const FloatingChatBubble: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
-  const [aiDataConsent, setAiDataConsent] = useState(false);
+  const [aiDataConsent, setAiDataConsent] = useAiPermission('chat');
   const [legalAcceptanceCurrent, setLegalAcceptanceCurrent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
@@ -45,11 +46,11 @@ const FloatingChatBubble: React.FC = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
   }, [messages, isLoading]);
 
   useEffect(() => {
-    if (isOpen && !isMinimized) inputRef.current?.focus();
+    if (isOpen && !isMinimized && window.matchMedia('(pointer: fine)').matches) inputRef.current?.focus();
   }, [isOpen, isMinimized]);
 
   useEffect(() => {
@@ -69,7 +70,6 @@ const FloatingChatBubble: React.FC = () => {
   }, [user?.uid, adultEligible]);
 
   useEffect(() => {
-    setAiDataConsent(false);
     setMessage('');
     setMessages([welcomeMessage]);
     setIsOpen(false);
@@ -317,7 +317,7 @@ const FloatingChatBubble: React.FC = () => {
               >
                 {aiDataConsent ? (
                   <div className='mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300'>
-                    <span role='status'>Envío a Groq autorizado para este chat</span>
+                    <span role='status'>Envío a Groq autorizado en este dispositivo</span>
                     <button type='button' className='min-h-8 underline underline-offset-2' onClick={() => setAiDataConsent(false)}>
                       Retirar permiso
                     </button>
@@ -330,7 +330,7 @@ const FloatingChatBubble: React.FC = () => {
                     onChange={(event) => setAiDataConsent(event.target.checked)}
                     className='mt-0.5 h-4 w-4 shrink-0 accent-violet-600'
                   />
-                  <span>Autorizo enviar cada mensaje de esta conversación a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo no usar esta función y evitar compartir información que no quiera enviar a un proveedor externo.</span>
+                  <span>Autorizo enviar los mensajes que decida enviar en MIA a Groq para generar respuestas. Mis mensajes pueden revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Este dispositivo recuerda mi permiso y puedo retirarlo en Configuración.</span>
                 </label>
                 )}
                 <div className={`flex items-end gap-2 rounded-2xl border p-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 ${
