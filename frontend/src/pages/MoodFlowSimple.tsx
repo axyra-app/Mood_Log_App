@@ -255,7 +255,8 @@ const MoodFlowSimple: React.FC = () => {
               {/* Modo oscuro */}
               <button
                 onClick={toggleDarkMode}
-                className={`p-2 rounded-lg ${
+                aria-label={isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
+                className={`touch-target rounded-lg p-2 ${
                   isDarkMode ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -271,8 +272,7 @@ const MoodFlowSimple: React.FC = () => {
                     : 'bg-purple-500 hover:bg-purple-600 text-white'
                 }`}
               >
-                <span className='hidden sm:inline'>← Volver al Dashboard</span>
-                <span className='sm:hidden'>← Dashboard</span>
+                <span>← Volver al tablero</span>
               </button>
             </div>
           </div>
@@ -747,7 +747,7 @@ const MoodFlowSimple: React.FC = () => {
                   onClick={handleBackToDashboard}
                   className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-transform duration-200 font-medium'
                 >
-                  🏠 Ir al Dashboard
+                  🏠 Ir al tablero
                 </button>
               </div>
             </div>

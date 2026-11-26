@@ -268,13 +268,6 @@ const Settings: React.FC = () => {
       <Header title='Configuración' subtitle='Gestiona tu perfil y preferencias' backTo='/dashboard' />
 
       <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='mb-8'>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Configuración</h1>
-          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Personaliza tu experiencia en Mood Log App
-          </p>
-        </div>
-
         <div className='space-y-8'>
           <section id='recordatorio-diario' aria-labelledby='recordatorio-titulo' className='card scroll-mt-24 space-y-3' ref={(section) => {
             if (section && hash === '#recordatorio-diario') section.scrollIntoView({ block: 'start' });

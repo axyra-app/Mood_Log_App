@@ -115,6 +115,8 @@ const Header: React.FC<HeaderProps> = ({
             <div className='relative'>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
+                aria-label='Menú de mi cuenta'
+                aria-expanded={showUserMenu}
                 className={`touch-target flex items-center space-x-2 p-2 rounded-lg transition-colors ${
                   isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
                 }`}

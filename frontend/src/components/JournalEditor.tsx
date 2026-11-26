@@ -43,7 +43,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && window.matchMedia('(pointer: fine)').matches) {
       textareaRef.current.focus();
     }
   }, []);

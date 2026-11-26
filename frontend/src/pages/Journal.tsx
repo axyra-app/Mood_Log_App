@@ -158,7 +158,7 @@ const Journal: React.FC = () => {
         title='Mi Diario'
         subtitle='Reflexiona sobre tus pensamientos y emociones'
         backTo='/dashboard'
-        backLabel='Volver al Dashboard'
+        backLabel='Volver al tablero'
       />
 
       {/* Contenido Principal */}
