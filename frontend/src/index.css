@@ -284,6 +284,15 @@
     padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
   }
 
+  @media (max-width: 767px) {
+    body.has-mobile-bottom-nav .mia-dock {
+      bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom) + 0.75rem);
+    }
+    body.has-mobile-bottom-nav .install-notice {
+      bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom) + 5.5rem);
+    }
+  }
+
   @media (min-width: 768px) {
     body.has-mobile-bottom-nav .App {
       padding-bottom: 0;

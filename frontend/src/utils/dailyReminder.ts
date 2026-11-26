@@ -1,10 +1,30 @@
-export function downloadDailyReminder(time = '19:00') {
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return;
+function nextReminder(time: string, now: Date) {
   const [hour, minute] = time.split(':').map(Number);
-  const now = new Date();
   const start = new Date(now);
   start.setHours(hour, minute, 0, 0);
   if (start <= now) start.setDate(start.getDate() + 1);
+  return start;
+}
+
+export function googleCalendarReminderUrl(time: string) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return undefined;
+  const start = nextReminder(time, new Date());
+  const end = new Date(start.getTime() + 5 * 60_000);
+  const stamp = (date: Date) => date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE', text: 'Mood Log · ¿Cómo va tu día?',
+    dates: `${stamp(start)}/${stamp(end)}`,
+    ctz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    recur: 'RRULE:FREQ=DAILY',
+    details: 'Registra cómo te sientes: https://mood-log-app-main.vercel.app/mood-flow',
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+export function downloadDailyReminder(time = '19:00') {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return;
+  const now = new Date();
+  const start = nextReminder(time, now);
   const date = [start.getFullYear(), start.getMonth() + 1, start.getDate()]
     .map((value) => String(value).padStart(2, '0')).join('');
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');

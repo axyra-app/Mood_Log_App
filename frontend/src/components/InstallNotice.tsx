@@ -69,11 +69,11 @@ export default function InstallNotice() {
     }
   };
 
-  if (pathname !== '/' || installed || dismissed || Capacitor.isNativePlatform()
+  if (!['/', '/dashboard'].includes(pathname) || installed || dismissed || Capacitor.isNativePlatform()
     || (!ios && !android)) return null;
 
   return (
-    <aside aria-label='Instalar Mood Log' className='fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 mx-auto max-w-md rounded-2xl border border-[var(--mood-border)] bg-[var(--mood-surface)] p-4 text-[var(--mood-text)] shadow-xl'>
+    <aside aria-label='Instalar Mood Log' className='install-notice fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-2xl border border-[var(--mood-border)] bg-[var(--mood-surface)] p-4 text-[var(--mood-text)] shadow-xl'>
       <p className='font-semibold'>¿Quieres agregar Mood Log a tu pantalla de inicio?</p>
       <p className='mt-1 text-sm text-[var(--mood-text-muted)]' aria-live='polite'>
         {showSteps

@@ -146,7 +146,7 @@ const FloatingChatBubble: React.FC = () => {
       className={
         isMobileSheetOpen
           ? 'fixed inset-0 z-50 flex items-end bg-gray-950/35 sm:inset-auto sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:block sm:bg-transparent'
-          : 'fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 sm:right-6'
+          : 'mia-dock fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 sm:right-6'
       }
     >
       {!isOpen ? (
@@ -154,16 +154,16 @@ const FloatingChatBubble: React.FC = () => {
           type='button'
           onClick={() => setIsOpen(true)}
           aria-label='Abrir chat con MIA para hablar sobre tu estado de ánimo'
-          className='group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 text-white shadow-xl shadow-violet-900/20 ring-1 ring-white/25 transition duration-200 hover:-translate-y-0.5 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-300'
+          className='group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 p-2 sm:px-4 sm:py-3 text-white shadow-xl shadow-violet-900/20 ring-1 ring-white/25 transition duration-200 hover:-translate-y-0.5 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-300'
         >
           <span className='flex h-9 w-9 items-center justify-center rounded-full bg-white/15'>
             <Heart className='h-5 w-5' aria-hidden='true' />
           </span>
-          <span className='pr-1 text-left'>
+          <span className='hidden pr-1 text-left sm:block'>
             <span className='block text-sm font-bold leading-4'>MIA</span>
             <span className='mt-0.5 block text-[11px] leading-4 text-white/85'>Hablemos de tu ánimo</span>
           </span>
-          <MessageCircle className='ml-1 h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5' aria-hidden='true' />
+          <MessageCircle className='ml-1 hidden h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5 sm:block' aria-hidden='true' />
         </button>
       ) : (
         <>

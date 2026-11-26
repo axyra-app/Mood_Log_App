@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
-import { downloadDailyReminder } from '../utils/dailyReminder';
+import { downloadDailyReminder, googleCalendarReminderUrl } from '../utils/dailyReminder';
 
 async function reminderRequest(uid: string, method = 'GET', body?: unknown) {
   const user = auth.currentUser;
@@ -25,6 +25,7 @@ export default function DailyReminderSettings() {
   const [notice, setNotice] = useState('');
   const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const calendarUrl = googleCalendarReminderUrl(time);
 
   useEffect(() => {
     if (!uid) return;
@@ -77,7 +78,7 @@ export default function DailyReminderSettings() {
     <p className='text-sm text-[var(--mood-text-muted)]'>Recibe «¿Cómo va tu día?» en el dispositivo que elijas.</p>
     <label className='block text-sm font-semibold'>
       Hora del recordatorio
-      <input type='time' value={time} onChange={(event) => setTime(event.target.value)} className='input-field mt-1 block max-w-48' />
+      <input type='time' value={time} onChange={(event) => setTime(event.target.value)} className='input-field mt-1 block min-w-0 !w-full !max-w-48' />
     </label>
     <p className='text-xs text-[var(--mood-text-muted)]'>Zona horaria de este dispositivo: {timeZone}</p>
     {savedTime && <p className='text-sm text-[var(--mood-text-muted)]'>Hora guardada: {savedTime}. Si guardas desde otro dispositivo, los avisos llegarán al último que guardes.</p>}
@@ -86,10 +87,11 @@ export default function DailyReminderSettings() {
         {savedTime ? 'Guardar hora en este dispositivo' : 'Activar notificaciones'}
       </button>
       {savedTime && <button type='button' className='min-h-11 rounded-xl border px-4' onClick={() => void disable()} disabled={busy}>Desactivar notificaciones</button>}
-      <button type='button' className='min-h-11 rounded-xl border px-4' disabled={!time} onClick={() => downloadDailyReminder(time)}>Agregar al calendario</button>
+      {calendarUrl && <a href={calendarUrl} target='_blank' rel='noopener noreferrer' className='inline-flex min-h-11 items-center rounded-xl border px-4'>Abrir en Google Calendar</a>}
+      <button type='button' className='min-h-11 rounded-xl border px-4' disabled={!time} onClick={() => downloadDailyReminder(time)}>Descargar archivo .ics</button>
     </div>
-    {!supported && <p className='text-sm'>Si usas iPhone, agrega Mood Log a tu pantalla de inicio y vuelve desde el ícono.</p>}
+    {!supported && <details className='text-sm'><summary className='cursor-pointer font-semibold'>Cómo instalar Mood Log en iPhone</summary><p className='mt-2'>Abre esta página en Safari y toca Compartir → Agregar a pantalla de inicio. Activa «Abrir como app web» si aparece. Luego abre Mood Log desde su ícono y vuelve a Configuración.</p></details>}
     {notice && <p className='text-sm' role='status'>{notice}</p>}
-    <p className='text-xs text-[var(--mood-text-muted)]'>Los eventos que agregaste al calendario se eliminan desde el calendario.</p>
+    <p className='text-xs text-[var(--mood-text-muted)]'>En Google Calendar, revisa que se repita todos los días, configura la alerta y guarda. Si descargas el .ics, impórtalo en tu calendario para activarlo.</p>
   </>;
 }
