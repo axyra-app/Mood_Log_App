@@ -3,6 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
 import { downloadDailyReminder, googleCalendarReminderUrl } from '../utils/dailyReminder';
 
+function decodePushKey(key: string): ArrayBuffer {
+  const base64 = key.replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')), (char) => char.charCodeAt(0)).buffer;
+}
+
 async function reminderRequest(uid: string, method = 'GET', body?: unknown) {
   const user = auth.currentUser;
   if (user?.uid !== uid) throw new Error('Vuelve a iniciar sesión.');
@@ -23,13 +28,18 @@ export default function DailyReminderSettings() {
   const [publicKey, setPublicKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const iPhoneOrPad = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const calendarUrl = googleCalendarReminderUrl(time);
 
   useEffect(() => {
     if (!uid) return;
     let active = true;
+    setLoadState('loading');
+    setNotice('');
     setPublicKey('');
     setSavedTime(null);
     void reminderRequest(uid).then((data) => {
@@ -37,9 +47,10 @@ export default function DailyReminderSettings() {
       setPublicKey(data.publicKey);
       setSavedTime(data.time);
       setTime(data.time || '19:00');
-    }).catch(() => { if (active) setNotice('Las notificaciones push aún no están disponibles.'); });
+      setLoadState('ready');
+    }).catch(() => { if (active) setLoadState('error'); });
     return () => { active = false; };
-  }, [uid]);
+  }, [uid, loadAttempt]);
 
   const save = async () => {
     if (!uid || !supported || !time || !publicKey || busy) return;
@@ -52,7 +63,7 @@ export default function DailyReminderSettings() {
       if (!registration?.active) throw new Error('Recarga Mood Log y vuelve a intentarlo.');
       const existing = await registration.pushManager.getSubscription();
       const subscription = existing ?? await registration.pushManager.subscribe({
-        userVisibleOnly: true, applicationServerKey: publicKey,
+        userVisibleOnly: true, applicationServerKey: decodePushKey(publicKey),
       });
       await reminderRequest(uid, 'PUT', { subscription: subscription.toJSON(), time, timeZone });
       setSavedTime(time);
@@ -83,15 +94,23 @@ export default function DailyReminderSettings() {
     <p className='text-xs text-[var(--mood-text-muted)]'>Zona horaria de este dispositivo: {timeZone}</p>
     {savedTime && <p className='text-sm text-[var(--mood-text-muted)]'>Hora guardada: {savedTime}. Si guardas desde otro dispositivo, los avisos llegarán al último que guardes.</p>}
     <div className='flex flex-wrap gap-2'>
-      <button type='button' className='btn-primary disabled:opacity-50' onClick={() => void save()} disabled={busy || !time || !supported || !publicKey}>
-        {savedTime ? 'Guardar hora en este dispositivo' : 'Activar notificaciones'}
-      </button>
+      {supported && loadState === 'ready' && <button type='button' className='btn-primary disabled:opacity-50' onClick={() => void save()} disabled={busy || !time || !publicKey}>
+        {busy ? 'Procesando…' : savedTime ? 'Guardar hora en este dispositivo' : 'Activar notificaciones'}
+      </button>}
       {savedTime && <button type='button' className='min-h-11 rounded-xl border px-4' onClick={() => void disable()} disabled={busy}>Desactivar notificaciones</button>}
-      {calendarUrl && <a href={calendarUrl} target='_blank' rel='noopener noreferrer' className='inline-flex min-h-11 items-center rounded-xl border px-4'>Abrir en Google Calendar</a>}
-      <button type='button' className='min-h-11 rounded-xl border px-4' disabled={!time} onClick={() => downloadDailyReminder(time)}>Descargar archivo .ics</button>
     </div>
-    {!supported && <details className='text-sm'><summary className='cursor-pointer font-semibold'>Cómo instalar Mood Log en iPhone</summary><p className='mt-2'>Abre esta página en Safari y toca Compartir → Agregar a pantalla de inicio. Activa «Abrir como app web» si aparece. Luego abre Mood Log desde su ícono y vuelve a Configuración.</p></details>}
+    {supported && loadState === 'loading' && <p role='status' className='text-sm'>Consultando tu recordatorio…</p>}
+    {supported && loadState === 'error' && <div role='status' className='text-sm'>No pudimos consultar tu recordatorio. <button type='button' className='min-h-11 font-semibold underline' onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Reintentar</button></div>}
+    {!supported && iPhoneOrPad && <details className='text-sm'><summary className='cursor-pointer font-semibold'>Cómo activar avisos en iPhone o iPad</summary><p className='mt-2'>Abre Mood Log desde su ícono en la pantalla de inicio y vuelve a Configuración. Si aún no tienes el ícono, en Safari toca Compartir → Agregar a pantalla de inicio.</p></details>}
+    {!supported && !iPhoneOrPad && <p className='text-sm'>Este navegador no admite avisos de Mood Log. Puedes usar el calendario.</p>}
     {notice && <p className='text-sm' role='status'>{notice}</p>}
-    <p className='text-xs text-[var(--mood-text-muted)]'>En Google Calendar, revisa que se repita todos los días, configura la alerta y guarda. Si descargas el .ics, impórtalo en tu calendario para activarlo.</p>
+    <details className='border-t border-[var(--mood-border)] pt-3 text-sm'>
+      <summary className='cursor-pointer font-semibold'>Usar un calendario</summary>
+      <p className='mt-2 text-[var(--mood-text-muted)]'>Guarda el evento y activa una alerta en tu calendario. Descargar el archivo por sí solo no activa el recordatorio.</p>
+      <div className='mt-2 flex flex-wrap gap-2'>
+        {calendarUrl && <a href={calendarUrl} target='_blank' rel='noopener noreferrer' className='inline-flex min-h-11 items-center rounded-xl border px-4'>Abrir en Google Calendar</a>}
+        <button type='button' className='min-h-11 rounded-xl border px-4' disabled={!time} onClick={() => downloadDailyReminder(time)}>Descargar archivo .ics</button>
+      </div>
+    </details>
   </>;
 }
