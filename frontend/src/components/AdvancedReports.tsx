@@ -1,3 +1,4 @@
+import AcceptedChoice from './AcceptedChoice';
 import { useAiPermission } from '../hooks/useAiPermission';
 import { Calendar, Download, FileText, TrendingUp } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -439,7 +440,8 @@ const AdvancedReports: React.FC = () => {
               )}
             </button>
           </div>
-          <label className={`mt-4 flex items-start gap-3 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          {aiDataConsent ? <AcceptedChoice label="Permiso de Groq marcado" onUndo={() => setAiDataConsent(false)} /> : (
+<label className={`mt-4 flex items-start gap-3 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
             <input
               type='checkbox'
               checked={aiDataConsent}
@@ -450,6 +452,7 @@ const AdvancedReports: React.FC = () => {
               Autorizo enviar a Groq los registros o entradas del período seleccionado, que pueden contener datos sensibles sobre mi salud, para generar este análisis y su PDF. {GROQ_RETENTION_DISCLOSURE} Puedo no generar el reporte.
              Este permiso se recuerda en este dispositivo.</span>
               </label>
+              )}
         </div>
 
         {/* Reports List */}

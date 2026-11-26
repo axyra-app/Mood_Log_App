@@ -1,3 +1,4 @@
+import AcceptedChoice from '../components/AcceptedChoice';
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -87,7 +88,8 @@ const LegalAcceptance: React.FC = () => {
 
         {needsAcceptance ? (
           <form onSubmit={submitAcceptance} className='space-y-5'>
-            <label className='flex items-start gap-3 text-sm leading-6 text-gray-800'>
+            {accepted ? <AcceptedChoice label="Términos marcados" onUndo={() => setAccepted(false)} /> : (
+<label className='flex items-start gap-3 text-sm leading-6 text-gray-800'>
               <input
                 type='checkbox'
                 checked={accepted}
@@ -96,6 +98,7 @@ const LegalAcceptance: React.FC = () => {
               />
               <span>Acepto los términos y confirmo que recibí y revisé el aviso de privacidad. Esta acción no autoriza el uso de datos de salud, analítica ni IA.</span>
             </label>
+              )}
             {errorMessage && <p role='alert' className='text-sm text-red-700'>{errorMessage}</p>}
             <button
               type='submit'

@@ -1,3 +1,4 @@
+import AcceptedChoice from '../components/AcceptedChoice';
 import { useAiPermission } from '../hooks/useAiPermission';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -649,7 +650,8 @@ const MoodFlowSimple: React.FC = () => {
                 </div>
               </div>
 
-              <label className='flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300'>
+              {aiDataConsent ? <AcceptedChoice label="Permiso de Groq marcado" onUndo={() => setAiDataConsent(false)} /> : (
+<label className='flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300'>
                 <input
                   type='checkbox'
                   checked={aiDataConsent}
@@ -658,6 +660,7 @@ const MoodFlowSimple: React.FC = () => {
                 />
                 <span>Si solicito una reflexión, autorizo enviar a Groq mis datos de estado de ánimo, medidas, actividades, emociones y notas, que pueden revelar datos sensibles de salud. Puedo guardar el registro sin solicitar IA. Este permiso se recuerda en este dispositivo.</span>
               </label>
+              )}
               {!aiAnalysis && (
                 <button
                   type='button'

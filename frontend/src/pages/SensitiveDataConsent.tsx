@@ -1,3 +1,4 @@
+import AcceptedChoice from '../components/AcceptedChoice';
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, hasCurrentAdultEligibility } from '../contexts/AuthContext';
@@ -118,10 +119,12 @@ const SensitiveDataConsent: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={(event) => void accept(event)} className='space-y-4'>
-            <label className='flex items-start gap-3 text-sm leading-6'>
+            {checked ? <AcceptedChoice label="Autorización marcada" onUndo={() => setChecked(false)} /> : (
+<label className='flex items-start gap-3 text-sm leading-6'>
               <input type='checkbox' checked={checked} onChange={(event) => setChecked(event.target.checked)} className='mt-1' />
               <span>Autorizo de forma opcional a Mood Log a tratar los registros descritos para guardarlos en mi cuenta y permitirme consultar mi historial, estadísticas y reflexiones solicitadas. Entiendo que puedo retirar esta autorización.</span>
             </label>
+              )}
             <button type='submit' disabled={saving || !checked || !adultEligible} className='rounded-lg bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-800 disabled:opacity-50'>
               {saving ? 'Registrando…' : 'Autorizar almacenamiento de mis registros'}
             </button>

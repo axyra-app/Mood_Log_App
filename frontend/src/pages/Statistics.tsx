@@ -1,3 +1,4 @@
+import AcceptedChoice from '../components/AcceptedChoice';
 import { useAiPermission } from '../hooks/useAiPermission';
 import {
   Activity,
@@ -410,7 +411,8 @@ const Statistics: React.FC = () => {
             </button>
           </div>
 
-          <label className='mb-4 flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm leading-5 text-gray-700 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-300'>
+          {aiDataConsent ? <AcceptedChoice label="Permiso de Groq marcado" onUndo={() => setAiDataConsent(false)} /> : (
+<label className='mb-4 flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm leading-5 text-gray-700 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-300'>
             <input
               type='checkbox'
               checked={aiDataConsent}
@@ -419,6 +421,7 @@ const Statistics: React.FC = () => {
             />
             <span>Autorizo enviar a Groq mis registros de ánimo, energía, estrés, sueño, notas, emociones y actividades de este período; pueden revelar datos sensibles de salud. El análisis usará como máximo 60 registros recientes. {GROQ_RETENTION_DISCLOSURE} Puedo no solicitarlo. Este permiso se recuerda en este dispositivo.</span>
               </label>
+              )}
 
           {analysisError && (
             <div role='alert' className='mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'>

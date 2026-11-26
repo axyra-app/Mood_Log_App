@@ -1,3 +1,4 @@
+import AcceptedChoice from './AcceptedChoice';
 import { useAiPermission } from '../hooks/useAiPermission';
 import { BookOpen, Lightbulb, Plus, Save, Sparkles, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -228,7 +229,8 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
           <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
             {/* Main Editor - Takes 2 columns */}
             <div className="lg:col-span-2 space-y-6">
-              <label className="flex items-start gap-3 rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
+              {aiDataConsent ? <AcceptedChoice label="Permiso de Groq marcado" onUndo={() => setAiDataConsent(false)} /> : (
+<label className="flex items-start gap-3 rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
                 <input
                   type="checkbox"
                   checked={aiDataConsent}
@@ -238,6 +240,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ entry, template, prompt, 
                 <span>
                   Autorizo enviar el contenido de esta entrada a Groq si solicito el análisis. Puede revelar datos sensibles sobre mi salud o estado de ánimo. {GROQ_RETENTION_DISCLOSURE} Puedo guardar la entrada sin solicitar IA y evitar incluir información que no quiera compartir con un proveedor externo. Este permiso se recuerda en este dispositivo.</span>
               </label>
+              )}
 
               {/* Title */}
               <div>

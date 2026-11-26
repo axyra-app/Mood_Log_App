@@ -1,3 +1,4 @@
+import AcceptedChoice from '../components/AcceptedChoice';
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -425,7 +426,8 @@ const RegisterSimple: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <div className='flex items-center space-x-3'>
+                {agreedToTerms ? <AcceptedChoice label="Términos marcados" onUndo={() => setAgreedToTerms(false)} /> : (
+<div className='flex items-center space-x-3'>
                   <input
                     type='checkbox'
                     id='terms'
@@ -449,8 +451,10 @@ const RegisterSimple: React.FC = () => {
                     </Link>
                   </label>
                 </div>
+              )}
 
-                <div className='flex items-start space-x-3'>
+                {confirmedAdult ? <AcceptedChoice label="Mayoría de edad marcada" onUndo={() => setConfirmedAdult(false)} /> : (
+<div className='flex items-start space-x-3'>
                   <input
                     type='checkbox'
                     id='adult-eligibility'
@@ -467,6 +471,7 @@ const RegisterSimple: React.FC = () => {
                     Confirmo que tengo 18 años o más. Mood Log está disponible inicialmente para personas adultas.
                   </label>
                 </div>
+              )}
 
                 <div className='space-y-4'>
                   <button

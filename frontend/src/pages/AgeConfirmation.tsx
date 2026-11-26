@@ -1,3 +1,4 @@
+import AcceptedChoice from '../components/AcceptedChoice';
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -56,7 +57,8 @@ const AgeConfirmation: React.FC = () => {
           Mood Log está disponible inicialmente para personas adultas. Para continuar, confirma que tienes 18 años o más.
           Esta confirmación no reemplaza las verificaciones que puedan requerirse por ley.
         </p>
-        <label className='mb-6 flex items-start gap-3'>
+        {confirmedAdult ? <AcceptedChoice label="Mayoría de edad marcada" onUndo={() => setConfirmedAdult(false)} /> : (
+<label className='mb-6 flex items-start gap-3'>
           <input
             type='checkbox'
             checked={confirmedAdult}
@@ -65,6 +67,7 @@ const AgeConfirmation: React.FC = () => {
           />
           <span>Confirmo que tengo 18 años o más.</span>
         </label>
+              )}
         {saveError && <p role='alert' className='mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'>{saveError}</p>}
         <button
           type='button'

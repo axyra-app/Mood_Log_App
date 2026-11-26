@@ -37,6 +37,10 @@ const DashboardSimple: React.FC = () => {
     return logDate !== null && logDate >= weekStart && logDate <= new Date();
   });
 
+  const hasMood = moodLogs.length > 0;
+  const hasJournal = journalEntries.length > 0;
+  const empty = !hasMood && !hasJournal && !moodLoading && !journalLoading && !moodError && !journalError;
+
   const averageMood = getAverageMood(7);
   const streak = getMoodStreak();
 
@@ -136,6 +140,13 @@ const DashboardSimple: React.FC = () => {
           </p>
         </div>
 
+        {empty ? (
+          <section className='card max-w-lg space-y-3'>
+            <h2 className='text-lg font-semibold'>Tu primer registro</h2>
+            <p className='text-sm text-[var(--mood-text-muted)]'>Elige cómo te sientes hoy. Con el tiempo, aquí podrás ver tu historial.</p>
+            <button type='button' className='btn-primary w-full sm:w-auto' onClick={() => navigate('/mood-flow')}>Registrar mi ánimo</button>
+          </section>
+        ) : (
         <div className='mb-6 flex flex-wrap items-center gap-3'>
           <button type='button' className='btn-primary' onClick={() => navigate('/mood-flow')}>Registrar mi ánimo</button>
           <button type='button' className='min-h-11 rounded-xl border border-[var(--mood-border)] px-4 text-sm font-semibold' onClick={() => navigate('/settings#recordatorio-diario')}>
@@ -143,7 +154,11 @@ const DashboardSimple: React.FC = () => {
           </button>
         </div>
 
-        {/* Journal Section - Destacado como función principal */}
+        )}
+        {!hasMood && !hasJournal && (moodLoading || journalLoading) && <p role='status' className='text-sm'>Cargando tus registros…</p>}
+
+        {(hasJournal || journalError) && (
+        /* Entradas del diario */
         <div
           className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg border ${
             isDarkMode ? 'border-gray-700' : 'border-gray-200'
@@ -271,6 +286,9 @@ const DashboardSimple: React.FC = () => {
           </div>
         </div>
 
+        )}
+        {hasMood && (
+        <>
         {/* Stats Cards */}
         <div className='mobile-grid mb-8'>
           <div
@@ -347,6 +365,8 @@ const DashboardSimple: React.FC = () => {
             <MoodHistoryPanel isDarkMode={isDarkMode} />
           </div>
         </div>
+        </>
+        )}
       </main>
     </div>
   );
