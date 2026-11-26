@@ -119,7 +119,7 @@ const ForgotPassword: React.FC = () => {
                     <CheckCircle className='w-12 h-12 text-white' />
                   </div>
                   <h1
-                    className={`text-5xl md:text-6xl font-black mb-6 transition-colors duration-500 ${
+                    className={`text-3xl sm:text-5xl md:text-6xl font-black mb-6 transition-colors duration-500 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}
                   >
@@ -305,7 +305,7 @@ const ForgotPassword: React.FC = () => {
                   <Zap className='w-12 h-12 text-white' />
                 </div>
                 <h1
-                  className={`text-5xl md:text-6xl font-black mb-6 transition-colors duration-500 ${
+                  className={`text-3xl sm:text-5xl md:text-6xl font-black mb-6 transition-colors duration-500 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}
                 >

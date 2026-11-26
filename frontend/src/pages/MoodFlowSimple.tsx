@@ -281,7 +281,7 @@ const MoodFlowSimple: React.FC = () => {
 
       {/* Progress Indicator */}
       <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-        <div className='flex items-center justify-center space-x-4'>
+        <div className='flex items-center justify-center gap-1 sm:gap-4'>
           {[1, 2, 3, 4].map((stepNumber) => (
             <div key={stepNumber} className='flex items-center'>
               <div
@@ -297,7 +297,7 @@ const MoodFlowSimple: React.FC = () => {
               </div>
               {stepNumber < 4 && (
                 <div
-                  className={`w-12 h-1 mx-2 ${
+                  className={`mx-1 h-1 w-5 sm:mx-2 sm:w-12 ${
                     step > stepNumber ? 'bg-purple-600' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
                   }`}
                 />
