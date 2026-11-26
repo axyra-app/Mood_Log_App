@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, FileText, Heart, MessageCircle, X } from 'lucide-react';
+import { BarChart3, BookOpen, FileText, Heart, X } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AI_FEATURES_ENABLED } from '../services/aiApi';
@@ -37,13 +37,6 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
       color: 'bg-gradient-to-r from-purple-500 to-pink-500',
     },
     {
-      icon: MessageCircle,
-      label: 'MIA',
-      path: '/chat',
-      description: 'Habla sobre cómo te sientes',
-      color: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    },
-    {
       icon: BarChart3,
       label: 'Ver Estadísticas',
       path: '/statistics',
@@ -57,7 +50,7 @@ const LateralSidebar: React.FC<LateralSidebarProps> = ({ isOpen, onClose }) => {
       description: 'Análisis detallados',
       color: 'bg-gradient-to-r from-orange-500 to-amber-500',
     },
-  ].filter((item) => AI_FEATURES_ENABLED || !['/chat', '/reports'].includes(item.path));
+  ].filter((item) => AI_FEATURES_ENABLED || item.path !== '/reports');
 
   return (
     <dialog

@@ -1,4 +1,4 @@
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 
@@ -17,8 +17,6 @@ import { AI_FEATURES_ENABLED } from './services/aiApi';
 const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
 const AgeConfirmation = lazy(() => import('./pages/AgeConfirmation'));
 const AiPaused = lazy(() => import('./pages/AiPaused'));
-const AIChat = lazy(() => import('./pages/AIChat'));
-const ChatSelection = lazy(() => import('./pages/ChatSelection'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
 const DashboardSimple = lazy(() => import('./pages/DashboardSimple'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
@@ -117,23 +115,7 @@ function App() {
                   }
                 />
 
-                {/* Rutas de conversación de autorreflexión */}
-                <Route
-                  path='/chat/assistant/:assistantId'
-                  element={
-                    <ProtectedRoute>
-                      {AI_FEATURES_ENABLED ? <AIChat /> : <AiPaused />}
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path='/chat'
-                  element={
-                    <ProtectedRoute>
-                      {AI_FEATURES_ENABLED ? <ChatSelection /> : <AiPaused />}
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path='/chat/*' element={<Navigate to='/dashboard' replace />} />
 
                 {/* Configuración y Perfil */}
                 <Route

@@ -17,7 +17,6 @@ const mobileRoutes = new Set([
   '/journal',
   '/statistics',
   '/reports',
-  '/chat',
   '/profile',
   '/settings',
 ]);
