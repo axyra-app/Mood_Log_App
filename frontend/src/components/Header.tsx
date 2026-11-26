@@ -1,10 +1,9 @@
-import { ArrowLeft, Bell, Home, LogOut, Moon, Sun, X } from 'lucide-react';
+import { ArrowLeft, Home, LogOut, Moon, Sun } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useNotifications } from '../hooks/useNotifications';
 import Logo from './Logo';
 import { logSanitizedClientError } from '../utils/safeClientLog';
 
@@ -29,10 +28,7 @@ const Header: React.FC<HeaderProps> = ({
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  const { notifications, unreadCount } = useNotifications(user?.uid || '');
 
   // No mostrar en dashboard
   const isDashboard = location.pathname === '/dashboard';
@@ -100,104 +96,6 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className='flex shrink-0 items-center gap-1 sm:gap-2'>
-            {/* Notificaciones */}
-            <div className='relative'>
-              <button
-                aria-label='Notificaciones'
-                aria-expanded={showNotifications}
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`touch-target p-2 rounded-lg transition-colors relative ${
-                  isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                }`}
-              >
-                <Bell className={`w-4 h-4 sm:w-5 sm:h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
-                {unreadCount > 0 && (
-                  <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center'>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Panel de Notificaciones */}
-              {showNotifications && (
-                <div className='fixed inset-x-4 top-20 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-2 sm:w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50'>
-                  <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
-                    <div className='flex items-center justify-between'>
-                      <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        Notificaciones
-                      </h3>
-                      <button
-                        aria-label='Cerrar notificaciones'
-                        onClick={() => setShowNotifications(false)}
-                        className={`p-1 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                      >
-                        <X className='w-4 h-4 text-gray-500' />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className='max-h-96 overflow-y-auto'>
-                    {notifications.length === 0 ? (
-                      <div className='p-6 text-center'>
-                        <Bell className='w-12 h-12 mx-auto mb-3 text-gray-300' />
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          No hay notificaciones
-                        </p>
-                      </div>
-                    ) : (
-                      <div className='divide-y divide-gray-200 dark:divide-gray-700'>
-                        {notifications.slice(0, 5).map((notification) => (
-                          <div
-                            key={notification.id}
-                            className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                              !notification.isRead ? (isDarkMode ? 'bg-gray-700/50' : 'bg-blue-50') : ''
-                            }`}
-                          >
-                            <div className='flex items-start space-x-3'>
-                              <div className='flex-shrink-0'>
-                                <div
-                                  className={`w-2 h-2 rounded-full ${
-                                    !notification.isRead ? 'bg-blue-500' : 'bg-gray-300'
-                                  }`}
-                                ></div>
-                              </div>
-                              <div className='flex-1 min-w-0'>
-                                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                  {notification.title}
-                                </p>
-                                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                  {notification.message}
-                                </p>
-                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  {new Date(notification.createdAt).toLocaleDateString('es-CO')}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {notifications.length > 5 && (
-                    <div className='p-4 border-t border-gray-200 dark:border-gray-700'>
-                      <button
-                        onClick={() => {
-                          setShowNotifications(false);
-                          navigate('/notifications');
-                        }}
-                        className={`w-full text-center text-sm ${
-                          isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
-                        }`}
-                      >
-                        Ver todas las notificaciones
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* Cambio de Tema */}
             <button
               onClick={toggleDarkMode}
