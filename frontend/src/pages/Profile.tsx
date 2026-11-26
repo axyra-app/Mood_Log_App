@@ -167,9 +167,9 @@ const Profile: React.FC = () => {
             </p>
           </aside>
 
-          <div className="flex items-center justify-between mb-6">
+          <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
                 <User className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -182,7 +182,7 @@ const Profile: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex space-x-2">
+            <div className='flex flex-wrap gap-2'>
               {isEditing ? (
                 <>
                   <button
